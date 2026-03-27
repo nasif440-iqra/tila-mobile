@@ -12,7 +12,7 @@ interface QuizQuestionProps {
   answered: boolean;
   isCorrect: boolean;
   onSelect: (optionId: number) => void;
-  onPlayAudio: () => Promise<void>;
+  onPlayAudio: () => void | Promise<void>;
 }
 
 // ── Component ──

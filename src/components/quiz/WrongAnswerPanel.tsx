@@ -11,7 +11,7 @@ interface WrongAnswerPanelProps {
   correctLetter: { letter: string; name: string } | null;
   chosenLetter: { letter: string; name: string } | null;
   isSoundQuestion: boolean;
-  onPlayCorrect: () => Promise<void>;
+  onPlayCorrect: () => void | Promise<void>;
   onContinue: () => void;
 }
 

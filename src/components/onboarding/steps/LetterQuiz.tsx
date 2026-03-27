@@ -1,12 +1,10 @@
 import { useState } from "react";
 import { View, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
-import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, radii, fontFamilies } from "../../../design/tokens";
-import { getSFXAsset } from "../../../audio/player";
+import { playCorrect, playTap, playWrong } from "../../../audio/player";
 
 export function LetterQuiz({ onNext }: { onNext: () => void }) {
   const colors = useColors();
@@ -14,14 +12,9 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
   const [answerChecked, setAnswerChecked] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
-  const correctSfx = useAudioPlayer(getSFXAsset("correct"));
-  const tapSfx = useAudioPlayer(getSFXAsset("button_tap"));
-
   function handleAnswerSelect(name: string) {
     if (answerChecked) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    tapSfx.seekTo(0);
-    tapSfx.play();
+    playTap();
     setSelectedAnswer(name);
   }
 
@@ -30,10 +23,9 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
     setIsCorrect(correct);
     setAnswerChecked(true);
     if (correct) {
-      correctSfx.seekTo(0);
-      correctSfx.play();
+      playCorrect();
     } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      playWrong();
       setTimeout(() => {
         setAnswerChecked(false);
         setIsCorrect(null);

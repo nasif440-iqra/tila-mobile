@@ -5,13 +5,16 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
 import { spacing } from "../../design/tokens";
-import { getLetterAsset, getSFXAsset } from "../../audio/player";
+import {
+  playOnboardingAdvance,
+  playOnboardingComplete,
+  playLetterName,
+  playTap,
+} from "../../audio/player";
 import type { OnboardingDraft } from "../../types/onboarding";
 
 import { FloatingLettersLayer } from "./FloatingLettersLayer";
@@ -38,15 +41,8 @@ export function OnboardingFlow() {
   const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
   const letterRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Audio players
-  const alifNameAsset = getLetterAsset(1, "name");
-  const alifPlayer = useAudioPlayer(alifNameAsset);
-  const advanceSfx = useAudioPlayer(getSFXAsset("onboarding_advance"));
-  const completeSfx = useAudioPlayer(getSFXAsset("onboarding_complete"));
-
   function goNext() {
-    advanceSfx.seekTo(0);
-    advanceSfx.play();
+    playOnboardingAdvance();
     setStep((s) => s + 1);
   }
 
@@ -63,17 +59,16 @@ export function OnboardingFlow() {
   }, [step]);
 
   const handlePlayAudio = useCallback(async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    alifPlayer.seekTo(0);
-    alifPlayer.play();
+    playTap();
+    playLetterName(1);
     setHasPlayedAudio(true);
-  }, [alifPlayer]);
+  }, []);
 
   async function handleFinish() {
     if (finishing) return;
     setFinishing(true);
     try {
-      completeSfx.play();
+      playOnboardingComplete();
     } catch {}
 
     try {

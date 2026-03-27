@@ -1,9 +1,9 @@
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
 import { typography, spacing, radii, fontFamilies } from "../../../design/tokens";
+import { playTap } from "../../../audio/player";
 
 const startingPointOptions = [
   { label: "I'm completely new", value: "new" as const },
@@ -26,7 +26,7 @@ function OptionCard({
   return (
     <Pressable
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        playTap();
         onPress();
       }}
       style={[

@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "../theme";
 
 interface HearButtonProps {
-  onPlay: () => Promise<void>;
+  onPlay: () => void | Promise<void>;
   size?: number;
   accessibilityLabel?: string;
 }

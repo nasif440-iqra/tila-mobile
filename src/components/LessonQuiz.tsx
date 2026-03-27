@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useAudioPlayer } from "expo-audio";
-import * as Haptics from "expo-haptics";
 import { useColors } from "../design/theme";
 import { typography, spacing } from "../design/tokens";
-import { getSFXAsset, getLetterAsset } from "../audio/player";
+import {
+  playCorrect,
+  playWrong,
+  playLetterName,
+  playLetterSound,
+} from "../audio/player";
 import { getLetter } from "../data/letters";
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";
 import type { Lesson } from "../types/lesson";
@@ -65,31 +68,20 @@ export function LessonQuiz({
     originalQCount.current
   );
 
-  // Audio players for SFX
-  const correctSFX = useAudioPlayer(getSFXAsset("correct"));
-  const wrongSFX = useAudioPlayer(getSFXAsset("wrong"));
-
   // Determine audio type for the current question's letter
   const isSoundQuestion =
     currentQuestion?.type === "audio_to_letter" ||
     currentQuestion?.type === "letter_to_sound" ||
     currentQuestion?.type === "contrast_audio";
 
-  const audioType: "sound" | "name" = isSoundQuestion ? "sound" : "name";
-
-  // Audio player for target letter (for audio-type questions)
-  const targetAudioSource =
-    currentQuestion?.hasAudio && currentQuestion?.targetId
-      ? getLetterAsset(currentQuestion.targetId, audioType)
-      : null;
-  const targetPlayer = useAudioPlayer(targetAudioSource);
-
-  const playTargetAudio = useCallback(async () => {
-    if (targetPlayer) {
-      await targetPlayer.seekTo(0);
-      targetPlayer.play();
+  const playTargetAudio = useCallback(() => {
+    if (!currentQuestion?.hasAudio || !currentQuestion?.targetId) return;
+    if (isSoundQuestion) {
+      playLetterSound(currentQuestion.targetId);
+    } else {
+      playLetterName(currentQuestion.targetId);
     }
-  }, [targetPlayer]);
+  }, [currentQuestion?.hasAudio, currentQuestion?.targetId, isSoundQuestion]);
 
   // Notify parent when quiz completes
   useEffect(() => {
@@ -118,21 +110,17 @@ export function LessonQuiz({
       setIsCorrect(correct);
 
       if (correct) {
-        correctSFX.seekTo(0);
-        correctSFX.play();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        playCorrect();
 
         // Auto-advance after a brief delay
         setTimeout(() => {
           handleAnswer(opt, true);
         }, 800);
       } else {
-        wrongSFX.seekTo(0);
-        wrongSFX.play();
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        playWrong();
       }
     },
-    [answered, currentQuestion, correctSFX, wrongSFX, handleAnswer]
+    [answered, currentQuestion, handleAnswer]
   );
 
   // Handle "Got it" press on wrong answer panel
