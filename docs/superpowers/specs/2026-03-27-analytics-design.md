@@ -56,7 +56,8 @@ flush()                         — forces PostHog queue flush (use sparingly)
 - Breadcrumbs: navigation transitions + user taps (Sentry's defaults)
 - Performance monitoring: **OFF** for v1 (adds overhead)
 - Sentry user context set to PostHog's `distinct_id` for crash-to-session correlation
-- Will require adding `metro.config.js` for Sentry's source map integration
+- **Required:** Create `metro.config.js` (does not currently exist) with Sentry's metro serializer for debug IDs and source map upload. This is not optional — without it, crash stack traces are minified and unreadable.
+- **Required:** Add `@sentry/react-native/expo` to `app.config.ts` plugins array. The Expo plugin handles automatic bundle/source-map upload during EAS Build.
 
 ### `src/analytics/events.ts` — Event Type Safety
 
@@ -106,6 +107,7 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 
 #### `lesson_started`
 **When:** Quiz begins (questions generated, first question displayed).
+**Implementation:** Add a `lessonStartedRef = useRef(Date.now())` in `app/lesson/[id].tsx` when stage transitions to `"quiz"`. This ref provides real elapsed time for `duration_seconds` on completion/failure. The existing `durationSeconds` was removed from `completeLesson()` in Wave 1 because it was always 0 — this ref replaces it with an actual measurement.
 **Properties:**
 - `lesson_id: number`
 - `phase: number`
@@ -118,7 +120,7 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 - `lesson_id: number`
 - `phase: number`
 - `accuracy: number` — 0.0 to 1.0
-- `duration_seconds: number`
+- `duration_seconds: number` — real elapsed time from `lessonStartedRef` to quiz completion
 - `total_questions: number`
 - `streak_peak: number` — highest streak during the lesson
 
@@ -128,7 +130,7 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 - `lesson_id: number`
 - `phase: number`
 - `accuracy: number`
-- `duration_seconds: number`
+- `duration_seconds: number` — real elapsed time from `lessonStartedRef` to quiz completion
 - `total_questions: number`
 
 #### `phase_completed`
@@ -142,6 +144,7 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 
 #### `letter_audio_played`
 **When:** User taps a HearButton to play letter audio.
+**Insertion point:** Fire at the tap site (the component calling the audio function), NOT inside `src/audio/player.ts`. The audio layer does not know screen context — threading context into the audio API would pollute its interface. The tap handler already knows the letter ID, audio type, and which screen it's on.
 **Properties:**
 - `letter_id: number`
 - `audio_type: string` — 'name' | 'sound'
@@ -158,7 +161,7 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 ### Retention Events
 
 #### `return_welcome_shown`
-**When:** The return hadith screen is displayed after a gap in practice.
+**When:** The return-welcome screen mounts (fires in `app/return-welcome.tsx` on component mount, NOT on the redirect decision in the home tab). Tracking at the redirect point would overcount attempted redirects vs confirmed views.
 **Properties:**
 - `days_since_last_practice: number`
 - `current_wird: number` — streak count at time of return
@@ -194,29 +197,29 @@ Analytics calls are added in **three passes**, each independently shippable:
 - Root layout `useEffect` — `app_opened` on mount
 
 ### Pass 2: Lesson Flow
-- `app/lesson/[id].tsx` — `lesson_started` when quiz begins, `lesson_completed` / `lesson_failed` on result
+- `app/lesson/[id].tsx` — add `lessonStartedRef` when stage transitions to `"quiz"`, `lesson_started` fires at that point, `lesson_completed` / `lesson_failed` on result with real elapsed time
 - `src/engine/mastery.js` or the mastery update call site — `mastery_state_changed` when state transitions
 - `app/phase-complete.tsx` — `phase_completed`
 
 ### Pass 3: Retention + Audio
-- `app/(tabs)/index.tsx` — `return_welcome_shown` when redirect fires
-- `src/audio/player.ts` — `letter_audio_played` in `playLetterName()` / `playLetterSound()`
+- `app/return-welcome.tsx` — `return_welcome_shown` on component mount (not the redirect in home tab)
+- HearButton tap handlers in quiz/onboarding components — `letter_audio_played` at the tap site with screen context (not in `src/audio/player.ts`)
 
 ---
 
 ## EAS / Build Configuration
 
-### Sentry Setup
-- Add `@sentry/react-native` dependency
-- Add Sentry Expo config plugin to `app.config.ts`:
-  ```typescript
-  plugins: [
-    ['@sentry/react-native/expo', { organization: '...', project: '...' }]
-  ]
-  ```
-- Create `metro.config.js` (does not currently exist) with Sentry's metro serializer for source maps
-- Set `SENTRY_AUTH_TOKEN` as EAS build secret
-- Set `SENTRY_DSN` as environment variable (can be checked into code — it's a public ingest URL)
+### Sentry Setup (all steps required)
+1. Add `@sentry/react-native` dependency
+2. Add Sentry Expo config plugin to `app.config.ts` plugins array:
+   ```typescript
+   plugins: [
+     ['@sentry/react-native/expo', { organization: '...', project: '...' }]
+   ]
+   ```
+3. Create `metro.config.js` at repo root (does not currently exist). Must include Sentry's metro serializer for debug IDs and source map upload. Without this, production crash stack traces are minified and useless.
+4. Set `SENTRY_AUTH_TOKEN` as EAS build secret (required for source map upload during `eas build`)
+5. Set `SENTRY_DSN` as environment variable (can be checked into code — it's a public ingest URL)
 
 ### PostHog Setup
 - Add `posthog-react-native` dependency
