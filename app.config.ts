@@ -25,7 +25,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   android: {
     adaptiveIcon: {
-      foregroundImage: "./assets/images/adaptive-icon.png",
+      foregroundImage: "./assets/images/android-icon-foreground.png",
       backgroundColor: "#F8F6F0",
     },
     package: "com.tila.app",
@@ -37,6 +37,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-sqlite",
     "expo-audio",
     "expo-secure-store",
+    "expo-asset",
   ],
   extra: {
     eas: {
