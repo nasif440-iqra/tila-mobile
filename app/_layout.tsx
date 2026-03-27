@@ -64,6 +64,8 @@ export default function RootLayout() {
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: colors.bg },
+            animation: "fade",
+            animationDuration: 300,
           }}
         />
       </DatabaseProvider>

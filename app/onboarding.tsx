@@ -397,13 +397,17 @@ export default function OnboardingScreen() {
     try {
       completeSfx.play();
     } catch {}
-    await updateProfile({
+    // Save profile in background — don't block navigation
+    updateProfile({
       onboarded: true,
       onboardingVersion: 2,
       startingPoint: startingPoint,
       commitmentComplete: true,
-    });
-    router.replace("/(tabs)");
+    }).catch(() => {});
+    // Small delay so audio starts playing before screen transition
+    setTimeout(() => {
+      router.replace("/(tabs)");
+    }, 150);
   }
 
   // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)
