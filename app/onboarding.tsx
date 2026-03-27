@@ -61,7 +61,7 @@ const floatingLetters = [
 const startingPointOptions = [
   { label: "I'm completely new", value: "new" as const },
   { label: "I know a few letters", value: "some_arabic" as const },
-  { label: "I used to learn, but forgot a lot", value: "some_arabic" as const },
+  { label: "I used to learn, but forgot a lot", value: "rusty" as const },
   { label: "I can read a little, but want stronger basics", value: "can_read" as const },
 ];
 
@@ -118,7 +118,6 @@ function FloatingLetter({
 
   return (
     <Animated.Text
-      entering={FadeInDown.delay(index * 60).duration(800)}
       style={[
         {
           position: "absolute",
@@ -403,7 +402,10 @@ export default function OnboardingScreen() {
       startingPoint: startingPoint,
       commitmentComplete: true,
     });
-    router.replace("/(tabs)");
+    // Brief pause so the completion SFX plays before transition
+    setTimeout(() => {
+      router.replace("/(tabs)");
+    }, 600);
   }
 
   // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)

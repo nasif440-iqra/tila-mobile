@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
   id INTEGER PRIMARY KEY DEFAULT 1,
   onboarded INTEGER NOT NULL DEFAULT 0 CHECK (onboarded IN (0, 1)),
   onboarding_version INTEGER NOT NULL DEFAULT 0 CHECK (onboarding_version >= 0),
-  starting_point TEXT CHECK (starting_point IN ('new', 'some_arabic', 'can_read')),
+  starting_point TEXT CHECK (starting_point IN ('new', 'some_arabic', 'rusty', 'can_read')),
   motivation TEXT CHECK (motivation IN ('quran', 'prayer', 'general')),
   daily_goal INTEGER CHECK (daily_goal >= 1),
   commitment_complete INTEGER NOT NULL DEFAULT 0 CHECK (commitment_complete IN (0, 1)),
