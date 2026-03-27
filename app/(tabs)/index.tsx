@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import Svg, { Path } from "react-native-svg";
@@ -101,6 +101,14 @@ export default function HomeScreen() {
   const progress = useProgress();
   const { habit } = useHabit();
   const today = getTodayDateString();
+
+  // Redirect to onboarding if user hasn't completed it yet
+  const onboarded = progress.onboarded ?? false;
+  useEffect(() => {
+    if (!progress.loading && !onboarded) {
+      router.replace("/onboarding" as any);
+    }
+  }, [progress.loading, onboarded]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery;
