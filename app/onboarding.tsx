@@ -328,6 +328,7 @@ export default function OnboardingScreen() {
   const { updateProfile } = useProgress();
 
   const [step, setStep] = useState(0);
+  const [finishing, setFinishing] = useState(false);
   const [startingPoint, setStartingPoint] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerChecked, setAnswerChecked] = useState(false);
@@ -394,27 +395,37 @@ export default function OnboardingScreen() {
   }
 
   async function handleFinish() {
+    if (finishing) return;
+    setFinishing(true);
     try {
       completeSfx.play();
     } catch {}
-    // Save profile in background — don't block navigation
     updateProfile({
       onboarded: true,
       onboardingVersion: 2,
       startingPoint: startingPoint,
       commitmentComplete: true,
     }).catch(() => {});
-    // Small delay so audio starts playing before screen transition
+    // Wait for fade-out to complete before navigating
     setTimeout(() => {
       router.replace("/(tabs)");
-    }, 150);
+    }, 500);
   }
 
   // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)
   const showProgressBar = step > 0 && step !== 4 && step !== 6 && step < 7;
 
+  // Fade-out opacity when finishing
+  const fadeOpacity = useSharedValue(1);
+  useEffect(() => {
+    if (finishing) {
+      fadeOpacity.value = withTiming(0, { duration: 400 });
+    }
+  }, [finishing]);
+  const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeOpacity.value }));
+
   return (
-    <View style={[styles.root, { backgroundColor: colors.bgWarm }]}>
+    <Animated.View style={[styles.root, { backgroundColor: colors.bgWarm }, fadeStyle]}>
       {/* Floating Arabic letters — visible on steps 0-2 */}
       {step <= 2 && <FloatingLettersLayer color={colors.primary} />}
 
@@ -1008,7 +1019,7 @@ export default function OnboardingScreen() {
           </Animated.View>
         )}
       </ScrollView>
-    </View>
+    </Animated.View>
   );
 }
 
