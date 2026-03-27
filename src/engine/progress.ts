@@ -5,7 +5,6 @@
  */
 
 import type { SQLiteDatabase } from 'expo-sqlite';
-import type { SQLiteBindValue } from 'expo-sqlite/build/NativeStatement';
 import { SEED_DEFAULTS } from '../db/schema';
 
 // ── State Shape Types ──────────────────────────────────────────────
@@ -290,7 +289,7 @@ export async function saveUserProfile(
   profile: UserProfileUpdate
 ): Promise<void> {
   const sets: string[] = [];
-  const values: SQLiteBindValue[] = [];
+  const values: any[] = [];
 
   if (profile.onboarded !== undefined) {
     sets.push('onboarded = ?');
@@ -320,7 +319,7 @@ export async function saveUserProfile(
   if (sets.length === 0) return;
 
   sets.push("updated_at = datetime('now')");
-  await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, ...values);
+  await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, values);
 }
 
 // ── Reset ──────────────────────────────────────────────────────────
