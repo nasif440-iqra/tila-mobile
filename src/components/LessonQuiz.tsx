@@ -166,11 +166,8 @@ export function LessonQuiz({
         correctSFX.play();
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
-        // Auto-advance after a brief delay
+        // Auto-advance after a brief delay — use already-found opt, not stale closure
         setTimeout(() => {
-          const opt = currentQuestion.options.find(
-            (o: any) => o.id === optionId
-          );
           handleAnswer(opt, true);
         }, 800);
       } else {
