@@ -20,10 +20,11 @@ interface LessonIntroProps {
 export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
   const colors = useColors();
 
-  // Resolve the first target letter for display and audio
+  // Resolve all target letters for display
   const letterIds: number[] = lesson.teachIds ?? lesson.letterIds ?? [];
+  const letters = letterIds.map(id => getLetter(id)).filter(Boolean);
   const primaryId = letterIds[0];
-  const letter = primaryId ? getLetter(primaryId) : undefined;
+  const letter = letters[0];
 
   // Determine audio type based on phase/mode
   const isSound =
@@ -67,31 +68,38 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
         entering={FadeIn.delay(150).duration(500)}
         style={styles.centerContent}
       >
-        {/* Letter circle */}
-        {letter && (
-          <View
-            style={[
-              styles.letterCircle,
-              { backgroundColor: colors.primarySoft },
-            ]}
-          >
-            <ArabicText size="display" color={colors.primaryDark}>
-              {letter.letter}
-            </ArabicText>
+        {/* Letter circles */}
+        {letters.length > 0 && (
+          <View style={styles.lettersRow}>
+            {letters.map((l: any) => (
+              <View key={l.id} style={styles.letterItem}>
+                <View
+                  style={[
+                    styles.letterCircle,
+                    letters.length > 2
+                      ? styles.letterCircleSmall
+                      : undefined,
+                    { backgroundColor: colors.primarySoft },
+                  ]}
+                >
+                  <ArabicText
+                    size={letters.length > 2 ? "large" : "display"}
+                    color={colors.primaryDark}
+                  >
+                    {l.letter}
+                  </ArabicText>
+                </View>
+                <Text
+                  style={[
+                    typography.bodySmall,
+                    { color: colors.textSoft, marginTop: spacing.xs },
+                  ]}
+                >
+                  {l.name}
+                </Text>
+              </View>
+            ))}
           </View>
-        )}
-
-        {/* Letter name */}
-        {letter && (
-          <Text
-            style={[
-              typography.bodyLarge,
-              styles.letterName,
-              { color: colors.textSoft },
-            ]}
-          >
-            {letter.name}
-          </Text>
         )}
 
         {/* Hear button */}
@@ -166,16 +174,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  lettersRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  letterItem: {
+    alignItems: "center",
+  },
   letterCircle: {
     width: 120,
     height: 120,
     borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.lg,
   },
-  letterName: {
-    marginBottom: spacing.lg,
+  letterCircleSmall: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
   },
   hearButtonWrapper: {
     marginBottom: spacing.xl,
