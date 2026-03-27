@@ -21,6 +21,7 @@ import {
   Lora_400Regular_Italic,
 } from "@expo-google-fonts/lora";
 import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme";
+import { DatabaseProvider } from "../src/db/provider";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
@@ -57,12 +58,14 @@ export default function RootLayout() {
 
   return (
     <ThemeContext.Provider value={{ colors, mode }}>
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: colors.bg },
-        }}
-      />
+      <DatabaseProvider>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.bg },
+          }}
+        />
+      </DatabaseProvider>
     </ThemeContext.Provider>
   );
 }
