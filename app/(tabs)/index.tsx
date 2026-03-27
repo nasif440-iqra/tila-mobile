@@ -24,6 +24,8 @@ import {
 } from "../../src/engine/selectors";
 import { isLessonUnlocked } from "../../src/engine/unlock";
 import { getTodayDateString } from "../../src/engine/dateUtils";
+import { resetDatabase } from "../../src/db/client";
+import { Alert } from "react-native";
 
 // ── Phase metadata ──
 
@@ -162,7 +164,28 @@ export default function HomeScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <Text style={[styles.appName, { color: colors.text }]}>tila</Text>
-          {currentWird > 0 && <StreakBadge count={currentWird} colors={colors} />}
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            {currentWird > 0 && <StreakBadge count={currentWird} colors={colors} />}
+            {/* DEV ONLY — remove before shipping */}
+            <Pressable
+              onPress={() => {
+                Alert.alert("Reset Progress", "This will erase all progress and restart onboarding.", [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Reset",
+                    style: "destructive",
+                    onPress: async () => {
+                      await resetDatabase();
+                      progress.refresh();
+                    },
+                  },
+                ]);
+              }}
+              style={{ backgroundColor: colors.dangerLight, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+            >
+              <Text style={{ color: colors.danger, fontSize: 11, fontWeight: "600" }}>DEV RESET</Text>
+            </Pressable>
+          </View>
         </View>
 
         {/* ── Hero Card ── */}
