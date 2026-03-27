@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDatabase } from "../db/provider";
-import { loadProgress, saveHabit, type HabitState } from "../engine/progress";
+import { saveHabit, type HabitState } from "../engine/progress";
+import { loadHabit } from "../engine/habit";
 import { getTodayDateString, getDayDifference } from "../engine/dateUtils";
 
 export function useHabit() {
@@ -8,8 +9,8 @@ export function useHabit() {
   const [habit, setHabit] = useState<HabitState | null>(null);
 
   const refresh = useCallback(async () => {
-    const data = await loadProgress(db);
-    setHabit(data.habit);
+    const data = await loadHabit(db);
+    setHabit(data);
   }, [db]);
 
   useEffect(() => {

@@ -62,74 +62,58 @@ import type { QuestionAttempt } from '../types/quiz';
 // ── Reads ──────────────────────────────────────────────────────────
 
 export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
-  // Completed lessons
-  const lessonRows = await db.getAllAsync<{ lesson_id: number }>(
-    'SELECT DISTINCT lesson_id FROM lesson_attempts WHERE passed = 1 ORDER BY lesson_id'
-  );
-  const completedLessonIds = lessonRows.map((r) => r.lesson_id);
+  const [lessonRows, entityRows, skillRows, confusionRows, habitRow, profileRow] =
+    await Promise.all([
+      db.getAllAsync<{ lesson_id: number }>(
+        'SELECT DISTINCT lesson_id FROM lesson_attempts WHERE passed = 1 ORDER BY lesson_id'
+      ),
+      db.getAllAsync<{
+        entity_key: string; correct: number; attempts: number;
+        last_seen: string | null; next_review: string | null;
+        interval_days: number; session_streak: number;
+      }>('SELECT entity_key, correct, attempts, last_seen, next_review, interval_days, session_streak FROM mastery_entities'),
+      db.getAllAsync<{
+        skill_key: string; correct: number; attempts: number; last_seen: string | null;
+      }>('SELECT skill_key, correct, attempts, last_seen FROM mastery_skills'),
+      db.getAllAsync<{
+        confusion_key: string; count: number; last_seen: string | null;
+      }>('SELECT confusion_key, count, last_seen FROM mastery_confusions'),
+      db.getFirstAsync<{
+        last_practice_date: string | null; current_wird: number;
+        longest_wird: number; today_lesson_count: number;
+      }>('SELECT last_practice_date, current_wird, longest_wird, today_lesson_count FROM habit WHERE id = 1'),
+      db.getFirstAsync<{
+        onboarded: number; onboarding_version: number;
+        starting_point: string | null; motivation: string | null;
+        daily_goal: number | null; commitment_complete: number;
+        wird_intro_seen: number; post_lesson_onboard_seen: number;
+        return_hadith_last_shown: string | null;
+      }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown FROM user_profile WHERE id = 1'),
+    ]);
 
-  // Mastery entities
-  const entityRows = await db.getAllAsync<{
-    entity_key: string;
-    correct: number;
-    attempts: number;
-    last_seen: string | null;
-    next_review: string | null;
-    interval_days: number;
-    session_streak: number;
-  }>('SELECT entity_key, correct, attempts, last_seen, next_review, interval_days, session_streak FROM mastery_entities');
+  // Transform rows to domain types
+  const completedLessonIds = lessonRows.map((r) => r.lesson_id);
 
   const entities: Record<string, EntityState> = {};
   for (const row of entityRows) {
     entities[row.entity_key] = {
-      correct: row.correct,
-      attempts: row.attempts,
-      lastSeen: row.last_seen,
-      nextReview: row.next_review,
-      intervalDays: row.interval_days,
-      sessionStreak: row.session_streak,
+      correct: row.correct, attempts: row.attempts,
+      lastSeen: row.last_seen, nextReview: row.next_review,
+      intervalDays: row.interval_days, sessionStreak: row.session_streak,
     };
   }
-
-  // Mastery skills
-  const skillRows = await db.getAllAsync<{
-    skill_key: string;
-    correct: number;
-    attempts: number;
-    last_seen: string | null;
-  }>('SELECT skill_key, correct, attempts, last_seen FROM mastery_skills');
 
   const skills: Record<string, SkillState> = {};
   for (const row of skillRows) {
     skills[row.skill_key] = {
-      correct: row.correct,
-      attempts: row.attempts,
-      lastSeen: row.last_seen,
+      correct: row.correct, attempts: row.attempts, lastSeen: row.last_seen,
     };
   }
-
-  // Mastery confusions
-  const confusionRows = await db.getAllAsync<{
-    confusion_key: string;
-    count: number;
-    last_seen: string | null;
-  }>('SELECT confusion_key, count, last_seen FROM mastery_confusions');
 
   const confusions: Record<string, ConfusionState> = {};
   for (const row of confusionRows) {
-    confusions[row.confusion_key] = {
-      count: row.count,
-      lastSeen: row.last_seen,
-    };
+    confusions[row.confusion_key] = { count: row.count, lastSeen: row.last_seen };
   }
-
-  // Habit
-  const habitRow = await db.getFirstAsync<{
-    last_practice_date: string | null;
-    current_wird: number;
-    longest_wird: number;
-    today_lesson_count: number;
-  }>('SELECT last_practice_date, current_wird, longest_wird, today_lesson_count FROM habit WHERE id = 1');
 
   const habit: HabitState = habitRow
     ? {
@@ -140,26 +124,12 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
       }
     : { lastPracticeDate: null, currentWird: 0, longestWird: 0, todayLessonCount: 0 };
 
-  // User profile
-  const profileRow = await db.getFirstAsync<{
-    onboarded: number;
-    onboarding_version: number;
-    starting_point: string | null;
-    motivation: string | null;
-    daily_goal: number | null;
-    commitment_complete: number;
-    wird_intro_seen: number;
-    post_lesson_onboard_seen: number;
-    return_hadith_last_shown: string | null;
-  }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown FROM user_profile WHERE id = 1');
-
   const onboarded = profileRow ? profileRow.onboarded === 1 : false;
   const onboardingVersion = profileRow ? profileRow.onboarding_version : 0;
   const onboardingStartingPoint = profileRow ? profileRow.starting_point : null;
   const onboardingMotivation = profileRow ? profileRow.motivation : null;
   const onboardingDailyGoal = profileRow ? profileRow.daily_goal : null;
   const onboardingCommitmentComplete = profileRow ? profileRow.commitment_complete === 1 : false;
-
   const wirdIntroSeen = profileRow ? profileRow.wird_intro_seen === 1 : false;
   const postLessonOnboardSeen = profileRow ? profileRow.post_lesson_onboard_seen === 1 : false;
   const returnHadithLastShown = profileRow ? profileRow.return_hadith_last_shown : null;
@@ -167,16 +137,9 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
   return {
     completedLessonIds,
     mastery: { entities, skills, confusions },
-    habit,
-    onboarded,
-    onboardingStartingPoint,
-    onboardingMotivation,
-    onboardingDailyGoal,
-    onboardingCommitmentComplete,
-    onboardingVersion,
-    wirdIntroSeen,
-    postLessonOnboardSeen,
-    returnHadithLastShown,
+    habit, onboarded, onboardingStartingPoint, onboardingMotivation,
+    onboardingDailyGoal, onboardingCommitmentComplete, onboardingVersion,
+    wirdIntroSeen, postLessonOnboardSeen, returnHadithLastShown,
   };
 }
 
