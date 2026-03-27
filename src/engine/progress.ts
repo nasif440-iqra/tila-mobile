@@ -55,7 +55,7 @@ export interface ProgressState {
   returnHadithLastShown: string | null;
 }
 
-// Re-export QuestionAttempt from canonical location for backwards compatibility
+// Re-export for backwards compatibility; local import needed for function signatures
 export type { QuestionAttempt } from '../types/quiz';
 import type { QuestionAttempt } from '../types/quiz';
 

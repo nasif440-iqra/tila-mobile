@@ -59,7 +59,7 @@ export function mapQuizResultsToAttempts(results: QuizResultItem[]): QuestionAtt
     targetEntity: r.targetId != null ? String(r.targetId) : null,
     correct: r.correct,
     selectedOption: r.selectedId ?? null,
-    correctOption: r.correctId ?? null,
+    correctOption: r.correctId || null,
     responseTimeMs: r.responseTimeMs ?? null,
   }));
 }

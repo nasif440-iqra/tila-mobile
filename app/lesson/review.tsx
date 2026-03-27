@@ -11,6 +11,8 @@ import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { buildReviewLessonPayload } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
+import { mapQuizResultsToAttempts } from '../../src/types/quiz';
+import type { QuizResultItem } from '../../src/types/quiz';
 
 // ── Types ──
 
@@ -19,7 +21,7 @@ type Stage = "quiz" | "summary";
 interface QuizResults {
   correct: number;
   total: number;
-  questions: any[];
+  questions: QuizResultItem[];
   accuracy: number;
   passed: boolean;
 }
@@ -47,7 +49,7 @@ export default function ReviewScreen() {
   // ── Handlers ──
 
   const handleQuizComplete = useCallback(
-    async (results: { correct: number; total: number; questions: any[] }) => {
+    async (results: { correct: number; total: number; questions: QuizResultItem[] }) => {
       const accuracy = results.total > 0 ? results.correct / results.total : 0;
 
       // Review sessions always pass
@@ -55,12 +57,12 @@ export default function ReviewScreen() {
 
       // Save to database — review uses id "review" but completeLesson expects a number,
       // so we pass 0 as a sentinel for review sessions
+      const attempts = mapQuizResultsToAttempts(results.questions);
       await progress.completeLesson(
         0, // review session sentinel
         accuracy,
         passed,
-        0, // durationSeconds — not tracked yet
-        results.questions
+        attempts
       );
 
       // Record practice for habit/wird
