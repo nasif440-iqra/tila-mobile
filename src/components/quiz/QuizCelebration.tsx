@@ -28,7 +28,7 @@ export function QuizCelebration({ onDismiss }: QuizCelebrationProps) {
           Keep going!
         </Text>
         <Text style={[styles.midCelebSubtitle, { color: colors.textSoft }]}>
-          You're halfway there
+          You{"\u2019"}re halfway there
         </Text>
         <Text style={[styles.midCelebTap, { color: colors.textMuted }]}>
           Tap to continue

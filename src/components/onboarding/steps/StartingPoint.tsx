@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
-import { typography, spacing, radii, fontFamilies } from "../../../design/tokens";
+import { typography, spacing, radii } from "../../../design/tokens";
 import { playTap } from "../../../audio/player";
 
 const startingPointOptions = [

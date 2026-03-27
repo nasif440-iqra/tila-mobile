@@ -74,7 +74,7 @@ export function Finish({
           { color: colors.text, zIndex: 1 },
         ]}
       >
-        You've already begun
+        You{"\u2019"}ve already begun
       </Animated.Text>
 
       <View style={{ height: spacing.md }} />
@@ -87,7 +87,7 @@ export function Finish({
           { color: colors.textSoft, zIndex: 1 },
         ]}
       >
-        Now let's take your first real lesson.
+        Now let{"\u2019"}s take your first real lesson.
       </Animated.Text>
 
       <View style={styles.spacerXl} />

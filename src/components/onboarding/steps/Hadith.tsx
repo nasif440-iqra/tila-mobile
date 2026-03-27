@@ -3,7 +3,7 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 import Svg, { Path } from "react-native-svg";
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
-import { spacing, radii, fontFamilies } from "../../../design/tokens";
+import { spacing, fontFamilies } from "../../../design/tokens";
 import { WarmGlow } from "../WarmGlow";
 
 function ArchOutline({ color }: { color: string }) {

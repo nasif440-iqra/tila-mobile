@@ -8,7 +8,6 @@ import Animated, {
 import { router } from "expo-router";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
-import { spacing } from "../../design/tokens";
 import {
   playOnboardingAdvance,
   playOnboardingComplete,
@@ -98,7 +97,7 @@ export function OnboardingFlow() {
     if (finishing) {
       fadeOpacity.value = withTiming(0, { duration: 400 });
     }
-  }, [finishing]);
+  }, [finishing, fadeOpacity]);
   const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeOpacity.value }));
 
   return (
