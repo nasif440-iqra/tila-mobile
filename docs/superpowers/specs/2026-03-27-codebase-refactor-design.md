@@ -47,7 +47,7 @@ Result: learning analytics are garbage. Every question_attempts row only has `qu
 
 #### Fix
 - Define `QuestionAttempt` type in `src/types/quiz.ts` matching the DB contract exactly
-- Add a mapper in `useLessonQuiz` that transforms quiz results into proper `QuestionAttempt` objects before returning them:
+- Add a **boundary adapter** (mapper function) that transforms quiz results into `QuestionAttempt` objects at the persistence boundary. The UI layer keeps its own result shape (`targetId`, `selectedId`, quiz metadata) — the mapper translates at the `completeLesson` call site. Do not collapse the UI shape and the DB shape into one "do everything" type, or you will drag persistence concerns into render logic:
   - `targetId` → `targetEntity` (e.g., `"letter:1"`)
   - `selectedId` → `selectedOption`
   - Derive `skillBucket` from `questionType` (the question generators already know the skill — thread it through)
@@ -71,10 +71,12 @@ Add a small Vitest test that verifies `useLessonQuiz` result objects satisfy the
 #### Onboarding (`app/onboarding.tsx`)
 - Replace `.catch(() => {})` on `handleFinish()` with real error handling:
   - Wrap `updateProfile(...)` in try/catch
-  - On failure: keep the user on the final onboarding step, show a visible error message (e.g., a red text banner), and provide a retry button
-  - Do NOT navigate away if persistence fails
+  - On failure: set `finishing` back to `false`, do NOT trigger fade-out completion animation, do NOT schedule time-based navigation
+  - Show a visible error message (e.g., a red text banner) and provide a retry button
+  - Do NOT navigate away if persistence fails — the user stays on the final step
   - Log the error for debugging
-- This is not "add logging." This is "the user sees the failure and can retry."
+  - Navigation only happens AFTER `updateProfile` succeeds — not on a timer that fires regardless
+- This is not "add logging." This is "the user sees the failure and can retry." The current code sets `finishing=true` before the save and navigates on a timeout, which means a failed save still moves the user forward into a broken state.
 
 #### Lesson flow — `durationSeconds` cleanup
 - This is a **full API cleanup**, not just a call-site fix:
@@ -91,10 +93,10 @@ The redirect useEffect (lines 109-127) reads `habit`, `today`, and `(progress as
 
 **Fix:** Add the missing dependencies to the array. Specifically: `habit?.lastPracticeDate`, `today`, and the `returnHadithLastShown` value. Also replace `(progress as any).returnHadithLastShown` with a properly typed field on `ProgressState`.
 
-#### Home screen typed route navigation
-The same file uses `router.replace("/onboarding" as any)` and `router.push(\`/lesson/${lessonId}\` as any)`. Expo Router typed routes are enabled in `app.config.ts`, but the `as any` casts bypass them completely.
+#### Typed route navigation — all touched files, not just Home
+Home uses `router.replace("/onboarding" as any)` and `router.push(\`/lesson/${lessonId}\` as any)`. But the lesson follow-up flow also uses `as any` for `"/post-lesson-onboard"` and `"/phase-complete?phase=..."` navigation. Expo Router typed routes are enabled in `app.config.ts`, but `as any` casts bypass them in every core navigation path.
 
-**Fix:** Remove `as any` casts and use proper typed route paths. If the generated route types don't cover these paths, fix the route structure — don't cast around it.
+**Fix:** Remove `as any` casts from route navigation in all files touched by Wave 1 — Home, lesson/[id].tsx, and any transient screen triggers. Use proper typed route paths. If the generated route types don't cover these paths, fix the route structure — don't cast around it.
 
 ### 1.4 Add Tooling
 
@@ -364,20 +366,37 @@ Route files (`app/`) become thin wrappers that import from `src/components/`.
 
 ---
 
-## Review Checkpoint
+## Wave 1 Done Criteria (Hard Gate)
 
-After Wave 1 is complete, pause for review before starting Wave 2. Verify:
-- Quiz result mapper produces valid `QuestionAttempt` objects (contract test passes)
-- `saveQuestionAttempts` receives all required fields (no more NULL analytics)
-- DEV RESET gone from Home
-- Dead buttons gone from Progress
-- Dead Pressable wrappers gone from letter grid
-- Onboarding finish has visible error + retry
-- `durationSeconds` removed from app code API
-- Home useEffect has correct dependency array (no stale closures)
-- Home route navigation uses typed routes (no `as any` casts)
-- `npm run lint`, `npm run typecheck`, `npm run validate` all execute
-- `useHabit` no longer calls `loadProgress()`
-- `loadProgress()` uses `Promise.all` instead of sequential awaits
-- Home screen still renders correctly with both hooks
-- Contract tests pass for quiz results, onboarding persistence, and data loading shapes
+Wave 2 does NOT start until every item below is true. These are binary — not subjective.
+
+**Data integrity:**
+- [ ] Quiz result boundary adapter produces valid `QuestionAttempt` objects with all 7 fields populated
+- [ ] Contract test for `saveQuestionAttempts` passes — no NULL analytics for `targetEntity`, `selectedOption`, `skillBucket`, `correctOption`, `responseTimeMs`
+- [ ] Contract test for onboarding persistence passes — `handleFinish` writes correct fields
+- [ ] Contract test for `loadProgress` / `loadHabit` passes — returns expected shapes
+
+**Prototype leakage removed:**
+- [ ] DEV RESET button and `resetDatabase()` import gone from Home
+- [ ] "Export Backup" / "Import Backup" buttons gone from Progress
+- [ ] Dead `<Pressable>` wrappers gone from letter mastery grid
+- [ ] Onboarding `handleFinish` has visible error + retry, `finishing` resets on failure, navigation only fires after successful save
+
+**Correctness bugs fixed:**
+- [ ] Home useEffect dependency array includes `habit?.lastPracticeDate`, `today`, and `returnHadithLastShown`
+- [ ] No `as any` remains in route navigation across all touched files (Home, lesson/[id].tsx, transient screen triggers)
+- [ ] `(progress as any).returnHadithLastShown` replaced with typed `ProgressState` field
+
+**API cleanup:**
+- [ ] `durationSeconds` removed from all call sites, hook signature, and persistence function
+- [ ] `useHabit` does not import or call `loadProgress`
+- [ ] `loadProgress()` uses `Promise.all` instead of sequential awaits
+
+**Tooling:**
+- [ ] `npm run lint` executes
+- [ ] `npm run typecheck` executes
+- [ ] `npm run validate` executes (runs both)
+
+**Smoke check:**
+- [ ] Home screen renders correctly with both hooks
+- [ ] All 3 contract test files pass via `npm test`
