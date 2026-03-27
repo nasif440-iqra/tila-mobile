@@ -402,3 +402,49 @@ export function mergeQuizResultsIntoMastery(mastery, quizResults, today) {
 
   return { entities, skills, confusions };
 }
+
+// ── Migration helpers (ported from web progress.js) ──
+
+/**
+ * Create the empty v3 mastery shape.
+ */
+export function emptyMastery() {
+  return {
+    entities: {},
+    skills: {},
+    confusions: {},
+  };
+}
+
+/**
+ * Convert flat numeric-keyed progress to entity-keyed progress.
+ */
+export function migrateFlatProgressToEntities(flatProgress) {
+  if (!flatProgress || typeof flatProgress !== "object") return {};
+  const entities = {};
+  for (const [rawId, entry] of Object.entries(flatProgress)) {
+    if (!entry || typeof entry !== "object") continue;
+    const numId = parseInt(rawId, 10);
+    if (!isNaN(numId)) {
+      entities[`letter:${numId}`] = { ...entry };
+    } else if (typeof rawId === "string" && rawId.includes("-")) {
+      entities[`combo:${rawId}`] = { ...entry };
+    }
+  }
+  return entities;
+}
+
+/**
+ * Build a flat progress map from mastery.entities for backward-compat consumers.
+ * Strips the "letter:" prefix so keys are numeric again.
+ */
+export function buildLegacyProgressView(entities) {
+  const flat = {};
+  for (const [key, entry] of Object.entries(entities)) {
+    if (key.startsWith("letter:")) {
+      const numId = parseInt(key.slice(7), 10);
+      if (!isNaN(numId)) flat[numId] = entry;
+    }
+  }
+  return flat;
+}
