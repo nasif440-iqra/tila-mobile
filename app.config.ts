@@ -2,6 +2,7 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  owner: "tila.app",
   name: "Tila",
   slug: "tila",
   version: "1.0.0",
@@ -37,6 +38,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-audio",
     "expo-secure-store",
   ],
+  extra: {
+    eas: {
+      projectId: "c0ef7427-a094-45c2-b7cd-bef77dae665b",
+    },
+  },
   experiments: {
     typedRoutes: true,
   },
