@@ -60,9 +60,9 @@ const floatingLetters = [
 
 const startingPointOptions = [
   { label: "I'm completely new", value: "new" as const },
-  { label: "I know a few letters", value: "some" as const },
-  { label: "I used to learn, but forgot a lot", value: "forgot" as const },
-  { label: "I can read a little, but want stronger basics", value: "basics" as const },
+  { label: "I know a few letters", value: "some_arabic" as const },
+  { label: "I used to learn, but forgot a lot", value: "some_arabic" as const },
+  { label: "I can read a little, but want stronger basics", value: "can_read" as const },
 ];
 
 // ── Floating Letter Component ──

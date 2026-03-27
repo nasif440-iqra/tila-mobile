@@ -319,7 +319,7 @@ export async function saveUserProfile(
   if (sets.length === 0) return;
 
   sets.push("updated_at = datetime('now')");
-  await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, values);
+  await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, ...values);
 }
 
 // ── Reset ──────────────────────────────────────────────────────────
