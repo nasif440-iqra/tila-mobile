@@ -18,9 +18,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   },
   ios: {
     supportsTablet: false,
-    bundleIdentifier: "com.tila.app",
+    bundleIdentifier: "com.tilaapp.tila",
     infoPlist: {
       UIBackgroundModes: [],
+      ITSAppUsesNonExemptEncryption: false,
     },
   },
   android: {
