@@ -15,26 +15,20 @@ interface LessonIntroProps {
   onStart: () => void;
 }
 
-// ── Component ──
+// ── Per-letter card with its own audio player ──
 
-export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
+function LetterCard({
+  letterId,
+  audioType,
+  isSmall,
+}: {
+  letterId: number;
+  audioType: "sound" | "name";
+  isSmall: boolean;
+}) {
   const colors = useColors();
-
-  // Resolve all target letters for display
-  const letterIds: number[] = lesson.teachIds ?? lesson.letterIds ?? [];
-  const letters = letterIds.map(id => getLetter(id)).filter(Boolean);
-  const primaryId = letterIds[0];
-  const letter = letters[0];
-
-  // Determine audio type based on phase/mode
-  const isSound =
-    lesson.lessonMode === "sound" ||
-    lesson.lessonMode === "contrast" ||
-    lesson.lessonMode === "checkpoint";
-  const audioType: "sound" | "name" = isSound ? "sound" : "name";
-
-  // Set up audio player for the primary letter
-  const audioSource = primaryId ? getLetterAsset(primaryId, audioType) : null;
+  const letter = getLetter(letterId);
+  const audioSource = getLetterAsset(letterId, audioType);
   const player = useAudioPlayer(audioSource);
 
   const handlePlay = useCallback(async () => {
@@ -43,10 +37,63 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
     player.play();
   }, [player]);
 
+  if (!letter) return null;
+
+  return (
+    <View style={styles.letterItem}>
+      <View
+        style={[
+          styles.letterCircle,
+          isSmall ? styles.letterCircleSmall : undefined,
+          { backgroundColor: colors.primarySoft },
+        ]}
+      >
+        <ArabicText
+          size={isSmall ? "large" : "display"}
+          color={colors.primaryDark}
+        >
+          {letter.letter}
+        </ArabicText>
+      </View>
+      <Text
+        style={[
+          typography.bodySmall,
+          { color: colors.textSoft, marginTop: spacing.xs },
+        ]}
+      >
+        {letter.name}
+      </Text>
+      {audioSource && (
+        <View style={{ marginTop: spacing.sm }}>
+          <HearButton
+            onPlay={handlePlay}
+            size={36}
+            accessibilityLabel={`Hear ${letter.name}`}
+          />
+        </View>
+      )}
+    </View>
+  );
+}
+
+// ── Main Component ──
+
+export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
+  const colors = useColors();
+
+  const letterIds: number[] = lesson.teachIds ?? lesson.letterIds ?? [];
+  const isSmall = letterIds.length > 2;
+
+  // Determine audio type based on phase/mode
+  const isSound =
+    lesson.lessonMode === "sound" ||
+    lesson.lessonMode === "contrast" ||
+    lesson.lessonMode === "checkpoint";
+  const audioType: "sound" | "name" = isSound ? "sound" : "name";
+
   // Phase and module label
   const phaseLabel = `Phase ${lesson.phase}${lesson.module ? ` \u00B7 Module ${lesson.module}` : ""}`;
 
-  // Instruction text
   const instruction = isSound
     ? "Tap to hear the sound, then start the quiz"
     : "Tap to hear, then start the quiz";
@@ -68,47 +115,17 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
         entering={FadeIn.delay(150).duration(500)}
         style={styles.centerContent}
       >
-        {/* Letter circles */}
-        {letters.length > 0 && (
+        {/* Letter cards with individual audio */}
+        {letterIds.length > 0 && (
           <View style={styles.lettersRow}>
-            {letters.map((l: any) => (
-              <View key={l.id} style={styles.letterItem}>
-                <View
-                  style={[
-                    styles.letterCircle,
-                    letters.length > 2
-                      ? styles.letterCircleSmall
-                      : undefined,
-                    { backgroundColor: colors.primarySoft },
-                  ]}
-                >
-                  <ArabicText
-                    size={letters.length > 2 ? "large" : "display"}
-                    color={colors.primaryDark}
-                  >
-                    {l.letter}
-                  </ArabicText>
-                </View>
-                <Text
-                  style={[
-                    typography.bodySmall,
-                    { color: colors.textSoft, marginTop: spacing.xs },
-                  ]}
-                >
-                  {l.name}
-                </Text>
-              </View>
+            {letterIds.map((id: number) => (
+              <LetterCard
+                key={id}
+                letterId={id}
+                audioType={audioType}
+                isSmall={isSmall}
+              />
             ))}
-          </View>
-        )}
-
-        {/* Hear button */}
-        {letter && audioSource && (
-          <View style={styles.hearButtonWrapper}>
-            <HearButton
-              onPlay={handlePlay}
-              accessibilityLabel={`Hear ${letter.name}`}
-            />
           </View>
         )}
 
@@ -194,9 +211,6 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-  },
-  hearButtonWrapper: {
-    marginBottom: spacing.xl,
   },
   instruction: {
     textAlign: "center",
