@@ -25,16 +25,18 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
 
 export async function resetDatabase(): Promise<void> {
   const db = await getDatabase();
+  // Drop all tables and recreate with latest schema (picks up CHECK constraint changes)
   await db.execAsync(`
-    DELETE FROM question_attempts;
-    DELETE FROM lesson_attempts;
-    DELETE FROM mastery_entities;
-    DELETE FROM mastery_skills;
-    DELETE FROM mastery_confusions;
-    DELETE FROM habit;
-    DELETE FROM user_profile;
+    DROP TABLE IF EXISTS question_attempts;
+    DROP TABLE IF EXISTS lesson_attempts;
+    DROP TABLE IF EXISTS mastery_entities;
+    DROP TABLE IF EXISTS mastery_skills;
+    DROP TABLE IF EXISTS mastery_confusions;
+    DROP TABLE IF EXISTS habit;
+    DROP TABLE IF EXISTS user_profile;
+    DROP TABLE IF EXISTS schema_version;
   `);
-  // Re-seed defaults
+  await db.execAsync(CREATE_TABLES);
   await db.execAsync(SEED_DEFAULTS);
 }
 

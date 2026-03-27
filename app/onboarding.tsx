@@ -394,18 +394,16 @@ export default function OnboardingScreen() {
   }
 
   async function handleFinish() {
-    completeSfx.seekTo(0);
-    completeSfx.play();
+    try {
+      completeSfx.play();
+    } catch {}
     await updateProfile({
       onboarded: true,
       onboardingVersion: 2,
       startingPoint: startingPoint,
       commitmentComplete: true,
     });
-    // Brief pause so the completion SFX plays before transition
-    setTimeout(() => {
-      router.replace("/(tabs)");
-    }, 600);
+    router.replace("/(tabs)");
   }
 
   // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)
