@@ -1,7 +1,7 @@
 // src/analytics/sentry.ts
 import * as Sentry from '@sentry/react-native';
 
-const SENTRY_DSN = '__SENTRY_DSN__';
+const SENTRY_DSN = 'https://***REMOVED***@o4511118918483968.ingest.us.sentry.io/4511118922416128';
 
 export function initSentry(): void {
   Sentry.init({
