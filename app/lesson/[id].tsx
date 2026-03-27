@@ -8,6 +8,7 @@ import { Button } from "../../src/design/components";
 import { LESSONS } from "../../src/data/lessons";
 import { LessonIntro } from "../../src/components/LessonIntro";
 import { LessonQuiz } from "../../src/components/LessonQuiz";
+import { LessonHybrid } from "../../src/components/LessonHybrid";
 import { LessonSummary } from "../../src/components/LessonSummary";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
@@ -110,13 +111,18 @@ export default function LessonScreen() {
 
   // ── Stage rendering ──
 
-  // Show intro unless we're skipping it (retry flow)
-  if (stage === "intro" && !skipIntro) {
+  const isHybrid = lesson?.lessonType === "hybrid";
+
+  // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
+  if (stage === "intro" && !skipIntro && !isHybrid) {
     return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} />;
   }
 
-  // Quiz stage (also entered directly when skipIntro is true)
-  if (stage === "quiz" || (stage === "intro" && skipIntro)) {
+  // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
+  if (stage === "quiz" || (stage === "intro" && (skipIntro || isHybrid))) {
+    if (isHybrid) {
+      return <LessonHybrid lesson={lesson} onComplete={handleQuizComplete} />;
+    }
     return (
       <LessonQuiz
         lesson={lesson}
