@@ -157,7 +157,8 @@ export function LessonQuiz({
       setSelectedId(optionId);
       setAnswered(true);
 
-      const correct = optionId === currentQuestion.correctId;
+      const opt = currentQuestion.options.find((o: any) => o.id === optionId);
+      const correct = opt?.isCorrect === true;
       setIsCorrect(correct);
 
       if (correct) {
