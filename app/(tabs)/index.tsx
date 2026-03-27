@@ -1,146 +1,540 @@
-import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
-import { useEffect, useState } from "react";
-import { useAudioPlayer } from "expo-audio";
-import { ArabicText, Button, Card, HearButton } from "../../src/design/components";
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
+import { useMemo } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
+import Svg, { Path } from "react-native-svg";
+import { ArabicText, Button, Card } from "../../src/design/components";
 import { useColors } from "../../src/design/theme";
-import { typography, spacing } from "../../src/design/tokens";
-import { useDatabase } from "../../src/db/provider";
-import { configureAudioSession, getSFXAsset, getLetterAsset } from "../../src/audio/player";
+import { typography, spacing, radii, shadows, fontFamilies } from "../../src/design/tokens";
+import { useProgress } from "../../src/hooks/useProgress";
+import { useHabit } from "../../src/hooks/useHabit";
+import { LESSONS } from "../../src/data/lessons";
+import { getLetter } from "../../src/data/letters";
+import {
+  getCurrentLesson,
+  getLessonsCompletedCount,
+  getPhaseCounts,
+} from "../../src/engine/selectors";
+import { isLessonUnlocked } from "../../src/engine/unlock";
+import { getTodayDateString } from "../../src/engine/dateUtils";
 
-export default function FoundationTestScreen() {
-  const colors = useColors();
-  const db = useDatabase();
-  const [dbStatus, setDbStatus] = useState("checking...");
+// ── Phase metadata ──
 
-  const correctPlayer = useAudioPlayer(getSFXAsset("correct"));
-  const baNamePlayer = useAudioPlayer(getLetterAsset(2, "name")!);
+const PHASE_LABELS: Record<number, string> = {
+  1: "Letter Recognition",
+  2: "Letter Sounds",
+  3: "Harakat (Vowels)",
+  4: "Connected Forms",
+};
 
-  useEffect(() => {
-    configureAudioSession();
-    checkDatabase();
-  }, []);
+// ── Serpentine x-offsets that repeat every 6 nodes ──
 
-  async function checkDatabase() {
-    try {
-      const result = await db.getFirstAsync<{ version: number }>(
-        "SELECT MAX(version) as version FROM schema_version"
-      );
-      setDbStatus(`OK — schema v${result?.version ?? "?"}`);
-    } catch (e: any) {
-      setDbStatus(`Error: ${e.message}`);
-    }
-  }
+const OFFSETS = [4, 16, 8, -4, -12, 0];
 
+// ── Icon helpers ──
+
+function CheckIcon({ size = 16, color = "#fff" }: { size?: number; color?: string }) {
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={styles.content}
-    >
-      <Text style={[typography.heading1, { color: colors.text }]}>
-        Foundation Test
-      </Text>
-      <Text style={[typography.body, { color: colors.textSoft, marginTop: spacing.sm }]}>
-        Verifying all Layer 1 systems
-      </Text>
-
-      {/* Typography */}
-      <Card style={{ marginTop: spacing.xl }}>
-        <Text style={[typography.heading3, { color: colors.text }]}>Typography</Text>
-        <Text style={[typography.body, { color: colors.textSoft, marginTop: spacing.sm }]}>
-          Inter body text renders correctly
-        </Text>
-        <Text style={[typography.heading2, { color: colors.text, marginTop: spacing.sm }]}>
-          Lora heading renders correctly
-        </Text>
-        <ArabicText size="large" style={{ marginTop: spacing.md }}>
-          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-        </ArabicText>
-        <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm }]}>
-          Amiri Arabic renders correctly (RTL)
-        </Text>
-      </Card>
-
-      {/* Colors */}
-      <Card style={{ marginTop: spacing.lg }}>
-        <Text style={[typography.heading3, { color: colors.text }]}>Colors</Text>
-        <View style={styles.colorRow}>
-          {(["primary", "primaryLight", "accent", "danger"] as const).map((name) => (
-            <View
-              key={name}
-              style={[styles.swatch, { backgroundColor: colors[name] }]}
-            />
-          ))}
-        </View>
-      </Card>
-
-      {/* Database */}
-      <Card style={{ marginTop: spacing.lg }}>
-        <Text style={[typography.heading3, { color: colors.text }]}>Database</Text>
-        <Text style={[typography.body, { color: colors.textSoft, marginTop: spacing.sm }]}>
-          Status: {dbStatus}
-        </Text>
-      </Card>
-
-      {/* Audio */}
-      <Card style={{ marginTop: spacing.lg }}>
-        <Text style={[typography.heading3, { color: colors.text }]}>Audio</Text>
-        <View style={styles.audioRow}>
-          <HearButton
-            onPlay={async () => { await correctPlayer.seekTo(0); correctPlayer.play(); }}
-            accessibilityLabel="Play correct sound"
-          />
-          <HearButton
-            onPlay={async () => { await baNamePlayer.seekTo(0); baNamePlayer.play(); }}
-            accessibilityLabel="Play Ba letter name"
-          />
-        </View>
-      </Card>
-
-      {/* Buttons */}
-      <Card style={{ marginTop: spacing.lg }}>
-        <Text style={[typography.heading3, { color: colors.text }]}>Buttons</Text>
-        <Button
-          title="Primary Button"
-          onPress={() => Alert.alert("Pressed!", "Haptic feedback should fire")}
-          style={{ marginTop: spacing.md }}
-        />
-        <Button
-          title="Secondary Button"
-          variant="secondary"
-          onPress={() => {}}
-          style={{ marginTop: spacing.sm }}
-        />
-        <Button
-          title="Disabled Button"
-          disabled
-          onPress={() => {}}
-          style={{ marginTop: spacing.sm }}
-        />
-      </Card>
-
-      <View style={{ height: spacing.xxxl }} />
-    </ScrollView>
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M20 6L9 17l-5-5"
+        stroke={color}
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
   );
 }
 
+function LockIcon({ size = 14, color = "#6B6760" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+function ArrowIcon({ size = 16, color = "#fff" }: { size?: number; color?: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path
+        d="M14 5l7 7m0 0l-7 7m7-7H3"
+        stroke={color}
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
+// ── Streak Badge ──
+
+function StreakBadge({ count, colors: c }: { count: number; colors: ReturnType<typeof useColors> }) {
+  return (
+    <View style={[styles.streakBadge, { borderColor: c.border }]}>
+      <Text style={{ fontSize: 14, color: c.accent, lineHeight: 16 }}>{"☽"}</Text>
+      <Text style={[styles.streakCount, { color: c.text }]}>{count}</Text>
+      <Text style={[styles.streakLabel, { color: c.textMuted }]}>Wird</Text>
+    </View>
+  );
+}
+
+// ── Main screen ──
+
+export default function HomeScreen() {
+  const colors = useColors();
+  const progress = useProgress();
+  const { habit } = useHabit();
+  const today = getTodayDateString();
+
+  const completedLessonIds = progress.completedLessonIds ?? [];
+  const mastery = progress.mastery;
+  const lessonsCompleted = getLessonsCompletedCount(completedLessonIds);
+
+  // Current lesson to show in hero
+  const nextLesson = getCurrentLesson(completedLessonIds);
+  const allDone = !nextLesson || completedLessonIds.length >= LESSONS.length;
+
+  // Hero letter
+  const heroLetters = nextLesson
+    ? (nextLesson.teachIds || []).map((id: number) => getLetter(id)).filter(Boolean)
+    : [];
+  const heroLetter = heroLetters[0];
+
+  // Current phase label
+  const currentPhase = nextLesson?.phase ?? 1;
+  const phaseLabel = `Phase ${currentPhase} — ${PHASE_LABELS[currentPhase] ?? ""}`;
+
+  // Journey path: show current phase lessons only
+  const currentPhaseLessons = useMemo(
+    () => LESSONS.filter((l) => l.phase === currentPhase),
+    [currentPhase]
+  );
+
+  // Wird streak
+  const currentWird = habit?.currentWird ?? 0;
+
+  // Loading state
+  if (progress.loading) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  function handleStartLesson(lessonId: number) {
+    router.push(`/lesson/${lessonId}` as any);
+  }
+
+  return (
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Header ── */}
+        <View style={styles.header}>
+          <Text style={[styles.appName, { color: colors.text }]}>tila</Text>
+          {currentWird > 0 && <StreakBadge count={currentWird} colors={colors} />}
+        </View>
+
+        {/* ── Hero Card ── */}
+        {!allDone && nextLesson ? (
+          <Card elevated style={styles.heroCard}>
+            {/* Phase label pill */}
+            <View style={[styles.phasePill, { backgroundColor: colors.bg }]}>
+              <Text style={[styles.phasePillText, { color: colors.accent }]}>{phaseLabel}</Text>
+            </View>
+
+            {/* Letter circle */}
+            <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft }]}>
+              <ArabicText size="display" color={colors.text}>
+                {heroLetter ? heroLetter.letter : "?"}
+              </ArabicText>
+            </View>
+
+            {/* Lesson info */}
+            <Text style={[styles.heroTitle, { color: colors.text }]}>{nextLesson.title}</Text>
+            <Text style={[styles.heroDescription, { color: colors.textMuted }]}>
+              {nextLesson.description}
+            </Text>
+
+            {/* CTA button */}
+            <Button
+              title={
+                completedLessonIds.includes(nextLesson.id)
+                  ? "Review Lesson"
+                  : lessonsCompleted > 0
+                    ? "Continue Lesson"
+                    : "Start Lesson"
+              }
+              onPress={() => handleStartLesson(nextLesson.id)}
+              style={styles.heroButton}
+            />
+          </Card>
+        ) : (
+          <Card elevated style={styles.heroCard}>
+            <Text style={[styles.heroTitle, { color: colors.text }]}>All lessons complete!</Text>
+            <Text style={[styles.heroDescription, { color: colors.textMuted }]}>
+              You have completed all available lessons. Keep reviewing to strengthen your knowledge.
+            </Text>
+          </Card>
+        )}
+
+        {/* ── Journey Path ── */}
+        <View style={styles.journeySection}>
+          <Text style={[styles.journeySectionTitle, { color: colors.textMuted }]}>
+            {phaseLabel.toUpperCase()}
+          </Text>
+
+          <View style={styles.journeyPath}>
+            {/* Connector line */}
+            <View
+              style={[
+                styles.connectorLine,
+                { borderColor: colors.border },
+              ]}
+            />
+
+            {currentPhaseLessons.map((lesson, i) => {
+              const globalIndex = LESSONS.findIndex((l) => l.id === lesson.id);
+              const complete = completedLessonIds.includes(lesson.id);
+              const isCurrent = lesson.id === nextLesson?.id;
+              const unlocked = isLessonUnlocked(
+                globalIndex,
+                completedLessonIds,
+                mastery?.entities || {},
+                today
+              );
+              const locked = !complete && !isCurrent && !unlocked;
+              const letters = (lesson.teachIds || []).map((id: number) => getLetter(id));
+              const firstLetter = letters[0];
+              const offset = OFFSETS[i % OFFSETS.length];
+
+              return (
+                <Pressable
+                  key={lesson.id}
+                  onPress={() => {
+                    if (!locked) handleStartLesson(lesson.id);
+                  }}
+                  disabled={locked}
+                  style={[
+                    styles.nodeRow,
+                    {
+                      transform: [{ translateX: offset }],
+                      opacity: locked ? 0.4 : complete ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  {/* Node circle */}
+                  {complete ? (
+                    <View
+                      style={[
+                        styles.nodeCircle,
+                        styles.nodeComplete,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
+                      <CheckIcon size={16} color={colors.accent} />
+                    </View>
+                  ) : isCurrent ? (
+                    <View
+                      style={[
+                        styles.nodeCircle,
+                        styles.nodeCurrent,
+                        {
+                          backgroundColor: colors.bgCard,
+                          borderColor: colors.primary,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[styles.currentDot, { backgroundColor: colors.primary }]}
+                      />
+                    </View>
+                  ) : (
+                    <View
+                      style={[
+                        styles.nodeCircle,
+                        styles.nodeLocked,
+                        {
+                          backgroundColor: colors.bg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      {firstLetter ? (
+                        <ArabicText
+                          size="body"
+                          color={colors.textMuted}
+                          style={{ fontSize: 18, lineHeight: 24 }}
+                        >
+                          {firstLetter.letter}
+                        </ArabicText>
+                      ) : (
+                        <LockIcon size={14} color={colors.textMuted} />
+                      )}
+                    </View>
+                  )}
+
+                  {/* Label */}
+                  {isCurrent ? (
+                    <View
+                      style={[
+                        styles.currentLabel,
+                        {
+                          backgroundColor: colors.bgCard,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                    >
+                      <Text style={[styles.currentLabelTitle, { color: colors.text }]}>
+                        {lesson.title}
+                      </Text>
+                      <View style={styles.upNextRow}>
+                        <View style={[styles.upNextDot, { backgroundColor: colors.accent }]} />
+                        <Text style={[styles.upNextText, { color: colors.accent }]}>Up next</Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <View>
+                      <Text
+                        style={[
+                          styles.nodeTitle,
+                          { color: locked ? colors.textMuted : colors.text },
+                        ]}
+                      >
+                        {lesson.title}
+                      </Text>
+                      <Text
+                        style={[
+                          styles.nodeSubtitle,
+                          { color: locked ? colors.textMuted : colors.textSoft },
+                        ]}
+                      >
+                        {complete ? "Completed" : locked ? "Locked" : "Available"}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* Bottom spacer for tab bar */}
+        <View style={{ height: spacing.xxxl }} />
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
+
+// ── Styles ──
+
 const styles = StyleSheet.create({
-  content: {
-    padding: 24,
-    paddingTop: 60,
+  container: {
+    flex: 1,
   },
-  colorRow: {
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: spacing.xl,
+    paddingBottom: 100,
+  },
+
+  // Header
+  header: {
     flexDirection: "row",
-    gap: 12,
-    marginTop: 12,
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: spacing.xl,
   },
-  swatch: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
+  appName: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 22,
+    letterSpacing: 0.8,
   },
-  audioRow: {
+  streakBadge: {
     flexDirection: "row",
-    gap: 16,
-    marginTop: 12,
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 9999,
+    borderWidth: 1,
+  },
+  streakCount: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodySemiBold,
+  },
+  streakLabel: {
+    fontSize: 11,
+    fontFamily: fontFamilies.bodyMedium,
+  },
+
+  // Hero card
+  heroCard: {
+    alignItems: "center",
+    marginBottom: spacing.xxl,
+    borderRadius: radii.xl,
+    paddingVertical: spacing.xxl,
+  },
+  phasePill: {
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 9999,
+    marginBottom: spacing.lg,
+  },
+  phasePillText: {
+    fontSize: 10,
+    fontFamily: fontFamilies.bodyBold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  letterCircle: {
+    width: 112,
+    height: 112,
+    borderRadius: 56,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.xl,
+  },
+  heroTitle: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 22,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  heroDescription: {
+    fontSize: 14,
+    fontFamily: fontFamilies.bodyRegular,
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: spacing.xxl,
+    paddingHorizontal: spacing.sm,
+  },
+  heroButton: {
+    width: "100%",
+  },
+
+  // Journey section
+  journeySection: {
+    marginTop: spacing.lg,
+  },
+  journeySectionTitle: {
+    fontSize: 10,
+    fontFamily: fontFamilies.bodyBold,
+    letterSpacing: 1.2,
+    marginBottom: spacing.xl,
+  },
+  journeyPath: {
+    position: "relative",
+    paddingLeft: 32,
+    paddingVertical: spacing.sm,
+  },
+  connectorLine: {
+    position: "absolute",
+    left: 50,
+    top: 0,
+    bottom: 0,
+    width: 0,
+    borderLeftWidth: 2,
+    borderStyle: "dashed",
+  },
+
+  // Nodes
+  nodeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+    marginBottom: 44,
+  },
+  nodeCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  nodeComplete: {
+    ...shadows.soft,
+  },
+  nodeCurrent: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 2.5,
+    ...shadows.card,
+  },
+  nodeLocked: {
+    borderWidth: 2,
+  },
+  currentDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+  },
+  currentLabel: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    ...shadows.card,
+  },
+  currentLabelTitle: {
+    fontFamily: fontFamilies.headingBold,
+    fontSize: 15,
+  },
+  upNextRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: 3,
+  },
+  upNextDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  upNextText: {
+    fontSize: 11,
+    fontFamily: fontFamilies.bodySemiBold,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  nodeTitle: {
+    fontSize: 15,
+    fontFamily: fontFamilies.bodyMedium,
+  },
+  nodeSubtitle: {
+    fontSize: 12,
+    fontFamily: fontFamilies.bodyRegular,
+    marginTop: 2,
   },
 });
