@@ -19,8 +19,32 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   // Seed default rows
   await db.execAsync(SEED_DEFAULTS);
 
+  // Run migrations for existing databases
+  await runMigrations(db);
+
   dbInstance = db;
   return db;
+}
+
+async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
+  const versionRow = await db.getFirstAsync<{ version: number }>(
+    "SELECT MAX(version) as version FROM schema_version"
+  );
+  const currentVersion = versionRow?.version ?? 0;
+
+  if (currentVersion < 2) {
+    // Add transient screen tracking columns (safe — ALTER TABLE ADD COLUMN is idempotent-ish)
+    try {
+      await db.execAsync(`
+        ALTER TABLE user_profile ADD COLUMN wird_intro_seen INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE user_profile ADD COLUMN post_lesson_onboard_seen INTEGER NOT NULL DEFAULT 0;
+        ALTER TABLE user_profile ADD COLUMN return_hadith_last_shown TEXT;
+      `);
+    } catch {
+      // Columns may already exist if DB was created fresh with v2 schema
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (2)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {

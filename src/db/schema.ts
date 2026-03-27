@@ -4,7 +4,7 @@
  * Single-user design — no user_id columns.
  */
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS user_profile (
@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS user_profile (
   motivation TEXT CHECK (motivation IN ('quran', 'prayer', 'general')),
   daily_goal INTEGER CHECK (daily_goal >= 1),
   commitment_complete INTEGER NOT NULL DEFAULT 0 CHECK (commitment_complete IN (0, 1)),
+  wird_intro_seen INTEGER NOT NULL DEFAULT 0 CHECK (wird_intro_seen IN (0, 1)),
+  post_lesson_onboard_seen INTEGER NOT NULL DEFAULT 0 CHECK (post_lesson_onboard_seen IN (0, 1)),
+  return_hadith_last_shown TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

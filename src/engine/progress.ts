@@ -51,6 +51,8 @@ export interface ProgressState {
   onboardingCommitmentComplete: boolean;
   onboardingVersion: number;
   wirdIntroSeen: boolean;
+  postLessonOnboardSeen: boolean;
+  returnHadithLastShown: string | null;
 }
 
 export interface QuestionAttempt {
@@ -152,7 +154,10 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
     motivation: string | null;
     daily_goal: number | null;
     commitment_complete: number;
-  }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete FROM user_profile WHERE id = 1');
+    wird_intro_seen: number;
+    post_lesson_onboard_seen: number;
+    return_hadith_last_shown: string | null;
+  }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown FROM user_profile WHERE id = 1');
 
   const onboarded = profileRow ? profileRow.onboarded === 1 : false;
   const onboardingVersion = profileRow ? profileRow.onboarding_version : 0;
@@ -161,9 +166,9 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
   const onboardingDailyGoal = profileRow ? profileRow.daily_goal : null;
   const onboardingCommitmentComplete = profileRow ? profileRow.commitment_complete === 1 : false;
 
-  // wirdIntroSeen: true if the user has completed at least one lesson and habit exists
-  // This mirrors the web app's behavior where wirdIntroSeen is set after the intro is shown
-  const wirdIntroSeen = completedLessonIds.length > 0 && habit.currentWird > 0;
+  const wirdIntroSeen = profileRow ? profileRow.wird_intro_seen === 1 : false;
+  const postLessonOnboardSeen = profileRow ? profileRow.post_lesson_onboard_seen === 1 : false;
+  const returnHadithLastShown = profileRow ? profileRow.return_hadith_last_shown : null;
 
   return {
     completedLessonIds,
@@ -176,6 +181,8 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
     onboardingCommitmentComplete,
     onboardingVersion,
     wirdIntroSeen,
+    postLessonOnboardSeen,
+    returnHadithLastShown,
   };
 }
 
@@ -282,6 +289,9 @@ export interface UserProfileUpdate {
   motivation?: string | null;
   dailyGoal?: number | null;
   commitmentComplete?: boolean;
+  wirdIntroSeen?: boolean;
+  postLessonOnboardSeen?: boolean;
+  returnHadithLastShown?: string | null;
 }
 
 export async function saveUserProfile(
@@ -314,6 +324,18 @@ export async function saveUserProfile(
   if (profile.commitmentComplete !== undefined) {
     sets.push('commitment_complete = ?');
     values.push(profile.commitmentComplete ? 1 : 0);
+  }
+  if (profile.wirdIntroSeen !== undefined) {
+    sets.push('wird_intro_seen = ?');
+    values.push(profile.wirdIntroSeen ? 1 : 0);
+  }
+  if (profile.postLessonOnboardSeen !== undefined) {
+    sets.push('post_lesson_onboard_seen = ?');
+    values.push(profile.postLessonOnboardSeen ? 1 : 0);
+  }
+  if (profile.returnHadithLastShown !== undefined) {
+    sets.push('return_hadith_last_shown = ?');
+    values.push(profile.returnHadithLastShown);
   }
 
   if (sets.length === 0) return;
