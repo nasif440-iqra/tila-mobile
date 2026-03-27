@@ -90,7 +90,7 @@ export default function LessonScreen() {
       // 1. First ever lesson completed? -> post-lesson onboard
       const postLessonSeen = progress.postLessonOnboardSeen ?? false;
       if (prevIds.length === 0 && !postLessonSeen) {
-        router.replace("/post-lesson-onboard" as any);
+        router.replace({ pathname: '/post-lesson-onboard' });
         return;
       }
 
@@ -101,7 +101,7 @@ export default function LessonScreen() {
       const wasPhaseDone = phaseLessons.every((l: any) => prevIds.includes(l.id));
 
       if (allPhaseDone && !wasPhaseDone) {
-        router.replace(`/phase-complete?phase=${lesson.phase}` as any);
+        router.replace({ pathname: '/phase-complete', params: { phase: String(lesson.phase) } });
         return;
       }
     }

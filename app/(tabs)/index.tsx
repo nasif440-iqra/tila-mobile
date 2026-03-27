@@ -104,25 +104,26 @@ export default function HomeScreen() {
 
   // Redirect to onboarding if user hasn't completed it yet
   const onboarded = progress.onboarded ?? false;
+  const returnHadithLastShown = progress.returnHadithLastShown ?? null;
+
   useEffect(() => {
     if (progress.loading) return;
 
     if (!onboarded) {
-      router.replace("/onboarding" as any);
+      router.replace("/onboarding");
       return;
     }
 
     // Check if user should see the return hadith screen
     const lastPractice = habit?.lastPracticeDate;
-    const returnHadithLastShown = (progress as any).returnHadithLastShown ?? null;
     if (lastPractice) {
       const gap = getDayDifference(today, lastPractice);
       if (gap >= 1 && returnHadithLastShown !== today) {
-        router.replace("/return-welcome" as any);
+        router.replace("/return-welcome");
         return;
       }
     }
-  }, [progress.loading, onboarded]);
+  }, [progress.loading, onboarded, habit?.lastPracticeDate, today, returnHadithLastShown]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery;
@@ -163,7 +164,7 @@ export default function HomeScreen() {
   }
 
   function handleStartLesson(lessonId: number) {
-    router.push(`/lesson/${lessonId}` as any);
+    router.push({ pathname: '/lesson/[id]', params: { id: String(lessonId) } });
   }
 
   return (
