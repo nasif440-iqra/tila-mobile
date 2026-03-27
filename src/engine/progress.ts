@@ -55,15 +55,9 @@ export interface ProgressState {
   returnHadithLastShown: string | null;
 }
 
-export interface QuestionAttempt {
-  questionType: string;
-  skillBucket: string | null;
-  targetEntity: string | null;
-  correct: boolean;
-  selectedOption: string | null;
-  correctOption: string | null;
-  responseTimeMs: number | null;
-}
+// Re-export QuestionAttempt from canonical location for backwards compatibility
+export type { QuestionAttempt } from '../types/quiz';
+import type { QuestionAttempt } from '../types/quiz';
 
 // ── Reads ──────────────────────────────────────────────────────────
 
@@ -192,15 +186,13 @@ export async function saveCompletedLesson(
   db: SQLiteDatabase,
   lessonId: number,
   accuracy: number,
-  passed: boolean,
-  durationSeconds: number | null
+  passed: boolean
 ): Promise<number> {
   const result = await db.runAsync(
-    'INSERT INTO lesson_attempts (lesson_id, accuracy, passed, duration_seconds) VALUES (?, ?, ?, ?)',
+    'INSERT INTO lesson_attempts (lesson_id, accuracy, passed) VALUES (?, ?, ?)',
     lessonId,
     accuracy,
-    passed ? 1 : 0,
-    durationSeconds
+    passed ? 1 : 0
   );
   return result.lastInsertRowId;
 }

@@ -6,9 +6,9 @@ import {
   saveQuestionAttempts,
   saveUserProfile,
   type ProgressState,
-  type QuestionAttempt,
   type UserProfileUpdate,
 } from "../engine/progress";
+import type { QuestionAttempt } from "../types/quiz";
 
 export function useProgress() {
   const db = useDatabase();
@@ -30,15 +30,13 @@ export function useProgress() {
       lessonId: number,
       accuracy: number,
       passed: boolean,
-      durationSeconds: number,
       questions: QuestionAttempt[]
     ) => {
       const attemptId = await saveCompletedLesson(
         db,
         lessonId,
         accuracy,
-        passed,
-        durationSeconds
+        passed
       );
       if (questions.length > 0) {
         await saveQuestionAttempts(db, attemptId, questions);

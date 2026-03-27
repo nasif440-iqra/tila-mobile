@@ -13,6 +13,8 @@ import { LessonSummary } from "../../src/components/LessonSummary";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { getPassThreshold } from "../../src/engine/outcome";
+import { mapQuizResultsToAttempts } from '../../src/types/quiz';
+import type { QuizResultItem } from '../../src/types/quiz';
 
 // ── Types ──
 
@@ -21,7 +23,7 @@ type Stage = "intro" | "quiz" | "summary";
 interface QuizResults {
   correct: number;
   total: number;
-  questions: any[];
+  questions: QuizResultItem[];
   accuracy: number;
   passed: boolean;
 }
@@ -50,7 +52,7 @@ export default function LessonScreen() {
   // ── Handlers ──
 
   const handleQuizComplete = useCallback(
-    async (results: { correct: number; total: number; questions: any[] }) => {
+    async (results: { correct: number; total: number; questions: QuizResultItem[] }) => {
       const accuracy = results.total > 0 ? results.correct / results.total : 0;
 
       // Determine pass/fail using the threshold for this lesson mode
@@ -61,12 +63,12 @@ export default function LessonScreen() {
       const prevIds = preCompletedRef.current;
 
       // Save to database
+      const attempts = mapQuizResultsToAttempts(results.questions);
       await progress.completeLesson(
         lesson!.id,
         accuracy,
         passed,
-        0, // durationSeconds — not tracked yet
-        results.questions
+        attempts
       );
 
       // Record practice for habit/wird on pass
@@ -74,14 +76,14 @@ export default function LessonScreen() {
         await recordPractice();
       }
 
-      setQuizResults({ ...results, accuracy, passed, _prevIds: prevIds } as any);
+      setQuizResults({ ...results, accuracy, passed });
       setStage("summary");
     },
     [lesson, progress, recordPractice]
   );
 
   const handleContinue = useCallback(() => {
-    const prevIds: number[] = (quizResults as any)?._prevIds ?? [];
+    const prevIds = preCompletedRef.current;
     const passed = quizResults?.passed ?? false;
 
     if (passed && lesson) {

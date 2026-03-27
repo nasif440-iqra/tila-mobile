@@ -3,6 +3,7 @@ import {
   generateLessonQuestions,
   shuffle,
 } from "../engine/questions/index.js";
+import type { QuizResultItem } from '../types/quiz';
 
 /**
  * Honest quiz progress: uses the live queue length.
@@ -30,11 +31,11 @@ export default function useLessonQuiz(
   dismissMidCelebrate: () => void;
   handleAnswer: (selectedOption: any, correct: boolean) => void;
   isComplete: boolean;
-  results: { correct: number; total: number; questions: any[] };
+  results: { correct: number; total: number; questions: QuizResultItem[] };
 } {
   const [questions, setQuestions] = useState<any[]>([]);
   const [qIndex, setQIndex] = useState(0);
-  const [quizResults, setQuizResults] = useState<any[]>([]);
+  const [quizResults, setQuizResults] = useState<QuizResultItem[]>([]);
   const [streak, setStreak] = useState(0);
   const [originalQCount, setOriginalQCount] = useState(0);
   const [midPoint, setMidPoint] = useState(-1);
@@ -42,6 +43,7 @@ export default function useLessonQuiz(
   const [midShown, setMidShown] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const generatedRef = useRef(false);
+  const questionStartRef = useRef<number>(Date.now());
 
   // Generate questions on mount
   useEffect(() => {
@@ -55,6 +57,7 @@ export default function useLessonQuiz(
       return;
     }
     setQuestions(qs);
+    questionStartRef.current = Date.now();
     setOriginalQCount(qs.length);
     if (qs.length >= 8) setMidPoint(Math.floor(qs.length * 0.45));
   }, [lesson, completedLessonIds, mastery]);
@@ -70,15 +73,21 @@ export default function useLessonQuiz(
       if (!currentQ) return;
 
       // Record result
+      const correctOption = currentQ.options?.find((o: any) => o.isCorrect);
+      const elapsed = Date.now() - questionStartRef.current;
+      questionStartRef.current = Date.now();
+
       setQuizResults((prev) => [
         ...prev,
         {
           targetId: currentQ.targetId,
           correct,
-          selectedId: selectedOption?.id ?? selectedOption,
+          selectedId: selectedOption?.id != null ? String(selectedOption.id) : String(selectedOption),
           questionType: currentQ.type || null,
+          correctId: correctOption?.id != null ? String(correctOption.id) : '',
           isHarakat: !!currentQ.isHarakat,
           hasAudio: !!currentQ.hasAudio,
+          responseTimeMs: elapsed,
         },
       ]);
 
