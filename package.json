@@ -7,7 +7,10 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "npx expo lint",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run typecheck"
   },
   "dependencies": {
     "@expo-google-fonts/amiri": "^0.4.1",
@@ -41,6 +44,8 @@
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~55.0.0",
     "typescript": "~5.9.2",
     "vitest": "^4.1.2"
   },
