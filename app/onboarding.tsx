@@ -329,6 +329,7 @@ export default function OnboardingScreen() {
 
   const [step, setStep] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState(false);
   const [startingPoint, setStartingPoint] = useState<string | null>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answerChecked, setAnswerChecked] = useState(false);
@@ -400,16 +401,23 @@ export default function OnboardingScreen() {
     try {
       completeSfx.play();
     } catch {}
-    updateProfile({
-      onboarded: true,
-      onboardingVersion: 2,
-      startingPoint: startingPoint,
-      commitmentComplete: true,
-    }).catch(() => {});
-    // Wait for fade-out to complete before navigating
-    setTimeout(() => {
-      router.replace("/(tabs)");
-    }, 500);
+
+    try {
+      await updateProfile({
+        onboarded: true,
+        onboardingVersion: 2,
+        startingPoint: startingPoint,
+        commitmentComplete: true,
+      });
+      // Only navigate after successful save
+      setTimeout(() => {
+        router.replace("/(tabs)");
+      }, 500);
+    } catch (err) {
+      console.error('Failed to save onboarding profile:', err);
+      setFinishing(false);
+      setFinishError(true);
+    }
   }
 
   // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)
@@ -1005,13 +1013,21 @@ export default function OnboardingScreen() {
 
             <View style={styles.spacerXl} />
 
+            {finishError && (
+              <View style={{ backgroundColor: colors.dangerLight, padding: spacing.md, borderRadius: radii.md, marginBottom: spacing.md, width: '100%' }}>
+                <Text style={{ color: colors.danger, fontSize: 14, fontFamily: fontFamilies.bodyMedium, textAlign: 'center' }}>
+                  Something went wrong saving your progress. Please try again.
+                </Text>
+              </View>
+            )}
+
             {/* CTA */}
             <Animated.View
               entering={FadeIn.delay(1750).duration(400)}
               style={[styles.fullWidthBtn, { zIndex: 1 }]}
             >
               <Button
-                title="Start Lesson 1"
+                title={finishError ? "Try Again" : "Start Lesson 1"}
                 onPress={handleFinish}
                 style={styles.fullWidthBtn}
               />

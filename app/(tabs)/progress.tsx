@@ -2,7 +2,6 @@ import {
   View,
   Text,
   ScrollView,
-  Pressable,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
@@ -307,7 +306,7 @@ export default function ProgressScreen() {
             const masteryStyle = getMasteryStyle(state, colors);
 
             return (
-              <Pressable key={letter.id} style={{ width: "25%" }}>
+              <View key={letter.id} style={{ width: "25%" }}>
                 <View
                   style={[
                     styles.letterCell,
@@ -340,56 +339,10 @@ export default function ProgressScreen() {
                       : "\u2014"}
                   </Text>
                 </View>
-              </Pressable>
+              </View>
             );
           })}
         </View>
-
-        {/* ── Your Data ── */}
-        <Text
-          style={[
-            typography.heading3,
-            {
-              color: colors.text,
-              marginTop: spacing.xxl,
-              marginBottom: spacing.md,
-            },
-          ]}
-        >
-          Your Data
-        </Text>
-
-        <Pressable
-          style={[
-            styles.dataButton,
-            { borderColor: colors.primary },
-          ]}
-        >
-          <Text
-            style={[
-              styles.dataButtonText,
-              { color: colors.primary },
-            ]}
-          >
-            Export Backup
-          </Text>
-        </Pressable>
-
-        <Pressable
-          style={[
-            styles.dataButton,
-            { borderColor: colors.border, marginTop: spacing.sm },
-          ]}
-        >
-          <Text
-            style={[
-              styles.dataButtonText,
-              { color: colors.textMuted },
-            ]}
-          >
-            Import Backup
-          </Text>
-        </Pressable>
 
         {/* Bottom padding for tab bar */}
         <View style={{ height: spacing.xxxl }} />
@@ -480,16 +433,5 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontFamily: fontFamilies.bodySemiBold,
     marginTop: 2,
-  },
-  dataButton: {
-    borderWidth: 1.5,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.xl,
-    alignItems: "center",
-  },
-  dataButtonText: {
-    fontSize: 13,
-    fontFamily: fontFamilies.headingSemiBold,
   },
 });
