@@ -7,7 +7,7 @@
 
 ## Provider Stack
 
-- **PostHog** (EU Cloud, Frankfurt) — product analytics, anonymous mode, autocapture disabled
+- **PostHog** (US Cloud) — product analytics, anonymous mode, autocapture disabled
 - **Sentry** (`@sentry/react-native` with Expo plugin) — crash reporting, source maps via EAS
 
 Both initialize in `app/_layout.tsx` as fire-and-forget. Neither blocks first render or splash screen dismissal.
@@ -40,7 +40,7 @@ flush()                         — forces PostHog queue flush (use sparingly)
 
 ### `src/analytics/posthog.ts` — PostHog Config
 
-- **EU Cloud** instance (Frankfurt data center)
+- **US Cloud** instance
 - `autocapture: false` — explicit events only, no overlap with Sentry breadcrumbs
 - `captureScreenViews: false` — we track meaningful navigation, not every screen
 - `disableSessionRecording: true` — not needed for v1
@@ -178,12 +178,12 @@ Each event name maps to a typed property interface. `track('lesson_completed', {
 
 ## Privacy
 
-- **PostHog EU Cloud** — data stays in Frankfurt (eu.posthog.com)
+- **PostHog US Cloud** — data hosted in US (us.posthog.com)
 - **IP capture disabled** — configured in PostHog project settings (server-side), not just client flag
 - **Autocapture disabled** — only explicit events, no accidental PII in touch targets
 - **No PII in events** — no names, emails, phone numbers, device IDs in any event property
 - **No IDFA** — we don't use Apple's advertising identifier, so App Tracking Transparency prompt is not required
-- **Opt-out respected** — if a future settings screen adds an analytics toggle, `posthog.optOut()` silences all tracking. Sentry continues for crash reporting (crashes are not personal data under GDPR).
+- **Opt-out respected** — if a future settings screen adds an analytics toggle, `posthog.optOut()` silences all tracking. Sentry continues for crash reporting.
 
 ---
 
@@ -224,7 +224,7 @@ Analytics calls are added in **three passes**, each independently shippable:
 ### PostHog Setup
 - Add `posthog-react-native` dependency
 - `POSTHOG_API_KEY` can be checked into code (it's a public write-only key)
-- `POSTHOG_HOST` set to `https://eu.posthog.com`
+- `POSTHOG_HOST` set to `https://us.i.posthog.com`
 
 ---
 

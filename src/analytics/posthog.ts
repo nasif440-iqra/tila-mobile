@@ -4,7 +4,7 @@ import PostHog from 'posthog-react-native';
 let client: PostHog | null = null;
 
 const POSTHOG_API_KEY = '__POSTHOG_API_KEY__';
-const POSTHOG_HOST = 'https://eu.i.posthog.com';
+const POSTHOG_HOST = 'https://us.i.posthog.com';
 
 export function initPostHog(): void {
   if (client) return;

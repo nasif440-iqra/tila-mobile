@@ -4,7 +4,7 @@
 
 **Goal:** Add PostHog product analytics and Sentry crash reporting to the Tila app with 10 typed events across onboarding, lesson, and retention flows.
 
-**Architecture:** Thin analytics wrapper (`src/analytics/`) that all components import — no direct SDK usage. PostHog EU Cloud with autocapture disabled, Sentry with Expo config plugin and EAS source map upload. Fire-and-forget init that never blocks first render.
+**Architecture:** Thin analytics wrapper (`src/analytics/`) that all components import — no direct SDK usage. PostHog US Cloud with autocapture disabled, Sentry with Expo config plugin and EAS source map upload. Fire-and-forget init that never blocks first render.
 
 **Tech Stack:** `posthog-react-native`, `@sentry/react-native`, Expo 55, EAS Build
 
@@ -223,7 +223,7 @@ import PostHog from 'posthog-react-native';
 let client: PostHog | null = null;
 
 const POSTHOG_API_KEY = '__POSTHOG_API_KEY__'; // Replace with real key from PostHog dashboard
-const POSTHOG_HOST = 'https://eu.i.posthog.com';
+const POSTHOG_HOST = 'https://us.i.posthog.com';
 
 export function initPostHog(): void {
   if (client) return;
@@ -852,10 +852,10 @@ git commit -m "chore: final validation for analytics implementation"
 
 ### Before shipping to production
 
-1. **Create PostHog project** at eu.posthog.com, get the API key, replace `__POSTHOG_API_KEY__` in `src/analytics/posthog.ts`
+1. **Create PostHog project** at us.posthog.com, get the API key, replace `__POSTHOG_API_KEY__` in `src/analytics/posthog.ts`
 2. **Create Sentry project**, get the DSN, replace `__SENTRY_DSN__` in `src/analytics/sentry.ts`
 3. **Set `SENTRY_AUTH_TOKEN`** as EAS build secret: `eas secret:create --name SENTRY_AUTH_TOKEN --value <token>`
-4. **Verify PostHog EU Cloud settings**: IP capture disabled, autocapture disabled in project settings (server-side, not just client)
+4. **Verify PostHog US Cloud settings**: IP capture disabled, autocapture disabled in project settings (server-side, not just client)
 5. **Update Sentry plugin org/project** in `app.config.ts` to match real Sentry project
 
 ### Deferred work
