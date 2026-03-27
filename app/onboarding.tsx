@@ -646,7 +646,7 @@ export default function OnboardingScreen() {
 
             {startingPointOptions.map((opt, idx) => (
               <Animated.View
-                key={opt.value}
+                key={`sp-${idx}`}
                 entering={FadeInDown.delay(300 + idx * 60).duration(400)}
               >
                 <OptionCard
