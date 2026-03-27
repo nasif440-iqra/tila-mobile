@@ -38,6 +38,13 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-audio",
     "expo-secure-store",
     "expo-asset",
+    [
+      "@sentry/react-native/expo",
+      {
+        organization: "tila",
+        project: "tila-mobile",
+      },
+    ],
   ],
   extra: {
     eas: {
