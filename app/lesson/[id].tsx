@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -44,6 +44,9 @@ export default function LessonScreen() {
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
 
+  // Capture pre-lesson state for transient screen detection
+  const preCompletedRef = useRef<number[]>(completedLessonIds);
+
   // ── Handlers ──
 
   const handleQuizComplete = useCallback(
@@ -53,6 +56,9 @@ export default function LessonScreen() {
       // Determine pass/fail using the threshold for this lesson mode
       const threshold = getPassThreshold(lesson!.lessonMode);
       const passed = threshold === null ? true : accuracy >= threshold;
+
+      // Capture completed IDs before saving
+      const prevIds = preCompletedRef.current;
 
       // Save to database
       await progress.completeLesson(
@@ -68,15 +74,39 @@ export default function LessonScreen() {
         await recordPractice();
       }
 
-      setQuizResults({ ...results, accuracy, passed });
+      setQuizResults({ ...results, accuracy, passed, _prevIds: prevIds } as any);
       setStage("summary");
     },
     [lesson, progress, recordPractice]
   );
 
   const handleContinue = useCallback(() => {
+    const prevIds: number[] = (quizResults as any)?._prevIds ?? [];
+    const passed = quizResults?.passed ?? false;
+
+    if (passed && lesson) {
+      // 1. First ever lesson completed? -> post-lesson onboard
+      const postLessonSeen = progress.postLessonOnboardSeen ?? false;
+      if (prevIds.length === 0 && !postLessonSeen) {
+        router.replace("/post-lesson-onboard" as any);
+        return;
+      }
+
+      // 2. Phase just completed? Check if all lessons in this phase are now done
+      const newCompletedIds = progress.completedLessonIds ?? [];
+      const phaseLessons = LESSONS.filter((l: any) => l.phase === lesson.phase);
+      const allPhaseDone = phaseLessons.every((l: any) => newCompletedIds.includes(l.id));
+      const wasPhaseDone = phaseLessons.every((l: any) => prevIds.includes(l.id));
+
+      if (allPhaseDone && !wasPhaseDone) {
+        router.replace(`/phase-complete?phase=${lesson.phase}` as any);
+        return;
+      }
+    }
+
+    // Default: go home
     router.replace("/(tabs)");
-  }, []);
+  }, [quizResults, lesson, progress]);
 
   const handleRetry = useCallback(() => {
     setQuizResults(null);

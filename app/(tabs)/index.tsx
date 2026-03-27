@@ -23,7 +23,7 @@ import {
   getPhaseCounts,
 } from "../../src/engine/selectors";
 import { isLessonUnlocked } from "../../src/engine/unlock";
-import { getTodayDateString } from "../../src/engine/dateUtils";
+import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
 import { resetDatabase } from "../../src/db/client";
 import { Alert } from "react-native";
 
@@ -107,8 +107,22 @@ export default function HomeScreen() {
   // Redirect to onboarding if user hasn't completed it yet
   const onboarded = progress.onboarded ?? false;
   useEffect(() => {
-    if (!progress.loading && !onboarded) {
+    if (progress.loading) return;
+
+    if (!onboarded) {
       router.replace("/onboarding" as any);
+      return;
+    }
+
+    // Check if user should see the return hadith screen
+    const lastPractice = habit?.lastPracticeDate;
+    const returnHadithLastShown = (progress as any).returnHadithLastShown ?? null;
+    if (lastPractice) {
+      const gap = getDayDifference(today, lastPractice);
+      if (gap >= 1 && returnHadithLastShown !== today) {
+        router.replace("/return-welcome" as any);
+        return;
+      }
     }
   }, [progress.loading, onboarded]);
 
