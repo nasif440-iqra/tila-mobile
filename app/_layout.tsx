@@ -28,7 +28,8 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const systemScheme = useColorScheme();
-  const [themeMode] = useState<ThemeMode>("system");
+  // Force light mode — dark mode ships later
+  const [themeMode] = useState<ThemeMode>("light");
 
   const [fontsLoaded, fontError] = useFonts({
     Amiri_400Regular,
