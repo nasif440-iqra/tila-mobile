@@ -3,6 +3,8 @@ import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import { initAnalytics, track } from "../src/analytics";
+import * as SecureStore from "expo-secure-store";
 import {
   Amiri_400Regular,
   Amiri_700Bold,
@@ -30,6 +32,26 @@ export default function RootLayout() {
   const systemScheme = useColorScheme();
   // Force light mode — dark mode ships later
   const [themeMode] = useState<ThemeMode>("light");
+
+  useEffect(() => {
+    initAnalytics();
+
+    (async () => {
+      const installDate = await SecureStore.getItemAsync('tila_install_date');
+      const today = new Date().toISOString().slice(0, 10);
+      const firstOpen = !installDate;
+
+      if (firstOpen) {
+        await SecureStore.setItemAsync('tila_install_date', today);
+      }
+
+      const daysSinceInstall = installDate
+        ? Math.floor((Date.now() - new Date(installDate).getTime()) / 86400000)
+        : 0;
+
+      track('app_opened', { first_open: firstOpen, days_since_install: daysSinceInstall });
+    })();
+  }, []);
 
   const [fontsLoaded, fontError] = useFonts({
     Amiri_400Regular,
