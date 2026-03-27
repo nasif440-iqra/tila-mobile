@@ -15,6 +15,7 @@ import {
   playTap,
 } from "../../audio/player";
 import type { OnboardingDraft } from "../../types/onboarding";
+import { track } from "../../analytics";
 
 import { FloatingLettersLayer } from "./FloatingLettersLayer";
 import { ProgressBar } from "./ProgressBar";
@@ -29,6 +30,11 @@ import { Finish } from "./steps/Finish";
 
 const TOTAL_STEPS = 8;
 
+const STEP_NAMES = [
+  'welcome', 'tilawat', 'hadith', 'starting_point',
+  'letter_reveal', 'letter_audio', 'letter_quiz', 'finish',
+] as const;
+
 export function OnboardingFlow() {
   const colors = useColors();
   const { updateProfile } = useProgress();
@@ -39,11 +45,19 @@ export function OnboardingFlow() {
   const [draft, setDraft] = useState<OnboardingDraft>({ startingPoint: null });
   const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
   const letterRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onboardingStartRef = useRef(Date.now());
 
   function goNext() {
     playOnboardingAdvance();
     setStep((s) => s + 1);
   }
+
+  useEffect(() => {
+    track('onboarding_step_viewed', {
+      step_index: step,
+      step_name: STEP_NAMES[step],
+    });
+  }, [step]);
 
   // Letter reveal auto-advance (step 4 -> step 5 after 3.5s)
   useEffect(() => {
@@ -58,6 +72,11 @@ export function OnboardingFlow() {
   }, [step]);
 
   const handlePlayAudio = useCallback(async () => {
+    track('letter_audio_played', {
+      letter_id: 1,
+      audio_type: 'name' as const,
+      context: 'onboarding' as const,
+    });
     playTap();
     playLetterName(1);
     setHasPlayedAudio(true);
@@ -76,6 +95,10 @@ export function OnboardingFlow() {
         onboardingVersion: 2,
         startingPoint: draft.startingPoint,
         commitmentComplete: true,
+      });
+      track('onboarding_completed', {
+        starting_point: draft.startingPoint ?? 'unknown',
+        duration_seconds: Math.round((Date.now() - onboardingStartRef.current) / 1000),
       });
       // Only navigate after successful save
       setTimeout(() => {

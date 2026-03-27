@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,11 +7,26 @@ import { useColors } from "../src/design/theme";
 import { typography, spacing, radii, fontFamilies } from "../src/design/tokens";
 import { Button, Card } from "../src/design/components";
 import { useProgress } from "../src/hooks/useProgress";
-import { getTodayDateString } from "../src/engine/dateUtils";
+import { getTodayDateString, getDayDifference } from "../src/engine/dateUtils";
+import { track } from "../src/analytics";
+import { useHabit } from "../src/hooks/useHabit";
 
 export default function ReturnWelcomeScreen() {
   const colors = useColors();
   const progress = useProgress();
+  const { habit } = useHabit();
+
+  useEffect(() => {
+    const lastPractice = habit?.lastPracticeDate;
+    const daysSince = lastPractice
+      ? getDayDifference(getTodayDateString(), lastPractice)
+      : 0;
+
+    track('return_welcome_shown', {
+      days_since_last_practice: daysSince,
+      current_wird: habit?.currentWird ?? 0,
+    });
+  }, []);
 
   function handleContinue() {
     // Mark today as shown so we don't show again today

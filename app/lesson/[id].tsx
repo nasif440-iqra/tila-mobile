@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,6 +15,7 @@ import { useHabit } from "../../src/hooks/useHabit";
 import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
+import { track } from '../../src/analytics';
 
 // ── Types ──
 
@@ -48,6 +49,21 @@ export default function LessonScreen() {
 
   // Capture pre-lesson state for transient screen detection
   const preCompletedRef = useRef<number[]>(completedLessonIds);
+  const lessonStartedRef = useRef<number | null>(null);
+
+  // ── Effects ──
+
+  useEffect(() => {
+    if (stage === "quiz" && lesson) {
+      lessonStartedRef.current = Date.now();
+      track('lesson_started', {
+        lesson_id: lesson.id,
+        phase: lesson.phase,
+        lesson_mode: lesson.lessonMode,
+        is_retry: skipIntro,
+      });
+    }
+  }, [stage, lesson, skipIntro]);
 
   // ── Handlers ──
 
@@ -75,6 +91,33 @@ export default function LessonScreen() {
       if (passed) {
         await recordPractice();
       }
+
+      const durationSeconds = lessonStartedRef.current
+        ? Math.round((Date.now() - lessonStartedRef.current) / 1000)
+        : 0;
+
+      if (passed) {
+        track('lesson_completed', {
+          lesson_id: lesson!.id,
+          phase: lesson!.phase,
+          accuracy,
+          duration_seconds: durationSeconds,
+          total_questions: results.total,
+          streak_peak: 0,
+        });
+      } else {
+        track('lesson_failed', {
+          lesson_id: lesson!.id,
+          phase: lesson!.phase,
+          accuracy,
+          duration_seconds: durationSeconds,
+          total_questions: results.total,
+        });
+      }
+
+      // TODO: Track mastery_state_changed event
+      // Requires comparing pre-lesson vs post-lesson mastery state per letter
+      // Deferred: ship other 9 events first, add mastery tracking in follow-up
 
       setQuizResults({ ...results, accuracy, passed });
       setStage("summary");

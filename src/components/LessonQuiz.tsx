@@ -9,6 +9,7 @@ import {
   playLetterSound,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
+import { track } from "../analytics";
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";
 import type { Lesson } from "../types/lesson";
 import type { MasteryState } from "../types/mastery";
@@ -76,6 +77,13 @@ export function LessonQuiz({
 
   const playTargetAudio = useCallback(() => {
     if (!currentQuestion?.hasAudio || !currentQuestion?.targetId) return;
+
+    track('letter_audio_played', {
+      letter_id: typeof currentQuestion.targetId === 'number' ? currentQuestion.targetId : 0,
+      audio_type: isSoundQuestion ? 'sound' as const : 'name' as const,
+      context: 'quiz' as const,
+    });
+
     if (isSoundQuestion) {
       playLetterSound(currentQuestion.targetId);
     } else {

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -6,6 +7,8 @@ import { useColors } from "../src/design/theme";
 import { typography, spacing, radii, fontFamilies } from "../src/design/tokens";
 import { ArabicText, Button } from "../src/design/components";
 import { useHabit } from "../src/hooks/useHabit";
+import { track } from "../src/analytics";
+import { LESSONS } from "../src/data/lessons";
 
 // ── Phase metadata ──
 
@@ -43,6 +46,14 @@ export default function PhaseCompleteScreen() {
   const info = PHASE_INFO[phaseNum] ?? PHASE_INFO[1];
   const nextPhaseTitle = NEXT_PHASE[phaseNum];
   const currentWird = habit?.currentWird ?? 0;
+
+  useEffect(() => {
+    const phaseLessons = LESSONS.filter((l) => l.phase === phaseNum);
+    track('phase_completed', {
+      phase: phaseNum,
+      total_lessons: phaseLessons.length,
+    });
+  }, [phaseNum]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
