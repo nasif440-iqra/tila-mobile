@@ -174,7 +174,6 @@ export function LessonQuiz({
       {/* Progress bar + streak banner */}
       <QuizProgress
         questionIndex={questionIndex}
-        totalQuestions={totalQuestions}
         originalQCount={originalQCount.current}
         progressPct={progressPct}
         streak={streak}

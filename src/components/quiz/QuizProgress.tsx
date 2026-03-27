@@ -14,7 +14,6 @@ import { typography, spacing, radii } from "../../design/tokens";
 
 interface QuizProgressProps {
   questionIndex: number;
-  totalQuestions: number;
   originalQCount: number;
   progressPct: number;
   streak: number;
