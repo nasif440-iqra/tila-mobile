@@ -30,12 +30,12 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
           entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}
           style={{ zIndex: 1 }}
         >
-          <Button title="Begin" onPress={onNext} style={styles.fullWidthBtn} />
+          <Button title="Begin Reading" onPress={onNext} style={styles.fullWidthBtn} />
         </Animated.View>
       }
     >
-      {/* Warm glow */}
-      <WarmGlow size={300} opacity={0.15} />
+      {/* Warm glow — animated pulsing */}
+      <WarmGlow size={300} animated pulseMin={0.10} pulseMax={0.20} />
 
       {/* Arabic calligraphy */}
       <Animated.View entering={FadeInDown.delay(calligraphyDelay).duration(SPLASH_STAGGER_DURATION)}>
