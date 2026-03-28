@@ -46,7 +46,7 @@ export default function PhasePanel({ label, done, total }: PhasePanelProps) {
                 typography.bodyLarge,
                 {
                   color: colors.text,
-                  fontFamily: fontFamilies.headingSemiBold,
+                  fontFamily: fontFamilies.headingMedium,
                 },
               ]}
             >
@@ -107,8 +107,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   phaseCount: {
-    fontSize: 12,
-    fontFamily: fontFamilies.bodyBold,
+    ...typography.bodySmall,
   },
   progressTrack: {
     height: 4,
