@@ -1,5 +1,4 @@
 import { Pressable, Text, type ViewStyle, type TextStyle, StyleSheet } from "react-native";
-import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,6 +6,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { typography, spacing, radii } from "../tokens";
 import { useColors } from "../theme";
+import { springs, pressScale } from "../animations";
+import { hapticTap } from "../haptics";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -35,15 +36,15 @@ export function Button({
   }));
 
   function handlePressIn() {
-    scale.value = withSpring(0.97, { stiffness: 400, damping: 25 });
+    scale.value = withSpring(pressScale.normal, springs.press);
   }
 
   function handlePressOut() {
-    scale.value = withSpring(1, { stiffness: 400, damping: 25 });
+    scale.value = withSpring(1, springs.press);
   }
 
   function handlePress() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     onPress();
   }
 
