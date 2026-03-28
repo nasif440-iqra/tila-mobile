@@ -1,6 +1,7 @@
 import React from "react";
-import { StyleSheet, Dimensions } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { spacing } from "../../design/tokens";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -9,41 +10,60 @@ interface OnboardingStepLayoutProps {
   variant: "splash" | "centered" | "card";
   fadeInDuration?: number;
   children: React.ReactNode;
+  footer?: React.ReactNode;
 }
 
 export function OnboardingStepLayout({
   variant,
   fadeInDuration = 600,
   children,
+  footer,
 }: OnboardingStepLayoutProps) {
-  const style =
+  const insets = useSafeAreaInsets();
+
+  const contentStyle =
     variant === "splash"
-      ? layoutStyles.splashStep
+      ? layoutStyles.splashContent
       : variant === "centered"
-      ? layoutStyles.centeredStep
-      : layoutStyles.cardStep;
+      ? layoutStyles.centeredContent
+      : layoutStyles.cardContent;
 
   return (
-    <Animated.View entering={FadeIn.duration(fadeInDuration)} style={style}>
-      {children}
+    <Animated.View entering={FadeIn.duration(fadeInDuration)} style={layoutStyles.root}>
+      <View style={[layoutStyles.contentArea, contentStyle]}>
+        {children}
+      </View>
+      {footer && (
+        <View style={[layoutStyles.footer, { paddingBottom: Math.max(insets.bottom, spacing.xxxl) }]}>
+          {footer}
+        </View>
+      )}
     </Animated.View>
   );
 }
 
 const layoutStyles = StyleSheet.create({
-  splashStep: {
+  root: {
+    flex: 1,
+  },
+  contentArea: {
+    flex: 1,
+  },
+  splashContent: {
     alignItems: "center",
     justifyContent: "center",
     paddingTop: SCREEN_HEIGHT * 0.15,
-    paddingBottom: spacing.xxxl,
   },
-  centeredStep: {
+  centeredContent: {
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: spacing.xxxl,
   },
-  cardStep: {
+  cardContent: {
     alignItems: "stretch",
     paddingVertical: spacing.xxxl,
+  },
+  footer: {
+    paddingHorizontal: spacing.xl,
   },
 });
