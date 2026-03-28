@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from "react-native";
 import { useColors } from "../../design/theme";
-import { spacing, radii, fontFamilies } from "../../design/tokens";
+import { spacing, typography, radii, fontFamilies } from "../../design/tokens";
 import { ArabicText } from "../../design/components";
 import { ARABIC_LETTERS } from "../../data/letters";
 import { deriveMasteryState } from "../../engine/mastery";
@@ -125,8 +125,8 @@ const styles = StyleSheet.create({
     padding: spacing.xs,
   },
   letterName: {
+    ...typography.caption,
     fontSize: 9,
-    fontFamily: fontFamilies.bodySemiBold,
     marginTop: spacing.xs,
   },
 });
