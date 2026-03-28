@@ -5,6 +5,13 @@ import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
 import { typography, spacing, fontFamilies } from "../../../design/tokens";
 import { WarmGlow } from "../WarmGlow";
+import { OnboardingStepLayout } from "../OnboardingStepLayout";
+import {
+  SPLASH_STAGGER_BASE,
+  SPLASH_STAGGER_DURATION,
+  CTA_DELAY_OFFSET,
+  CTA_DURATION,
+} from "../animations";
 
 function LogoMark({ colors }: { colors: ReturnType<typeof useColors> }) {
   return (
@@ -42,22 +49,40 @@ function LogoMark({ colors }: { colors: ReturnType<typeof useColors> }) {
 export function Welcome({ onNext }: { onNext: () => void }) {
   const colors = useColors();
 
+  // Splash stagger: element 0 = logo, 1 = app name, 2 = motto, 3 = tagline
+  const logoDelay = 0;
+  const nameDelay = SPLASH_STAGGER_BASE;
+  const mottoDelay = SPLASH_STAGGER_BASE * 2;
+  const taglineDelay = SPLASH_STAGGER_BASE * 3;
+  const ctaDelay = SPLASH_STAGGER_BASE * 4 + CTA_DELAY_OFFSET;
+
   return (
-    <Animated.View entering={FadeIn.duration(800)} style={styles.splashStep}>
+    <OnboardingStepLayout
+      variant="splash"
+      fadeInDuration={SPLASH_STAGGER_DURATION}
+      footer={
+        <Animated.View
+          entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}
+          style={{ zIndex: 1 }}
+        >
+          <Button title="Get Started" onPress={onNext} style={styles.fullWidthBtn} />
+        </Animated.View>
+      }
+    >
       {/* Warm ambient glow */}
       <WarmGlow size={360} opacity={0.12} />
 
       {/* Logo mark */}
       <Animated.View
-        entering={FadeIn.delay(200).duration(1200)}
-        style={{ marginBottom: 32, zIndex: 1 }}
+        entering={FadeIn.delay(logoDelay).duration(SPLASH_STAGGER_DURATION)}
+        style={{ marginBottom: spacing.xxl, zIndex: 1 }}
       >
         <LogoMark colors={colors} />
       </Animated.View>
 
       {/* App name */}
       <Animated.Text
-        entering={FadeInDown.delay(800).duration(800)}
+        entering={FadeInDown.delay(nameDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[
           styles.appName,
           {
@@ -72,7 +97,7 @@ export function Welcome({ onNext }: { onNext: () => void }) {
 
       {/* Brand motto */}
       <Animated.Text
-        entering={FadeIn.delay(1100).duration(700)}
+        entering={FadeIn.delay(mottoDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.brandMotto, { color: colors.accent, zIndex: 1 }]}
       >
         READ BEAUTIFULLY
@@ -80,32 +105,16 @@ export function Welcome({ onNext }: { onNext: () => void }) {
 
       {/* Tagline */}
       <Animated.Text
-        entering={FadeIn.delay(1500).duration(800)}
+        entering={FadeIn.delay(taglineDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.tagline, { color: colors.textSoft, zIndex: 1 }]}
       >
         Learn to read the Quran,{"\n"}one letter at a time.
       </Animated.Text>
-
-      <View style={styles.spacerXl} />
-
-      {/* CTA */}
-      <Animated.View
-        entering={FadeInUp.delay(1800).duration(600)}
-        style={[styles.fullWidthBtn, { zIndex: 1 }]}
-      >
-        <Button title="Get Started" onPress={onNext} style={styles.fullWidthBtn} />
-      </Animated.View>
-    </Animated.View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  splashStep: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: require("react-native").Dimensions.get("window").height * 0.15,
-    paddingBottom: spacing.xxxl,
-  },
   appName: {
     fontSize: 44,
     letterSpacing: 5.3,
@@ -118,18 +127,17 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: "uppercase",
     textAlign: "center",
-    marginTop: 8,
-    marginBottom: 24,
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
   },
   tagline: {
     ...typography.body,
     fontSize: 16,
     lineHeight: 26,
     textAlign: "center",
-    maxWidth: 260,
+    maxWidth: 300,
   },
   fullWidthBtn: {
     width: "100%",
   },
-  spacerXl: { height: spacing.xxxl },
 });
