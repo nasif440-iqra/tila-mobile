@@ -9,7 +9,7 @@ import { useEffect } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useColors } from "../../src/design/theme";
-import { spacing, fontFamilies } from "../../src/design/tokens";
+import { spacing, typography, fontFamilies } from "../../src/design/tokens";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { LESSONS } from "../../src/data/lessons";
@@ -103,7 +103,7 @@ export default function HomeScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Text style={[styles.appName, { color: colors.text }]}>tila</Text>
+          <Text style={[styles.appName, { color: colors.brown }]}>tila</Text>
           {currentWird > 0 && <StreakBadge count={currentWird} colors={colors} />}
         </View>
 
@@ -161,9 +161,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   appName: {
-    fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 22,
-    letterSpacing: 0.8,
+    ...typography.pageTitle,
   },
   streakBadge: {
     flexDirection: "row",
