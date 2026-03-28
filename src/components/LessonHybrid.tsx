@@ -11,11 +11,10 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import useLessonHybrid, { type Stage } from "../hooks/useLessonHybrid";
-import {
-  TRANSITION_FADE_IN,
-  TRANSITION_FADE_OUT,
-  TRANSITION_FADE_IN_DELAY,
-} from "./onboarding/animations";
+import { durations } from "../design/animations";
+
+/** Delay before new content fades in (specific timing gap, not a general preset) */
+const FADE_IN_DELAY = 100;
 
 // Exercise components
 import { ComprehensionExercise } from "./exercises/ComprehensionExercise";
@@ -258,8 +257,8 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
       <View style={styles.exerciseArea}>
         <Animated.View
           key={hybrid.exerciseIndex}
-          entering={FadeIn.duration(TRANSITION_FADE_IN).delay(TRANSITION_FADE_IN_DELAY)}
-          exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+          entering={FadeIn.duration(durations.normal).delay(FADE_IN_DELAY)}
+          exiting={FadeOut.duration(durations.micro)}
           style={styles.exerciseWrapper}
         >
           {renderExercise()}

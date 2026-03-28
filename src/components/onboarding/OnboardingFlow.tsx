@@ -11,10 +11,7 @@ import { router } from "expo-router";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
 import { spacing } from "../../design/tokens";
-import {
-  TRANSITION_FADE_IN,
-  TRANSITION_FADE_OUT,
-} from "./animations";
+import { durations } from "../../design/animations";
 import {
   playOnboardingAdvance,
   playOnboardingComplete,
@@ -149,8 +146,8 @@ export function OnboardingFlow() {
       >
         <Animated.View
           key={step}
-          entering={FadeIn.duration(TRANSITION_FADE_IN + 100)}
-          exiting={FadeOut.duration(TRANSITION_FADE_OUT + 50)}
+          entering={FadeIn.duration(durations.normal + 100)}
+          exiting={FadeOut.duration(durations.micro + 50)}
           style={{ flex: 1 }}
         >
           {step === 0 && <Welcome onNext={goNext} />}
