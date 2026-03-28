@@ -34,8 +34,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 4 plans
 Plans:
 - [x] 01-01-PLAN.md — Create animation presets module and haptics utility with tests
-- [x] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
-- [ ] 01-03-PLAN.md — Configure screen transitions and migrate onboarding/animations.ts consumers
+- [ ] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
+- [x] 01-03-PLAN.md — Configure screen transitions and migrate onboarding/animations.ts consumers
 - [ ] 01-04-PLAN.md — Automated validation + visual/haptic verification checkpoint
 **UI hint**: yes
 
@@ -117,7 +117,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design Foundation & Transitions | 0/4 | Planning | - |
+| 1. Design Foundation & Transitions | 2/4 | Executing | - |
 | 2. Onboarding Wow Factor | 0/TBD | Not started | - |
 | 3. Home Screen | 0/TBD | Not started | - |
 | 4. Lesson Experience | 0/TBD | Not started | - |
