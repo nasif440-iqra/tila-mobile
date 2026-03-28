@@ -4,6 +4,8 @@ import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
 import { typography, spacing, radii } from "../../../design/tokens";
 import { playTap } from "../../../audio/player";
+import { OnboardingStepLayout } from "../OnboardingStepLayout";
+import { STAGGER_BASE, STAGGER_DURATION } from "../animations";
 
 const startingPointOptions = [
   { label: "I'm completely new", value: "new" as const },
@@ -75,7 +77,18 @@ export function StartingPoint({
   const colors = useColors();
 
   return (
-    <Animated.View entering={FadeIn.duration(500)} style={styles.cardStep}>
+    <OnboardingStepLayout
+      variant="card"
+      fadeInDuration={STAGGER_DURATION}
+      footer={
+        <Button
+          title="Continue"
+          onPress={onNext}
+          disabled={!startingPoint}
+          style={styles.fullWidthBtn}
+        />
+      }
+    >
       <Text style={[styles.headline, { color: colors.text }]}>
         Where are you starting from?
       </Text>
@@ -83,12 +96,12 @@ export function StartingPoint({
         Choose what feels most true right now.
       </Text>
 
-      <View style={styles.spacerMd} />
+      <View style={{ height: spacing.xl }} />
 
       {startingPointOptions.map((opt, idx) => (
         <Animated.View
           key={`sp-${idx}`}
-          entering={FadeInDown.delay(300 + idx * 60).duration(400)}
+          entering={FadeInDown.delay(STAGGER_BASE * (idx + 1)).duration(STAGGER_DURATION)}
         >
           <OptionCard
             label={opt.label}
@@ -98,24 +111,11 @@ export function StartingPoint({
           />
         </Animated.View>
       ))}
-
-      <View style={styles.spacerMd} />
-
-      <Button
-        title="Continue"
-        onPress={onNext}
-        disabled={!startingPoint}
-        style={styles.fullWidthBtn}
-      />
-    </Animated.View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  cardStep: {
-    alignItems: "stretch",
-    paddingVertical: spacing.xxxl,
-  },
   headline: {
     ...typography.heading1,
     textAlign: "center",
@@ -130,5 +130,4 @@ const styles = StyleSheet.create({
   fullWidthBtn: {
     width: "100%",
   },
-  spacerMd: { height: spacing.xl },
 });
