@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   journeyPath: {
     position: "relative",
-    paddingLeft: 32,
+    paddingLeft: spacing.xxl,
     paddingVertical: spacing.sm,
   },
   connectorLine: {
@@ -313,6 +313,6 @@ const styles = StyleSheet.create({
   nodeSubtitle: {
     fontSize: 12,
     fontFamily: fontFamilies.bodyRegular,
-    marginTop: 2,
+    marginTop: spacing.xs,
   },
 });
