@@ -16,7 +16,7 @@ export default function PhasePanel({ label, done, total }: PhasePanelProps) {
   const isComplete = done === total && total > 0;
 
   return (
-    <Card style={{ marginBottom: spacing.md, padding: spacing.lg }}>
+    <Card style={{ padding: spacing.lg }}>
       <View style={styles.phaseHeader}>
         <View style={styles.phaseHeaderLeft}>
           {/* Status dot */}
