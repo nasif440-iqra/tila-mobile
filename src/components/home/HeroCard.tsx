@@ -40,7 +40,7 @@ export default function HeroCard({
   if (allDone || !lesson) {
     return (
       <Card elevated style={styles.heroCard}>
-        <Text style={[styles.heroTitle, { color: colors.text }]}>All lessons complete!</Text>
+        <Text style={[styles.heroTitle, { color: colors.brown }]}>All lessons complete!</Text>
         <Text style={[styles.heroDescription, { color: colors.textMuted }]}>
           You have completed all available lessons. Keep reviewing to strengthen your knowledge.
         </Text>
@@ -73,7 +73,7 @@ export default function HeroCard({
       </View>
 
       {/* Lesson info */}
-      <Text style={[styles.heroTitle, { color: colors.text }]}>{lesson.title}</Text>
+      <Text style={[styles.heroTitle, { color: colors.brown }]}>{lesson.title}</Text>
       <Text style={[styles.heroDescription, { color: colors.textMuted }]}>
         {lesson.description}
       </Text>
@@ -93,7 +93,7 @@ export default function HeroCard({
 const styles = StyleSheet.create({
   heroCard: {
     alignItems: "center",
-    marginBottom: spacing.xxl,
+    marginBottom: spacing.xxxxl,
     borderRadius: radii.xl,
     paddingVertical: spacing.xxl,
   },
@@ -104,10 +104,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   phasePillText: {
-    fontSize: 10,
-    fontFamily: fontFamilies.bodyBold,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    ...typography.label,
   },
   letterCircle: {
     width: 112,
@@ -118,16 +115,13 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   heroTitle: {
-    fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 22,
+    ...typography.cardHeadline,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   heroDescription: {
-    fontSize: 14,
-    fontFamily: fontFamilies.bodyRegular,
+    ...typography.body,
     textAlign: "center",
-    lineHeight: 22,
     marginBottom: spacing.xxl,
     paddingHorizontal: spacing.sm,
   },
