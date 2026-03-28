@@ -30,15 +30,22 @@ import { Welcome } from "./steps/Welcome";
 import { Tilawat } from "./steps/Tilawat";
 import { Hadith } from "./steps/Hadith";
 import { StartingPoint } from "./steps/StartingPoint";
+import { BismillahMoment } from "./steps/BismillahMoment";
 import { LetterReveal } from "./steps/LetterReveal";
 import { LetterAudio } from "./steps/LetterAudio";
 import { LetterQuiz } from "./steps/LetterQuiz";
 import { Finish } from "./steps/Finish";
 
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
+
+const STEP = {
+  WELCOME: 0, TILAWAT: 1, HADITH: 2, STARTING_POINT: 3,
+  BISMILLAH: 4, LETTER_REVEAL: 5, LETTER_AUDIO: 6,
+  LETTER_QUIZ: 7, FINISH: 8,
+} as const;
 
 const STEP_NAMES = [
-  'welcome', 'tilawat', 'hadith', 'starting_point',
+  'welcome', 'tilawat', 'hadith', 'starting_point', 'bismillah',
   'letter_reveal', 'letter_audio', 'letter_quiz', 'finish',
 ] as const;
 
@@ -59,6 +66,7 @@ export function OnboardingFlow() {
     setStep((s) => s + 1);
   }
 
+  // TODO: Update analytics to use STEP_NAMES instead of numeric indices (step indices shifted after Bismillah insertion)
   useEffect(() => {
     track('onboarding_step_viewed', {
       step_index: step,
@@ -66,12 +74,14 @@ export function OnboardingFlow() {
     });
   }, [step]);
 
-  // Letter reveal auto-advance (step 4 -> step 5 after 3.5s)
+  // LetterReveal and Bismillah auto-advance from their own component timers via onNext/goNext.
+  // Other steps advance via user button press.
+  // LetterReveal auto-advance (STEP.LETTER_REVEAL -> STEP.LETTER_AUDIO after 4.5s, accounts for stillness beat per UI-SPEC)
   useEffect(() => {
-    if (step === 4) {
+    if (step === STEP.LETTER_REVEAL) {
       letterRevealTimerRef.current = setTimeout(() => {
-        setStep(5);
-      }, 3500);
+        setStep(STEP.LETTER_AUDIO);
+      }, 4500);
       return () => {
         if (letterRevealTimerRef.current) clearTimeout(letterRevealTimerRef.current);
       };
@@ -118,8 +128,8 @@ export function OnboardingFlow() {
     }
   }
 
-  // Progress bar visibility: hidden on welcome (0), letter reveal (4), and quiz (6)
-  const showProgressBar = step > 0 && step !== 4 && step !== 6 && step < 7;
+  // Progress bar visibility: hidden on welcome, bismillah, letter reveal, letter quiz, and finish
+  const showProgressBar = step > STEP.WELCOME && step !== STEP.LETTER_REVEAL && step !== STEP.LETTER_QUIZ && step !== STEP.BISMILLAH && step < STEP.FINISH;
 
   // Fade-out opacity when finishing
   const fadeOpacity = useSharedValue(1);
@@ -132,8 +142,8 @@ export function OnboardingFlow() {
 
   return (
     <Animated.View style={[styles.root, { backgroundColor: colors.bgWarm }, fadeStyle]}>
-      {/* Floating Arabic letters — visible on steps 0-2 */}
-      {step <= 2 && <FloatingLettersLayer color={colors.primary} />}
+      {/* Floating Arabic letters — visible on steps 0-3 (Welcome through StartingPoint) */}
+      {step <= STEP.STARTING_POINT && <FloatingLettersLayer color={colors.primary} />}
 
       {/* Progress bar */}
       {showProgressBar && (
@@ -153,10 +163,10 @@ export function OnboardingFlow() {
           exiting={FadeOut.duration(TRANSITION_FADE_OUT + 50)}
           style={{ flex: 1 }}
         >
-          {step === 0 && <Welcome onNext={goNext} />}
-          {step === 1 && <Tilawat onNext={goNext} />}
-          {step === 2 && <Hadith onNext={goNext} />}
-          {step === 3 && (
+          {step === STEP.WELCOME && <Welcome onNext={goNext} />}
+          {step === STEP.TILAWAT && <Tilawat onNext={goNext} />}
+          {step === STEP.HADITH && <Hadith onNext={goNext} />}
+          {step === STEP.STARTING_POINT && (
             <StartingPoint
               startingPoint={draft.startingPoint}
               onSelectStartingPoint={(value) =>
@@ -165,16 +175,17 @@ export function OnboardingFlow() {
               onNext={goNext}
             />
           )}
-          {step === 4 && <LetterReveal />}
-          {step === 5 && (
+          {step === STEP.BISMILLAH && <BismillahMoment onNext={goNext} />}
+          {step === STEP.LETTER_REVEAL && <LetterReveal />}
+          {step === STEP.LETTER_AUDIO && (
             <LetterAudio
               onNext={goNext}
               onPlayAudio={handlePlayAudio}
               hasPlayedAudio={hasPlayedAudio}
             />
           )}
-          {step === 6 && <LetterQuiz onNext={goNext} />}
-          {step === 7 && (
+          {step === STEP.LETTER_QUIZ && <LetterQuiz onNext={goNext} />}
+          {step === STEP.FINISH && (
             <Finish
               onFinish={handleFinish}
               finishing={finishing}
@@ -207,3 +218,5 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxxl,
   },
 });
+
+export { STEP };
