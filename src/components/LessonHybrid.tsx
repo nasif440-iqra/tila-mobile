@@ -5,7 +5,6 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   FadeIn,
-  FadeInDown,
   FadeOut,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
