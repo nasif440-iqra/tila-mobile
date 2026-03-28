@@ -5,7 +5,7 @@
 
 **Visual direction:** Warm & sacred palette + playful interaction energy. Balanced warmth — cream canvas, gold accents, rounded shapes. Duolingo-style bouncy transitions (Phase 4), but the structural foundation is laid now.
 
----
+
 
 ## Strategy
 

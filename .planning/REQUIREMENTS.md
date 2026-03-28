@@ -62,13 +62,13 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 - [ ] **STATE-01**: App shows beautiful loading state while initializing (not a blank screen)
 - [ ] **STATE-02**: Empty states show encouraging messages and guidance (not blank space)
 - [ ] **STATE-03**: Error boundary catches crashes gracefully with recovery option
-- [ ] **STATE-04**: All screen transitions are smooth with no jarring jumps
+- [x] **STATE-04**: All screen transitions are smooth with no jarring jumps
 
 ### Screen Transitions
 
-- [ ] **TRANS-01**: Screen-to-screen navigation transitions feel smooth and intentional
-- [ ] **TRANS-02**: In-screen content transitions (stage changes, exercise switches) are fluid
-- [ ] **TRANS-03**: Maximum 3 transition types used consistently: slide-up for modals, fade for in-place, push for navigation
+- [x] **TRANS-01**: Screen-to-screen navigation transitions feel smooth and intentional
+- [x] **TRANS-02**: In-screen content transitions (stage changes, exercise switches) are fluid
+- [x] **TRANS-03**: Maximum 3 transition types used consistently: slide-up for modals, fade for in-place, push for navigation
 
 ## v2 Requirements
 
@@ -112,10 +112,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | DES-02 | Phase 1 | Complete |
 | DES-03 | Phase 1 | Complete |
 | DES-04 | Phase 1 | Complete |
-| TRANS-01 | Phase 1 | Pending |
-| TRANS-02 | Phase 1 | Pending |
-| TRANS-03 | Phase 1 | Pending |
-| STATE-04 | Phase 1 | Pending |
+| TRANS-01 | Phase 1 | Complete |
+| TRANS-02 | Phase 1 | Complete |
+| TRANS-03 | Phase 1 | Complete |
+| STATE-04 | Phase 1 | Complete |
 | ONB-01 | Phase 2 | Pending |
 | ONB-02 | Phase 2 | Pending |
 | ONB-03 | Phase 2 | Pending |
