@@ -68,7 +68,7 @@ Plans:
 **Plans:** 2 plans
 Plans:
 - [x] 03-01-PLAN.md — Wave 0 test stubs + AnimatedStreakBadge + JourneyNode new components
-- [ ] 03-02-PLAN.md — HeroCard polish, LessonGrid wiring, index.tsx staggered entrances + visual checkpoint
+- [x] 03-02-PLAN.md — HeroCard polish, LessonGrid wiring, index.tsx staggered entrances + visual checkpoint
 **UI hint**: yes
 
 ### Phase 4: Lesson Experience
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Design Foundation & Transitions | 2/4 | Executing | - |
 | 2. Onboarding Wow Factor | 1/4 | In Progress|  |
-| 3. Home Screen | 1/2 | Executing | - |
+| 3. Home Screen | 2/2 | Checkpoint pending | - |
 | 4. Lesson Experience | 0/TBD | Not started | - |
 | 5. Celebrations & Feedback | 0/TBD | Not started | - |
 | 6. Progress Screen | 0/TBD | Not started | - |
