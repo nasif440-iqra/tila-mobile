@@ -115,19 +115,20 @@ export default function ProgressScreen() {
         <Text
           style={[
             typography.heading3,
-            { color: colors.text, marginBottom: spacing.md },
+            { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.md },
           ]}
         >
           Phase Progress
         </Text>
 
         {PHASES.map((phase) => (
-          <PhasePanel
-            key={phase.key}
-            label={phase.label}
-            done={phaseCounts[phase.done] as number}
-            total={phaseCounts[phase.total] as number}
-          />
+          <View key={phase.key} style={{ marginBottom: spacing.md }}>
+            <PhasePanel
+              label={phase.label}
+              done={phaseCounts[phase.done] as number}
+              total={phaseCounts[phase.total] as number}
+            />
+          </View>
         ))}
 
         {/* ── Letter Mastery Grid ── */}
@@ -136,7 +137,7 @@ export default function ProgressScreen() {
             typography.heading3,
             {
               color: colors.text,
-              marginTop: spacing.lg,
+              marginTop: spacing.xl,
               marginBottom: spacing.md,
             },
           ]}
