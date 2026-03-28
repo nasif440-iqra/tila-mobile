@@ -18,6 +18,7 @@ import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
 import { durations } from "../../src/design/animations";
+import { BismillahOverlay, shouldShowBismillah } from "../../src/components/shared/BismillahOverlay";
 
 // ── Types ──
 
@@ -45,6 +46,7 @@ export default function LessonScreen() {
   const [stage, setStage] = useState<Stage>("intro");
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
   const [skipIntro, setSkipIntro] = useState(false);
+  const [showBismillah, setShowBismillah] = useState(() => shouldShowBismillah());
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -233,14 +235,19 @@ export default function LessonScreen() {
   }
 
   return (
-    <Animated.View
-      key={effectiveStage}
-      entering={FadeIn.duration(durations.normal)}
-      exiting={FadeOut.duration(durations.micro)}
-      style={{ flex: 1 }}
-    >
-      {renderStage()}
-    </Animated.View>
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        key={effectiveStage}
+        entering={FadeIn.duration(durations.normal)}
+        exiting={FadeOut.duration(durations.micro)}
+        style={{ flex: 1 }}
+      >
+        {renderStage()}
+      </Animated.View>
+      {showBismillah && (
+        <BismillahOverlay onComplete={() => setShowBismillah(false)} />
+      )}
+    </View>
   );
 }
 
