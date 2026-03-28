@@ -31,7 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Every tappable element provides haptic feedback appropriate to its action (light tap on press, success buzz on correct, error buzz on wrong)
   3. Design system components (Button, Card, ArabicText, HearButton, QuizOption) look polished and premium across all screens where they appear
   4. Animation timings are consistent app-wide (shared presets file, not per-component magic numbers)
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 01-01-PLAN.md — Create animation presets module and haptics utility with tests
+- [ ] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
+- [ ] 01-03-PLAN.md — Configure screen transitions and migrate onboarding/animations.ts consumers
+- [ ] 01-04-PLAN.md — Automated validation + visual/haptic verification checkpoint
 **UI hint**: yes
 
 ### Phase 2: Onboarding Wow Factor
@@ -112,7 +117,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Design Foundation & Transitions | 0/TBD | Not started | - |
+| 1. Design Foundation & Transitions | 0/4 | Planning | - |
 | 2. Onboarding Wow Factor | 0/TBD | Not started | - |
 | 3. Home Screen | 0/TBD | Not started | - |
 | 4. Lesson Experience | 0/TBD | Not started | - |
