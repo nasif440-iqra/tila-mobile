@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "../../src/design/theme";
@@ -16,6 +17,10 @@ import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
+import {
+  TRANSITION_FADE_IN,
+  TRANSITION_FADE_OUT,
+} from "../../src/components/onboarding/animations";
 
 // ── Types ──
 
@@ -188,42 +193,58 @@ export default function LessonScreen() {
 
   const isHybrid = lesson?.lessonType === "hybrid";
 
-  // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
-  if (stage === "intro" && !skipIntro && !isHybrid) {
-    return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} />;
-  }
+  // Determine the effective stage key for animation
+  const effectiveStage =
+    stage === "intro" && (skipIntro || isHybrid) ? "quiz" : stage;
 
-  // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
-  if (stage === "quiz" || (stage === "intro" && (skipIntro || isHybrid))) {
-    if (isHybrid) {
-      return <LessonHybrid lesson={lesson} onComplete={handleQuizComplete} />;
+  function renderStage() {
+    // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
+    if (stage === "intro" && !skipIntro && !isHybrid) {
+      return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} />;
     }
-    return (
-      <LessonQuiz
-        lesson={lesson}
-        completedLessonIds={completedLessonIds}
-        mastery={mastery}
-        onComplete={handleQuizComplete}
-      />
-    );
+
+    // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
+    if (stage === "quiz" || (stage === "intro" && (skipIntro || isHybrid))) {
+      if (isHybrid) {
+        return <LessonHybrid lesson={lesson} onComplete={handleQuizComplete} />;
+      }
+      return (
+        <LessonQuiz
+          lesson={lesson}
+          completedLessonIds={completedLessonIds}
+          mastery={mastery}
+          onComplete={handleQuizComplete}
+        />
+      );
+    }
+
+    // Summary stage
+    if (stage === "summary" && quizResults) {
+      return (
+        <LessonSummary
+          lesson={lesson}
+          results={quizResults}
+          passed={quizResults.passed}
+          accuracy={quizResults.accuracy}
+          onContinue={handleContinue}
+          onRetry={handleRetry}
+        />
+      );
+    }
+
+    return null;
   }
 
-  // Summary stage
-  if (stage === "summary" && quizResults) {
-    return (
-      <LessonSummary
-        lesson={lesson}
-        results={quizResults}
-        passed={quizResults.passed}
-        accuracy={quizResults.accuracy}
-        onContinue={handleContinue}
-        onRetry={handleRetry}
-      />
-    );
-  }
-
-  // Fallback — should not happen
-  return null;
+  return (
+    <Animated.View
+      key={effectiveStage}
+      entering={FadeIn.duration(TRANSITION_FADE_IN)}
+      exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+      style={{ flex: 1 }}
+    >
+      {renderStage()}
+    </Animated.View>
+  );
 }
 
 // ── Styles ──

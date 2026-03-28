@@ -12,6 +12,11 @@ import * as Haptics from "expo-haptics";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import useLessonHybrid, { type Stage } from "../hooks/useLessonHybrid";
+import {
+  TRANSITION_FADE_IN,
+  TRANSITION_FADE_OUT,
+  TRANSITION_FADE_IN_DELAY,
+} from "./onboarding/animations";
 
 // Exercise components
 import { ComprehensionExercise } from "./exercises/ComprehensionExercise";
@@ -254,7 +259,8 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
       <View style={styles.exerciseArea}>
         <Animated.View
           key={hybrid.exerciseIndex}
-          entering={FadeInDown.springify().stiffness(320).damping(28)}
+          entering={FadeIn.duration(TRANSITION_FADE_IN).delay(TRANSITION_FADE_IN_DELAY)}
+          exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
           style={styles.exerciseWrapper}
         >
           {renderExercise()}
