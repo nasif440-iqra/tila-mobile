@@ -122,10 +122,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | ONB-04 | Phase 2 | Complete |
 | MIND-01 | Phase 2 | Complete |
 | MIND-02 | Phase 2 | Complete |
-| HOME-01 | Phase 3 | Pending |
+| HOME-01 | Phase 3 | In Progress |
 | HOME-02 | Phase 3 | Pending |
-| HOME-03 | Phase 3 | Pending |
-| HOME-04 | Phase 3 | Pending |
+| HOME-03 | Phase 3 | In Progress |
+| HOME-04 | Phase 3 | In Progress |
 | LES-01 | Phase 4 | Pending |
 | LES-02 | Phase 4 | Pending |
 | LES-03 | Phase 4 | Pending |

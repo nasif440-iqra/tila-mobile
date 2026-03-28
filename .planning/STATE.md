@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 UI-SPEC approved
-last_updated: "2026-03-28T19:22:49.095Z"
-last_activity: 2026-03-28
+stopped_at: Completed 03-01-PLAN.md
+last_updated: "2026-03-28T19:41:00Z"
+last_activity: 2026-03-28 -- Completed 03-01 (home component extraction)
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 8
-  completed_plans: 7
-  percent: 18
+  total_plans: 10
+  completed_plans: 8
+  percent: 22
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-28)
 
 **Core value:** The first impression must be stunning. When someone opens Tila for the first time, they should feel welcomed, inspired, and excited to learn.
-**Current focus:** Phase 02 — onboarding-wow-factor
+**Current focus:** Phase 03 — home-screen
 
 ## Current Position
 
-Phase: 3
-Plan: Not started
-Status: Executing Phase 02
-Last activity: 2026-03-28
+Phase: 03 (home-screen) — EXECUTING
+Plan: 2 of 2
+Status: Executing Phase 03
+Last activity: 2026-03-28 -- Completed 03-01 (home component extraction)
 
-Progress: [██░░░░░░░░] 18%
+Progress: [██▓░░░░░░░] 22%
 
 ## Performance Metrics
 
@@ -56,6 +56,7 @@ Progress: [██░░░░░░░░] 18%
 | Phase 01 P03 | 243 | 2 tasks | 6 files |
 | Phase 02 P00 | 78 | 2 tasks | 4 files |
 | Phase 02 P03 | ~240 | 2 tasks | 4 files |
+| Phase 03 P01 | 151 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Module-level boolean for BismillahOverlay session detection (simpler than SecureStore)
 - [Phase 02]: withTiming callback + runOnJS for deterministic animation-driven completion signals
 - [Phase 02]: Dual WarmGlow layering pattern for sacred moment ambient lighting
+- [Phase 03]: JourneyNode glow ring uses standalone Animated.View (not WarmGlow) per Research Open Question 1
+- [Phase 03]: AnimatedStreakBadge uses WarmGlow with pulseMin 0.04 / pulseMax 0.12 for subtle breathing
 
 ### Pending Todos
 
@@ -86,6 +89,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-28T19:22:49.089Z
-Stopped at: Phase 3 UI-SPEC approved
-Resume file: .planning/phases/03-home-screen/03-UI-SPEC.md
+Last session: 2026-03-28T19:41:00Z
+Stopped at: Completed 03-01-PLAN.md
+Resume file: .planning/phases/03-home-screen/03-02-PLAN.md
