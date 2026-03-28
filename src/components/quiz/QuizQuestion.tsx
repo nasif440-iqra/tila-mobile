@@ -50,7 +50,7 @@ export function QuizQuestion({
           <Text
             style={[
               styles.promptText,
-              { color: colors.text, marginTop: spacing.lg },
+              { color: colors.brown, marginTop: spacing.lg },
             ]}
           >
             {question.prompt}
@@ -106,7 +106,7 @@ export function QuizQuestion({
       {isVisualQuestion && (
         <View style={styles.promptCenter}>
           <Text
-            style={[styles.promptText, { color: colors.text }]}
+            style={[styles.promptText, { color: colors.brown }]}
           >
             {question.prompt}
           </Text>
