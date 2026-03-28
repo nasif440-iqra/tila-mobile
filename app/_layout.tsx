@@ -23,6 +23,7 @@ import {
   Lora_400Regular_Italic,
 } from "@expo-google-fonts/lora";
 import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme";
+import { screenTransitions } from "../src/design/animations";
 import { DatabaseProvider } from "../src/db/provider";
 
 // Prevent splash from auto-hiding — we control when it goes away
@@ -87,23 +88,46 @@ export default function RootLayout() {
             headerShown: false,
             contentStyle: { backgroundColor: colors.bg },
             animation: "fade",
-            animationDuration: 300,
+            animationDuration: screenTransitions.fade,
           }}
         >
+          {/* Modal/overlay screens: slide up (per D-10) */}
           <Stack.Screen
             name="lesson/[id]"
             options={{
               animation: "slide_from_bottom",
-              animationDuration: 400,
+              animationDuration: screenTransitions.slideUp,
             }}
           />
           <Stack.Screen
             name="lesson/review"
             options={{
               animation: "slide_from_bottom",
-              animationDuration: 400,
+              animationDuration: screenTransitions.slideUp,
             }}
           />
+          <Stack.Screen
+            name="wird-intro"
+            options={{
+              animation: "slide_from_bottom",
+              animationDuration: screenTransitions.slideUp,
+            }}
+          />
+          <Stack.Screen
+            name="phase-complete"
+            options={{
+              animation: "slide_from_bottom",
+              animationDuration: screenTransitions.slideUp,
+            }}
+          />
+          <Stack.Screen
+            name="post-lesson-onboard"
+            options={{
+              animation: "slide_from_bottom",
+              animationDuration: screenTransitions.slideUp,
+            }}
+          />
+          {/* Fade screens: onboarding, return-welcome, (tabs) use default animation: "fade" */}
         </Stack>
       </DatabaseProvider>
     </ThemeContext.Provider>
