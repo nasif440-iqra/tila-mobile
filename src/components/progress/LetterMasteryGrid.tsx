@@ -127,6 +127,6 @@ const styles = StyleSheet.create({
   letterName: {
     fontSize: 9,
     fontFamily: fontFamilies.bodySemiBold,
-    marginTop: 2,
+    marginTop: spacing.xs,
   },
 });
