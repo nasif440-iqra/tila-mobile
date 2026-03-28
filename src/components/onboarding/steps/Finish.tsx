@@ -101,7 +101,7 @@ export function Finish({
       {/* Headline */}
       <Animated.Text
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={[styles.finishHeadline, { color: colors.text, zIndex: 1 }]}
+        style={[styles.finishHeadline, { color: colors.brown, zIndex: 1 }]}
       >
         You{"\u2019"}ve already begun
       </Animated.Text>

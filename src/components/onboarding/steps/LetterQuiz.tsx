@@ -56,7 +56,7 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
       {/* Prompt */}
       <Animated.Text
         entering={FadeInDown.delay(0).duration(STAGGER_DURATION)}
-        style={[styles.quizPrompt, { color: colors.text }]}
+        style={[styles.quizPrompt, { color: colors.brown }]}
       >
         Which one is Alif?
       </Animated.Text>
