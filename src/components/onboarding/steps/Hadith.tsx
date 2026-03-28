@@ -47,12 +47,12 @@ export function Hadith({ onNext }: { onNext: () => void }) {
           entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}
           style={{ zIndex: 1 }}
         >
-          <Button title="Continue" onPress={onNext} style={styles.fullWidthBtn} />
+          <Button title="Continue Journey" onPress={onNext} style={styles.fullWidthBtn} />
         </Animated.View>
       }
     >
-      {/* Ambient glow */}
-      <WarmGlow size={340} opacity={0.12} />
+      {/* Ambient glow — animated pulsing */}
+      <WarmGlow size={340} animated pulseMin={0.08} pulseMax={0.18} />
 
       {/* Arch outline */}
       <ArchOutline color={colors.accent} />
