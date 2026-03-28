@@ -3,6 +3,13 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button, HearButton } from "../../../design/components";
 import { typography, spacing, fontFamilies } from "../../../design/tokens";
+import { OnboardingStepLayout } from "../OnboardingStepLayout";
+import {
+  STAGGER_BASE,
+  STAGGER_DURATION,
+  CTA_DELAY_OFFSET,
+  CTA_DURATION,
+} from "../animations";
 
 export function LetterAudio({
   onNext,
@@ -15,11 +22,25 @@ export function LetterAudio({
 }) {
   const colors = useColors();
 
+  // Standard stagger: 0 = label, 1 = letter circle, 2 = play button
+  const labelDelay = 0;
+  const circleDelay = STAGGER_BASE;
+  const playDelay = STAGGER_BASE * 2;
+  const ctaDelay = STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
+
   return (
-    <Animated.View entering={FadeIn.duration(700)} style={styles.centeredStep}>
+    <OnboardingStepLayout
+      variant="centered"
+      fadeInDuration={STAGGER_DURATION}
+      footer={
+        <Animated.View entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}>
+          <Button title="Continue" onPress={onNext} style={styles.fullWidthBtn} />
+        </Animated.View>
+      }
+    >
       {/* Label */}
       <Animated.Text
-        entering={FadeInDown.delay(100).duration(500)}
+        entering={FadeInDown.delay(labelDelay).duration(STAGGER_DURATION)}
         style={[styles.firstWinLabel, { color: colors.textMuted }]}
       >
         Your first letter
@@ -29,7 +50,7 @@ export function LetterAudio({
 
       {/* Letter in circle with glow */}
       <Animated.View
-        entering={FadeIn.delay(200).duration(500)}
+        entering={FadeIn.delay(circleDelay).duration(STAGGER_DURATION)}
         style={styles.letterCircleOuter}
       >
         {/* Soft glow behind circle */}
@@ -54,12 +75,7 @@ export function LetterAudio({
           </ArabicText>
         </View>
         {/* Name */}
-        <Text
-          style={[
-            styles.letterCircleName,
-            { color: colors.text },
-          ]}
-        >
+        <Text style={[styles.letterCircleName, { color: colors.text }]}>
           Alif
         </Text>
       </Animated.View>
@@ -68,7 +84,7 @@ export function LetterAudio({
 
       {/* Play button */}
       <Animated.View
-        entering={FadeIn.delay(400).duration(500)}
+        entering={FadeIn.delay(playDelay).duration(STAGGER_DURATION)}
         style={{ alignItems: "center" }}
       >
         <HearButton
@@ -85,26 +101,11 @@ export function LetterAudio({
           {hasPlayedAudio ? "Hear again" : "Hear it"}
         </Text>
       </Animated.View>
-
-      <View style={styles.spacerXl} />
-
-      {/* CTA */}
-      <Animated.View
-        entering={FadeInUp.delay(550).duration(500)}
-        style={styles.fullWidthBtn}
-      >
-        <Button title="Continue" onPress={onNext} style={styles.fullWidthBtn} />
-      </Animated.View>
-    </Animated.View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  centeredStep: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: spacing.xxxl,
-  },
   firstWinLabel: {
     fontFamily: fontFamilies.bodyMedium,
     fontSize: 13,
@@ -143,5 +144,4 @@ const styles = StyleSheet.create({
   fullWidthBtn: {
     width: "100%",
   },
-  spacerXl: { height: spacing.xxxl },
 });
