@@ -4,6 +4,8 @@ import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
 
+const OPTIONS_GRID_MAX_WIDTH = 340;
+
 // ── Types ──
 
 interface QuizQuestionProps {
@@ -202,7 +204,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
     width: "100%",
-    maxWidth: 340,
+    maxWidth: OPTIONS_GRID_MAX_WIDTH,
   },
   optionCell: {
     width: "47%",
