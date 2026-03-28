@@ -60,7 +60,7 @@ export function Hadith({ onNext }: { onNext: () => void }) {
       {/* Headline */}
       <Animated.Text
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={[styles.hadithHeadline, { color: colors.text, zIndex: 1 }]}
+        style={[styles.hadithHeadline, { color: colors.brown, zIndex: 1 }]}
       >
         Struggling is not failing
       </Animated.Text>
