@@ -4,17 +4,41 @@ import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, fontFamilies } from "../../../design/tokens";
 import { WarmGlow } from "../WarmGlow";
+import { OnboardingStepLayout } from "../OnboardingStepLayout";
+import {
+  SPLASH_STAGGER_BASE,
+  SPLASH_STAGGER_DURATION,
+  CTA_DELAY_OFFSET,
+  CTA_DURATION,
+} from "../animations";
 
 export function Tilawat({ onNext }: { onNext: () => void }) {
   const colors = useColors();
 
+  // Splash stagger: 0 = calligraphy, 1 = headline, 2 = motto
+  const calligraphyDelay = 0;
+  const headlineDelay = SPLASH_STAGGER_BASE;
+  const mottoDelay = SPLASH_STAGGER_BASE * 2;
+  const ctaDelay = SPLASH_STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
+
   return (
-    <Animated.View entering={FadeIn.duration(700)} style={styles.splashStep}>
+    <OnboardingStepLayout
+      variant="splash"
+      fadeInDuration={SPLASH_STAGGER_DURATION}
+      footer={
+        <Animated.View
+          entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}
+          style={{ zIndex: 1 }}
+        >
+          <Button title="Begin" onPress={onNext} style={styles.fullWidthBtn} />
+        </Animated.View>
+      }
+    >
       {/* Warm glow */}
       <WarmGlow size={300} opacity={0.15} />
 
       {/* Arabic calligraphy */}
-      <Animated.View entering={FadeInDown.delay(150).duration(550)}>
+      <Animated.View entering={FadeInDown.delay(calligraphyDelay).duration(SPLASH_STAGGER_DURATION)}>
         <ArabicText
           size="display"
           color={colors.primaryDark}
@@ -24,15 +48,12 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         </ArabicText>
       </Animated.View>
 
-      <View style={{ height: 28 }} />
+      <View style={{ height: spacing.xxl }} />
 
       {/* Headline */}
       <Animated.Text
-        entering={FadeInDown.delay(350).duration(550)}
-        style={[
-          styles.sacredHeadline,
-          { color: colors.text, zIndex: 1 },
-        ]}
+        entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
+        style={[styles.sacredHeadline, { color: colors.text, zIndex: 1 }]}
       >
         To recite the Quran beautifully is{" "}
         <Text
@@ -45,36 +66,20 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         </Text>
       </Animated.Text>
 
-      <View style={{ height: 10 }} />
+      <View style={{ height: spacing.md }} />
 
       {/* Motto */}
       <Animated.Text
-        entering={FadeIn.delay(750).duration(500)}
+        entering={FadeIn.delay(mottoDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.sacredMotto, { color: colors.textMuted, zIndex: 1 }]}
       >
         Recite. Reflect. Return.
       </Animated.Text>
-
-      <View style={styles.spacerXl} />
-
-      {/* CTA */}
-      <Animated.View
-        entering={FadeInUp.delay(900).duration(500)}
-        style={[styles.fullWidthBtn, { zIndex: 1 }]}
-      >
-        <Button title="Begin" onPress={onNext} style={styles.fullWidthBtn} />
-      </Animated.View>
-    </Animated.View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  splashStep: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: require("react-native").Dimensions.get("window").height * 0.15,
-    paddingBottom: spacing.xxxl,
-  },
   sacredHeadline: {
     fontFamily: fontFamilies.headingSemiBold,
     fontSize: 22,
@@ -91,5 +96,4 @@ const styles = StyleSheet.create({
   fullWidthBtn: {
     width: "100%",
   },
-  spacerXl: { height: spacing.xxxl },
 });
