@@ -81,7 +81,11 @@ Plans:
   3. Correct answers produce a warm sparkle + haptic; wrong answers produce a gentle shake + encouraging correction (not punishing)
   4. Lesson completion summary celebrates with visual excitement proportional to score (confetti/particles for great scores, warm encouragement for okay scores)
   5. All exercise types (guided reveal, tap-in-order, build-up reader, free reader) share a consistent polished look
-**Plans**: TBD
+**Plans:** 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Exercise haptic migration + LessonHybrid spring/haptic migration + GuidedReveal WarmGlow
+- [ ] 04-02-PLAN.md — Quiz polish: QuizProgress springs + color transition, QuizCelebration scale + haptic + copy, QuizQuestion correct pulse, WrongAnswerPanel encouragement
+- [ ] 04-03-PLAN.md — LessonIntro WarmGlow + staggered scale entrance, LessonSummary score-proportional celebration
 **UI hint**: yes
 
 ### Phase 5: Celebrations & Feedback
@@ -128,7 +132,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Design Foundation & Transitions | 2/4 | Executing | - |
 | 2. Onboarding Wow Factor | 1/4 | In Progress|  |
 | 3. Home Screen | 2/2 | Checkpoint pending | - |
-| 4. Lesson Experience | 0/TBD | Not started | - |
+| 4. Lesson Experience | 0/3 | Planned | - |
 | 5. Celebrations & Feedback | 0/TBD | Not started | - |
 | 6. Progress Screen | 0/TBD | Not started | - |
 | 7. Loading & Error States | 0/TBD | Not started | - |
