@@ -18,6 +18,9 @@ export const lightColors = {
   textSoft: "#52545C",
   textMuted: "#6B6760",
   border: "#EBE6DC",
+  brown: "#3D2B1F",
+  brownLight: "#5C4033",
+  brownSoft: "#F5EDE4",
   white: "#FFFFFF",
   black: "#000000",
 } as const;
@@ -40,6 +43,9 @@ export const darkColors = {
   textSoft: "#A0A4AC",
   textMuted: "#8A8680",
   border: "#2A3028",
+  brown: "#D4C4B0",
+  brownLight: "#B8A898",
+  brownSoft: "#2A2420",
   white: "#FFFFFF",
   black: "#000000",
 } as const;
@@ -113,6 +119,38 @@ export const typography = {
     fontSize: 11,
     lineHeight: 16,
   },
+  // ── Role-based presets (Phase 2) ──
+  pageTitle: {
+    fontFamily: fontFamilies.headingItalic,
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: -0.5,
+  },
+  cardHeadline: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: -0.3,
+  },
+  sectionHeader: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 13,
+    lineHeight: 18,
+    letterSpacing: 1.5,
+    textTransform: "uppercase" as const,
+  },
+  label: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 11,
+    lineHeight: 16,
+    letterSpacing: 1.5,
+    textTransform: "uppercase" as const,
+  },
+  statNumber: {
+    fontFamily: fontFamilies.headingItalic,
+    fontSize: 24,
+    lineHeight: 32,
+  },
 } as const;
 
 // ── Spacing (8px base rhythm) ──
@@ -125,6 +163,7 @@ export const spacing = {
   xl: 24,
   xxl: 32,
   xxxl: 48,
+  xxxxl: 64,
 } as const;
 
 // ── Border Radii ──
