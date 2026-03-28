@@ -6,10 +6,16 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useEffect } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useColors } from "../../src/design/theme";
-import { spacing, typography, fontFamilies } from "../../src/design/tokens";
+import { spacing, typography } from "../../src/design/tokens";
+import { durations, easings } from "../../src/design/animations";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { LESSONS } from "../../src/data/lessons";
@@ -18,24 +24,13 @@ import {
   getLessonsCompletedCount,
 } from "../../src/engine/selectors";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
+import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import HeroCard from "../../src/components/home/HeroCard";
 import LessonGrid from "../../src/components/home/LessonGrid";
 
 // ── Constants ──
 
 const SCROLL_BOTTOM_INSET = 96;
-
-// ── Streak Badge ──
-
-function StreakBadge({ count, colors: c }: { count: number; colors: ReturnType<typeof useColors> }) {
-  return (
-    <View style={[styles.streakBadge, { borderColor: c.border }]}>
-      <Text style={{ fontSize: 14, color: c.accent, lineHeight: 16 }}>{"☽"}</Text>
-      <Text style={[styles.streakCount, { color: c.text }]}>{count}</Text>
-      <Text style={[styles.streakLabel, { color: c.textMuted }]}>Wird</Text>
-    </View>
-  );
-}
 
 // ── Main screen ──
 
@@ -44,6 +39,20 @@ export default function HomeScreen() {
   const progress = useProgress();
   const { habit } = useHabit();
   const today = getTodayDateString();
+
+  // Header entrance animation
+  const headerOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    headerOpacity.value = withTiming(1, {
+      duration: durations.normal,
+      easing: easings.contentReveal,
+    });
+  }, []);
+
+  const headerEntranceStyle = useAnimatedStyle(() => ({
+    opacity: headerOpacity.value,
+  }));
 
   // Redirect to onboarding if user hasn't completed it yet
   const onboarded = progress.onboarded ?? false;
@@ -103,8 +112,10 @@ export default function HomeScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Text style={[styles.appName, { color: colors.brown }]}>tila</Text>
-          {currentWird > 0 && <StreakBadge count={currentWird} colors={colors} />}
+          <Animated.View style={headerEntranceStyle}>
+            <Text style={[styles.appName, { color: colors.brown }]}>tila</Text>
+          </Animated.View>
+          {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
         </View>
 
         {/* ── Hero Card ── */}
@@ -115,6 +126,7 @@ export default function HomeScreen() {
           lessonsCompleted={lessonsCompleted}
           currentPhase={currentPhase}
           onStartLesson={handleStartLesson}
+          enterDelay={80}
         />
 
         {/* ── Journey Path ── */}
@@ -125,6 +137,7 @@ export default function HomeScreen() {
           mastery={mastery}
           today={today}
           onStartLesson={handleStartLesson}
+          enterDelay={160}
         />
 
         {/* Bottom spacer for tab bar */}
@@ -162,22 +175,5 @@ const styles = StyleSheet.create({
   },
   appName: {
     ...typography.pageTitle,
-  },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.xs,
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    borderRadius: 9999,
-    borderWidth: 1,
-  },
-  streakCount: {
-    fontSize: 13,
-    fontFamily: fontFamilies.bodySemiBold,
-  },
-  streakLabel: {
-    fontSize: 11,
-    fontFamily: fontFamilies.bodyMedium,
   },
 });
