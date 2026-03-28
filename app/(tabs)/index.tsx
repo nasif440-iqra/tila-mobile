@@ -21,6 +21,10 @@ import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils
 import HeroCard from "../../src/components/home/HeroCard";
 import LessonGrid from "../../src/components/home/LessonGrid";
 
+// ── Constants ──
+
+const SCROLL_BOTTOM_INSET = 96;
+
 // ── Streak Badge ──
 
 function StreakBadge({ count, colors: c }: { count: number; colors: ReturnType<typeof useColors> }) {
@@ -146,7 +150,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: spacing.xl,
-    paddingBottom: 100,
+    paddingBottom: SCROLL_BOTTOM_INSET,
   },
 
   // Header
@@ -164,9 +168,9 @@ const styles = StyleSheet.create({
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
+    gap: spacing.xs,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
     borderRadius: 9999,
     borderWidth: 1,
   },
