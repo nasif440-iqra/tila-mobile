@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   },
   letterCell: {
     aspectRatio: 1,
-    margin: 4,
+    margin: spacing.xs,
     borderRadius: radii.md,
     alignItems: "center",
     justifyContent: "center",
