@@ -89,7 +89,22 @@ export default function RootLayout() {
             animation: "fade",
             animationDuration: 300,
           }}
-        />
+        >
+          <Stack.Screen
+            name="lesson/[id]"
+            options={{
+              animation: "slide_from_bottom",
+              animationDuration: 400,
+            }}
+          />
+          <Stack.Screen
+            name="lesson/review"
+            options={{
+              animation: "slide_from_bottom",
+              animationDuration: 400,
+            }}
+          />
+        </Stack>
       </DatabaseProvider>
     </ThemeContext.Provider>
   );

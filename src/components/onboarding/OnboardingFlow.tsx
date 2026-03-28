@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import Animated, {
+  FadeIn,
+  FadeOut,
   useSharedValue,
   useAnimatedStyle,
   withTiming,
@@ -9,6 +11,10 @@ import { router } from "expo-router";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
 import { spacing } from "../../design/tokens";
+import {
+  TRANSITION_FADE_IN,
+  TRANSITION_FADE_OUT,
+} from "./animations";
 import {
   playOnboardingAdvance,
   playOnboardingComplete,
@@ -141,34 +147,41 @@ export function OnboardingFlow() {
         showsVerticalScrollIndicator={false}
         bounces={false}
       >
-        {step === 0 && <Welcome onNext={goNext} />}
-        {step === 1 && <Tilawat onNext={goNext} />}
-        {step === 2 && <Hadith onNext={goNext} />}
-        {step === 3 && (
-          <StartingPoint
-            startingPoint={draft.startingPoint}
-            onSelectStartingPoint={(value) =>
-              setDraft((d) => ({ ...d, startingPoint: value as OnboardingDraft["startingPoint"] }))
-            }
-            onNext={goNext}
-          />
-        )}
-        {step === 4 && <LetterReveal />}
-        {step === 5 && (
-          <LetterAudio
-            onNext={goNext}
-            onPlayAudio={handlePlayAudio}
-            hasPlayedAudio={hasPlayedAudio}
-          />
-        )}
-        {step === 6 && <LetterQuiz onNext={goNext} />}
-        {step === 7 && (
-          <Finish
-            onFinish={handleFinish}
-            finishing={finishing}
-            finishError={finishError}
-          />
-        )}
+        <Animated.View
+          key={step}
+          entering={FadeIn.duration(TRANSITION_FADE_IN + 100)}
+          exiting={FadeOut.duration(TRANSITION_FADE_OUT + 50)}
+          style={{ flex: 1 }}
+        >
+          {step === 0 && <Welcome onNext={goNext} />}
+          {step === 1 && <Tilawat onNext={goNext} />}
+          {step === 2 && <Hadith onNext={goNext} />}
+          {step === 3 && (
+            <StartingPoint
+              startingPoint={draft.startingPoint}
+              onSelectStartingPoint={(value) =>
+                setDraft((d) => ({ ...d, startingPoint: value as OnboardingDraft["startingPoint"] }))
+              }
+              onNext={goNext}
+            />
+          )}
+          {step === 4 && <LetterReveal />}
+          {step === 5 && (
+            <LetterAudio
+              onNext={goNext}
+              onPlayAudio={handlePlayAudio}
+              hasPlayedAudio={hasPlayedAudio}
+            />
+          )}
+          {step === 6 && <LetterQuiz onNext={goNext} />}
+          {step === 7 && (
+            <Finish
+              onFinish={handleFinish}
+              finishing={finishing}
+              finishError={finishError}
+            />
+          )}
+        </Animated.View>
       </ScrollView>
     </Animated.View>
   );

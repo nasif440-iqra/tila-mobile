@@ -1,5 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "../../src/design/theme";
@@ -13,6 +14,10 @@ import { buildReviewLessonPayload } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
+import {
+  TRANSITION_FADE_IN,
+  TRANSITION_FADE_OUT,
+} from "../../src/components/onboarding/animations";
 
 // ── Types ──
 
@@ -117,36 +122,46 @@ export default function ReviewScreen() {
     );
   }
 
-  // ── Quiz stage ──
+  // ── Stage rendering ──
 
-  if (stage === "quiz") {
-    return (
-      <LessonQuiz
-        lesson={reviewLesson}
-        completedLessonIds={completedLessonIds}
-        mastery={mastery}
-        onComplete={handleQuizComplete}
-      />
-    );
+  function renderStage() {
+    if (stage === "quiz") {
+      return (
+        <LessonQuiz
+          lesson={reviewLesson}
+          completedLessonIds={completedLessonIds}
+          mastery={mastery}
+          onComplete={handleQuizComplete}
+        />
+      );
+    }
+
+    if (stage === "summary" && quizResults) {
+      return (
+        <LessonSummary
+          lesson={reviewLesson}
+          results={quizResults}
+          passed={quizResults.passed}
+          accuracy={quizResults.accuracy}
+          onContinue={handleContinue}
+          onRetry={() => {}} // Review sessions don't retry — always pass
+        />
+      );
+    }
+
+    return null;
   }
 
-  // ── Summary stage (always passed) ──
-
-  if (stage === "summary" && quizResults) {
-    return (
-      <LessonSummary
-        lesson={reviewLesson}
-        results={quizResults}
-        passed={quizResults.passed}
-        accuracy={quizResults.accuracy}
-        onContinue={handleContinue}
-        onRetry={() => {}} // Review sessions don't retry — always pass
-      />
-    );
-  }
-
-  // Fallback
-  return null;
+  return (
+    <Animated.View
+      key={stage}
+      entering={FadeIn.duration(TRANSITION_FADE_IN)}
+      exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+      style={{ flex: 1 }}
+    >
+      {renderStage()}
+    </Animated.View>
+  );
 }
 
 // ── Styles ──
