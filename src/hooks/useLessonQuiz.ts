@@ -127,7 +127,7 @@ export default function useLessonQuiz(
         return currentQuestions;
       });
     },
-    [qIndex, midPoint, midShown]
+    [questions, qIndex, midPoint, midShown]
   );
 
   const currentQuestion = questions[qIndex] || null;
