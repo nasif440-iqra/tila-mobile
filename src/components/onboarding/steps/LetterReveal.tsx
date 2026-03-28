@@ -4,15 +4,25 @@ import { useColors } from "../../../design/theme";
 import { ArabicText } from "../../../design/components";
 import { spacing, fontFamilies } from "../../../design/tokens";
 import { WarmGlow } from "../WarmGlow";
+import { OnboardingStepLayout } from "../OnboardingStepLayout";
+import {
+  SPLASH_STAGGER_BASE,
+  SPLASH_STAGGER_DURATION,
+} from "../animations";
 
 export function LetterReveal() {
   const colors = useColors();
 
+  // Splash stagger: 0 = label, 1 = alif, 2 = name
+  const labelDelay = 0;
+  const alifDelay = SPLASH_STAGGER_BASE;
+  const nameDelay = SPLASH_STAGGER_BASE * 2;
+
   return (
-    <Animated.View entering={FadeIn.duration(800)} style={styles.splashStep}>
+    <OnboardingStepLayout variant="splash" fadeInDuration={SPLASH_STAGGER_DURATION}>
       {/* Label */}
       <Animated.Text
-        entering={FadeInDown.delay(300).duration(500)}
+        entering={FadeInDown.delay(labelDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.firstWinLabel, { color: colors.textMuted }]}
       >
         Your first letter
@@ -24,7 +34,7 @@ export function LetterReveal() {
       <WarmGlow size={200} opacity={0.18} />
 
       {/* Large Alif */}
-      <Animated.View entering={FadeIn.delay(800).duration(1000)}>
+      <Animated.View entering={FadeIn.delay(alifDelay).duration(SPLASH_STAGGER_DURATION)}>
         <ArabicText
           size="display"
           color={colors.primaryDark}
@@ -38,25 +48,16 @@ export function LetterReveal() {
 
       {/* Name */}
       <Animated.Text
-        entering={FadeInUp.delay(1800).duration(600)}
-        style={[
-          styles.letterRevealName,
-          { color: colors.text, zIndex: 1 },
-        ]}
+        entering={FadeInUp.delay(nameDelay).duration(SPLASH_STAGGER_DURATION)}
+        style={[styles.letterRevealName, { color: colors.text, zIndex: 1 }]}
       >
         Alif
       </Animated.Text>
-    </Animated.View>
+    </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
-  splashStep: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: require("react-native").Dimensions.get("window").height * 0.15,
-    paddingBottom: spacing.xxxl,
-  },
   firstWinLabel: {
     fontFamily: fontFamilies.bodyMedium,
     fontSize: 13,
