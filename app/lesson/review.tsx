@@ -14,10 +14,7 @@ import { buildReviewLessonPayload } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
-import {
-  TRANSITION_FADE_IN,
-  TRANSITION_FADE_OUT,
-} from "../../src/components/onboarding/animations";
+import { durations } from "../../src/design/animations";
 
 // ── Types ──
 
@@ -155,8 +152,8 @@ export default function ReviewScreen() {
   return (
     <Animated.View
       key={stage}
-      entering={FadeIn.duration(TRANSITION_FADE_IN)}
-      exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+      entering={FadeIn.duration(durations.normal)}
+      exiting={FadeOut.duration(durations.micro)}
       style={{ flex: 1 }}
     >
       {renderStage()}
