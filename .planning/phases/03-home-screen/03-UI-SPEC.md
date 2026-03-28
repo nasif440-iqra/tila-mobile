@@ -27,20 +27,21 @@ created: 2026-03-28
 
 ## Spacing Scale
 
-Declared values from `src/design/tokens.ts` (8px base rhythm):
+Base system defined in `src/design/tokens.ts` (8px base rhythm). Phase 3 introduces no new spacing tokens.
 
 | Token | Value | Usage in this phase |
 |-------|-------|---------------------|
 | xs | 4px | Icon gaps, pill internal padding, badge gaps |
 | sm | 8px | Compact element spacing, label margins |
-| md | 12px | Pill padding, current-label inner padding |
 | lg | 16px | Section padding, card inner sections |
 | xl | 24px | Scroll content padding, section gaps, card vertical padding |
 | xxl | 32px | Hero card vertical padding, major section breaks |
 | xxxl | 48px | Journey node row spacing (vertical rhythm) |
 | xxxxl | 64px | Hero card bottom margin (separation from journey) |
 
-Exceptions:
+**Named exception -- `md: 12px`:** This is a pre-existing token in `src/design/tokens.ts` that does not fall on the 8px grid. Phase 3 does NOT use `md` for any new layout spacing. Its usage in this phase is limited to inherited component internals (pill horizontal padding in AnimatedStreakBadge, current-label inner padding in JourneyNode) where 12px is the established inner-padding value from prior phases. All new layout spacing in Phase 3 uses grid-aligned tokens (`sm`, `lg`, `xl`, `xxl`).
+
+Non-token size exceptions:
 - Lesson node circles: 40px (complete/locked), 44px (current) -- touch-target minimum met
 - Letter circle in hero card: 112px diameter -- display-size element, not a spacing token
 - Serpentine offsets: 4, 16, 8, -4, -12, 0 px -- decorative horizontal offsets, not governed by spacing scale
@@ -49,21 +50,25 @@ Exceptions:
 
 ## Typography
 
-All typography presets are pre-established in `src/design/tokens.ts`. This phase uses existing presets only -- no new typography tokens.
+All typography is defined in `src/design/tokens.ts`. Phase 3 introduces **no new font sizes, weights, or typography presets**. Every text element in this phase uses an existing preset from the design system.
 
-| Role | Preset | Font | Size | Weight | Line Height | Usage |
-|------|--------|------|------|--------|-------------|-------|
-| Page title | `pageTitle` | Lora Italic | 24px | 400 | 32px | "tila" header text |
-| Card headline | `cardHeadline` | Lora SemiBold | 20px | 600 | 28px | Hero card lesson title |
-| Section header | `sectionHeader` | Inter SemiBold | 13px | 600 | 18px | Phase label above journey path (uppercase, 1.5px tracking) |
-| Body large | `bodyLarge` | Inter Medium | 17px | 500 | 24px | Button text |
-| Body | `body` | Inter Regular | 15px | 400 | 22px | Hero card description, node titles |
-| Body small | `bodySmall` | Inter Regular | 13px | 400 | 18px | Streak count |
-| Caption | `caption` | Inter Medium | 11px | 500 | 16px | Streak "Wird" label |
-| Label | `label` | Inter SemiBold | 11px | 600 | 16px | Phase pill text, "Up next" text (uppercase, 1.5px tracking) |
-| Stat number | `statNumber` | Lora Italic | 24px | 400 | 32px | Streak counter animated number (new usage) |
-| Arabic display | `arabicDisplay` | Amiri Regular | 48px | 400 | 72px | Hero card letter circle |
-| Arabic body | `arabicBody` | Amiri Regular | 24px | 400 | 36px | Journey node locked letter preview (rendered at 18px via style override) |
+**Reference:** See `typography` export in `src/design/tokens.ts` for the full set of presets (pageTitle, cardHeadline, sectionHeader, bodyLarge, body, bodySmall, caption, label, statNumber, arabicDisplay, arabicBody, heading1-3).
+
+**Presets used in this phase (all pre-existing):**
+
+| Preset | Usage in this phase |
+|--------|---------------------|
+| `pageTitle` | "tila" header text |
+| `cardHeadline` | Hero card lesson title |
+| `sectionHeader` | Phase label above journey path |
+| `bodyLarge` | Button text |
+| `body` | Hero card description, node titles |
+| `bodySmall` | Streak count |
+| `caption` | Streak "Wird" label |
+| `label` | Phase pill text, "Up next" text |
+| `statNumber` | Streak counter animated number |
+| `arabicDisplay` | Hero card letter circle |
+| `arabicBody` | Journey node locked letter preview (rendered at 18px via style override) |
 
 ---
 
@@ -133,7 +138,7 @@ Accent reserved for:
 
 ### AnimatedStreakBadge
 
-- Container: Pill shape (`borderRadius: 9999`), border 1px `border` color, horizontal padding `md` (12px), vertical padding `xs` (4px)
+- Container: Pill shape (`borderRadius: 9999`), border 1px `border` color, horizontal padding `md` (12px -- pre-existing component pattern), vertical padding `xs` (4px)
 - Content row: Crescent icon (14px, `accent` color) + count (`bodySemiBold` 13px, `text` color) + "Wird" label (`bodyMedium` 11px, `textMuted` color), gap `xs` (4px)
 - Animation: Gentle breathing glow behind the badge using WarmGlow (size: 60px, animated, pulseMin: 0.04, pulseMax: 0.12, positioned centered behind badge, color: `accentGlow`)
 - Entrance: FadeIn with duration `normal` (300ms), easing `contentReveal`, delay 200ms (staggered after header text)
@@ -146,7 +151,7 @@ Accent reserved for:
 - Content alignment: center
 
 **Phase pill:**
-- Background: `bg` (#F8F6F0), pill shape (borderRadius full), padding `xs`/`md` vertical/horizontal
+- Background: `bg` (#F8F6F0), pill shape (borderRadius full), padding `xs`/`md` vertical/horizontal (md is pre-existing component pattern)
 - Text: `label` preset, color `accent`
 - Content: "Phase {N} -- {Phase Name}"
 
@@ -211,7 +216,7 @@ Accent reserved for:
 - Content: Solid dot 12x12px, borderRadius 6px, background `primary`
 - Subtle glow: Accent-colored ring animation -- a faint pulsing glow ring (opacity 0.08 to 0.15, 3000ms cycle) around the circle using `accentGlow` color, size 52px, to draw the eye without being aggressive
 - Opacity: 1.0 (full prominence)
-- Label card: background `bgCard`, border 1px `border`, borderRadius `lg` (16px), padding `md`/`lg` vertical/horizontal, shadow `card`
+- Label card: background `bgCard`, border 1px `border`, borderRadius `lg` (16px), padding `md`/`lg` vertical/horizontal (md is pre-existing component pattern)
 - Label title: `cardHeadline` at 15px override, color `brown`
 - "Up next" row: Dot 6px `accent` + text `label` preset `accent` color, gap `xs`, top margin `xs`
 - Press: `springs.press` scale animation + `hapticTap`, navigates to lesson
