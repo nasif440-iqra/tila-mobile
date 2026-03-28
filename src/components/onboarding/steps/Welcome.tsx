@@ -86,7 +86,7 @@ export function Welcome({ onNext }: { onNext: () => void }) {
         style={[
           styles.appName,
           {
-            color: colors.text,
+            color: colors.brown,
             fontFamily: fontFamilies.headingRegular,
             zIndex: 1,
           },

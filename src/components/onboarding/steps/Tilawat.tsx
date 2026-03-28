@@ -53,7 +53,7 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
       {/* Headline */}
       <Animated.Text
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={[styles.sacredHeadline, { color: colors.text, zIndex: 1 }]}
+        style={[styles.sacredHeadline, { color: colors.brown, zIndex: 1 }]}
       >
         To recite the Quran beautifully is{" "}
         <Text
