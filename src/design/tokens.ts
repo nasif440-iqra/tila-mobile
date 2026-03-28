@@ -176,6 +176,14 @@ export const radii = {
   full: 9999,
 } as const;
 
+// ── Border Widths ──
+
+export const borderWidths = {
+  thin: 1,
+  normal: 1.5,
+  thick: 2,
+} as const;
+
 // ── Shadows ──
 
 export const shadows = {
