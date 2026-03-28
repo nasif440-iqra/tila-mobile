@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 4 plans
 Plans:
 - [x] 01-01-PLAN.md — Create animation presets module and haptics utility with tests
-- [ ] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
+- [x] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
 - [ ] 01-03-PLAN.md — Configure screen transitions and migrate onboarding/animations.ts consumers
 - [ ] 01-04-PLAN.md — Automated validation + visual/haptic verification checkpoint
 **UI hint**: yes
