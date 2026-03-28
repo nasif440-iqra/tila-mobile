@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
-import { typography, spacing, radii, fontFamilies } from "../design/tokens";
+import { typography, spacing, radii, shadows, fontFamilies } from "../design/tokens";
 import { Button } from "../design/components";
 import { getSFXAsset } from "../audio/player";
 import {
@@ -218,6 +218,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xxl,
     borderRadius: radii.xl,
+    ...shadows.card,
   },
   iconCircle: {
     width: 80,

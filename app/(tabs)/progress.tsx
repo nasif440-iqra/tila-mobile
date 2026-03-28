@@ -115,7 +115,7 @@ export default function ProgressScreen() {
         <Text
           style={[
             typography.sectionHeader,
-            { color: colors.brownLight, marginTop: spacing.xxxxl, marginBottom: spacing.md },
+            { color: colors.brownLight, marginTop: spacing.xxxxl, marginBottom: spacing.lg },
           ]}
         >
           Phase Progress
@@ -138,7 +138,7 @@ export default function ProgressScreen() {
             {
               color: colors.brownLight,
               marginTop: spacing.xxxxl,
-              marginBottom: spacing.md,
+              marginBottom: spacing.lg,
             },
           ]}
         >

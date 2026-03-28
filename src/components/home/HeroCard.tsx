@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
   phasePill: {
     paddingVertical: spacing.xs,
     paddingHorizontal: spacing.md,
-    borderRadius: 9999,
+    borderRadius: radii.full,
     marginBottom: spacing.lg,
   },
   phasePillText: {
