@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { ArabicText } from "../../design/components";
 import { useColors } from "../../design/theme";
-import { spacing, radii, shadows, fontFamilies } from "../../design/tokens";
+import { spacing, typography, radii, shadows, fontFamilies } from "../../design/tokens";
 import { LESSONS } from "../../data/lessons";
 import { getLetter } from "../../data/letters";
 import { isLessonUnlocked } from "../../engine/unlock";
@@ -79,7 +79,7 @@ export default function LessonGrid({
 
   return (
     <View style={styles.journeySection}>
-      <Text style={[styles.journeySectionTitle, { color: colors.textMuted }]}>
+      <Text style={[styles.journeySectionTitle, { color: colors.brownLight }]}>
         {phaseLabel.toUpperCase()}
       </Text>
 
@@ -184,7 +184,7 @@ export default function LessonGrid({
                     },
                   ]}
                 >
-                  <Text style={[styles.currentLabelTitle, { color: colors.text }]}>
+                  <Text style={[styles.currentLabelTitle, { color: colors.brown }]}>
                     {lesson.title}
                   </Text>
                   <View style={styles.upNextRow}>
@@ -227,9 +227,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.lg,
   },
   journeySectionTitle: {
-    fontSize: 10,
-    fontFamily: fontFamilies.bodyBold,
-    letterSpacing: 1.2,
+    ...typography.label,
     marginBottom: spacing.xl,
   },
   journeyPath: {
@@ -286,7 +284,7 @@ const styles = StyleSheet.create({
     ...shadows.card,
   },
   currentLabelTitle: {
-    fontFamily: fontFamilies.headingBold,
+    ...typography.cardHeadline,
     fontSize: 15,
   },
   upNextRow: {
@@ -301,10 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   upNextText: {
-    fontSize: 11,
-    fontFamily: fontFamilies.bodySemiBold,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    ...typography.label,
   },
   nodeTitle: {
     fontSize: 15,
