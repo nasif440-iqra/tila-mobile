@@ -106,7 +106,44 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-*Updated by roadmap creation — maps requirements to phases.*
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| DES-01 | Phase 1 | Pending |
+| DES-02 | Phase 1 | Pending |
+| DES-03 | Phase 1 | Pending |
+| DES-04 | Phase 1 | Pending |
+| TRANS-01 | Phase 1 | Pending |
+| TRANS-02 | Phase 1 | Pending |
+| TRANS-03 | Phase 1 | Pending |
+| STATE-04 | Phase 1 | Pending |
+| ONB-01 | Phase 2 | Pending |
+| ONB-02 | Phase 2 | Pending |
+| ONB-03 | Phase 2 | Pending |
+| ONB-04 | Phase 2 | Pending |
+| MIND-01 | Phase 2 | Pending |
+| MIND-02 | Phase 2 | Pending |
+| HOME-01 | Phase 3 | Pending |
+| HOME-02 | Phase 3 | Pending |
+| HOME-03 | Phase 3 | Pending |
+| HOME-04 | Phase 3 | Pending |
+| LES-01 | Phase 4 | Pending |
+| LES-02 | Phase 4 | Pending |
+| LES-03 | Phase 4 | Pending |
+| LES-04 | Phase 4 | Pending |
+| LES-05 | Phase 4 | Pending |
+| LES-06 | Phase 4 | Pending |
+| CEL-01 | Phase 5 | Pending |
+| CEL-02 | Phase 5 | Pending |
+| CEL-03 | Phase 5 | Pending |
+| CEL-04 | Phase 5 | Pending |
+| CEL-05 | Phase 5 | Pending |
+| PROG-01 | Phase 6 | Pending |
+| PROG-02 | Phase 6 | Pending |
+| PROG-03 | Phase 6 | Pending |
+| PROG-04 | Phase 6 | Pending |
+| STATE-01 | Phase 7 | Pending |
+| STATE-02 | Phase 7 | Pending |
+| STATE-03 | Phase 7 | Pending |
 
 ---
 *Defined: 2026-03-28*
