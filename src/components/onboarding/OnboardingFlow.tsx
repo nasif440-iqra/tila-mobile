@@ -8,6 +8,7 @@ import Animated, {
 import { router } from "expo-router";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
+import { spacing } from "../../design/tokens";
 import {
   playOnboardingAdvance,
   playOnboardingComplete,
@@ -178,8 +179,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   progressContainer: {
-    paddingTop: 56,
-    paddingHorizontal: 20,
+    paddingTop: spacing.xxxl + spacing.sm,
+    paddingHorizontal: spacing.xl,
     position: "absolute",
     top: 0,
     left: 0,
@@ -189,7 +190,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    paddingHorizontal: 24,
-    paddingBottom: 48,
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.xxxl,
   },
 });
