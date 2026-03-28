@@ -47,8 +47,8 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 
 ### Mindful Moments
 
-- [ ] **MIND-01**: Bismillah breathing moment before lessons — brief mindful pause acknowledging the sacred nature of Quran learning
-- [ ] **MIND-02**: Moment is brief (2-3 seconds) and adds to the experience, not friction
+- [x] **MIND-01**: Bismillah breathing moment before lessons — brief mindful pause acknowledging the sacred nature of Quran learning
+- [x] **MIND-02**: Moment is brief (2-3 seconds) and adds to the experience, not friction
 
 ### Progress Screen
 
