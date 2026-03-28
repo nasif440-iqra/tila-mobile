@@ -1,4 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// Mock the design/animations re-export to avoid react-native dependency
+vi.mock("../design/animations", () => ({
+  durations: { normal: 300, fast: 150, slow: 400, micro: 100 },
+  staggers: { fast: { delay: 50 }, normal: { delay: 80 } },
+}));
+
 import {
   STAGGER_BASE,
   STAGGER_DURATION,
