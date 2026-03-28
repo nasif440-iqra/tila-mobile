@@ -67,7 +67,7 @@ Plans:
   4. The streak counter is visually engaging with animation or visual flair (not just a plain number)
 **Plans:** 2 plans
 Plans:
-- [ ] 03-01-PLAN.md — Wave 0 test stubs + AnimatedStreakBadge + JourneyNode new components
+- [x] 03-01-PLAN.md — Wave 0 test stubs + AnimatedStreakBadge + JourneyNode new components
 - [ ] 03-02-PLAN.md — HeroCard polish, LessonGrid wiring, index.tsx staggered entrances + visual checkpoint
 **UI hint**: yes
 
@@ -127,7 +127,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 |-------|----------------|--------|-----------|
 | 1. Design Foundation & Transitions | 2/4 | Executing | - |
 | 2. Onboarding Wow Factor | 1/4 | In Progress|  |
-| 3. Home Screen | 0/2 | Planned | - |
+| 3. Home Screen | 1/2 | Executing | - |
 | 4. Lesson Experience | 0/TBD | Not started | - |
 | 5. Celebrations & Feedback | 0/TBD | Not started | - |
 | 6. Progress Screen | 0/TBD | Not started | - |
