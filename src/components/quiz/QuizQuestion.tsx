@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii } from "../../design/tokens";
+import { typography, spacing, radii, borderWidths } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
 
 const OPTIONS_GRID_MAX_WIDTH = 340;
@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: radii.full,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.normal,
     marginTop: spacing.lg,
     gap: spacing.sm,
   },

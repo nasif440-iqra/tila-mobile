@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { SlideInDown } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii } from "../../design/tokens";
+import { typography, spacing, radii, shadows } from "../../design/tokens";
 import { ArabicText, Button, HearButton } from "../../design/components";
 
 // ── Types ──
@@ -109,6 +109,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.xl,
     padding: spacing.lg,
     gap: spacing.md,
+    ...shadows.card,
   },
   wrongExplanationRow: {
     flexDirection: "row",

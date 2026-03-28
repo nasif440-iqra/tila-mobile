@@ -61,7 +61,7 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    padding: spacing.md,
+    padding: spacing.lg,
     alignItems: "center",
   },
   statLabel: {

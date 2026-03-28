@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { ArabicText } from "../../design/components";
 import { useColors } from "../../design/theme";
-import { spacing, typography, radii, shadows, fontFamilies } from "../../design/tokens";
+import { spacing, typography, radii, shadows, borderWidths, fontFamilies } from "../../design/tokens";
 import { LESSONS } from "../../data/lessons";
 import { getLetter } from "../../data/letters";
 import { isLessonUnlocked } from "../../engine/unlock";
@@ -241,7 +241,7 @@ const styles = StyleSheet.create({
     top: 0,
     bottom: 0,
     width: 0,
-    borderLeftWidth: 2,
+    borderLeftWidth: borderWidths.thick,
     borderStyle: "dashed",
   },
   nodeRow: {
@@ -259,17 +259,17 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   nodeComplete: {
-    ...shadows.soft,
+    ...shadows.card,
   },
   nodeCurrent: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: 2.5,
+    borderWidth: borderWidths.thick,
     ...shadows.card,
   },
   nodeLocked: {
-    borderWidth: 2,
+    borderWidth: borderWidths.thick,
   },
   currentDot: {
     width: 12,
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
     borderRadius: radii.lg,
-    borderWidth: 1,
+    borderWidth: borderWidths.thin,
     ...shadows.card,
   },
   currentLabelTitle: {

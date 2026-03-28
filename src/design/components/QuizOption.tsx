@@ -8,7 +8,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { typography, spacing, radii } from "../tokens";
+import { typography, spacing, radii, borderWidths } from "../tokens";
 import { useColors } from "../theme";
 import { ArabicText } from "./ArabicText";
 
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     borderRadius: radii.lg,
-    borderWidth: 2,
+    borderWidth: borderWidths.thick,
     alignItems: "center",
     justifyContent: "center",
   },

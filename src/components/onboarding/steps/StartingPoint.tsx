@@ -2,7 +2,7 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
-import { typography, spacing, radii } from "../../../design/tokens";
+import { typography, spacing, radii, shadows, borderWidths } from "../../../design/tokens";
 import { playTap } from "../../../audio/player";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import { STAGGER_BASE, STAGGER_DURATION } from "../animations";
@@ -56,8 +56,9 @@ const optionStyles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     borderRadius: radii.lg,
-    borderWidth: 1.5,
+    borderWidth: borderWidths.normal,
     marginBottom: spacing.sm,
+    ...shadows.card,
   },
   label: {
     ...typography.bodyLarge,
