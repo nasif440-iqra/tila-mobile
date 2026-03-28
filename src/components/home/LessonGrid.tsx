@@ -249,8 +249,8 @@ const styles = StyleSheet.create({
   nodeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 20,
-    marginBottom: 44,
+    gap: spacing.xl,
+    marginBottom: spacing.xxxl,
   },
   nodeCircle: {
     width: 40,
@@ -279,8 +279,8 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   currentLabel: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
     borderRadius: radii.lg,
     borderWidth: 1,
     ...shadows.card,
@@ -292,8 +292,8 @@ const styles = StyleSheet.create({
   upNextRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginTop: 3,
+    gap: spacing.xs,
+    marginTop: spacing.xs,
   },
   upNextDot: {
     width: 6,
