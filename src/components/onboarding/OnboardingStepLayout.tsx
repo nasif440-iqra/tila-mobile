@@ -61,6 +61,7 @@ const layoutStyles = StyleSheet.create({
   },
   cardContent: {
     alignItems: "stretch",
+    justifyContent: "center",
     paddingVertical: spacing.xxxl,
   },
   footer: {
