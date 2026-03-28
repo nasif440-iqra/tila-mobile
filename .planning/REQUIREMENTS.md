@@ -17,7 +17,7 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 ### Onboarding
 
 - [ ] **ONB-01**: Onboarding flow feels special and inspiring — not a generic walkthrough
-- [ ] **ONB-02**: "First letter" moment feels sacred and exciting — gold particles, gentle animation, moment of stillness before audio
+- [x] **ONB-02**: "First letter" moment feels sacred and exciting — gold particles, gentle animation, moment of stillness before audio
 - [ ] **ONB-03**: Onboarding transitions are smooth with staggered entrance animations
 - [ ] **ONB-04**: Visual warmth throughout (warm glow effects, elegant Arabic floating elements)
 

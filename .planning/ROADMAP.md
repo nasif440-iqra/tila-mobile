@@ -48,12 +48,12 @@ Plans:
   2. The "first letter" moment has a sacred quality: gold particles, gentle animation, a beat of stillness before the audio plays
   3. A brief Bismillah breathing moment (2-3 seconds) precedes lesson entry, adding reverence without friction
   4. Transitions between onboarding steps are smooth with staggered content entrances (no content popping in all at once)
-**Plans:** 3/4 plans executed
+**Plans:** 2/4 plans executed
 Plans:
 - [x] 02-00-PLAN.md — Wave 0: Test stubs for all Phase 2 requirements (onboarding-flow, bismillah, warm-glow, onboarding-animations)
-- [x] 02-01-PLAN.md — Foundation components: WarmGlow animated variant, FloatingLettersLayer tint, BrandedLogo, animation constants
-- [x] 02-02-PLAN.md — BismillahMoment step, OnboardingFlow 9-step rewrite, Welcome/Tilawat/Hadith screen elevations
-- [ ] 02-03-PLAN.md — LetterReveal sacred moment, Finish celebration, BismillahOverlay for lesson entry
+- [ ] 02-01-PLAN.md — Foundation components: WarmGlow animated variant, FloatingLettersLayer tint, BrandedLogo, animation constants
+- [ ] 02-02-PLAN.md — BismillahMoment step, OnboardingFlow 9-step rewrite, Welcome/Tilawat/Hadith screen elevations
+- [x] 02-03-PLAN.md — LetterReveal sacred moment, Finish celebration, BismillahOverlay for lesson entry
 **UI hint**: yes
 
 ### Phase 3: Home Screen
@@ -123,7 +123,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Design Foundation & Transitions | 2/4 | Executing | - |
-| 2. Onboarding Wow Factor | 3/4 | In Progress|  |
+| 2. Onboarding Wow Factor | 1/4 | In Progress|  |
 | 3. Home Screen | 0/TBD | Not started | - |
 | 4. Lesson Experience | 0/TBD | Not started | - |
 | 5. Celebrations & Feedback | 0/TBD | Not started | - |

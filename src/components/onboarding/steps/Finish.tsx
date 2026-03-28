@@ -1,9 +1,19 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  interpolate,
+} from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, radii, fontFamilies } from "../../../design/tokens";
+import { springs } from "../../../design/animations";
+import { hapticSuccess } from "../../../design/haptics";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import {
   SPLASH_STAGGER_BASE,
@@ -30,6 +40,22 @@ export function Finish({
   const headlineDelay = SPLASH_STAGGER_BASE;
   const subtextDelay = SPLASH_STAGGER_BASE * 2;
   const ctaDelay = SPLASH_STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
+
+  // Bouncy spring checkmark entrance
+  const scale = useSharedValue(0.5);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      hapticSuccess();
+      scale.value = withSpring(1.0, springs.bouncy);
+    }, checkDelay);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const checkAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+    opacity: interpolate(scale.value, [0.5, 1.0], [0, 1]),
+  }));
 
   return (
     <OnboardingStepLayout
@@ -68,21 +94,21 @@ export function Finish({
         <ArabicText
           size="display"
           color={colors.text}
-          style={{ fontSize: 200, lineHeight: 260, opacity: 0.06 }}
+          style={{ fontSize: 200, lineHeight: 260, opacity: 0.08 }}
         >
           {"\u0627"}
         </ArabicText>
       </Animated.View>
 
-      {/* Checkmark circle */}
+      {/* Checkmark circle — bouncy spring entrance */}
       <Animated.View
-        entering={FadeIn.delay(checkDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[
           styles.checkCircle,
           {
             backgroundColor: colors.accentLight,
             borderColor: "rgba(196,164,100,0.40)",
           },
+          checkAnimStyle,
         ]}
       >
         <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
