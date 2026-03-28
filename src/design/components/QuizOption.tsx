@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { Pressable, Text, type ViewStyle, StyleSheet } from "react-native";
-import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -10,6 +9,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { typography, spacing, radii, borderWidths } from "../tokens";
 import { useColors } from "../theme";
+import { springs, pressScale, durations } from "../animations";
+import { hapticTap, hapticSuccess, hapticError } from "../haptics";
 import { ArabicText } from "./ArabicText";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -40,10 +41,10 @@ export function QuizOption({
   useEffect(() => {
     if (state === "correct") {
       scale.value = withSequence(
-        withTiming(1.04, { duration: 150 }),
-        withTiming(1, { duration: 150 })
+        withTiming(1.04, { duration: durations.fast }),
+        withTiming(1, { duration: durations.fast })
       );
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      hapticSuccess();
     } else if (state === "wrong") {
       translateX.value = withSequence(
         withTiming(-6, { duration: 50 }),
@@ -54,7 +55,7 @@ export function QuizOption({
         withTiming(3, { duration: 50 }),
         withTiming(0, { duration: 50 })
       );
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      hapticError();
     }
   }, [state, scale, translateX]);
 
@@ -64,18 +65,18 @@ export function QuizOption({
 
   function handlePressIn() {
     if (state === "default") {
-      scale.value = withSpring(0.97, { stiffness: 400, damping: 25 });
+      scale.value = withSpring(pressScale.normal, springs.press);
     }
   }
 
   function handlePressOut() {
     if (state === "default") {
-      scale.value = withSpring(1, { stiffness: 400, damping: 25 });
+      scale.value = withSpring(1, springs.press);
     }
   }
 
   function handlePress() {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     onPress();
   }
 
