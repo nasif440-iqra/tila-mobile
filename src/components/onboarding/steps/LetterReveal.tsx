@@ -49,7 +49,7 @@ export function LetterReveal() {
       {/* Name */}
       <Animated.Text
         entering={FadeInUp.delay(nameDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={[styles.letterRevealName, { color: colors.text, zIndex: 1 }]}
+        style={[styles.letterRevealName, { color: colors.brown, zIndex: 1 }]}
       >
         Alif
       </Animated.Text>

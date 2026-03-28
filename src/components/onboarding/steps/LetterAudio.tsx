@@ -75,7 +75,7 @@ export function LetterAudio({
           </ArabicText>
         </View>
         {/* Name */}
-        <Text style={[styles.letterCircleName, { color: colors.text }]}>
+        <Text style={[styles.letterCircleName, { color: colors.brown }]}>
           Alif
         </Text>
       </Animated.View>

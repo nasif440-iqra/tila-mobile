@@ -89,7 +89,7 @@ export function StartingPoint({
         />
       }
     >
-      <Text style={[styles.headline, { color: colors.text }]}>
+      <Text style={[styles.headline, { color: colors.brown }]}>
         Where are you starting from?
       </Text>
       <Text style={[styles.body, { color: colors.textMuted }]}>
