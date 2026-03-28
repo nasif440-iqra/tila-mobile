@@ -38,7 +38,7 @@ export default function StatsRow({
         <Card key={stat.label} style={styles.statCard}>
           <Text
             style={[
-              typography.heading2,
+              typography.statNumber,
               { color: colors.primary, textAlign: "center" },
             ]}
           >
@@ -65,10 +65,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   statLabel: {
-    fontSize: 10,
-    fontFamily: fontFamilies.bodySemiBold,
+    ...typography.caption,
     textTransform: "uppercase",
     letterSpacing: 0.5,
-    marginTop: 2,
+    marginTop: spacing.xs,
   },
 });
