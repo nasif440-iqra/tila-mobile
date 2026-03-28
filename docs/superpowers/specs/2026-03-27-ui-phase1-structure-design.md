@@ -74,6 +74,17 @@ interface OnboardingStepLayoutProps {
 
 Each step passes its button(s) via `footer` instead of positioning them inline. The layout handles consistent bottom spacing.
 
+**Footer height contract:** The layout uses `flex: 1` for the content area with the footer sitting below it as a natural flex sibling — no absolute positioning. The content area expands to fill available space, and the footer gets its natural height. This means steps don't need to know the footer's height. The layout structure is:
+
+```
+<View style={{ flex: 1 }}>
+  <View style={{ flex: 1, justifyContent: 'center' }}>{children}</View>
+  {footer && <View style={{ paddingBottom: spacing.xxxl }}>{footer}</View>}
+</View>
+```
+
+**SafeAreaView:** The `OnboardingFlow` parent already wraps everything in a root `Animated.View` with `flex: 1`. SafeAreaView handling for the footer's bottom inset should be added to `OnboardingStepLayout` using `useSafeAreaInsets()` from `react-native-safe-area-context` — apply the bottom inset to the footer wrapper's `paddingBottom` so CTAs never overlap the home indicator on notched devices.
+
 ### Problem: Animation Entry Timing Varies Per Step
 
 Current timing audit shows no pattern:
@@ -111,15 +122,18 @@ This creates a consistent rhythm: each element appears slightly after the previo
 - `index.tsx:149` — `paddingBottom: 100` (raw number)
 - `HeroCard.tsx:101-104` — `phasePill` uses `paddingVertical: 4, paddingHorizontal: 12` (raw numbers)
 - `LessonGrid.tsx:253` — `marginBottom: 44` (raw number)
+- `LessonGrid.tsx:253` — `gap: 20` (raw number, doesn't map to any token)
 - `LessonGrid.tsx:283` — `paddingVertical: 10, paddingHorizontal: 16` (raw numbers)
 - `LessonGrid.tsx:296` — `marginTop: 3` (raw number)
 
-**Fix:** Replace all raw numbers with spacing tokens:
-- `paddingBottom: 100` → `paddingBottom: spacing.xxxl * 2` or a named constant
+**Fix:** Replace all raw numbers with spacing tokens. Define a named constant for scroll bottom inset instead of multiplying tokens:
+- `paddingBottom: 100` → define `const SCROLL_BOTTOM_INSET = 96` at top of file (avoids `spacing.xxxl * 2` anti-pattern)
 - `paddingVertical: 4` → `paddingVertical: spacing.xs`
 - `paddingHorizontal: 12` → `paddingHorizontal: spacing.md`
-- `marginBottom: 44` → `marginBottom: spacing.xxxl` (48, close enough)
-- `paddingVertical: 10` → `paddingVertical: spacing.sm + spacing.xs` or round to `spacing.md` (12)
+- `marginBottom: 44` → `marginBottom: spacing.xxxl` (48)
+- `gap: 20` → `gap: spacing.xl` (24) — rounds up to nearest token
+- `paddingVertical: 10` → `paddingVertical: spacing.md` (12) — rounds to nearest token
+- `paddingHorizontal: 16` → `paddingHorizontal: spacing.lg`
 - `marginTop: 3` → `marginTop: spacing.xs` (4)
 
 ### Problem: Journey Path Node Spacing
@@ -212,9 +226,9 @@ src/components/quiz/QuizQuestion.tsx                 — extract maxWidth consta
 - [ ] All onboarding steps use `OnboardingStepLayout` with `footer` prop for CTAs
 - [ ] All onboarding animation timings use presets from `animations.ts`
 - [ ] All onboarding body text uses `maxWidth: 300`
-- [ ] Home screen: zero raw padding/margin numbers
-- [ ] Progress screen: consistent section header spacing
-- [ ] Quiz: options grid maxWidth is a named constant
+- [ ] Home screen: zero raw padding/margin numbers — all use spacing tokens or named constants
+- [ ] Progress screen: zero raw padding/margin numbers, consistent section header spacing
+- [ ] Quiz: zero raw padding/margin numbers, options grid maxWidth is a named constant
 - [ ] App builds and runs correctly — no visual regressions in layout or behavior
 - [ ] All existing tests pass
 
