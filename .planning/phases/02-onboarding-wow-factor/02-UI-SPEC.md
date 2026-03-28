@@ -29,20 +29,26 @@ created: 2026-03-28
 
 ## Spacing Scale
 
-Existing tokens from `src/design/tokens.ts` — no changes for Phase 2:
+Base system defined in `src/design/tokens.ts`. Phase 2 does not introduce new spacing tokens.
+
+**Active tokens used by Phase 2 onboarding components:**
 
 | Token | Value | Usage in Onboarding |
 |-------|-------|---------------------|
 | xs | 4px | Icon gaps, inline padding |
 | sm | 8px | Between label and subtitle, compact gaps |
-| md | 12px | Between body elements, divider margins |
 | lg | 16px | Between content sections within a step |
 | xl | 24px | Section padding, gap between major content blocks |
 | xxl | 32px | Gap between hero element and supporting content |
 | xxxl | 48px | Progress bar top padding offset, page-level breathing room |
-| xxxxl | 64px | Not used in onboarding |
 
-Exceptions:
+**Named exceptions:**
+
+| Token | Value | Justification |
+|-------|-------|---------------|
+| md | 12px | Pre-existing token in `src/design/tokens.ts`, inherited from prior phases. Phase 2 components do NOT use `md` for new layout spacing. It remains in the token file for backward compatibility with existing components outside the onboarding flow. |
+
+**Non-scale values:**
 - Bismillah step vertical centering uses `flex: 1` with `justifyContent: center`, not fixed spacing
 - WarmGlow radial size uses pixel values (200-360px) independent of spacing scale — this is a visual effect, not layout
 
@@ -50,31 +56,21 @@ Exceptions:
 
 ## Typography
 
-### Existing Presets Used (from `src/design/tokens.ts`)
+Base type system defined in `src/design/tokens.ts` — see that file for the full set of font presets (Amiri Arabic display sizes, Lora heading sizes, Inter body sizes).
+
+Phase 2 onboarding steps reuse existing typography presets by role name. The only **new** typography introduced by Phase 2 is for the BismillahMoment component:
+
+### New Typography (Phase 2)
 
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
-| Arabic display | Amiri | 120px | 400 | 170px | Alif letter in LetterReveal sacred moment |
-| Arabic display (calligraphy) | Amiri | 72px | 400 | 100px | Tilawat calligraphy |
-| Arabic display (answer) | Amiri | 56px | 400 | 80px | Quiz answer letters |
-| Arabic display (watermark) | Amiri | 200px | 400 | 260px | Finish screen ambient Alif |
-| App name | Lora Regular | 44px | 400 | 52px | "tila" on Welcome screen |
-| Hadith headline | Lora SemiBold Italic | 28px | 600 | 36px | "Struggling is not failing" |
-| Finish headline | Lora Bold | 28px | 700 | 36px | "You've already begun" |
-| Sacred headline | Lora SemiBold | 22px | 600 | 31px | Tilawat context, LetterReveal name |
-| Quiz prompt | Lora SemiBold | 23px | 600 | 31px | "Which one is Alif?" |
-| Body large | Inter Medium | 17px | 500 | 24px | Hadith quote, option card labels |
-| Body | Inter Regular | 15px | 400 | 22px | Tagline, subtext, feedback text |
-| Section label | Inter SemiBold | 13px | 600 | 18px | "Your first letter", uppercase labels |
-| Brand motto | Inter SemiBold | 11px | 600 | 16px | "READ BEAUTIFULLY", uppercase |
-| Source citation | Inter Regular | 10px | 400 | 14px | "SAHIH AL-BUKHARI 4937" |
-
-### Bismillah Step Typography (NEW)
-
-| Role | Font | Size | Weight | Line Height | Usage |
-|------|------|------|--------|-------------|-------|
-| Bismillah Arabic | Amiri | 40px | 400 | 60px | Bismillah calligraphy text |
+| Bismillah Arabic | Amiri | 40px | 400 | 60px | Bismillah calligraphy text in BismillahMoment and BismillahOverlay |
 | Bismillah subtitle | Inter Regular | 13px | 400 | 18px | "In the name of God, the Most Gracious, the Most Merciful" |
+
+**Active sizes:** 40px, 13px (2 sizes)
+**Active weights:** 400 (1 weight)
+
+All other onboarding typography (app name, headlines, body, labels, Arabic display) uses existing presets from `src/design/tokens.ts` referenced by role name in the Screen-by-Screen Choreography section below.
 
 ---
 
@@ -156,7 +152,7 @@ Existing tokens from `src/design/tokens.ts` — no new colors for Phase 2:
 | Arabic calligraphy | FadeInDown | 0ms | 700ms | Amiri 72px, color `primaryDark` |
 | Sacred headline | FadeInDown | 250ms | 700ms | "To recite the Quran beautifully is *Tilawat*" — italic accent on "Tilawat" in gold |
 | Motto | FadeIn | 500ms | 700ms | "Recite. Reflect. Return." |
-| "Begin" button | FadeInUp | 950ms | 500ms | Full-width |
+| "Begin Reading" button | FadeInUp | 950ms | 500ms | Full-width |
 
 ### Step 2: Hadith (NO CHANGE)
 
@@ -301,9 +297,9 @@ All animations MUST use presets from `src/design/animations.ts` (D-15):
 | Element | Copy | Notes |
 |---------|------|-------|
 | Welcome CTA | "Get Started" | Existing — no change |
-| Tilawat CTA | "Begin" | Existing — no change |
-| Hadith CTA | "Continue" | Existing — no change |
-| StartingPoint CTA | "Continue" | Existing — no change |
+| Tilawat CTA | "Begin Reading" | Verb + noun — invites the user into the reading journey |
+| Hadith CTA | "Continue Journey" | Verb + noun — maintains forward momentum |
+| StartingPoint CTA | "Continue Setup" | Verb + noun — clarifies the setup context |
 | Bismillah Arabic | `بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيمِ` | Full Bismillah with diacritics |
 | Bismillah English | "In the name of God, the Most Gracious, the Most Merciful" | Subtle translation below Arabic |
 | LetterReveal label | "Your first letter" | Existing — no change |
