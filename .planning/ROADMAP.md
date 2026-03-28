@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Animation timings are consistent app-wide (shared presets file, not per-component magic numbers)
 **Plans:** 4 plans
 Plans:
-- [ ] 01-01-PLAN.md — Create animation presets module and haptics utility with tests
+- [x] 01-01-PLAN.md — Create animation presets module and haptics utility with tests
 - [ ] 01-02-PLAN.md — Polish design system components (Button, Card, HearButton, QuizOption) with shared presets
 - [ ] 01-03-PLAN.md — Configure screen transitions and migrate onboarding/animations.ts consumers
 - [ ] 01-04-PLAN.md — Automated validation + visual/haptic verification checkpoint

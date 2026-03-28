@@ -11,8 +11,8 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 
 - [ ] **DES-01**: All screens use consistent spacing, typography, and color tokens from the design system
 - [ ] **DES-02**: Design system components (Button, Card, ArabicText, HearButton, QuizOption) are polished to premium quality
-- [ ] **DES-03**: Animation timing is centralized in shared presets, not scattered across files
-- [ ] **DES-04**: All interactive elements have consistent haptic feedback (light tap on press, success on correct, error on wrong)
+- [x] **DES-03**: Animation timing is centralized in shared presets, not scattered across files
+- [x] **DES-04**: All interactive elements have consistent haptic feedback (light tap on press, success on correct, error on wrong)
 
 ### Onboarding
 
@@ -110,8 +110,8 @@ Explicitly excluded. Documented to prevent scope creep.
 |-------------|-------|--------|
 | DES-01 | Phase 1 | Pending |
 | DES-02 | Phase 1 | Pending |
-| DES-03 | Phase 1 | Pending |
-| DES-04 | Phase 1 | Pending |
+| DES-03 | Phase 1 | Complete |
+| DES-04 | Phase 1 | Complete |
 | TRANS-01 | Phase 1 | Pending |
 | TRANS-02 | Phase 1 | Pending |
 | TRANS-03 | Phase 1 | Pending |
