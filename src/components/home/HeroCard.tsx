@@ -98,8 +98,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxl,
   },
   phasePill: {
-    paddingVertical: 4,
-    paddingHorizontal: 12,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
     borderRadius: 9999,
     marginBottom: spacing.lg,
   },
