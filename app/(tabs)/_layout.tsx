@@ -1,8 +1,8 @@
 import { Tabs } from "expo-router";
 import { Platform } from "react-native";
 import Svg, { Path } from "react-native-svg";
-import * as Haptics from "expo-haptics";
 import { useColors } from "../../src/design/theme";
+import { hapticTap } from "../../src/design/haptics";
 
 function HomeIcon({ color, size }: { color: string; size: number }) {
   return (
@@ -46,7 +46,7 @@ export default function TabLayout() {
       }}
       screenListeners={{
         tabPress: () => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          hapticTap();
         },
       }}
     >

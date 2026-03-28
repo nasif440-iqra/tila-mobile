@@ -1,8 +1,16 @@
 import { Pressable, ActivityIndicator, StyleSheet } from "react-native";
 import { useState, useCallback } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
-import * as Haptics from "expo-haptics";
 import { useColors } from "../theme";
+import { springs, pressScale } from "../animations";
+import { hapticTap } from "../haptics";
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface HearButtonProps {
   onPlay: () => void | Promise<void>;
@@ -17,10 +25,23 @@ export function HearButton({
 }: HearButtonProps) {
   const colors = useColors();
   const [loading, setLoading] = useState(false);
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  function handlePressIn() {
+    scale.value = withSpring(pressScale.subtle, springs.press);
+  }
+
+  function handlePressOut() {
+    scale.value = withSpring(1, springs.press);
+  }
 
   const handlePress = useCallback(async () => {
     if (loading) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     setLoading(true);
     try {
       await onPlay();
@@ -30,8 +51,10 @@ export function HearButton({
   }, [onPlay, loading]);
 
   return (
-    <Pressable
+    <AnimatedPressable
       onPress={handlePress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       disabled={loading}
       style={[
         styles.base,
@@ -42,6 +65,7 @@ export function HearButton({
           backgroundColor: colors.primarySoft,
           opacity: loading ? 0.6 : 1,
         },
+        animatedStyle,
       ]}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
@@ -62,7 +86,7 @@ export function HearButton({
           />
         </Svg>
       )}
-    </Pressable>
+    </AnimatedPressable>
   );
 }
 
