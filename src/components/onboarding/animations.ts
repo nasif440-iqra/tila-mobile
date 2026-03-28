@@ -15,3 +15,11 @@ export const TRANSITION_FADE_IN = 300; // ms — container-level fade in
 export const TRANSITION_FADE_OUT = 200; // ms — container-level fade out
 export const TRANSITION_FADE_IN_DELAY = 100; // ms — delay before new content fades in
 export const TRANSITION_LESSON_DURATION = 400; // ms — lesson slide up/down
+
+// ── Sacred moment timing (Phase 2) ──
+export const BISMILLAH_DISPLAY_DURATION = 2500; // ms — auto-advance timer for Bismillah step
+export const STILLNESS_BEAT_DURATION = 1200; // ms — deliberate pause before Alif appears in LetterReveal
+
+// Derived constant — no magic numbers downstream (per D-15)
+export const LETTER_REVEAL_HAPTIC_DELAY =
+  SPLASH_STAGGER_DURATION + STILLNESS_BEAT_DURATION; // 700 + 1200 = 1900ms — when to fire hapticMilestone in LetterReveal

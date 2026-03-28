@@ -10,9 +10,14 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { fontFamilies } from "../../design/tokens";
+import { useColors } from "../../design/theme";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
+// 12 letters x 1 opacity value = 12 UI-thread animations.
+// Budget ~23 total on Welcome (see review justification in PLAN).
+// These are lightweight opacity tweens; profile on mid-range Android if frame drops occur.
+// Fallback: reduce to 8 letters.
 const floatingLetters = [
   { char: "\u0628", top: "3%", left: "8%", size: 30, opacity: 0.09, axis: "y" as const, range: 8, duration: 16000 },
   { char: "\u0646", top: "5%", left: "52%", size: 26, opacity: 0.07, axis: "y" as const, range: -6, duration: 18000 },
@@ -98,11 +103,20 @@ function FloatingLetter({
   );
 }
 
-export function FloatingLettersLayer({ color }: { color: string }) {
+export function FloatingLettersLayer({
+  color,
+  tint,
+}: {
+  color: string;
+  tint?: "primary" | "accent";
+}) {
+  const colors = useColors(); // ALWAYS call — hooks must be unconditional
+  const effectiveColor = tint === "accent" ? colors.accent : color;
+
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {floatingLetters.map((l, i) => (
-        <FloatingLetter key={i} {...l} color={color} index={i} />
+        <FloatingLetter key={i} {...l} color={effectiveColor} index={i} />
       ))}
     </View>
   );
