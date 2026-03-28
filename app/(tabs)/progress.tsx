@@ -97,7 +97,7 @@ export default function ProgressScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* ── Header ── */}
-        <Text style={[typography.heading1, { color: colors.text, marginBottom: spacing.xl }]}>
+        <Text style={[typography.pageTitle, { color: colors.brown, marginBottom: spacing.xl }]}>
           Your Progress
         </Text>
 
@@ -114,8 +114,8 @@ export default function ProgressScreen() {
         {/* ── Phase Progress ── */}
         <Text
           style={[
-            typography.heading3,
-            { color: colors.text, marginTop: spacing.xl, marginBottom: spacing.md },
+            typography.sectionHeader,
+            { color: colors.brownLight, marginTop: spacing.xxxxl, marginBottom: spacing.md },
           ]}
         >
           Phase Progress
@@ -134,10 +134,10 @@ export default function ProgressScreen() {
         {/* ── Letter Mastery Grid ── */}
         <Text
           style={[
-            typography.heading3,
+            typography.sectionHeader,
             {
-              color: colors.text,
-              marginTop: spacing.xl,
+              color: colors.brownLight,
+              marginTop: spacing.xxxxl,
               marginBottom: spacing.md,
             },
           ]}
