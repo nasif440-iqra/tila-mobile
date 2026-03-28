@@ -45,7 +45,7 @@ Non-token size exceptions:
 - Icon circle (LessonSummary): 80px diameter -- result icon container
 - Options grid max-width: 340px -- prevents options from stretching on wide screens
 - Exercise max-width: 430px (GuidedReveal), 340px (BuildUpReader, FreeReader) -- content readability constraint
-- Progress bar track height: 6px (QuizProgress), 8px (LessonHybrid) -- fine-grained sizing below token scale
+- Progress bar track height: 4px (QuizProgress), 8px (LessonHybrid) -- fine-grained sizing, both multiples of 4
 - GuidedReveal chips: 76px min-width/min-height -- touch target for form display
 
 ---
@@ -180,7 +180,7 @@ None. Phase 4 modifies existing components rather than creating new ones. All vi
 ### Quiz Screen
 
 **Progress bar (QuizProgress):**
-- Track: full width, height 6px, borderRadius 3px, background `border`
+- Track: full width, height 4px, borderRadius 2px, background `border`
 - Fill: animated width via `springs.gentle`, background `primary`
 - Near completion (>85%): fill color transitions to `accent` over `durations.normal` (300ms) -- visual signal that finish is near
 - Counter: `caption` preset, fontWeight 700, color `textSoft`, right-aligned, minWidth 40px
@@ -376,7 +376,7 @@ All 6 exercise types share these visual conventions:
 
 ### Exercise -- BuildUpReader Specifics
 
-**Step dots:** Row of 6px circles, gap 6px, filled `primary` (completed) / `border` (upcoming)
+**Step dots:** Row of 8px circles, gap `xs` (4px), filled `primary` (completed) / `border` (upcoming)
 
 **Arabic display:** Key step transition with FadeInDown springify per step
 
