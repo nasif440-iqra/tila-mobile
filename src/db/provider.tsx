@@ -14,10 +14,11 @@ export function useDatabase(): SQLiteDatabase {
 
 interface DatabaseProviderProps {
   children: ReactNode;
+  fallback?: ReactNode;
   onReady?: () => void;
 }
 
-export function DatabaseProvider({ children, onReady }: DatabaseProviderProps) {
+export function DatabaseProvider({ children, fallback, onReady }: DatabaseProviderProps) {
   const [db, setDb] = useState<SQLiteDatabase | null>(null);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export function DatabaseProvider({ children, onReady }: DatabaseProviderProps) {
     });
   }, []);
 
-  if (!db) return null;
+  if (!db) return <>{fallback}</>;
 
   return (
     <DatabaseContext.Provider value={db}>{children}</DatabaseContext.Provider>

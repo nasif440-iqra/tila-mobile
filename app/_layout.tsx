@@ -3,8 +3,11 @@ import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import * as Sentry from "@sentry/react-native";
 import { initAnalytics, track } from "../src/analytics";
 import * as SecureStore from "expo-secure-store";
+import { AppLoadingScreen } from "../src/components/feedback/AppLoadingScreen";
+import { ErrorFallback } from "../src/components/feedback/ErrorFallback";
 import {
   Amiri_400Regular,
   Amiri_700Bold,
@@ -81,31 +84,35 @@ export default function RootLayout() {
 
   return (
     <ThemeContext.Provider value={{ colors, mode }}>
-      <DatabaseProvider>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.bg },
-            animation: "fade",
-            animationDuration: 300,
-          }}
-        >
-          <Stack.Screen
-            name="lesson/[id]"
-            options={{
-              animation: "slide_from_bottom",
-              animationDuration: 400,
+      <Sentry.ErrorBoundary fallback={({ resetError }) => (
+        <ErrorFallback onRetry={resetError} />
+      )}>
+        <DatabaseProvider fallback={<AppLoadingScreen />}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.bg },
+              animation: "fade",
+              animationDuration: 300,
             }}
-          />
-          <Stack.Screen
-            name="lesson/review"
-            options={{
-              animation: "slide_from_bottom",
-              animationDuration: 400,
-            }}
-          />
-        </Stack>
-      </DatabaseProvider>
+          >
+            <Stack.Screen
+              name="lesson/[id]"
+              options={{
+                animation: "slide_from_bottom",
+                animationDuration: 400,
+              }}
+            />
+            <Stack.Screen
+              name="lesson/review"
+              options={{
+                animation: "slide_from_bottom",
+                animationDuration: 400,
+              }}
+            />
+          </Stack>
+        </DatabaseProvider>
+      </Sentry.ErrorBoundary>
     </ThemeContext.Provider>
   );
 }
