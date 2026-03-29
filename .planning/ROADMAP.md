@@ -114,7 +114,10 @@ Plans:
   2. The letter mastery grid shows 5 distinct visual states (not_started, introduced, unstable, accurate, retained) that are immediately distinguishable
   3. Phase progress bars animate smoothly and show clear completion status
   4. Stats (lessons completed, letters mastered, streak) are presented with beautiful typography and clear hierarchy
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 06-01-PLAN.md — LetterMasteryGrid 5-state visuals + PhasePanel animated progress bars
+- [ ] 06-02-PLAN.md — StatsRow polish + progress.tsx staggered entrance animations
 **UI hint**: yes
 
 ### Phase 7: Loading & Error States
@@ -139,5 +142,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 3. Home Screen | 2/2 | Checkpoint pending | - |
 | 4. Lesson Experience | 3/4 | Executing | - |
 | 5. Celebrations & Feedback | 3/3 | Complete | 2026-03-29 |
-| 6. Progress Screen | 0/TBD | Not started | - |
+| 6. Progress Screen | 0/2 | Not started | - |
 | 7. Loading & Error States | 0/TBD | Not started | - |
