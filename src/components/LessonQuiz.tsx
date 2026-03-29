@@ -1,15 +1,19 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { router } from "expo-router";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSequence,
   withTiming,
   Easing,
+  FadeIn,
+  FadeOut,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "../design/theme";
 import { typography, spacing } from "../design/tokens";
-import { WarmGradient } from "../design/components";
+import { WarmGradient, Button } from "../design/components";
 import {
   playCorrect,
   playWrong,
@@ -18,6 +22,7 @@ import {
 } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { track } from "../analytics";
+// haptics now handled in StreakMilestoneOverlay
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";
 import type { Lesson } from "../types/lesson";
 import type { MasteryState } from "../types/mastery";
@@ -25,6 +30,11 @@ import { QuizProgress } from "./quiz/QuizProgress";
 import { QuizCelebration } from "./quiz/QuizCelebration";
 import { QuizQuestion } from "./quiz/QuizQuestion";
 import { WrongAnswerPanel } from "./quiz/WrongAnswerPanel";
+import { StreakMilestoneOverlay } from "./quiz/StreakMilestoneOverlay";
+
+// ── Streak milestones ──
+
+const STREAK_MILESTONES = [3, 5, 7] as const;
 
 // ── Types ──
 
@@ -44,8 +54,8 @@ export function LessonQuiz({
   onComplete,
 }: LessonQuizProps) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
 
-  // Quiz state from hook
   const {
     currentQuestion,
     questionIndex,
@@ -55,47 +65,54 @@ export function LessonQuiz({
     dismissMidCelebrate,
     handleAnswer,
     isComplete,
+    error,
     results,
   } = useLessonQuiz(lesson, completedLessonIds, mastery);
 
-  // Local UI state
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
+
+  // Streak milestone overlay state
+  const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
+  const prevStreakRef = useRef(0);
 
   // Screen flash animations
   const wrongFlashOpacity = useSharedValue(0);
   const goldTintOpacity = useSharedValue(0);
 
-  // Track original question count for progress display
-  const originalQCount = useRef(totalQuestions);
-  useEffect(() => {
-    if (totalQuestions > 0 && originalQCount.current === 0) {
-      originalQCount.current = totalQuestions;
-    }
-  }, [totalQuestions]);
+  // Track original question count — snapshot when first available
+  const originalQCount = useRef(0);
+  if (totalQuestions > 0 && originalQCount.current === 0) {
+    originalQCount.current = totalQuestions;
+  }
 
+  const effectiveQCount = originalQCount.current || totalQuestions;
   const progressPct = computeQuizProgress(
     questionIndex,
     totalQuestions,
-    originalQCount.current
+    effectiveQCount
   );
 
-  // Determine audio type for the current question's letter
   const isSoundQuestion =
     currentQuestion?.type === "audio_to_letter" ||
     currentQuestion?.type === "letter_to_sound" ||
     currentQuestion?.type === "contrast_audio";
 
+  const lessonAudioType: "sound" | "name" =
+    lesson.lessonMode === "sound" ||
+    lesson.lessonMode === "contrast" ||
+    lesson.lessonMode === "checkpoint"
+      ? "sound"
+      : "name";
+
   const playTargetAudio = useCallback(() => {
     if (!currentQuestion?.hasAudio || !currentQuestion?.targetId) return;
-
     track('letter_audio_played', {
       letter_id: typeof currentQuestion.targetId === 'number' ? currentQuestion.targetId : 0,
       audio_type: isSoundQuestion ? 'sound' as const : 'name' as const,
       context: 'quiz' as const,
     });
-
     if (isSoundQuestion) {
       playLetterSound(currentQuestion.targetId);
     } else {
@@ -103,54 +120,57 @@ export function LessonQuiz({
     }
   }, [currentQuestion?.hasAudio, currentQuestion?.targetId, isSoundQuestion]);
 
-  // Notify parent when quiz completes
+  const playChosenAudio = useCallback(() => {
+    if (!selectedId) return;
+    if (isSoundQuestion || lessonAudioType === "sound") {
+      playLetterSound(selectedId);
+    } else {
+      playLetterName(selectedId);
+    }
+  }, [selectedId, isSoundQuestion, lessonAudioType]);
+
   useEffect(() => {
     if (isComplete) {
       onComplete(results);
     }
   }, [isComplete, results, onComplete]);
 
-  // Reset selection state when question changes
   useEffect(() => {
     setSelectedId(null);
     setAnswered(false);
     setIsCorrect(false);
   }, [questionIndex]);
 
-  // Gold tint on streak milestones
-  const prevStreakForFlash = useRef(0);
+  // ── Synchronized streak milestone ──
   useEffect(() => {
-    if (streak > prevStreakForFlash.current && [3, 5, 7].includes(streak)) {
+    if (
+      streak > prevStreakRef.current &&
+      STREAK_MILESTONES.includes(streak as 3 | 5 | 7)
+    ) {
+      // Full-screen milestone overlay (replaces banner for milestone streaks)
+      setMilestoneStreak(streak);
+
       goldTintOpacity.value = withSequence(
-        withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
-        withTiming(0, { duration: 600, easing: Easing.in(Easing.cubic) })
+        withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) })
       );
     }
-    prevStreakForFlash.current = streak;
-  }, [streak, goldTintOpacity]);
+    prevStreakRef.current = streak;
+  }, [streak]);
 
-  // Handle option press
   const handleSelect = useCallback(
     (optionId: number) => {
       if (answered || !currentQuestion) return;
-
       setSelectedId(optionId);
       setAnswered(true);
-
       const opt = currentQuestion.options.find((o: any) => o.id === optionId);
       const correct = opt?.isCorrect === true;
       setIsCorrect(correct);
-
       if (correct) {
         playCorrect();
-
-        // Auto-advance after a brief delay
-        setTimeout(() => {
-          handleAnswer(opt, true);
-        }, 800);
+        setTimeout(() => { handleAnswer(opt, true); }, 800);
       } else {
         playWrong();
-        // Red flash on wrong answer
         wrongFlashOpacity.value = withSequence(
           withTiming(1, { duration: 80 }),
           withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) })
@@ -160,16 +180,12 @@ export function LessonQuiz({
     [answered, currentQuestion, handleAnswer, wrongFlashOpacity]
   );
 
-  // Handle "Got it" press on wrong answer panel
   const handleContinueAfterWrong = useCallback(() => {
     if (!currentQuestion) return;
-    const opt = currentQuestion.options.find(
-      (o: any) => o.id === selectedId
-    );
+    const opt = currentQuestion.options.find((o: any) => o.id === selectedId);
     handleAnswer(opt, false);
   }, [currentQuestion, selectedId, handleAnswer]);
 
-  // Animated flash styles
   const wrongFlashStyle = useAnimatedStyle(() => ({
     opacity: wrongFlashOpacity.value,
   }));
@@ -178,10 +194,28 @@ export function LessonQuiz({
     opacity: goldTintOpacity.value,
   }));
 
-  // Loading state
+  if (error) {
+    return (
+      <View style={[styles.root, styles.errorContainer, { backgroundColor: colors.bg }]}>
+        <Text style={[styles.errorHeading, { color: colors.text }]}>
+          Something went wrong
+        </Text>
+        <Text style={[styles.errorMessage, { color: colors.textSoft }]}>
+          {error}
+        </Text>
+        <Button
+          title="Go Back"
+          variant="secondary"
+          onPress={() => router.back()}
+          style={{ marginTop: spacing.lg }}
+        />
+      </View>
+    );
+  }
+
   if (!currentQuestion) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      <View style={[styles.root, { backgroundColor: colors.bg, justifyContent: "center", alignItems: "center" }]}>
         <Text style={[styles.loadingText, { color: colors.textSoft }]}>
           Loading question...
         </Text>
@@ -189,7 +223,6 @@ export function LessonQuiz({
     );
   }
 
-  // Resolve correct letter info for wrong-answer panel
   const correctLetter = currentQuestion.targetId
     ? (getLetter(currentQuestion.targetId) ?? null)
     : null;
@@ -198,65 +231,89 @@ export function LessonQuiz({
       ? (getLetter(selectedId) ?? null)
       : null;
 
+  // ── CRITICAL: banner is OUTSIDE the space-between container ──
+  // Rendering it inside causes RN to briefly calculate a flex position
+  // before applying absolute positioning, causing bottom-to-top travel.
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Warm ambient gradient */}
-      <WarmGradient color={colors.bgWarm} height={280} />
-
-      {/* Wrong answer red flash overlay */}
-      <Animated.View
+    <View style={[styles.root, { backgroundColor: colors.bg }]}>
+      {/* Quiz content — flex layout with space-between */}
+      <View
         style={[
-          styles.screenFlash,
-          { backgroundColor: "rgba(189, 82, 77, 0.08)" },
-          wrongFlashStyle,
+          styles.quizContainer,
+          {
+            paddingTop: insets.top + spacing.sm,
+            paddingBottom: Math.max(insets.bottom, spacing.xl),
+          },
         ]}
-        pointerEvents="none"
-      />
+      >
+        <WarmGradient color={colors.bgWarm} height={280} />
 
-      {/* Streak gold tint overlay */}
-      <Animated.View
-        style={[
-          styles.screenFlash,
-          { backgroundColor: "rgba(196, 164, 100, 0.06)" },
-          goldTintStyle,
-        ]}
-        pointerEvents="none"
-      />
+        <QuizProgress
+          questionIndex={questionIndex}
+          originalQCount={effectiveQCount}
+          progressPct={progressPct}
+          isRecycled={!!currentQuestion._recycled}
+        />
 
-      {/* Mid-celebration overlay */}
-      {showMidCelebrate && (
-        <QuizCelebration onDismiss={dismissMidCelebrate} />
+        {/* Keyed question stage — scene transition on question change */}
+        <Animated.View
+          key={questionIndex}
+          entering={FadeIn.duration(280).withInitialValues({ opacity: 0, transform: [{ translateY: 20 }, { scale: 0.96 }] })}
+          exiting={FadeOut.duration(150).withInitialValues({ opacity: 1, transform: [{ translateY: 0 }] })}
+          style={{ flex: 1 }}
+        >
+          <QuizQuestion
+            question={currentQuestion}
+            selectedId={selectedId}
+            answered={answered}
+            isCorrect={isCorrect}
+            onSelect={handleSelect}
+            onPlayAudio={playTargetAudio}
+          />
+        </Animated.View>
+
+      </View>
+
+      {/* ── Overlays — OUTSIDE the flex container ── */}
+
+      {/* Wrong answer panel — absolute overlay at bottom */}
+      {answered && !isCorrect && (
+        <View style={[styles.wrongPanelOverlay, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}>
+          <WrongAnswerPanel
+            explanation={currentQuestion.explanation ?? null}
+            correctLetter={correctLetter}
+            chosenLetter={chosenLetter}
+            isSoundQuestion={isSoundQuestion}
+            onPlayCorrect={playTargetAudio}
+            onPlayChosen={isSoundQuestion && chosenLetter ? playChosenAudio : undefined}
+            onContinue={handleContinueAfterWrong}
+          />
+        </View>
       )}
 
-      {/* Progress bar + streak banner */}
-      <QuizProgress
-        questionIndex={questionIndex}
-        originalQCount={originalQCount.current}
-        progressPct={progressPct}
-        streak={streak}
-        isRecycled={!!currentQuestion._recycled}
+      {/* Wrong answer red flash */}
+      <Animated.View
+        style={[styles.screenFlash, { backgroundColor: "rgba(189, 82, 77, 0.08)" }, wrongFlashStyle]}
+        pointerEvents="none"
       />
 
-      {/* Question content + options */}
-      <QuizQuestion
-        question={currentQuestion}
-        selectedId={selectedId}
-        answered={answered}
-        isCorrect={isCorrect}
-        onSelect={handleSelect}
-        onPlayAudio={playTargetAudio}
+      {/* Streak gold tint */}
+      <Animated.View
+        style={[styles.screenFlash, { backgroundColor: "rgba(196, 164, 100, 0.06)" }, goldTintStyle]}
+        pointerEvents="none"
       />
 
-      {/* Wrong answer panel */}
-      {answered && !isCorrect && (
-        <WrongAnswerPanel
-          explanation={currentQuestion.explanation ?? null}
-          correctLetter={correctLetter}
-          chosenLetter={chosenLetter}
-          isSoundQuestion={isSoundQuestion}
-          onPlayCorrect={playTargetAudio}
-          onContinue={handleContinueAfterWrong}
+      {/* Streak milestone — full-screen overlay */}
+      {milestoneStreak !== null && (
+        <StreakMilestoneOverlay
+          streak={milestoneStreak}
+          onDismiss={() => setMilestoneStreak(null)}
         />
+      )}
+
+      {/* Mid-celebration */}
+      {showMidCelebrate && (
+        <QuizCelebration onDismiss={dismissMidCelebrate} />
       )}
     </View>
   );
@@ -265,19 +322,42 @@ export function LessonQuiz({
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
+    flex: 1,
+  },
+  quizContainer: {
     flex: 1,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.xl,
     justifyContent: "space-between",
   },
   loadingText: {
     ...typography.body,
     textAlign: "center",
   },
+  errorContainer: {
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+  },
+  errorHeading: {
+    ...typography.heading2,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  errorMessage: {
+    ...typography.body,
+    textAlign: "center",
+  },
   screenFlash: {
     ...StyleSheet.absoluteFillObject,
     zIndex: 150,
+  },
+  wrongPanelOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.lg,
+    zIndex: 100,
   },
 });
