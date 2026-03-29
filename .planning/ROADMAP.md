@@ -100,9 +100,9 @@ Plans:
   4. Encouragement messages use warm Islamic phrases (Bismillah, MashaAllah, Alhamdulillah) instead of generic "Great job!" text
 **Plans:** 3 plans
 Plans:
-- [ ] 05-01-PLAN.md — Wave 0 test stubs + Islamic copy expansion + mastery pipeline wiring
-- [ ] 05-02-PLAN.md — LetterMasteryCelebration component + lesson flow mastery detection
-- [ ] 05-03-PLAN.md — Phase completion milestone enhancement + 4-tier system validation
+- [x] 05-01-PLAN.md — Wave 0 test stubs + Islamic copy expansion + mastery pipeline wiring
+- [x] 05-02-PLAN.md — LetterMasteryCelebration component + lesson flow mastery detection
+- [x] 05-03-PLAN.md — Phase completion milestone enhancement + 4-tier system validation
 **UI hint**: yes
 
 ### Phase 6: Progress Screen
@@ -138,6 +138,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 2. Onboarding Wow Factor | 1/4 | In Progress|  |
 | 3. Home Screen | 2/2 | Checkpoint pending | - |
 | 4. Lesson Experience | 3/4 | Executing | - |
-| 5. Celebrations & Feedback | 0/3 | Not started | - |
+| 5. Celebrations & Feedback | 1/3 | Executing | - |
 | 6. Progress Screen | 0/TBD | Not started | - |
 | 7. Loading & Error States | 0/TBD | Not started | - |
