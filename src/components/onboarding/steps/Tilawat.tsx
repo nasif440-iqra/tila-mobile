@@ -34,9 +34,6 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         </Animated.View>
       }
     >
-      {/* Warm glow — animated pulsing */}
-      <WarmGlow size={300} animated pulseMin={0.10} pulseMax={0.20} />
-
       {/* Arabic calligraphy */}
       <Animated.View entering={FadeInDown.delay(calligraphyDelay).duration(SPLASH_STAGGER_DURATION)}>
         <ArabicText
@@ -55,7 +52,6 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.sacredHeadline, { color: colors.brown, zIndex: 1 }]}
       >
-        To recite the Quran beautifully is{" "}
         <Text
           style={{
             fontFamily: fontFamilies.headingItalic,
@@ -64,6 +60,7 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         >
           Tilawat
         </Text>
+        {": To recite the Quran beautifully"}
       </Animated.Text>
 
       <View style={{ height: spacing.md }} />

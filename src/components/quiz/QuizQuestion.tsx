@@ -135,7 +135,7 @@ export function QuizQuestion({
       )}
 
       {/* Answer options -- 2x2 grid */}
-      <View style={styles.optionsGrid}>
+      <View style={[styles.optionsGrid, { position: "relative" }]}>
         {question.options.map((opt: any) => {
           let optionState: "default" | "correct" | "wrong" | "dimmed" =
             "default";
@@ -201,8 +201,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   promptText: {
-    ...typography.bodyLarge,
-    fontWeight: "700",
+    ...typography.heading2,
     textAlign: "center",
   },
   promptSubtext: {
@@ -230,15 +229,17 @@ const styles = StyleSheet.create({
   },
   optionCell: {
     width: "47%",
+    minHeight: 56,
   },
   correctFeedback: {
+    position: "absolute",
+    bottom: -48,
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.lg,
     borderRadius: radii.full,
     borderWidth: borderWidths.normal,
-    marginTop: spacing.lg,
     gap: spacing.sm,
   },
   correctFeedbackText: {
