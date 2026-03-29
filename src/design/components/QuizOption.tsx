@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { typography, spacing, radii, borderWidths } from "../tokens";
+import { typography, spacing, radii, borderWidths, shadows } from "../tokens";
 import { useColors } from "../theme";
 import { springs, pressScale, durations } from "../animations";
 import { hapticTap, hapticSuccess, hapticError } from "../haptics";
@@ -95,7 +95,7 @@ export function QuizOption({
       ? colors.primary
       : state === "wrong"
         ? colors.danger
-        : colors.border;
+        : "transparent";
 
   const textColor =
     state === "correct"
@@ -112,9 +112,11 @@ export function QuizOption({
       disabled={!isPressable}
       style={[
         styles.base,
+        shadows.card,
         {
           backgroundColor,
           borderColor,
+          borderWidth: state === "correct" || state === "wrong" ? borderWidths.thick : 0,
           opacity: isDimmed ? 0.5 : 1,
         },
         animatedStyle,
@@ -123,7 +125,7 @@ export function QuizOption({
       accessibilityRole="button"
     >
       {isArabic ? (
-        <ArabicText size="body" color={textColor}>
+        <ArabicText size="large" color={textColor}>
           {label}
         </ArabicText>
       ) : (
@@ -136,15 +138,14 @@ export function QuizOption({
 const styles = StyleSheet.create({
   base: {
     width: "100%",
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
-    borderRadius: radii.lg,
-    borderWidth: borderWidths.thick,
+    borderRadius: radii.xl,
     alignItems: "center",
     justifyContent: "center",
-    minHeight: 56,
+    minHeight: 88,
   },
   text: {
-    ...typography.bodyLarge,
+    ...typography.heading3,
   },
 });

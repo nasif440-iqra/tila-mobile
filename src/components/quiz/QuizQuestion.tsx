@@ -1,17 +1,9 @@
-import { useEffect } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import Animated, {
-  FadeIn,
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii, borderWidths } from "../../design/tokens";
-import { springs } from "../../design/animations";
+import { typography, spacing } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
 
-const OPTIONS_GRID_MAX_WIDTH = 340;
+const OPTIONS_GRID_MAX_WIDTH = 400;
 
 // ── Types ──
 
@@ -35,20 +27,6 @@ export function QuizQuestion({
   onPlayAudio,
 }: QuizQuestionProps) {
   const colors = useColors();
-
-  // Correct feedback pulse animation
-  const correctScale = useSharedValue(0.95);
-
-  useEffect(() => {
-    if (answered && isCorrect) {
-      correctScale.value = 0.95;
-      correctScale.value = withSpring(1, springs.press);
-    }
-  }, [answered, isCorrect, correctScale]);
-
-  const correctPulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: correctScale.value }],
-  }));
 
   // Question type detection
   const isAudioQuestion = question.hasAudio;
@@ -135,7 +113,7 @@ export function QuizQuestion({
       )}
 
       {/* Answer options -- 2x2 grid */}
-      <View style={[styles.optionsGrid, { position: "relative" }]}>
+      <View style={styles.optionsGrid}>
         {question.options.map((opt: any) => {
           let optionState: "default" | "correct" | "wrong" | "dimmed" =
             "default";
@@ -165,25 +143,6 @@ export function QuizQuestion({
           );
         })}
       </View>
-
-      {/* Correct feedback message */}
-      {answered && isCorrect && (
-        <Animated.View
-          entering={FadeIn.duration(300)}
-          style={[
-            styles.correctFeedback,
-            {
-              backgroundColor: colors.primarySoft,
-              borderColor: colors.primary,
-            },
-            correctPulseStyle,
-          ]}
-        >
-          <Text style={[styles.correctFeedbackText, { color: colors.primary }]}>
-            {"\u2713"} Correct!
-          </Text>
-        </Animated.View>
-      )}
     </View>
   );
 }
@@ -229,21 +188,5 @@ const styles = StyleSheet.create({
   },
   optionCell: {
     width: "47%",
-    minHeight: 56,
-  },
-  correctFeedback: {
-    position: "absolute",
-    bottom: -48,
-    flexDirection: "row",
-    alignItems: "center",
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.full,
-    borderWidth: borderWidths.normal,
-    gap: spacing.sm,
-  },
-  correctFeedbackText: {
-    ...typography.bodySmall,
-    fontWeight: "700",
   },
 });
