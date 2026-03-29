@@ -19,6 +19,9 @@ export const CORRECT_COPY = {
     "Good eye.",
     "That's the one.",
     "Clear and correct.",
+    "MashaAllah, that's right.",
+    "MashaAllah -- you see it clearly.",
+    "Alhamdulillah, correct.",
   ],
   sound: [
     "You matched it.",
@@ -29,6 +32,8 @@ export const CORRECT_COPY = {
     "Your ear is learning.",
     "You can hear it now.",
     "Spot on.",
+    "MashaAllah, you hear it.",
+    "Your ear is blessed -- that's right.",
   ],
   harakat: [
     "You read that.",
@@ -39,6 +44,8 @@ export const CORRECT_COPY = {
     "You can hear the difference.",
     "The vowels are making sense.",
     "That's real reading.",
+    "MashaAllah, you read that well.",
+    "Alhamdulillah -- the marks are clear to you.",
   ],
 };
 
@@ -51,6 +58,8 @@ export const WRONG_ENCOURAGEMENT = [
   "Not quite — but you're learning the distinction.",
   "This is how you build accuracy.",
   "Good attempt — the difference is subtle.",
+  "In shaa Allah, it will come -- keep trying.",
+  "Every effort is rewarded -- try again.",
 ];
 
 // ─── Streak microcopy ───────────────────────────────────────────────────────
@@ -62,6 +71,7 @@ export const STREAK_COPY = {
     "Clear and focused",
     "Building momentum",
     "Confident steps",
+    "Alhamdulillah, flowing beautifully",
   ],
   harakat: [
     "Reading naturally",
@@ -81,6 +91,8 @@ export const MID_CELEBRATE_COPY = {
     "This is steady progress",
     "You're seeing the details clearly",
     "Keep this pace — it's working",
+    "MashaAllah, your dedication shows",
+    "Alhamdulillah -- real progress",
   ],
   harakat: [
     "You're reading letter-vowel combinations",
@@ -95,8 +107,8 @@ export const MID_CELEBRATE_COPY = {
 
 export const COMPLETION_HEADLINES = {
   firstLesson: "Your first step",
-  perfect: "Flawless.",
-  great: "Well done.",
+  perfect: "MashaAllah!",
+  great: "Alhamdulillah.",
   good: "Solid effort.",
   struggling: "Keep going.",
   harakatPerfect: "Every sound, correct.",
@@ -106,8 +118,8 @@ export const COMPLETION_HEADLINES = {
 
 export const COMPLETION_SUBLINES = {
   firstLesson: "You've taken the first step in reading Quran.",
-  perfect: "Every answer was precise. That's real learning.",
-  great: "Strong understanding. The letters are becoming clear.",
+  perfect: "MashaAllah -- every answer was precise. That's real learning.",
+  great: "Alhamdulillah -- strong understanding. The letters are becoming clear.",
   good: "Each attempt sharpens your recognition. Keep going.",
   struggling: "Every practice session builds familiarity. You'll get there.",
   harakatPerfect: "You matched every mark to its sound.",
@@ -123,12 +135,24 @@ export const CONTINUATION_COPY = [
   "Ready when you are.",
   "One more step forward.",
   "The next lesson builds on this.",
+  "Bismillah -- your next step awaits.",
 ];
 
 export const UNLOCK_COPY = [
   "You've unlocked the next lesson.",
   "A new lesson is now available.",
   "Your progress has opened a new path.",
+  "MashaAllah -- a new lesson is open to you.",
+];
+
+// ─── Letter mastery celebration copy ────────────────────────────────────────
+
+export const LETTER_MASTERY_COPY = [
+  "MashaAllah! You've truly learned {letter}.",
+  "Alhamdulillah -- {letter} is now part of your reading.",
+  "MashaAllah -- you've mastered {letter}.",
+  "SubhanAllah, look how far you've come with {letter}.",
+  "{letter} is yours now. MashaAllah.",
 ];
 
 // ─── Islamic closing quotes (expanded) ──────────────────────────────────────
