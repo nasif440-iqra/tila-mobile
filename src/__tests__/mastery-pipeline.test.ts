@@ -31,9 +31,10 @@ describe("Mastery Pipeline", () => {
     const result = mergeQuizResultsIntoMastery(mastery, quizResults, today);
 
     expect(result.entities).toHaveProperty("letter:1");
-    expect(result.entities["letter:1"].attempts).toBe(1);
-    expect(result.entities["letter:1"].correct).toBe(1);
-    expect(result.entities["letter:1"].lastSeen).toBe(today);
+    const entity = (result.entities as Record<string, any>)["letter:1"];
+    expect(entity.attempts).toBe(1);
+    expect(entity.correct).toBe(1);
+    expect(entity.lastSeen).toBe(today);
   });
 
   it("deriveMasteryState returns 'introduced' for new entity", () => {
