@@ -13,6 +13,7 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import { useColors } from "../../src/design/theme";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
@@ -27,6 +28,7 @@ import { getTodayDateString } from "../../src/engine/dateUtils";
 import StatsRow from "../../src/components/progress/StatsRow";
 import PhasePanel from "../../src/components/progress/PhasePanel";
 import LetterMasteryGrid from "../../src/components/progress/LetterMasteryGrid";
+import { EmptyState } from "../../src/components/feedback/EmptyState";
 
 // ── Phase metadata ──
 
@@ -39,6 +41,7 @@ const PHASES = [
 
 export default function ProgressScreen() {
   const colors = useColors();
+  const router = useRouter();
   const progress = useProgress();
 
   const completedLessonIds = progress.completedLessonIds ?? [];
@@ -127,6 +130,32 @@ export default function ProgressScreen() {
       >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (completedLessonIds.length === 0) {
+    return (
+      <SafeAreaView
+        edges={["top"]}
+        style={[styles.container, { backgroundColor: colors.bg }]}
+      >
+        <Text
+          style={[
+            typography.pageTitle,
+            { color: colors.brown, paddingHorizontal: spacing.xl, paddingTop: spacing.lg },
+          ]}
+        >
+          Your Progress
+        </Text>
+        <View style={{ flex: 1, justifyContent: "center" }}>
+          <EmptyState
+            title="Your Journey Begins"
+            subtitle="Bismillah -- complete your first lesson and watch your progress grow here."
+            actionLabel="Start Learning"
+            onAction={() => router.replace("/(tabs)")}
+          />
         </View>
       </SafeAreaView>
     );
