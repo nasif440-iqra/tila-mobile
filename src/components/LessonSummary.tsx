@@ -4,11 +4,13 @@ import Animated, {
   FadeIn,
   useSharedValue,
   useAnimatedProps,
+  useAnimatedStyle,
   withTiming,
   withDelay,
   Easing,
   useDerivedValue,
   runOnJS,
+  interpolateColor,
 } from "react-native-reanimated";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
@@ -23,6 +25,8 @@ import {
   pickCopy,
 } from "../engine/engagement";
 import { useState } from "react";
+import { WarmGlow } from "./onboarding/WarmGlow";
+import { hapticMilestone, hapticSuccess, hapticTap } from "../design/haptics";
 
 // ── Types ──
 
@@ -64,6 +68,41 @@ export function LessonSummary({
     runOnJS(setDisplayPct)(Math.round(animatedPct.value));
   });
 
+  // Score-proportional haptic on mount
+  useEffect(() => {
+    if (percentage >= 80) hapticMilestone();
+    else if (percentage >= 50) hapticSuccess();
+    else hapticTap();
+  }, []);
+
+  // Count-up color interpolation (D-08)
+  const countUpColor = useDerivedValue(() => {
+    // Interpolate based on the current animated percentage value
+    // 0-49: danger (red), 50-79: accent (gold), 80-100: primary (green)
+    if (animatedPct.value < 50) {
+      return interpolateColor(
+        animatedPct.value,
+        [0, 49],
+        [colors.danger, colors.danger]
+      );
+    } else if (animatedPct.value < 80) {
+      return interpolateColor(
+        animatedPct.value,
+        [50, 79],
+        [colors.accent, colors.accent]
+      );
+    }
+    return interpolateColor(
+      animatedPct.value,
+      [80, 100],
+      [colors.accent, colors.primary]
+    );
+  });
+
+  const countUpColorStyle = useAnimatedStyle(() => ({
+    color: countUpColor.value,
+  }));
+
   // Audio — play completion SFX on mount
   const sfxAsset = passed
     ? accuracy === 1
@@ -86,14 +125,6 @@ export function LessonSummary({
   const headline = (COMPLETION_HEADLINES as Record<string, string>)[tier] ?? "Lesson complete.";
   const subline = (COMPLETION_SUBLINES as Record<string, string>)[tier] ?? "";
 
-  // Accuracy color
-  const accuracyColor =
-    percentage >= 80
-      ? colors.primary
-      : percentage >= 50
-        ? colors.accent
-        : colors.danger;
-
   // Icon background
   const iconBg = passed ? colors.primarySoft : colors.accentLight;
   const iconColor = passed ? colors.primary : colors.accent;
@@ -101,25 +132,37 @@ export function LessonSummary({
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
-        {/* 1. Result icon */}
-        <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
-          {passed ? (
-            <CheckIcon size={36} color={iconColor} />
-          ) : (
-            <RefreshIcon size={36} color={iconColor} />
+        {/* 1. Result icon with score-proportional WarmGlow */}
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
+          {percentage >= 50 && (
+            <WarmGlow
+              size={percentage >= 80 ? 140 : 100}
+              animated
+              color="rgba(196,164,100,0.3)"
+              pulseMin={percentage >= 80 ? 0.08 : 0.04}
+              pulseMax={percentage >= 80 ? 0.22 : 0.10}
+            />
           )}
+          <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
+            {passed ? (
+              <CheckIcon size={36} color={iconColor} />
+            ) : (
+              <RefreshIcon size={36} color={iconColor} />
+            )}
+          </View>
         </View>
 
-        {/* 2. Accuracy display */}
+        {/* 2. Accuracy display with animated color */}
         <Animated.View entering={FadeIn.delay(200).duration(400)}>
-          <Text
+          <Animated.Text
             style={[
               styles.accuracyText,
-              { color: accuracyColor, fontFamily: fontFamilies.headingBold },
+              { fontFamily: fontFamilies.headingBold },
+              countUpColorStyle,
             ]}
           >
             {displayPct}%
-          </Text>
+          </Animated.Text>
         </Animated.View>
 
         {/* 3. Performance message */}
