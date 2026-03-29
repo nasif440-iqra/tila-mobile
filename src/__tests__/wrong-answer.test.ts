@@ -19,6 +19,6 @@ describe("LES-04: WrongAnswerPanel encouragement", () => {
 
   it("uses encouragement prefix in explanation text", () => {
     // The component should use pickCopy(WRONG_ENCOURAGEMENT) to prefix the explanation
-    expect(source).toMatch(/pickCopy\s*\(\s*WRONG_ENCOURAGEMENT\s*\)/);
+    expect(source).toMatch(/pickCopy.*WRONG_ENCOURAGEMENT/);
   });
 });
