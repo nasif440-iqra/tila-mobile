@@ -1,14 +1,15 @@
 import { useState, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { useAudioPlayer } from "expo-audio";
+import { hapticTap } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, shadows } from "../../design/tokens";
 import { ArabicText, Button, HearButton } from "../../design/components";
 import { getLetter } from "../../data/letters";
 import { getConnectedForms } from "../../data/connectedForms";
 import { getLetterAsset } from "../../audio/player";
+import { WarmGlow } from "../onboarding/WarmGlow";
 
 // ── Types ──
 
@@ -87,7 +88,7 @@ export function GuidedReveal({ exercise, onComplete }: Props) {
   }, [audioPlayer]);
 
   const handleNext = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     if (!isFullyRevealed) {
       setRevealedIndex((i) => i + 1);
     } else {
@@ -101,11 +102,14 @@ export function GuidedReveal({ exercise, onComplete }: Props) {
     <View style={styles.container}>
       {/* Letter name + audio button */}
       <View style={styles.letterHeader}>
-        {letter && (
-          <ArabicText size="display" color={colors.primaryDark}>
-            {letter.letter}
-          </ArabicText>
-        )}
+        <View style={styles.letterGlowContainer}>
+          <WarmGlow size={120} opacity={0.12} />
+          {letter && (
+            <ArabicText size="display" color={colors.primaryDark}>
+              {letter.letter}
+            </ArabicText>
+          )}
+        </View>
         <HearButton
           onPlay={handleHearName}
           accessibilityLabel={`Hear ${letter ? letter.name : "letter"}`}
@@ -235,6 +239,10 @@ const styles = StyleSheet.create({
   letterHeader: {
     alignItems: "center",
     gap: spacing.sm,
+  },
+  letterGlowContainer: {
+    alignItems: "center",
+    justifyContent: "center",
   },
   chipsRow: {
     flexDirection: "row",

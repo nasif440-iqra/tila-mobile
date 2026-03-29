@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { hapticSuccess, hapticError } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText, Button, QuizOption } from "../../design/components";
@@ -62,13 +62,13 @@ export function ComprehensionExercise({ exercise, onComplete }: Props) {
       setIsCorrect(correct);
 
       if (correct) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        hapticSuccess();
         timerRef.current = setTimeout(
           () => onComplete({ correct: true, selectedOption: option, targetId }),
           850
         );
       } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        hapticError();
         // Wait for "Got it" button press
       }
     },
