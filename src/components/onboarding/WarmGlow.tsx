@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface WarmGlowProps {
   size?: number;
@@ -18,7 +19,7 @@ interface WarmGlowProps {
   pulseMax?: number;
 }
 
-// Internal: static variant — no Reanimated hooks
+// Internal: static variant -- no Reanimated hooks
 function StaticWarmGlow({
   size,
   opacity,
@@ -35,13 +36,30 @@ function StaticWarmGlow({
         width: size,
         height: size,
         borderRadius: size / 2,
-        backgroundColor: color ?? `rgba(196, 164, 100, ${opacity})`,
+        overflow: "hidden",
       }}
-    />
+    >
+      <LinearGradient
+        colors={[
+          color ?? `rgba(196, 164, 100, ${opacity})`,
+          color ? color.replace(/[\d.]+\)$/, `${opacity * 0.4})`) : `rgba(196, 164, 100, ${opacity * 0.4})`,
+          "transparent",
+        ]}
+        locations={[0, 0.5, 0.85]}
+        style={{
+          position: "absolute",
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        }}
+        start={{ x: 0.5, y: 0.5 }}
+        end={{ x: 1, y: 1 }}
+      />
+    </View>
   );
 }
 
-// Internal: animated variant — uses Reanimated hooks
+// Internal: animated variant -- uses Reanimated hooks + breathing scale
 function AnimatedWarmGlow({
   size,
   color,
@@ -54,6 +72,7 @@ function AnimatedWarmGlow({
   pulseMax: number;
 }) {
   const pulseOpacity = useSharedValue(pulseMin);
+  const pulseScale = useSharedValue(1);
 
   useEffect(() => {
     pulseOpacity.value = withRepeat(
@@ -70,11 +89,28 @@ function AnimatedWarmGlow({
       -1,
       false,
     );
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.08, {
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+        }),
+        withTiming(1, {
+          duration: 2000,
+          easing: Easing.inOut(Easing.ease),
+        }),
+      ),
+      -1,
+      false,
+    );
   }, []);
 
   const animStyle = useAnimatedStyle(() => ({
     opacity: pulseOpacity.value,
+    transform: [{ scale: pulseScale.value }],
   }));
+
+  const midOpacity = (pulseMin + pulseMax) / 2;
 
   return (
     <Animated.View
@@ -84,15 +120,31 @@ function AnimatedWarmGlow({
           width: size,
           height: size,
           borderRadius: size / 2,
-          backgroundColor: color ?? "rgba(196, 164, 100, 1)",
+          overflow: "hidden",
         },
         animStyle,
       ]}
-    />
+    >
+      <LinearGradient
+        colors={[
+          color ?? `rgba(196, 164, 100, ${midOpacity * 2.5})`,
+          color ? color.replace(/[\d.]+\)$/, `${midOpacity * 1.2})`) : `rgba(196, 164, 100, ${midOpacity * 1.2})`,
+          "transparent",
+        ]}
+        locations={[0, 0.45, 0.8]}
+        style={{
+          width: size,
+          height: size,
+          borderRadius: size / 2,
+        }}
+        start={{ x: 0.5, y: 0.5 }}
+        end={{ x: 1, y: 1 }}
+      />
+    </Animated.View>
   );
 }
 
-// Public API — thin wrapper that delegates based on animated prop
+// Public API -- thin wrapper that delegates based on animated prop
 export function WarmGlow({
   size = 340,
   opacity = 0.12,

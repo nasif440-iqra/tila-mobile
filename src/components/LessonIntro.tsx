@@ -5,15 +5,18 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
+  withDelay,
+  withTiming,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
-import { typography, spacing, radii } from "../design/tokens";
+import { typography, spacing, radii, shadows, borderWidths } from "../design/tokens";
 import { ArabicText, Button, HearButton } from "../design/components";
 import { getLetter } from "../data/letters";
 import { getLetterAsset } from "../audio/player";
 import { WarmGlow } from "./onboarding/WarmGlow";
-import { springs, staggers } from "../design/animations";
+import { springs, staggers, durations, easings } from "../design/animations";
 
 // ── Types ──
 
@@ -41,15 +44,19 @@ function LetterCard({
   const player = useAudioPlayer(audioSource);
 
   // Staggered scale entrance
-  const scale = useSharedValue(0.9);
+  const scale = useSharedValue(0.85);
+  const opacity = useSharedValue(0);
   useEffect(() => {
+    const delay = 200 + index * staggers.fast.delay;
     const timer = setTimeout(() => {
-      scale.value = withSpring(1, springs.gentle);
-    }, 150 + index * staggers.fast.delay);
+      scale.value = withSpring(1, springs.bouncy);
+      opacity.value = withTiming(1, { duration: durations.slow, easing: easings.contentReveal });
+    }, delay);
     return () => clearTimeout(timer);
   }, []);
   const scaleStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+    opacity: opacity.value,
   }));
 
   const handlePlay = useCallback(async () => {
@@ -64,17 +71,20 @@ function LetterCard({
     <Animated.View style={[styles.letterItem, scaleStyle]}>
       <View style={{ alignItems: "center", justifyContent: "center" }}>
         <WarmGlow
-          size={isSmall ? 120 : 160}
+          size={isSmall ? 140 : 200}
           animated
           color="rgba(196,164,100,0.3)"
-          pulseMin={0.05}
-          pulseMax={0.15}
+          pulseMin={0.12}
+          pulseMax={0.35}
         />
         <View
           style={[
             styles.letterCircle,
             isSmall ? styles.letterCircleSmall : undefined,
-            { backgroundColor: colors.primarySoft },
+            {
+              backgroundColor: colors.primarySoft,
+              borderColor: "rgba(255, 255, 255, 0.8)",
+            },
           ]}
         >
           <ArabicText
@@ -88,7 +98,7 @@ function LetterCard({
       <Text
         style={[
           typography.bodySmall,
-          { color: colors.textSoft, marginTop: spacing.xs },
+          { color: colors.textSoft, marginTop: spacing.sm, fontWeight: "600" },
         ]}
       >
         {letter.name}
@@ -106,7 +116,7 @@ function LetterCard({
   );
 }
 
-// ── Main Component ──
+// ── Main Component ─���
 
 export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
   const colors = useColors();
@@ -130,6 +140,14 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Warm ambient gradient */}
+      <LinearGradient
+        colors={[colors.bgWarm, "transparent"]}
+        locations={[0, 1]}
+        style={styles.ambientGradient}
+        pointerEvents="none"
+      />
+
       {/* Header area */}
       <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
         <Text style={[typography.caption, styles.phaseLabel, { color: colors.textMuted }]}>
@@ -173,21 +191,22 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
 
         {/* Family rule / description */}
         {lesson.familyRule && (
-          <Text
-            style={[
-              typography.bodySmall,
-              styles.familyRule,
-              { color: colors.textSoft },
-            ]}
-          >
-            {lesson.familyRule}
-          </Text>
+          <View style={[styles.familyRuleCard, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+            <Text
+              style={[
+                typography.bodySmall,
+                { color: colors.textSoft, textAlign: "center", lineHeight: 20 },
+              ]}
+            >
+              {lesson.familyRule}
+            </Text>
+          </View>
         )}
       </Animated.View>
 
       {/* Bottom button */}
       <Animated.View
-        entering={FadeIn.delay(300).duration(400)}
+        entering={FadeIn.delay(400).duration(400)}
         style={styles.bottomArea}
       >
         <Button title="Start Quiz" onPress={onStart} />
@@ -196,7 +215,7 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
   );
 }
 
-// ── Styles ──
+// ── Styles ─��
 
 const styles = StyleSheet.create({
   container: {
@@ -205,13 +224,20 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xxxl,
     paddingBottom: spacing.xxl,
   },
+  ambientGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 280,
+  },
   header: {
     alignItems: "center",
     marginBottom: spacing.xl,
   },
   phaseLabel: {
     textTransform: "uppercase",
-    letterSpacing: 1,
+    letterSpacing: 1.5,
     marginBottom: spacing.sm,
   },
   title: {
@@ -225,8 +251,8 @@ const styles = StyleSheet.create({
   lettersRow: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: spacing.xl,
-    marginBottom: spacing.lg,
+    gap: spacing.xxl,
+    marginBottom: spacing.xl,
   },
   letterItem: {
     alignItems: "center",
@@ -237,6 +263,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
   },
   letterCircleSmall: {
     width: 88,
@@ -247,10 +274,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: spacing.md,
   },
-  familyRule: {
-    textAlign: "center",
-    maxWidth: 300,
-    lineHeight: 20,
+  familyRuleCard: {
+    borderRadius: radii.lg,
+    borderWidth: borderWidths.thin,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    maxWidth: 320,
+    ...shadows.card,
   },
   bottomArea: {
     paddingTop: spacing.lg,

@@ -9,7 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { ArabicText, Button, Card } from "../../design/components";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii } from "../../design/tokens";
+import { typography, spacing, radii, shadows, borderWidths } from "../../design/tokens";
 import { durations, easings, springs } from "../../design/animations";
 import { WarmGlow } from "../onboarding/WarmGlow";
 import { getLetter } from "../../data/letters";
@@ -98,7 +98,7 @@ export default function HeroCard({
 
   const heroLetters = (lesson.teachIds || []).map((id: number) => getLetter(id)).filter(Boolean);
   const heroLetter = heroLetters[0];
-  const phaseLabel = `Phase ${currentPhase} — ${PHASE_LABELS[currentPhase] ?? ""}`;
+  const phaseLabel = `Phase ${currentPhase} \u2014 ${PHASE_LABELS[currentPhase] ?? ""}`;
 
   const ctaTitle = completedLessonIds.includes(lesson.id)
     ? "Review Lesson"
@@ -108,7 +108,11 @@ export default function HeroCard({
 
   return (
     <Animated.View style={cardEntranceStyle}>
-      <Card elevated style={styles.heroCard}>
+      <View style={[styles.heroCard, shadows.hero, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+        {/* Decorative corner blobs */}
+        <View style={[styles.cornerBlobTopRight, { backgroundColor: colors.bg }]} />
+        <View style={[styles.cornerBlobBottomLeft, { backgroundColor: "rgba(196, 164, 100, 0.05)" }]} />
+
         {/* Phase label pill */}
         <View style={[styles.phasePill, { backgroundColor: colors.bg }]}>
           <Text style={[styles.phasePillText, { color: colors.accent }]}>{phaseLabel}</Text>
@@ -118,10 +122,10 @@ export default function HeroCard({
         <Animated.View style={[styles.letterCircleWrapper, circleEntranceStyle]}>
           <WarmGlow
             animated={true}
-            size={160}
+            size={200}
             color={colors.accentGlow}
-            pulseMin={0.06}
-            pulseMax={0.18}
+            pulseMin={0.15}
+            pulseMax={0.45}
           />
           <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft }]}>
             <ArabicText size="display" color={colors.text}>
@@ -142,7 +146,7 @@ export default function HeroCard({
           onPress={() => onStartLesson(lesson.id)}
           style={styles.heroButton}
         />
-      </Card>
+      </View>
     </Animated.View>
   );
 }
@@ -153,8 +157,28 @@ const styles = StyleSheet.create({
   heroCard: {
     alignItems: "center",
     marginBottom: spacing.xxxxl,
-    borderRadius: radii.xl,
+    borderRadius: radii.xxl,
     paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+    borderWidth: borderWidths.thin,
+    overflow: "hidden",
+  },
+  cornerBlobTopRight: {
+    position: "absolute",
+    top: -40,
+    right: -40,
+    width: 128,
+    height: 128,
+    borderBottomLeftRadius: 128,
+    opacity: 0.5,
+  },
+  cornerBlobBottomLeft: {
+    position: "absolute",
+    bottom: -32,
+    left: -32,
+    width: 96,
+    height: 96,
+    borderTopRightRadius: 96,
   },
   phasePill: {
     paddingVertical: spacing.xs,
@@ -176,6 +200,8 @@ const styles = StyleSheet.create({
     borderRadius: 56,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(255, 255, 255, 0.8)",
   },
   heroTitle: {
     ...typography.cardHeadline,
