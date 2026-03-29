@@ -17,12 +17,17 @@ import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
-import { durations } from "../../src/design/animations";
-import { BismillahOverlay, shouldShowBismillah } from "../../src/components/shared/BismillahOverlay";
+import {
+  TRANSITION_FADE_IN,
+  TRANSITION_FADE_OUT,
+} from "../../src/components/onboarding/animations";
+import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery.js";
+import { getLetter } from "../../src/data/letters.js";
+import { LetterMasteryCelebration } from "../../src/components/celebrations/LetterMasteryCelebration";
 
 // ── Types ──
 
-type Stage = "intro" | "quiz" | "summary";
+type Stage = "intro" | "quiz" | "mastery-celebration" | "summary";
 
 interface QuizResults {
   correct: number;
@@ -46,7 +51,7 @@ export default function LessonScreen() {
   const [stage, setStage] = useState<Stage>("intro");
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
   const [skipIntro, setSkipIntro] = useState(false);
-  const [showBismillah, setShowBismillah] = useState(() => shouldShowBismillah());
+  const [masteredLetters, setMasteredLetters] = useState<Array<{ letter: string; name: string }>>([]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -79,16 +84,22 @@ export default function LessonScreen() {
       const threshold = getPassThreshold(lesson!.lessonMode);
       const passed = threshold === null ? true : accuracy >= threshold;
 
-      // Capture completed IDs before saving
-      const prevIds = preCompletedRef.current;
+      // Snapshot pre-mastery states for comparison
+      const today = new Date().toISOString().slice(0, 10);
+      const currentMastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
+      const preMasteryStates = new Map<string, string>();
+      for (const [key, entity] of Object.entries(currentMastery.entities)) {
+        preMasteryStates.set(key, deriveMasteryState(entity, today));
+      }
 
-      // Save to database
+      // Save to database with quizResultItems for mastery pipeline
       const attempts = mapQuizResultsToAttempts(results.questions);
       await progress.completeLesson(
         lesson!.id,
         accuracy,
         passed,
-        attempts
+        attempts,
+        results.questions  // QuizResultItem[] -- feeds mastery pipeline
       );
 
       // Record practice for habit/wird on pass
@@ -119,12 +130,31 @@ export default function LessonScreen() {
         });
       }
 
-      // TODO: Track mastery_state_changed event
-      // Requires comparing pre-lesson vs post-lesson mastery state per letter
-      // Deferred: ship other 9 events first, add mastery tracking in follow-up
+      // Detect newly mastered letters by comparing pre/post mastery states
+      const postMastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
+      const newlyMastered: Array<{ letter: string; name: string }> = [];
+
+      for (const [key, entity] of Object.entries(postMastery.entities)) {
+        const oldState = preMasteryStates.get(key) ?? "introduced";
+        const newState = deriveMasteryState(entity as any, today);
+        if (newState === "retained" && oldState !== "retained") {
+          const parsed = parseEntityKey(key);
+          if (parsed.type === "letter" && typeof parsed.rawId === "number") {
+            const letterData = getLetter(parsed.rawId);
+            if (letterData) {
+              newlyMastered.push({ letter: letterData.letter, name: letterData.name });
+            }
+          }
+        }
+      }
 
       setQuizResults({ ...results, accuracy, passed });
-      setStage("summary");
+      if (newlyMastered.length > 0) {
+        setMasteredLetters(newlyMastered);
+        setStage("mastery-celebration");
+      } else {
+        setStage("summary");
+      }
     },
     [lesson, progress, recordPractice]
   );
@@ -156,6 +186,10 @@ export default function LessonScreen() {
     // Default: go home
     router.replace("/(tabs)");
   }, [quizResults, lesson, progress]);
+
+  const handleMasteryDismiss = useCallback(() => {
+    setStage("summary");
+  }, []);
 
   const handleRetry = useCallback(() => {
     setQuizResults(null);
@@ -194,7 +228,7 @@ export default function LessonScreen() {
 
   // Determine the effective stage key for animation
   const effectiveStage =
-    stage === "intro" && (skipIntro || isHybrid) ? "quiz" : stage;
+    stage === "intro" && (skipIntro || isHybrid) ? "quiz" : stage as string;
 
   function renderStage() {
     // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
@@ -217,6 +251,16 @@ export default function LessonScreen() {
       );
     }
 
+    // Mastery celebration stage
+    if (stage === "mastery-celebration" && masteredLetters.length > 0) {
+      return (
+        <LetterMasteryCelebration
+          masteredLetters={masteredLetters}
+          onDismiss={handleMasteryDismiss}
+        />
+      );
+    }
+
     // Summary stage
     if (stage === "summary" && quizResults) {
       return (
@@ -235,19 +279,14 @@ export default function LessonScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <Animated.View
-        key={effectiveStage}
-        entering={FadeIn.duration(durations.normal)}
-        exiting={FadeOut.duration(durations.micro)}
-        style={{ flex: 1 }}
-      >
-        {renderStage()}
-      </Animated.View>
-      {showBismillah && (
-        <BismillahOverlay onComplete={() => setShowBismillah(false)} />
-      )}
-    </View>
+    <Animated.View
+      key={effectiveStage}
+      entering={FadeIn.duration(TRANSITION_FADE_IN)}
+      exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+      style={{ flex: 1 }}
+    >
+      {renderStage()}
+    </Animated.View>
   );
 }
 
