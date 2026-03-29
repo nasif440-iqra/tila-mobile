@@ -27,6 +27,7 @@ export interface SkillState {
 export interface ConfusionState {
   count: number;
   lastSeen: string | null;
+  categories?: Record<string, number>;
 }
 
 export interface HabitState {
@@ -76,8 +77,8 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
         skill_key: string; correct: number; attempts: number; last_seen: string | null;
       }>('SELECT skill_key, correct, attempts, last_seen FROM mastery_skills'),
       db.getAllAsync<{
-        confusion_key: string; count: number; last_seen: string | null;
-      }>('SELECT confusion_key, count, last_seen FROM mastery_confusions'),
+        confusion_key: string; count: number; last_seen: string | null; categories: string | null;
+      }>('SELECT confusion_key, count, last_seen, categories FROM mastery_confusions'),
       db.getFirstAsync<{
         last_practice_date: string | null; current_wird: number;
         longest_wird: number; today_lesson_count: number;
@@ -112,7 +113,15 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
 
   const confusions: Record<string, ConfusionState> = {};
   for (const row of confusionRows) {
-    confusions[row.confusion_key] = { count: row.count, lastSeen: row.last_seen };
+    let categories: Record<string, number> | undefined;
+    if (row.categories) {
+      try {
+        categories = JSON.parse(row.categories) as Record<string, number>;
+      } catch {
+        // Malformed JSON — treat as absent
+      }
+    }
+    confusions[row.confusion_key] = { count: row.count, lastSeen: row.last_seen, categories };
   }
 
   const habit: HabitState = habitRow
@@ -218,12 +227,17 @@ export async function saveMasteryConfusion(
   confusionKey: string,
   state: ConfusionState
 ): Promise<void> {
+  const categoriesJson =
+    state.categories && Object.keys(state.categories).length > 0
+      ? JSON.stringify(state.categories)
+      : null;
   await db.runAsync(
-    `INSERT OR REPLACE INTO mastery_confusions (confusion_key, count, last_seen)
-     VALUES (?, ?, ?)`,
+    `INSERT OR REPLACE INTO mastery_confusions (confusion_key, count, last_seen, categories)
+     VALUES (?, ?, ?, ?)`,
     confusionKey,
     state.count,
-    state.lastSeen
+    state.lastSeen,
+    categoriesJson
   );
 }
 
