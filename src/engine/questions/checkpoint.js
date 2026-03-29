@@ -171,7 +171,10 @@ function classifyLetters(allIds, progress) {
   const strong = [];
 
   for (const id of allIds) {
-    const entry = progress?.[id];
+    // Try entity-keyed format first (e.g. progress.mastery.entities["letter:5"]),
+    // then fall back to legacy numeric-keyed format (progress[5]).
+    const entry =
+      progress?.mastery?.entities?.[`letter:${id}`] ?? progress?.[id];
     if (!entry || (entry.attempts ?? 0) === 0) {
       unseen.push(id);
     } else if ((entry.correct ?? 0) / (entry.attempts ?? 1) < 0.7) {
