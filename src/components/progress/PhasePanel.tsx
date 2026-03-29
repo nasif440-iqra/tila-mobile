@@ -1,6 +1,13 @@
 import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
+import { useEffect } from "react";
 import { useColors } from "../../design/theme";
 import { typography, spacing, fontFamilies } from "../../design/tokens";
+import { springs } from "../../design/animations";
 import { Card } from "../../design/components";
 
 export interface PhasePanelProps {
@@ -14,6 +21,16 @@ export default function PhasePanel({ label, done, total }: PhasePanelProps) {
 
   const pct = total > 0 ? (done / total) * 100 : 0;
   const isComplete = done === total && total > 0;
+
+  const progress = useSharedValue(0);
+
+  useEffect(() => {
+    progress.value = withSpring(pct / 100, springs.gentle);
+  }, [done, total]);
+
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    width: `${progress.value * 100}%`,
+  }));
 
   return (
     <Card style={{ padding: spacing.lg }}>
@@ -71,13 +88,11 @@ export default function PhasePanel({ label, done, total }: PhasePanelProps) {
         <View
           style={[styles.progressTrack, { backgroundColor: colors.border }]}
         >
-          <View
+          <Animated.View
             style={[
               styles.progressFill,
-              {
-                backgroundColor: colors.primary,
-                width: `${pct}%`,
-              },
+              { backgroundColor: colors.primary },
+              animatedFillStyle,
             ]}
           />
         </View>
@@ -110,12 +125,12 @@ const styles = StyleSheet.create({
     ...typography.bodySmall,
   },
   progressTrack: {
-    height: 4,
-    borderRadius: 2,
+    height: 6,
+    borderRadius: 3,
     overflow: "hidden",
   },
   progressFill: {
-    height: 4,
-    borderRadius: 2,
+    height: 6,
+    borderRadius: 3,
   },
 });
