@@ -1,758 +1,555 @@
-# Tila Post-UI Roadmap: Foundation + Engagement + Learning Quality
+# Tila Launch Roadmap: Trust → Habit → Money → Polish
 
 **Date:** 2026-03-29
-**Status:** Approved
-**Scope:** Everything needed to go from "beautiful UI" to "ship-ready retention machine with smart learning"
-**Deferred:** Curriculum expansion (Phase 5+ lessons, words, phrases, Al-Fatiha) — future milestone
+**Status:** Approved (v2 — replaces original 3-track design)
+**Goal:** Get to $10k MRR. Not "make the app nicer."
+**Deferred:** Curriculum expansion (Phase 5+), badges, streak flames, adaptive engine, weekly summaries, interleaved review injection, React.memo sweep, and all other second-order optimizations.
 
 ---
 
 ## Context
 
-The UI overhaul milestone is ~90% complete. The app has 106 lessons across 4 phases (letter recognition, sounds, harakat, connected forms), a sophisticated mastery engine with spaced repetition, and a polished visual experience with animations, haptics, and warm Islamic aesthetics.
+The UI overhaul is ~90% done. The app has 106 lessons across 4 phases, a sophisticated mastery engine, and polished visuals. What's missing: data integrity bugs, no monetization, no daily return loop, and no way to bring users back.
 
-What's missing: the app has bugs that can corrupt learning data, API keys hardcoded in source, no way to bring users back (no notifications, no goal tracking, broken streaks), no intelligence in how it handles mistakes, and no accessibility support.
+This roadmap is built around one loop:
 
-This roadmap transforms Tila from a beautiful prototype into a production app that people open every day and actually learn from.
-
----
-
-## Architecture: Three Parallel Tracks
-
-| Track | Purpose | Phases |
-|-------|---------|--------|
-| **Foundation** | Make it safe and stable | F1, F2, F3, F4 |
-| **Engagement** | Make users come back | E1, E2, E3, E4 |
-| **Learning Quality** | Make users learn better | L1, L2, L3, L4 |
-
-### Execution Waves
-
-```
-Wave 1 (no dependencies):     F1 + F2 + E1
-Wave 2 (after Wave 1):        F3 + L1 + E2
-Wave 3 (after Wave 2):        E3 + L2 + F4
-Wave 4 (after Wave 3):        L3 + E4 + L4
-```
-
-### Dependency Map
-
-```
-F1 ──→ F3 ──→ E3 ──→ E4
-F2 ──↗       ↗
-E1 ──→ E2 ──→ L3
-       ↘
-L1 ──→ L2 ──→ L3
-              ↘
-        F4    L4 (audits final state)
-```
-
-### Key Dependencies
-- Push notifications (E3) requires deep linking (F3) — tapping a notification opens a screen
-- Wrong-answer explanations (L1) requires confusion persistence (F1) — can't explain what isn't saved
-- Adaptive difficulty (L2) requires accurate mastery data (F1) — adapting on bad data is worse than not adapting
-- Dark mode & accessibility (L4) goes last — audit final UI once, not mid-change
-- Home screen polish (E4) goes last in its track — integration point for goals, streaks, reviews, progress
-
-### Parallel Execution Within Waves
-All phases within a wave are independent and can run simultaneously:
-- Wave 1: F1 (engine/DB), F2 (analytics/config), E1 (home screen/hooks) — no file conflicts
-- Wave 2: F3 (infrastructure), L1 (quiz feedback), E2 (streak system) — different domains
-- Wave 3: E3 (notifications), L2 (engine logic), F4 (database) — no overlap
-- Wave 4: L3 (review system), E4 (home screen), L4 (accessibility) — L4 goes last within wave
+**finish lesson → feel real progress → come back tomorrow → hit review moment → pay**
 
 ---
 
-## Track 1: Foundation — Make It Safe and Stable
+## Execution Shape: Partially Parallel
 
-### Phase F1: Critical Data Bugs
+This is NOT fully sequential. Phases overlap where dependencies allow.
 
-**Goal:** Fix bugs that silently corrupt learning data or produce broken quizzes.
+```
+Week 1-2:  ████ Phase A (trust) ████████████████████████
+Week 1-2:            ███ B1-B3 (habit: goals, streak) ███  ← starts mid-A
+Week 2-3:                 ███ B4-B6 (habit: teaching, review) ███
+Week 2-3:            ███ C1-C2 (RevenueCat + entitlements) ███  ← starts during B
+Week 3-4:                      ███ C3-C8 (paywall, trial, billing) ███
+Week 4+:                              ███ Phase D (polish) ███
+```
 
-#### F1.1: Mastery Save Race Condition
-**Problem:** In `useProgress.ts`, `completeLesson()` calls `refresh()` to load fresh progress, then merges quiz results against potentially-stale `state`. If mastery data changes between the refresh and the merge, the merge overwrites newer data.
+**Why partially parallel:**
+- B1-B3 (daily goal, celebration, streak) touch different files than A1-A7 (engine, DB, analytics). No conflicts.
+- C1-C2 (RevenueCat setup, entitlement system) require an Expo development build and EAS-based testing — this is native module work that takes calendar time. Starting early prevents a bottleneck.
+- B4 (wrong-answer teaching) depends on A3 (confusion persistence). Must wait.
+- C3-C8 (paywall, trial, billing flows) depend on C1-C2 (RevenueCat) and B (the habit loop that retains during trial). Must wait.
 
-**Fix:** Change the pipeline to: load fresh state → merge quiz results into fresh state → save merged state → reload once. Single atomic flow, no window for stale reads.
+---
+
+## Phase A: Trust
+
+Fix what's broken. No user-facing features — just make the data honest.
+
+### A1: Fix Mastery Save Race Condition
+**Problem:** `useProgress.ts` `completeLesson()` calls `refresh()` then merges quiz results against potentially-stale `state`. If mastery updated between refresh and merge, newer data gets overwritten.
+
+**Fix:** Change pipeline to: load fresh state → merge quiz results into fresh state → save merged state → reload once. Single atomic flow.
 
 **Files:** `src/hooks/useProgress.ts`
-**Verification:** Write a test that simulates concurrent mastery updates and confirms no data loss.
+**Verification:** Test simulating concurrent mastery updates confirms no data loss.
 
-#### F1.2: Checkpoint Phase 2+ Classifier Bug
-**Problem:** In `checkpoint.js`, `classifyLetters()` accesses `progress?.[id]` expecting a flat numeric-keyed object. Real mastery data uses entity keys like `"letter:5"`. Phase 2+ checkpoint quizzes silently produce garbage questions because every letter classifies as "unseen."
+### A2: Fix Checkpoint Phase 2+ Classifier
+**Problem:** `checkpoint.js` `classifyLetters()` accesses `progress?.[id]` expecting flat numeric keys. Real mastery data uses entity keys like `"letter:5"`. Phase 2+ checkpoint quizzes silently produce garbage because every letter classifies as "unseen."
 
-**Fix:** Adapt `classifyLetters()` to work with entity key format. Parse `"letter:X"` keys to extract numeric IDs, or accept both formats.
+**Fix:** Adapt `classifyLetters()` to parse entity key format. Accept both `progress[5]` and `progress["letter:5"]`.
 
 **Files:** `src/engine/questions/checkpoint.js`
-**Verification:** Generate Phase 2 checkpoint questions with real mastery data. Confirm struggled/unseen/strong classification matches actual user state.
+**Verification:** Generate Phase 2 checkpoint with real mastery data. Confirm struggled/unseen/strong matches actual state.
 
-#### F1.3: Confusion Categories Not Persisted
-**Problem:** When a user confuses Ba with Ta, `mastery.js` computes the error category (visual_confusion, sound_confusion, vowel_confusion) but `progress.ts` only saves confusion_key, count, and last_seen. Categories are lost on app restart.
+### A3: Persist Confusion Categories
+**Problem:** `mastery.js` computes error categories (visual_confusion, sound_confusion, vowel_confusion) but `progress.ts` only saves confusion_key, count, last_seen. Categories are lost on restart. Phase B4 (wrong-answer teaching) needs this data.
 
 **Fix:**
-1. Add `categories TEXT` column to `mastery_confusions` table (JSON-encoded histogram)
+1. Add `categories TEXT` column to mastery_confusions (JSON-encoded histogram)
 2. Update `saveConfusion()` to serialize categories
-3. Update `loadProgress()` to deserialize categories
+3. Update `loadProgress()` to deserialize
 4. Schema migration v2 → v3
 
 **Files:** `src/db/schema.ts`, `src/db/client.ts`, `src/engine/progress.ts`
-**Verification:** Record a confusion, restart app, confirm categories are restored.
+**Verification:** Record confusion, restart app, confirm categories restored.
 
-#### F1.4: Empty Harakat Quiz Fallback
-**Problem:** If `generateHarakatCombos()` returns empty (e.g., `lesson.teachCombos` undefined and combo generation fails), the lesson produces 0 questions and silently "completes" with 100% accuracy.
+### A4: Empty Harakat Quiz Fallback
+**Problem:** If `generateHarakatCombos()` returns empty, lesson produces 0 questions and silently "completes" with 100% accuracy. Fake progress.
 
-**Fix:** Add a minimum question count check in `useLessonQuiz.ts`. If question generation returns empty, show an error state instead of auto-completing. Add fallback combo generation using the lesson's `teachIds`.
+**Fix:** Add minimum question count check in `useLessonQuiz.ts`. If generation returns empty, show error state. Add fallback combo generation using lesson's `teachIds`.
 
 **Files:** `src/engine/questions/harakat.js`, `src/hooks/useLessonQuiz.ts`
-**Verification:** Force empty combo generation, confirm error state shown instead of silent completion.
+**Verification:** Force empty combo generation, confirm error state instead of silent completion.
 
----
-
-### Phase F2: Security & Privacy
-
-**Goal:** Remove hardcoded secrets, add analytics consent, prepare for App Store review.
-
-#### F2.1: Environment Variables
-**Problem:** PostHog API key, Sentry DSN, and EAS project ID are hardcoded in source files committed to git.
+### A5: Environment Variables
+**Problem:** PostHog key (`phc_1VLx...`), Sentry DSN, and EAS project ID hardcoded in source files committed to git.
 
 **Fix:**
-1. Create `.env` and `.env.production` files with `EXPO_PUBLIC_` prefixed variables
-2. Update `posthog.ts`, `sentry.ts`, and `app.config.ts` to read from `process.env`
+1. Create `.env` and `.env.production` with `EXPO_PUBLIC_` prefixed variables
+2. Update `posthog.ts`, `sentry.ts`, `app.config.ts` to read from `process.env`
 3. Add `.env*` to `.gitignore`
 4. Set production values as EAS secrets
-5. Rotate the exposed PostHog key (create new key, invalidate old one)
+5. Rotate the exposed PostHog key (create new, invalidate old)
 
 **Files:** `src/analytics/posthog.ts`, `src/analytics/sentry.ts`, `app.config.ts`, `.gitignore`
-**Note:** PostHog and Sentry keys are technically "public" (client-side), but exposing them in git repos invites abuse (fake event injection). Environment variables are the standard practice.
 
-#### F2.2: Analytics Consent
-**Problem:** The app sends analytics events from first launch with no user consent. Required for GDPR (Europe) and App Store guidelines.
+### A6: Analytics Consent
+**Problem:** App sends analytics events from first launch with no user consent. Required for GDPR and App Store.
 
 **Fix:**
-1. Add `analyticsConsent: boolean | null` to user_profile table (null = not yet asked)
-2. On first launch after onboarding, show a simple modal: "Help improve Tila by sharing anonymous usage data? This helps us make the app better for everyone." with Accept/Decline buttons
-3. If declined: disable PostHog tracking, keep Sentry crash reporting (legitimate interest exemption)
-4. Store choice in user_profile. Provide toggle in future Settings screen (Phase L4)
-5. Respect choice on every app launch — check before initializing PostHog
+1. Add `analytics_consent: INTEGER` to user_profile (null = not asked, 1 = accepted, 0 = declined)
+2. After onboarding completion, show simple modal: "Help improve Tila by sharing anonymous usage data?"
+3. If declined: disable PostHog. Keep Sentry crash reporting (legitimate interest).
+4. Store choice. Provide toggle in Settings screen (Phase D2).
+5. Check consent before initializing PostHog on every launch.
 
 **Files:** `src/analytics/index.ts`, `src/analytics/posthog.ts`, `src/db/schema.ts`, new consent modal component
-**Note:** Sentry crash reporting can stay on under "legitimate interest" — it's for app stability, not behavioral tracking.
 
-#### F2.3: Sentry Performance Monitoring
-**Problem:** `tracesSampleRate` is set to 0, meaning zero performance data collected. You're blind to slow screens, long database queries, and janky animations in production.
+### A7: Fix Motivation Mapping
+**Problem:** All 5 motivation choices in post-lesson onboarding save as `"quran"`. Current schema CHECK constraint only allows `('quran', 'prayer', 'general')`.
 
-**Fix:** Set `tracesSampleRate: 0.1` (10% of sessions sampled). This gives meaningful data without excessive volume. Add Sentry performance spans around: database initialization, lesson question generation, mastery merge pipeline.
+**Fix:**
+1. Migrate schema: expand CHECK to `('read_quran', 'pray_confidently', 'connect_heritage', 'teach_children', 'personal_growth')`
+2. Map each UI option to its real value
+3. Use for personalized copy in Phase B and paywall messaging in Phase C
 
-**Files:** `src/analytics/sentry.ts`, `src/hooks/useProgress.ts`, `src/db/client.ts`
+**Files:** `app/post-lesson-onboard.tsx`, `src/db/schema.ts`, `src/db/client.ts`
+
+### Phase A Exit Criteria
+- [ ] Quiz completion with 15 questions saves mastery atomically — no stale merge
+- [ ] Phase 2 checkpoint produces correctly classified questions (tested with real entity-key mastery)
+- [ ] Confusion categories survive app restart (write → kill → reload → verify)
+- [ ] Empty harakat combo shows error state, not silent 100% completion
+- [ ] `npm run validate` passes with no env var leaks in source
+- [ ] PostHog only initializes after consent accepted
+- [ ] Motivation saves distinct values per selection (verified in DB)
 
 ---
 
-### Phase F3: App Infrastructure
+## Phase B: Habit
 
-**Goal:** Enable instant bug fixes, prevent white-screen crashes, support deep linking for notifications.
+Wire the daily return loop. Minimum viable retention.
 
-#### F3.1: Over-the-Air Updates
-**Problem:** Every fix requires full App Store resubmission (1-7 day review for iOS). JS-only changes can be pushed instantly via OTA.
+**B1-B3 can start during Phase A** (different files, no dependency on A1-A7).
+**B4 requires A3** (confusion categories must be persisted).
 
-**Fix:**
-1. Install and configure `expo-updates`
-2. Add update channel configuration to `eas.json` (preview + production channels)
-3. Add update check on app launch in `_layout.tsx` — if update available, apply on next restart
-4. No forced updates — user sees a subtle banner "Update available" that applies on next launch
-
-**Files:** `app.config.ts`, `eas.json`, `app/_layout.tsx`, new `src/lib/updates.ts`
-**Constraint:** OTA only works for JS/asset changes. Native module changes still require store submission.
-
-#### F3.2: Per-Screen Error Boundaries
-**Problem:** One crash anywhere takes down the entire app. The root Sentry boundary catches it, but the user sees a generic "Something went wrong" for the whole app.
-
-**Fix:** Add error boundaries around 4 critical screen groups:
-1. **Lesson flow** (intro + quiz + summary) — crash shows "This lesson had a problem. Tap to go home." with Sentry report
-2. **Onboarding flow** — crash shows retry option
-3. **Home screen** — crash shows minimal "Tap to reload" state
-4. **Progress screen** — crash shows empty state with reload option
-
-Each boundary reports to Sentry with screen context (which lesson, which step, what data was loaded).
-
-**Files:** New `src/components/shared/ScreenErrorBoundary.tsx`, updates to `app/lesson/[id].tsx`, `app/(tabs)/index.tsx`, `app/(tabs)/progress.tsx`, `src/components/onboarding/OnboardingFlow.tsx`
-
-#### F3.3: Deep Linking
-**Problem:** Can't link directly to a lesson or screen. Needed for push notifications (E3) and sharing.
-
-**Fix:**
-1. Configure Expo Router linking with `tila://` scheme (already defined in app.config.ts but not wired)
-2. Register route mappings: `tila://lesson/{id}`, `tila://home`, `tila://progress`, `tila://review`
-3. Add link handling in `_layout.tsx` — parse incoming URL, navigate to correct screen
-4. Handle invalid/expired links gracefully (lesson doesn't exist → redirect to home)
-
-**Files:** `app/_layout.tsx`, Expo Router linking configuration
-**Note:** Universal links (https://tila.app/lesson/5) are a future enhancement requiring a web domain. Start with custom scheme only.
-
-#### F3.4: Database Initialization Recovery
-**Problem:** If database initialization hangs or fails, the app shows a loading spinner forever with no way out.
-
-**Fix:**
-1. Add 10-second timeout to database initialization
-2. On timeout: show error screen with "Tap to retry" and "Reset database" options
-3. On initialization error: show specific error message, report to Sentry
-4. Add integrity check on startup: verify all expected tables exist with expected column count
-
-**Files:** `src/db/client.ts`, `src/db/provider.tsx`
-
----
-
-### Phase F4: Performance & Data Integrity
-
-**Goal:** Prevent slowdowns as user data grows. Batch operations, add indexes, reduce unnecessary work.
-
-#### F4.1: Batch Mastery Saves
-**Problem:** After a 15-question quiz, `useProgress.ts` makes ~45 individual database writes (one per entity, skill, and confusion update). Each is a separate round-trip.
-
-**Fix:** Create `saveMasteryBatch(entities[], skills[], confusions[])` that wraps all writes in a single SQLite transaction. One round-trip instead of 45.
-
-**Files:** `src/engine/progress.ts`, `src/hooks/useProgress.ts`
-**Verification:** Time a quiz completion before/after. Expect 5-10x speedup on mastery save step.
-
-#### F4.2: Database Indexes
-**Problem:** No explicit indexes on frequently-queried columns. As data grows past 500+ rows, queries slow down.
-
-**Fix:** Add indexes:
-- `mastery_entities(entity_key)` — primary lookup path
-- `mastery_confusions(confusion_key)` — confusion queries
-- `lesson_attempts(lesson_id)` — lesson history queries
-- `question_attempts(attempt_id)` — question detail queries
-- `lesson_attempts(attempted_at)` — date-range queries
-
-Add as schema migration v3 → v4 (or combine with F1.3 migration).
-
-**Files:** `src/db/schema.ts`, `src/db/client.ts`
-
-#### F4.3: Component Memoization
-**Problem:** Design system components (Button, Card, ArabicText, HearButton) re-render on every parent update even when their props haven't changed.
-
-**Fix:** Wrap exported components in `React.memo()`. This is a mechanical change — no logic modifications.
-
-**Files:** `src/design/components/Button.tsx`, `Card.tsx`, `ArabicText.tsx`, `HearButton.tsx`, `QuizOption.tsx`
-**Caution:** Only memoize components that receive stable props. Components with inline callback props need `useCallback` in parents first.
-
-#### F4.4: Pre-compute Known Letter IDs
-**Problem:** `getKnownIds()` in `shared.js` iterates the entire LESSONS array on every call to find letters taught before the current lesson. Called multiple times per question generation.
-
-**Fix:** Pre-compute a lookup table at module load: `KNOWN_IDS_BY_LESSON[lessonId] = Set<number>`. One-time computation, O(1) lookups thereafter.
-
-**Files:** `src/engine/questions/shared.js`
-
----
-
-## Track 2: Engagement — Make Users Come Back
-
-### Phase E1: Wire Up Daily Goals
-
-**Goal:** Connect the daily goal data (already collected in onboarding) to the home screen experience.
-
-#### E1.1: Goal-Aware Home Screen
-**Problem:** The "Today: 0/1" pill on the home screen is hardcoded to 1 lesson. The user chose 3, 5, or 10 minutes during post-lesson onboarding, but that choice is never used.
+### B1: Wire Daily Goal to Home Screen
+**Problem:** "Today: 0/1" pill is hardcoded to `DAILY_GOAL = 1`. The user chose 3, 5, or 10 minutes during post-lesson onboarding. Schema already has `daily_goal` column, habit table already tracks `today_lesson_count`.
 
 **Fix:**
 1. Load `dailyGoal` from user_profile via `useProgress()`
-2. Convert minutes to lesson count: 3 min = 1 lesson, 5 min = 2 lessons, 10 min = 3 lessons (based on ~3 min average lesson duration)
-3. Replace hardcoded `DAILY_GOAL = 1` with user's actual goal
-4. Update pill to show progress: "Today: 1/2" with filled/unfilled indicator
-5. Default to 1 lesson if no goal set (onboarding skipped or pre-existing users)
+2. Convert: 3 min = 1 lesson, 5 min = 2 lessons, 10 min = 3 lessons
+3. Replace hardcoded constant with user's actual goal
+4. Default to 1 lesson if no goal set
+5. Update pill display: "Today: 1/2"
 
-**Files:** `app/(tabs)/index.tsx`, `src/hooks/useProgress.ts`
+**Files:** `app/(tabs)/index.tsx`
 
-#### E1.2: Goal Completion Celebration
-**Problem:** When user hits their daily goal, nothing happens. This should be the most rewarding moment in the daily loop.
-
-**Fix:**
-1. After quiz completion, check if `todayLessonCount >= dailyGoal`
-2. If goal just reached (was below, now at or above): trigger celebration
-3. Celebration: confetti burst (reuse lesson summary confetti), haptic milestone, banner: "You hit your goal today!" with Islamic encouragement (rotate: "MashaAllah", "Alhamdulillah", "Consistent effort pleases Allah")
-4. Banner appears on home screen for remainder of session
-5. Track `goalHitToday` in habit state to prevent re-triggering
-
-**Files:** `app/lesson/[id].tsx` (post-quiz check), `app/(tabs)/index.tsx` (banner display), `src/engine/habit.ts` (goal tracking)
-
-#### E1.3: Goal Adjustment
-**Problem:** Daily goal is set once during post-lesson onboarding and locked forever.
+### B2: Goal Completion Celebration
+**Problem:** Hitting the daily goal produces nothing. This should be the most rewarding moment in the daily loop.
 
 **Fix:**
-1. Add goal adjustment to future Settings screen (Phase L4). For now, add a subtle "Edit" button next to the daily goal pill on home screen
-2. Tapping opens a bottom sheet with the same 3 options (3 min, 5 min, 10 min)
-3. Save new choice to user_profile
-4. Haptic confirmation on save
+1. After quiz completion, check `todayLessonCount >= dailyGoal`
+2. If goal just reached: confetti burst (reuse LessonSummary confetti), haptic milestone, banner "You hit your goal today!"
+3. Track `goalHitToday` in habit state to prevent re-triggering
+4. Banner visible on home screen for remainder of session
 
-**Files:** `app/(tabs)/index.tsx`, new `src/components/home/GoalAdjustSheet.tsx`
+**Files:** `app/lesson/[id].tsx`, `app/(tabs)/index.tsx`, `src/engine/habit.ts`
 
-#### E1.4: Fix Motivation Mapping
-**Problem:** All 5 motivation choices during post-lesson onboarding save as `"quran"` regardless of selection. The data is useless.
-
-**Fix:**
-1. Map each motivation option to its actual value: `"read_quran"`, `"pray_confidently"`, `"connect_heritage"`, `"teach_children"`, `"personal_growth"`
-2. Save the real value to user_profile
-3. Use in engagement copy later (E4): "You're one step closer to reading the Quran confidently" vs. "You're building a bridge to your heritage"
-
-**Files:** `app/post-lesson-onboard.tsx`
-
----
-
-### Phase E2: Streak Protection & Milestones
-
-**Goal:** Make streaks forgiving and milestones meaningful. Prevent the "I missed one day, my 30-day streak is gone, I quit" scenario.
-
-#### E2.1: Streak Freeze System
-**Fix:**
-1. Add `freezes_available: INTEGER DEFAULT 0` and `freeze_used_dates: TEXT` (JSON array) to habit table
-2. Earn 1 freeze per 7 consecutive days (max 2 banked)
-3. When streak would break (gap > 1 day): check if freeze available, auto-apply, decrement count
-4. Home screen shows freeze status: snowflake icon with count next to streak badge
-5. When freeze used: show subtle notification on next launch: "Your streak freeze saved your X-day streak yesterday"
-6. Schema migration to add columns
-
-**Files:** `src/engine/habit.ts`, `src/hooks/useHabit.ts`, `src/db/schema.ts`, `app/(tabs)/index.tsx`
-
-#### E2.2: Milestone Celebrations
-**Fix:**
-1. Define milestones: 7 days, 30 days, 100 days, 365 days, plus: "First lesson," "Phase 1 complete," "All letters learned," "100 letters reviewed"
-2. Each milestone has: title, subtitle, Islamic encouragement, unique visual treatment
-3. Milestone screen (similar to phase-complete): full-screen celebration, haptic milestone, ambient glow
-4. Detect milestones in `useHabit()` and `useProgress()` — compare before/after state
-5. Queue milestones (user could hit "30 days" and "Phase 2 complete" on same session)
-6. Track shown milestones in DB to prevent re-showing
-
-**Files:** New `src/engine/milestones.ts`, new `app/milestone.tsx`, `src/hooks/useHabit.ts`, `src/db/schema.ts`
-
-#### E2.3: Streak Recovery
-**Problem:** When a streak breaks (no freeze available), the return-welcome screen shows a generic hadith. Should acknowledge the broken streak compassionately.
+### B3: Simple Streak
+**Problem:** Streak exists in engine but has no protection, no longest-streak tracking, and a punishing UX when it breaks.
 
 **Fix:**
-1. Track `longestStreak` in habit table (never decreases)
-2. When streak resets: return-welcome becomes context-aware
-   - "Your 15-day streak ended, but your longest streak of 23 days is forever yours"
-   - "Every return is a fresh start. The Prophet (peace be upon him) said the most beloved deeds are the most consistent, even if small"
-3. Show "Start a new streak" CTA instead of generic "Continue"
-4. Never show a "0 day streak" — show "Start your streak" instead
+1. Add `longest_streak INTEGER DEFAULT 0` to habit table
+2. Update `longestStreak` whenever `currentWird` exceeds it (never decreases)
+3. Show streak prominently on home screen (current design already has wird badge)
+4. When streak breaks, return-welcome shows: "Your X-day streak ended, but your longest of Y days is yours forever" + compassionate hadith
+5. Never show "0 day streak" — show "Start your streak" instead
+6. No freeze system at launch — keep it simple
 
-**Files:** `src/engine/habit.ts`, `app/return-welcome.tsx`
+**Files:** `src/engine/habit.ts`, `src/hooks/useHabit.ts`, `src/db/schema.ts`, `app/return-welcome.tsx`
 
-#### E2.4: Achievement Badges
-**Fix:**
-1. Define badge types: streak milestones, phase completions, mastery counts, review consistency
-2. Add `achievements` table: `badge_id TEXT, earned_at TEXT, seen BOOLEAN`
-3. Badges displayed on progress screen in a horizontal scrollable row
-4. New badge earned: gold shimmer animation on badge, haptic notification
-5. Unseen badges show a dot indicator on the Progress tab
-
-**Files:** New `src/engine/achievements.ts`, `src/db/schema.ts`, `app/(tabs)/progress.tsx`, new `src/components/progress/AchievementRow.tsx`
-
----
-
-### Phase E3: Push Notifications
-
-**Goal:** Gently bring users back. No spam — every notification has a purpose and respects boundaries.
-
-#### E3.1: Permission & Scheduling Infrastructure
-**Fix:**
-1. Install `expo-notifications`
-2. Request permission after first lesson completion (not first launch — earn trust)
-3. Permission prompt: custom UI explaining value before system dialog: "Get gentle daily reminders to keep your streak alive"
-4. If declined: respect it. Show permission prompt again only once more, 7 days later
-5. Store permission state and notification preferences in user_profile
-
-**Files:** New `src/notifications/index.ts`, `src/notifications/scheduler.ts`, `app/lesson/[id].tsx` (trigger permission after first lesson)
-
-#### E3.2: Daily Practice Reminder
-**Fix:**
-1. Schedule local notification at user's preferred time (default: 8:00 PM, adjustable in settings)
-2. Content rotates from pool of 10+ messages:
-   - "Your wird is waiting. Keep your X-day streak alive"
-   - "A few minutes with your letters today?"
-   - "Small steps, big rewards. Open Tila for today's practice"
-3. Notification deep-links to `tila://home`
-4. Cancel today's reminder if user already practiced (check on app foreground)
-5. Smart quiet hours: no notifications before 8 AM or after 10 PM
-
-**Files:** `src/notifications/scheduler.ts`, `src/notifications/messages.ts`
-
-#### E3.3: Streak at Risk
-**Fix:**
-1. If user hasn't practiced and it's 2 hours before midnight: fire urgent notification
-2. "Your X-day streak resets at midnight. A quick lesson takes 3 minutes"
-3. Only fires if no streak freeze available
-4. Deep-links to `tila://home`
-5. Max 1 per day (don't stack with daily reminder)
-
-**Files:** `src/notifications/scheduler.ts`
-
-#### E3.4: Milestone & Review Notifications
-**Fix:**
-1. After milestone earned (calculated on next app open): show notification if app was closed
-2. "You've been learning for 30 days straight. MashaAllah"
-3. Weekly review notification (Saturday mornings): "X letters are ready for review. A quick session keeps them fresh"
-4. Review notification only fires if there are actually due letters
-5. Deep-links to `tila://review`
-
-**Files:** `src/notifications/scheduler.ts`
-
----
-
-### Phase E4: Home Screen Engagement Polish
-
-**Goal:** Make the home screen a dashboard that creates momentum and makes progress feel tangible.
-
-#### E4.1: Daily Goal Progress Ring
-**Fix:** Replace the text "Today: 0/1" pill with a circular progress ring.
-- Ring fills clockwise as lessons complete
-- Empty: subtle border color. Partial: accent gold fill. Complete: full gold with checkmark
-- Animated fill on lesson completion (spring animation)
-- Tap to adjust goal (opens GoalAdjustSheet from E1.3)
-
-**Files:** `app/(tabs)/index.tsx`, new `src/components/home/GoalRing.tsx`
-
-#### E4.2: Streak Flame Animation
-**Fix:** The wird streak badge gets a warm animated element that scales with streak length.
-- 1-6 days: small warm ember (subtle pulse)
-- 7-29 days: steady flame (gentle sway animation)
-- 30-99 days: bright fire (more pronounced animation)
-- 100+ days: golden blaze (premium visual treatment)
-- Use Reanimated for 60fps. Keep it subtle — enhancement, not distraction
-
-**Files:** `app/(tabs)/index.tsx`, new `src/components/home/StreakFlame.tsx`
-
-#### E4.3: Smart Review Nudge Card
-**Fix:** When letters are due for review, show a card between hero card and lesson grid.
-- "5 letters need a quick refresh" with accent border
-- Visual urgency scales: 1-3 due = subtle, 4-7 = moderate, 8+ = prominent
-- Tapping starts a review session (builds review payload, navigates to lesson/review)
-- Dismissible (hides for 24 hours if swiped)
-- Disappears when no letters are due
-
-**Files:** `app/(tabs)/index.tsx`, new `src/components/home/ReviewNudge.tsx`
-
-#### E4.4: Weekly Progress Summary
-**Fix:** Small expandable section below hero card.
-- Collapsed: "This week: 4 lessons, 92% accuracy"
-- Expanded: lessons per day bar chart (Mon-Sun), letters practiced count, accuracy trend (up/down arrow)
-- Data computed from lesson_attempts table filtered to current week
-- Collapses to save space, remembers expanded state
-
-**Files:** `app/(tabs)/index.tsx`, new `src/components/home/WeeklySummary.tsx`, new selector in `src/engine/selectors.ts`
-
-#### E4.5: Context-Aware Return Welcome
-**Fix:** The return-welcome screen currently shows one generic hadith. Make it personal.
-- Load last completed lesson: "You were working on Seen · Sheen sounds"
-- Load due review count: "You have 3 letters ready for review"
-- If streak was saved by freeze: "Your streak freeze kept your X-day streak alive yesterday"
-- Keep the hadith but add context below it
-- CTA changes based on state: "Continue your lesson" vs. "Start a review" vs. "Begin today's practice"
-
-**Files:** `app/return-welcome.tsx`
-
----
-
-## Track 3: Learning Quality — Make Users Learn Better
-
-### Phase L1: Wrong-Answer Explanations
-
-**Goal:** Turn every mistake into a teaching moment with category-specific feedback.
-
-#### L1.1: Error-Category Feedback in Wrong Answer Panel
-**Problem:** The WrongAnswerPanel shows "The correct answer was [letter]" and plays audio. No explanation of why the user confused the letters.
+### B4: Wrong-Answer Teaching (requires A3)
+**Problem:** WrongAnswerPanel shows "The correct answer was [letter]" and plays audio. No explanation of WHY the user confused the letters. The engine classifies errors but the UI doesn't use it.
 
 **Fix:**
-1. Pass the error category from mastery engine to WrongAnswerPanel
+1. Pass error category from mastery engine to WrongAnswerPanel
 2. Render category-specific explanation:
-   - **Visual confusion**: "These look alike! [correct] has [distinguishing feature]. Look for [visual cue]."
-   - **Sound confusion**: "These sound similar. [correct] comes from [articulation point]. Listen for [sound cue]."
-   - **Vowel confusion**: "The mark is different. [correct mark] is [position] — it makes [sound]. [chosen mark] is [position] — it makes [sound]."
-   - **Random miss**: "Take your time — no rush. Let's look at [correct] again."
-3. Use existing letter data: `confusedWith`, `tip`, `soundHint`, `articulation` fields from letters.js
+   - **Visual confusion**: "These look alike! [correct] has [distinguishing feature]. Count the dots."
+   - **Sound confusion**: "These sound similar. [correct] comes from [articulation point]. Listen for [difference]."
+   - **Vowel confusion**: "The mark is different. [correct mark] is [position] — it makes [sound]."
+   - **Random miss**: "Take your time. Let's look at [correct] again."
+3. Use existing letter data: `confusedWith`, `tip`, `soundHint`, `articulation` fields
+4. Expand `confusedWith` and `tip` coverage to all 28 letters where missing
 
-**Files:** `src/components/quiz/WrongAnswerPanel.tsx`, `src/components/quiz/QuizQuestion.tsx`
+**Files:** `src/components/quiz/WrongAnswerPanel.tsx`, `src/components/quiz/QuizQuestion.tsx`, `src/data/letters.js`
 
-#### L1.2: Expand Confusion Pair Tips
-**Problem:** Only some letters have `confusedWith` and `tip` fields in letters.js. Need coverage for all 28 letters and all common confusion pairs.
+### B5: Post-Lesson Review Prompt
+**Problem:** Review system exists in engine but is entirely passive — user must notice the review card on home screen.
 
-**Fix:**
-1. Audit all 28 letters for missing tips
-2. Add `confusedWith` arrays for every letter (top 2-3 confusion partners)
-3. Add `tip` strings for distinguishing each pair
-4. Add mnemonics: "Ba = 1 dot Below = Belly", "Ta = 2 dots on Top = Tiara", "Tha = 3 dots = THree"
-5. Store in letters.js alongside existing data
-
-**Files:** `src/data/letters.js`
-
-#### L1.3: Progressive Hint Escalation
-**Fix:**
-1. Track confusion frequency per-pair in current session (already tracked in mastery engine)
-2. First occurrence: standard explanation (L1.1)
-3. Second occurrence same pair: explanation + side-by-side audio comparison ("Listen to both: [play A] ... [play B]. Hear the difference?")
-4. Third occurrence: dedicated mini-drill — 3 rapid-fire questions on just this pair, then return to normal quiz
-5. Mini-drill uses existing question generators with forced distractor (only the confused pair as options)
-
-**Files:** `src/hooks/useLessonQuiz.ts`, `src/components/quiz/WrongAnswerPanel.tsx`, new `src/components/quiz/ConfusionDrill.tsx`
-
----
-
-### Phase L2: Adaptive Difficulty
-
-**Goal:** Notice when users are struggling or breezing through, and adjust the experience accordingly.
-
-#### L2.1: Struggling Detection
-**Fix:**
-1. Track rolling window: last 3 lesson results (scores + pass/fail)
-2. **Struggling criteria**: 2 consecutive failures on same lesson, OR 3 lessons below 60%
-3. **When struggling detected**:
-   - Reduce question count by 30% (fewer questions = less overwhelming)
-   - Simplify distractors (use letters from different families, not same-family confusables)
-   - Add encouraging intro copy: "Let's slow down and focus on these letters"
-   - Insert extra review of previously-mastered letters for confidence boost (2 easy questions at start)
-4. **Exit struggling mode**: Pass 2 lessons in a row above 70%
-
-**Files:** New `src/engine/difficulty.ts`, `src/hooks/useLessonQuiz.ts`, `src/components/LessonIntro.tsx`
-
-#### L2.2: Fast-Track Detection
-**Fix:**
-1. **Fast-track criteria**: 3 consecutive lessons at 95%+ accuracy with average response time under 3 seconds
-2. **When fast-track detected**:
-   - Skip lesson intro automatically (already supported via `skipIntro` flag)
-   - Reduce review questions (cut reviewIds by half)
-   - Show "You're flying through this!" copy in lesson summary
-   - Don't reduce teach questions — still need to learn new content
-3. **Exit fast-track**: Score below 85% on any lesson
-
-**Files:** `src/engine/difficulty.ts`, `src/hooks/useLessonQuiz.ts`, `src/components/LessonIntro.tsx`, `src/components/LessonSummary.tsx`
-
-#### L2.3: Adaptive SRS Intervals
-**Problem:** All errors reset review interval to 1 day regardless of error type. A visual confusion (one focused look fixes it) and a sound confusion (needs repeated audio exposure) get identical treatment.
-
-**Fix:**
-1. Sound confusions: reset to 1 day, require 2 correct reviews before advancing interval
-2. Visual confusions: reset to 2 days (usually fixed quickly)
-3. Vowel confusions: reset to 1 day (harakat needs repetition)
-4. Random misses (no pattern): don't reset interval at all — likely a tap error
-5. Implement in `updateEntitySRS()` in mastery.js
-
-**Files:** `src/engine/mastery.js`
-
-#### L2.4: Marginal Pass Band
-**Problem:** 79% = fail, 81% = pass. One question changes everything. No middle ground.
-
-**Fix:**
-1. Add "marginal" band: 70-79% accuracy
-2. Marginal pass: lesson counts as completed (user can progress), BUT SRS intervals for taught letters don't advance (they'll come back for review sooner)
-3. Summary screen shows different messaging: "You passed, but those letters need more practice. They'll come back for review soon"
-4. Update outcome.js pass logic and LessonSummary messaging
-
-**Files:** `src/engine/outcome.js`, `src/components/LessonSummary.tsx`
-
-#### L2.5: Response Time as Learning Signal
-**Problem:** Quiz records response time per answer but never uses it. An 8-second correct answer means something very different from a 1-second correct answer.
-
-**Fix:**
-1. Define thresholds: <2s = confident, 2-5s = normal, >5s = uncertain
-2. Uncertain correct answers (>5s): don't count toward mastery streak advancement. The letter isn't truly retained — it needed too much thinking
-3. Confident correct answers (<2s): count as 1.5x toward streak (faster mastery for truly known letters)
-4. Display in quiz: no visible change to user (don't add pressure). This is engine-only intelligence
-5. Implement in `mergeQuizResultsIntoMastery()` in mastery.js
-
-**Files:** `src/engine/mastery.js`
-
----
-
-### Phase L3: Smarter Review System
-
-**Goal:** Make review feel natural and effortless, not like extra homework.
-
-#### L3.1: Interleaved Review Questions
-**Fix:**
-1. During question generation for any lesson, check for due review entities
-2. If due entities exist: inject 1-2 review questions into the lesson question queue
-3. Position them at 30% and 70% through the lesson (not at start or end)
-4. Review questions use the same UI as regular questions — no context switch
-5. Mark injected questions as `_isReview: true` so they don't affect lesson accuracy calculation
-6. Update mastery for reviewed entities normally
-
-**Files:** `src/hooks/useLessonQuiz.ts`, `src/engine/questions/shared.js`
-
-#### L3.2: Review Urgency Weighting
-**Problem:** Letters due today and letters 30 days overdue are weighted equally in review planning.
-
-**Fix:**
-1. Calculate urgency: `urgency = daysOverdue / scheduledInterval`
-   - Letter due 1 day ago with 3-day interval: urgency = 0.33
-   - Letter due 30 days ago with 7-day interval: urgency = 4.28
-2. Sort review queue by urgency descending
-3. Weight review question probability by urgency (exponential: `weight = e^(urgency - 1)`)
-4. Most overdue letters appear first and most frequently
-
-**Files:** `src/engine/selectors.ts`
-
-#### L3.3: Post-Lesson Review Prompt
 **Fix:**
 1. After lesson summary (passed state), check for due review entities
-2. If due entities exist, show prompt below summary: "You have X letters ready for a quick review — takes about 2 minutes. Review now?"
-3. "Review now" builds review payload and navigates to `lesson/review`
-4. "Not now" dismisses (no penalty, no guilt)
-5. Track prompt acceptance rate in analytics (useful for understanding review engagement)
+2. If due: show prompt below summary actions: "3 letters ready for a quick review — takes 2 minutes. Review now?"
+3. "Review now" builds review payload, navigates to `lesson/review`
+4. "Not now" dismisses. No guilt.
+5. Track `review_prompt_shown` and `review_prompt_accepted` in analytics
 
 **Files:** `src/components/LessonSummary.tsx`, `app/lesson/[id].tsx`
 
-#### L3.4: Micro-Review Sessions
+### B6: Micro-Review Sessions
 **Problem:** Review sessions are 15 questions. Too long. Users skip them.
 
 **Fix:**
-1. Break review into micro-sessions: 3-5 questions each
-2. Home screen review card shows "Quick review (3 questions)" instead of implying a long session
-3. After micro-review: "3 letters refreshed! X more available." with option to continue or stop
-4. Track micro-review completion separately in analytics
-5. Adjust review payload builder to support configurable question count
+1. Default review to 3-5 questions
+2. Home screen review card: "Quick review (3 questions)" instead of implying a long session
+3. After micro-review: "3 letters refreshed! X more available." Option to continue or stop.
+4. Adjust `buildReviewLessonPayload()` to support configurable question count
 
-**Files:** `src/engine/selectors.ts`, `app/(tabs)/index.tsx`, `app/lesson/[id].tsx`
+**Files:** `src/engine/selectors.ts`, `app/(tabs)/index.tsx`
 
-#### L3.5: Review Streak Tracking
-**Fix:**
-1. Add `reviewStreak` and `lastReviewDate` to habit table
-2. Track review sessions separately from lesson sessions
-3. Home screen shows both: "X-day practice streak | Y reviews this week"
-4. Review consistency contributes to milestone badges (E2.4): "Consistent Reviewer" badge at 7 review sessions
-
-**Files:** `src/engine/habit.ts`, `src/hooks/useHabit.ts`, `src/db/schema.ts`
+### Phase B Exit Criteria
+- [ ] Daily goal pill shows user's actual chosen goal (3/5/10 min converted to lessons)
+- [ ] Goal completion triggers confetti + haptic + banner (verified on device)
+- [ ] Streak increments on consecutive days, longest streak persists, broken streak shows recovery message
+- [ ] Wrong answer for a visual confusion shows dot-counting tip (not generic copy)
+- [ ] Wrong answer for a sound confusion shows articulation hint
+- [ ] Post-lesson review prompt appears when due letters exist (verified with seeded mastery data)
+- [ ] Micro-review completes in 3-5 questions, shows "X more available" prompt
+- [ ] Analytics events tracked: `goal_completed`, `review_prompt_shown`, `review_prompt_accepted`, `review_completed`
 
 ---
 
-### Phase L4: Dark Mode & Accessibility
+## Phase C: Money
 
-**Goal:** Make the app usable by everyone, in every lighting condition.
+Ship the paywall. This is where the app becomes a business.
 
-#### L4.1: Dark Mode Activation
-**Problem:** All dark mode tokens exist. Every component uses `useColors()`. The only thing blocking dark mode is a hardcoded `"light"` in `_layout.tsx`.
+**C1-C2 start during Phase B** — RevenueCat needs an Expo development build and EAS-based testing. This is native module work with calendar time. Starting early prevents a bottleneck.
+
+### Entitlement Matrix
+
+This is the single source of truth for what's free vs. premium.
+
+| Feature | Free (no account) | Trial (7 days) | Premium | Expired (was premium) |
+|---------|-------------------|-----------------|---------|----------------------|
+| Onboarding (9 steps) | Yes | Yes | Yes | Yes |
+| Lessons 1-6 | Yes | Yes | Yes | Yes |
+| Lessons 7-106 | No | Yes | Yes | No |
+| Daily goal display | Yes | Yes | Yes | Yes |
+| Goal celebration | Yes | Yes | Yes | Yes |
+| Streak tracking | Yes | Yes | Yes | Yes |
+| Wrong-answer teaching (lessons 1-6) | Yes | Yes | Yes | Yes |
+| Wrong-answer teaching (lessons 7+) | N/A | Yes | Yes | N/A |
+| Review of letters from lessons 1-6 | Yes | Yes | Yes | Yes |
+| Review of premium letters (lessons 7+) | No | Yes | Yes | **Yes** |
+| Review counts toward streak | Yes | Yes | Yes | Yes |
+| Post-lesson review prompt | Yes | Yes | Yes | Yes |
+| Micro-review sessions | Yes | Yes | Yes | Yes (free letters only unless premium letters earned during trial/sub) |
+
+**Key entitlement decisions:**
+- **Premium letters earned during trial/subscription are reviewable after expiry.** The user already learned them. Blocking review would feel punitive and cause skill regression — bad for brand and re-conversion. They can review, but they can't start new lessons.
+- **Streak tracking is always free.** Streaks drive daily return. Gating streaks behind premium would kill the retention loop that makes people want to subscribe.
+- **Wrong-answer teaching is free for lessons 1-6.** The teaching quality is part of what convinces users to subscribe — they need to feel the difference.
+- **Goal celebration is always free.** Same reason as streaks — it's the daily reward moment.
+
+### C1: RevenueCat Integration
+**What:** Install and configure RevenueCat's Expo SDK. Set up App Store Connect products and Google Play billing products.
 
 **Fix:**
-1. Replace hardcoded `"light"` with system preference detection via `useColorScheme()`
-2. Add manual override: store user's theme preference in user_profile
-3. Priority: user preference > system preference > light (default)
-4. Test every screen in dark mode — fix any contrast or visibility issues
-5. Ensure WarmGlow, WarmGradient, confetti, and decorative elements work in dark palette
+1. Install `react-native-purchases` (RevenueCat's Expo-compatible SDK)
+2. Create RevenueCat project, configure API keys as EAS secrets
+3. Set up products in App Store Connect and Google Play Console:
+   - `tila_monthly` — $8.99/month
+   - `tila_annual` — $49.99/year
+4. Configure introductory offers: 7-day free trial on both products
+5. Create Expo development build (`eas build --profile development`) — IAP cannot be tested in Expo Go
+6. Verify sandbox purchases work on both platforms
+7. Create `src/monetization/` directory with `entitlements.ts`, `offerings.ts`, `purchases.ts`
+
+**Files:** `package.json`, `app.config.ts`, `eas.json`, new `src/monetization/` directory
+**Note:** RevenueCat's Expo docs confirm: real purchases require development builds. Plan for this build time.
+
+### C2: Entitlement System
+**What:** The `isPremium()` check that gates lesson access throughout the app.
+
+**Fix:**
+1. Create `src/monetization/entitlements.ts`:
+   - `isPremium(): boolean` — checks RevenueCat entitlement status
+   - `isTrialing(): boolean` — active trial
+   - `trialDaysRemaining(): number` — for countdown display
+   - `canAccessLesson(lessonId: number): boolean` — lessons 1-6 always true, 7+ requires premium/trial
+   - `canReviewLetter(letterId: number, learnedDuringPremium: boolean): boolean` — always true if letter was learned
+2. Create `EntitlementProvider` React Context that wraps the app (alongside Theme and Database)
+3. Add `premium_letters_learned TEXT` (JSON array) to user_profile — tracks which letters were accessed during premium/trial, so review remains available after expiry
+4. Gate lesson navigation: `app/lesson/[id].tsx` checks `canAccessLesson()` before entering, redirects to paywall if not entitled
+
+**Files:** New `src/monetization/entitlements.ts`, `src/monetization/provider.tsx`, `app/lesson/[id].tsx`, `app/_layout.tsx`, `src/db/schema.ts`
+
+### C3: Paywall Trigger — Mini-Checkpoint After Lesson 6
+**What:** The moment the user transitions from free to "time to subscribe." This must feel like a real milestone, not an arbitrary wall.
+
+**Fix:**
+1. After completing lesson 6 (Ba · Ta · Tha family group), show a mini-celebration: "You just learned your first letter family — Ba, Ta, and Tha. You can tell them apart by their dots."
+2. Then transition to trial offer: "Ready to learn the rest of the alphabet? Start your free 7-day trial."
+3. Lesson 6 is chosen because it completes the first family group (lessons 1-7 teach Alif + Ba/Ta/Tha) and ends with the family summary lesson. The user has genuinely learned something — this isn't an arbitrary number.
+4. If user declines: return to home. Lessons 1-6 remain accessible. Tapping lesson 7+ shows paywall.
+5. If user hasn't completed lesson 6 but tries to access lesson 7+ directly (e.g., from review or deep link): show paywall immediately.
+
+**Files:** `app/lesson/[id].tsx`, new `src/components/paywall/TrialOffer.tsx`
+
+### C4: Paywall Screen
+**What:** The purchase screen. This triggers an actual App Store / Play Store billing flow.
+
+**Fix:**
+1. Show offerings from RevenueCat (annual and monthly)
+2. Annual preselected: "$49.99/year" with "Save 53%" badge. Monthly visible but visually secondary: "$8.99/month"
+3. Both products configured with 7-day free introductory offer in App Store Connect / Google Play Console
+4. "Start Free Trial" button initiates RevenueCat purchase flow → App Store / Play Store native billing dialog appears → user confirms with Face ID / fingerprint / password
+5. On successful purchase: RevenueCat entitlement activates, user returned to app, full access unlocked
+6. On cancel/failure: user stays on paywall, can dismiss to return to free tier
+7. "Restore Purchases" button at bottom (required by Apple)
+8. Scholarship link: "Can't afford Tila? We'll give you free access" → opens email to support@tila.app
+9. Sadaqah framing: "Your subscription sponsors free Quran education for those who can't afford it"
+10. Terms of Service and Privacy Policy links (required by Apple)
+
+**Design:** Clean, warm, not aggressive. Match Tila's aesthetic. No dark patterns, no countdown timers, no "limited offer" language.
+
+**Files:** New `src/components/paywall/PaywallScreen.tsx`
+
+### C5: Trial Lifecycle Handling
+**What:** What happens during and after the 7-day trial.
+
+**Fix:**
+1. **Day 1-4:** No interruption. User has full access. Small subtle badge in home header: "Trial — 5 days left"
+2. **Day 5-6:** Gentle in-app banner on home screen: "Your trial ends in X days. Subscribe to keep learning." Tapping opens paywall.
+3. **Day 7 (expiry):** RevenueCat handles the billing transition. If user didn't cancel and chose a plan, subscription auto-starts (standard App Store behavior). If user cancelled during trial, entitlement revokes.
+4. **Post-expiry:** User can still open app, see full progress, access lessons 1-6, review any letters they learned during trial. Tapping lesson 7+ shows paywall. Home screen shows subtle "Upgrade to continue" card where hero card was.
+5. **Trial days remaining:** Read from RevenueCat's `CustomerInfo.entitlements` — don't compute locally.
+
+**Files:** `app/(tabs)/index.tsx`, `src/monetization/entitlements.ts`
+
+### C6: Conversion Analytics Events
+**What:** The most important events in the entire app. These are how you know if the business is working.
+
+**Events:**
+- `paywall_shown` — paywall screen appeared (with `trigger`: "lesson_6_complete", "lesson_locked", "trial_expired", "home_upgrade_card")
+- `paywall_dismissed` — user closed paywall without purchasing
+- `trial_started` — 7-day trial activated (with `plan`: "monthly" or "annual")
+- `trial_expired` — trial ended without conversion
+- `subscription_started` — paid subscription began (with `plan`, `price`, `currency`)
+- `subscription_renewed` — existing subscription renewed (from RevenueCat webhook, if configured)
+- `subscription_cancelled` — user cancelled (from RevenueCat)
+- `restore_purchases_tapped` — user attempted restore
+- `scholarship_link_tapped` — user tapped scholarship option
+
+**Files:** `src/analytics/events.ts`, `src/monetization/purchases.ts`
+**Integration:** All events fire to both PostHog (for analysis) and RevenueCat (for revenue attribution).
+
+### C7: Restore Purchases
+**What:** Required by Apple. User switches devices or reinstalls — needs to recover their subscription.
+
+**Fix:**
+1. "Restore Purchases" button on paywall screen
+2. Calls `Purchases.restorePurchases()` via RevenueCat
+3. On success: entitlement reactivated, user shown confirmation, paywall dismissed
+4. On failure/no purchases found: "No active subscription found. If you believe this is an error, contact support@tila.app"
+
+**Files:** `src/components/paywall/PaywallScreen.tsx`, `src/monetization/purchases.ts`
+
+### C8: Scholarship Access
+**What:** Free access for users who genuinely can't afford the subscription. Eliminates the moral objection to charging for Quran education.
+
+**Fix:**
+1. Link on paywall: "Can't afford Tila? We'll give you free access — no questions asked."
+2. Tapping opens email compose to support@tila.app with subject "Scholarship Request"
+3. Fulfillment: Generate a subscription Offer Code in App Store Connect (free, one-time-use, custom code). Send redemption URL to the user via email.
+4. **Apple-specific:** As of March 2026, legacy promo codes for IAP are deprecated. Use Subscription Offer Codes instead — these support free offers, custom codes, and redemption URLs. Configurable in App Store Connect under Subscriptions → Offer Codes.
+5. **Google Play:** Use a promo code via Google Play Console, or manually grant entitlement via RevenueCat dashboard.
+6. Display scholarship option prominently — it costs nearly nothing (very few people email) but neutralizes the "charging for Quran" objection entirely.
+
+**Files:** `src/components/paywall/PaywallScreen.tsx`
+**Ops:** Scholarship fulfillment is manual for now. If volume exceeds ~10/month, automate with a webhook.
+
+### Phase C Exit Criteria
+- [ ] RevenueCat SDK installed and configured in Expo development build
+- [ ] Sandbox purchase completes successfully on iOS and Android
+- [ ] Lesson 7+ blocked for free users, accessible for trial/premium users
+- [ ] Paywall shows after lesson 6 completion with mini-celebration
+- [ ] Paywall shows when free user taps locked lesson
+- [ ] Annual plan preselected, monthly visible, both with 7-day trial
+- [ ] Trial countdown badge appears on home screen during trial
+- [ ] Post-expiry: user can review learned letters but can't start lesson 7+
+- [ ] Restore purchases works (tested: purchase on device A, restore on device B in sandbox)
+- [ ] All C6 analytics events firing and visible in PostHog
+- [ ] Scholarship email link works (opens compose with correct subject)
+- [ ] `paywall_shown` → `trial_started` → `subscription_started` funnel visible in PostHog
+
+---
+
+## Phase D: Polish
+
+Business is working. Now make it better. Ordered by impact on retention and churn.
+
+### D1: Deep Linking (prerequisite for D2)
+**What:** `tila://` scheme routes to specific screens. Required for push notifications to land users on the right screen.
+
+**Fix:**
+1. Wire Expo Router linking with `tila://` scheme (already defined in `app.config.ts`, not connected)
+2. Register routes: `tila://lesson/{id}`, `tila://home`, `tila://progress`, `tila://review`, `tila://paywall`
+3. Handle in `_layout.tsx`: parse incoming URL, navigate to screen
+4. Invalid/expired links → redirect to home
+5. Entitlement check on deep-linked lessons (free user deep-links to lesson 50 → paywall)
+
+**Files:** `app/_layout.tsx`, Expo Router linking config
+
+### D2: Push Notifications (requires D1)
+**What:** The #1 retention lever for mobile. Bring users back with gentle, purposeful nudges.
+
+**Fix:**
+1. Install `expo-notifications`
+2. Request permission after first lesson completion (not first launch — earn trust first)
+3. **Daily reminder:** Local notification at user's preferred time (default 8pm). "Your wird is waiting. Keep your X-day streak alive." Deep-links to `tila://home`
+4. **Streak at risk:** If no practice by 2 hours before midnight and no freeze: "Your X-day streak resets at midnight." Deep-links to `tila://home`
+5. **Review due:** Weekly if letters are due: "X letters ready for review." Deep-links to `tila://review`
+6. **Smart quiet hours:** No notifications before 8am or after 10pm
+7. Notification preferences stored in user_profile, adjustable in Settings (D3)
+
+**Files:** New `src/notifications/`, `app/lesson/[id].tsx`, `src/db/schema.ts`
+
+### D3: Settings Screen
+**What:** Users need a place to manage their subscription, notification preferences, theme, and privacy.
+
+**Fix:**
+1. Gear icon in home screen header → Settings screen
+2. Sections:
+   - **Subscription:** Current plan, manage/cancel (deep-links to App Store subscription management), trial status
+   - **Daily Goal:** Adjust 3/5/10 minutes
+   - **Notifications:** Toggle daily reminder, set preferred time, toggle streak alert
+   - **Appearance:** Light / Dark / System theme toggle
+   - **Privacy:** Analytics toggle (from A6)
+   - **About:** Version, "Send Feedback" link, "Rate Tila" link
+   - **Danger Zone:** Reset All Progress (with confirmation)
+
+**Files:** New `app/settings.tsx`, new `src/components/settings/`
+
+### D4: Dark Mode
+**What:** All tokens exist in `tokens.ts`. Every component uses `useColors()`. Just flip the switch.
+
+**Fix:**
+1. Replace hardcoded `"light"` in `_layout.tsx` with `useColorScheme()` system detection
+2. Manual override stored in user_profile (set via Settings screen D3)
+3. Priority: user preference > system > light default
+4. Test every screen in dark mode for contrast and visibility issues
+5. Verify WarmGlow, WarmGradient, confetti, decorative elements work in dark palette
 
 **Files:** `app/_layout.tsx`, `src/design/theme.ts`, `src/db/schema.ts`
 
-#### L4.2: Settings Screen
-**Problem:** No settings screen exists. Needed for: theme toggle, daily goal, notification preferences, analytics consent, and eventually account management.
+### D5: OTA Updates
+**What:** Push JS-level fixes without App Store review.
 
 **Fix:**
-1. Add Settings screen accessible from home screen (gear icon in header)
-2. Sections:
-   - **Appearance**: Light / Dark / System toggle
-   - **Daily Goal**: 3 / 5 / 10 minutes (reuses GoalAdjustSheet)
-   - **Notifications**: Daily reminder toggle + time picker, Streak reminder toggle
-   - **Privacy**: Analytics sharing toggle (from F2.2)
-   - **About**: App version, "Send Feedback" link, "Rate Tila" link
-   - **Danger Zone**: Reset All Progress (moved from progress screen, with confirmation)
-3. Settings persisted in user_profile table
-4. Simple list layout — clean, not over-designed
+1. Install and configure `expo-updates`
+2. Add update channels to `eas.json` (preview, production)
+3. Check for updates on app launch in `_layout.tsx`
+4. Subtle banner "Update available" — applies on next restart. No forced updates.
 
-**Files:** New `app/settings.tsx`, new `src/components/settings/` directory
+**Files:** `app.config.ts`, `eas.json`, `app/_layout.tsx`
 
-#### L4.3: Font Scaling Support
+### D6: Per-Screen Error Boundaries
+**What:** One crash anywhere shouldn't take down the whole app. Root Sentry boundary exists but is generic.
+
+**Fix:** Error boundaries around 4 screen groups:
+1. **Lesson flow** — crash shows "This lesson had a problem. Tap to go home." Reports to Sentry with lesson context
+2. **Onboarding** — crash shows retry
+3. **Home** — crash shows "Tap to reload"
+4. **Progress** — crash shows empty state with reload
+
+**Files:** New `src/components/shared/ScreenErrorBoundary.tsx`, screen files
+
+### D7: Accessibility Basics
+**What:** Font scaling, reduced motion, screen reader hints. Not a full audit — enough for App Store and basic inclusivity.
+
 **Fix:**
-1. Add `maxFontSizeMultiplier={1.5}` to all Text components in design system
-2. Create wrapper: `<AccessibleText>` that applies this automatically
-3. Test at 1.0x, 1.25x, and 1.5x — ensure layouts don't break
-4. Arabic text (ArabicText component) needs special testing — already large, must scale without overflow
-5. Quiz options must remain tappable at all font sizes (increase touch target if needed)
+1. `maxFontSizeMultiplier={1.5}` on Text components in design system
+2. `useReducedMotion()` hook: when enabled, replace spring animations with simple fades, disable confetti and floating letters
+3. `accessibilityHint` on interactive elements (HearButton, quiz options, lesson cards)
+4. Arabic text: `accessibilityLanguage="ar"` for correct screen reader pronunciation
+5. Contrast check on `textMuted` combinations in both light and dark mode
 
-**Files:** `src/design/components/ArabicText.tsx`, all components using raw `<Text>`
+**Files:** `src/design/components/`, `src/design/animations.ts`, new `src/hooks/useReducedMotion.ts`
 
-#### L4.4: Reduced Motion Support
-**Fix:**
-1. Detect system "reduce motion" setting via `AccessibilityInfo` API
-2. Create `useReducedMotion()` hook
-3. When enabled:
-   - Replace spring animations with instant or 150ms linear transitions
-   - Disable confetti particles
-   - Disable floating letters layer
-   - Disable breathing/pulsing glows (show static opacity instead)
-   - Disable streak flame animation
-   - Keep fade transitions (they're gentle enough)
-4. Apply throughout: animations.ts presets check the flag, components that animate check the flag
+### D8: Sentry Performance Monitoring
+**What:** Currently at 0% sampling — blind to production performance.
 
-**Files:** New `src/hooks/useReducedMotion.ts`, `src/design/animations.ts`, all components with animations
+**Fix:** Set `tracesSampleRate: 0.1`. Add spans on DB initialization, mastery merge, and question generation.
 
-#### L4.5: Screen Reader Depth
-**Fix:**
-1. Add `accessibilityHint` to all interactive elements (hint describes what will happen, not what it is)
-   - HearButton: label="Play letter sound", hint="Plays the pronunciation of this letter"
-   - Quiz option: label="Letter Ba", hint="Tap to select this answer"
-   - Lesson card: label="Lesson 5: Ba vs Ta", hint="Tap to start this lesson"
-2. Quiz options announce state: "Selected, correct" / "Selected, incorrect" / "Correct answer"
-3. Progress screen announces stats meaningfully: "12 letters learned out of 28"
-4. Arabic text gets `accessibilityLanguage="ar"` so screen readers use Arabic pronunciation engine
-5. Test with VoiceOver (iOS) and TalkBack (Android)
+**Files:** `src/analytics/sentry.ts`
 
-**Files:** All interactive components across `src/components/` and `src/design/components/`
-
-#### L4.6: Contrast Audit
-**Fix:**
-1. Audit every foreground/background color combination against WCAG AA:
-   - Body text: 4.5:1 minimum
-   - Large text (18px+): 3:1 minimum
-   - Interactive elements: 3:1 minimum
-2. Check both light and dark modes
-3. Known risk areas: `textMuted` on light backgrounds, accent gold on white, border colors
-4. Fix any failures by adjusting the failing token (prefer darkening text over lightening backgrounds)
-5. Document final contrast ratios in tokens.ts comments
-
-**Files:** `src/design/tokens.ts`
+### Phase D Exit Criteria
+- [ ] Push notification permission requested after first lesson, daily reminder fires at scheduled time
+- [ ] Notification tap deep-links to correct screen (home, review, lesson)
+- [ ] Settings screen: subscription status shows correctly, goal adjustable, notifications toggleable, theme switchable
+- [ ] Dark mode renders correctly on all screens (spot-checked: home, lesson intro, quiz, summary, progress, onboarding)
+- [ ] OTA update check runs on launch, banner shown when update available
+- [ ] Screen error boundary: force crash in quiz component, verify friendly error instead of white screen
+- [ ] System font size at 1.5x: no layout overflow on quiz options or lesson cards
+- [ ] Reduced motion: confetti and floating letters disabled, springs replaced with fades
 
 ---
 
-## Deferred to Future Milestone
+## What Got Cut (and why it's fine)
 
-The following items are explicitly out of scope for this roadmap:
+| Cut | Why |
+|-----|-----|
+| Achievement badges | Nice delight, zero impact on core loop or conversion |
+| Streak freeze system | Complexity before evidence that streaks drive retention |
+| Milestone celebration screens | Phase-complete screen already exists |
+| Weekly progress summary | Dashboard feature, not habit feature |
+| Streak flame animation | Decoration |
+| Daily goal progress ring | Text pill works fine |
+| Context-aware return welcome | Generic hadith is fine at launch |
+| Fast-track detection | Optimization before data exists |
+| Response-time weighted mastery | Sophisticated but invisible to user |
+| Adaptive SRS by error type | Standard SRS works for launch |
+| Interleaved review injection | Complex. Post-lesson prompt (B5) is simpler |
+| Marginal pass band | Binary pass/fail is clear enough |
+| React.memo sweep | Optimize when you see jank |
+| Broad contrast audit | Basic check in D7. Full audit is post-launch |
+| Database index sweep | Schema already has indexes on critical columns. Measure first |
+| Progressive hint escalation | B4 basic teaching is enough for launch |
+
+---
+
+## Deferred to Future Milestones
 
 ### Curriculum Expansion (Next Milestone)
-- Phase 5: Connected Reading (question generator exists, no lessons assigned)
-- Phase 6: Simple Word Reading (2-3 letter words with harakat)
-- Phase 7: Additional Marks (sukoon, shadda, tanwin, madd)
-- Phase 8: Phrase Reading (multi-word combinations)
-- Phase 9: Quranic Conventions (special symbols, stop marks)
-- Phase 10: Guided Surah Reading (Al-Fatiha verse by verse)
-- ~200+ new lessons of curriculum design
-- New question generators for word-level and phrase-level exercises
-- Quranic audio assets and verse data
+- Phase 5+: Connected reading, word reading, phrase reading, additional marks, Quranic conventions, guided Al-Fatiha reading
+- ~200+ new lessons
+- New question generators
 
-### Other Future Work
-- Multi-user support (family sharing on one device)
+### Second-Order Retention
+- Streak freezes, achievement badges, milestone screens, weekly summaries
+- Adaptive difficulty, fast-track/struggling detection
+- Interleaved review injection, response-time mastery weighting
+- Social features, sharing, peer comparison
+
+### Infrastructure
 - Cloud sync / account system
+- Multi-user support (family sharing)
 - Teacher dashboard
-- Monetization / subscription
-- Speaking/pronunciation feedback (ML-based)
-- Internationalization (i18n framework, translations)
-- Social features (sharing, peer comparison)
 - E2E testing framework
+- Internationalization (i18n)
 
----
-
-## Success Criteria
-
-This roadmap is complete when:
-
-1. **No data corruption** — Quiz results save atomically, mastery data persists correctly across restarts
-2. **No hardcoded secrets** — All API keys in environment variables, analytics consent implemented
-3. **Users come back** — Push notifications scheduled, daily goals tracked, streaks protected
-4. **Mistakes teach** — Every wrong answer explains why, with progressive depth for repeated confusions
-5. **App adapts** — Struggling users get easier questions, fast learners skip intros, SRS adjusts by error type
-6. **Reviews happen** — Due letters appear naturally inside lessons, review prompts at the right moments
-7. **Everyone can use it** — Dark mode works, fonts scale, animations respect reduced motion, screen readers navigate properly
-8. **Ship-ready** — OTA updates configured, error boundaries prevent crashes, deep linking works for notifications
+### Advanced Monetization
+- Lifetime pricing (after retention data proves value)
+- Regional/PPP pricing
+- Referral program
+- Gift subscriptions
 
 ---
 
 ## Constraints
 
-- **No business logic architecture changes** — Engine/hook/DB pattern stays. Improvements work within existing architecture.
-- **No new state management** — No Redux, Zustand, or new Context providers beyond what's needed (notification preferences, settings).
-- **Offline-first preserved** — All new features work without network. Push notifications use local scheduling. No server dependencies.
-- **60fps on mid-range Android** — All new animations must hit performance bar. Streak flame, progress ring, etc. use Reanimated.
-- **Existing design tokens** — Keep current color palette, fonts, spacing. Dark mode uses already-defined dark tokens. No new visual language.
-- **Bundle size awareness** — expo-notifications is the only major new dependency. No heavy libraries for gamification or charting.
+- **No architecture changes** — Engine/hook/DB pattern stays
+- **No new state management** — No Redux/Zustand beyond EntitlementProvider
+- **Offline-first preserved** — All features work without network. Notifications are local. RevenueCat caches entitlements offline
+- **60fps on mid-range Android** — All animations use Reanimated
+- **Existing design tokens** — Current palette, fonts, spacing. Dark mode uses existing dark tokens
+- **Bundle size** — expo-notifications and react-native-purchases are the only major new dependencies
+- **RevenueCat requires development build** — IAP does not work in Expo Go. Factor build time into C1-C2 scheduling
