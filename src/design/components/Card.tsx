@@ -76,7 +76,7 @@ export function Card({
 
 const styles = StyleSheet.create({
   base: {
-    borderRadius: radii.lg,
+    borderRadius: radii.xl,
     padding: spacing.xl,
   },
 });

@@ -10,9 +10,9 @@ import Animated, {
   SlideOutUp,
 } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii } from "../../design/tokens";
+import { typography, spacing, radii, shadows } from "../../design/tokens";
 import { springs } from "../../design/animations";
-import { hapticSuccess } from "../../design/haptics";
+import { hapticSuccess, hapticMilestone } from "../../design/haptics";
 
 // ── Types ──
 
@@ -24,14 +24,20 @@ interface QuizProgressProps {
   isRecycled: boolean;
 }
 
-// ── Streak thresholds ──
+// ── Streak tiers ──
 
 const STREAK_MILESTONES = [3, 5, 7] as const;
 
-function getStreakMessage(streak: number): string {
-  if (streak >= 7) return "Unstoppable! \uD83D\uDD25";
-  if (streak >= 5) return "On fire! \u2B50";
-  return "Nice streak! \u2728";
+interface StreakTier {
+  message: string;
+  emoji: string;
+  tier: 1 | 2 | 3;
+}
+
+function getStreakTier(streak: number): StreakTier {
+  if (streak >= 7) return { message: "Masha'Allah!", emoji: "\uD83D\uDD25\u2728", tier: 3 };
+  if (streak >= 5) return { message: "Sharp focus!", emoji: "\u2B50\u2B50", tier: 2 };
+  return { message: "Nice streak!", emoji: "\u2728", tier: 1 };
 }
 
 // ── Component ──
@@ -74,34 +80,52 @@ export function QuizProgress({
       streak > prevStreakRef.current &&
       STREAK_MILESTONES.includes(streak as 3 | 5 | 7)
     ) {
-      hapticSuccess();
+      if (streak >= 7) {
+        hapticMilestone();
+      } else {
+        hapticSuccess();
+      }
       setBannerStreak(streak);
-      const timer = setTimeout(() => setBannerStreak(null), 1500);
+      const timer = setTimeout(() => setBannerStreak(null), streak >= 7 ? 2500 : 1500);
       return () => clearTimeout(timer);
     }
     prevStreakRef.current = streak;
   }, [streak]);
 
+  const tier = bannerStreak ? getStreakTier(bannerStreak) : null;
+
   return (
     <>
       {/* Streak banner overlay */}
-      {bannerStreak !== null && (
+      {bannerStreak !== null && tier && (
         <Animated.View
           entering={SlideInDown.springify().stiffness(300).damping(20)}
           exiting={SlideOutUp.duration(300)}
           style={[
             styles.streakBanner,
-            { backgroundColor: colors.accentLight, borderColor: colors.accent },
+            shadows.cardLifted,
+            tier.tier === 3
+              ? { backgroundColor: colors.primary, borderColor: "rgba(196, 164, 100, 0.35)" }
+              : tier.tier === 2
+                ? { backgroundColor: colors.bgCard, borderColor: colors.accent }
+                : { backgroundColor: colors.accentLight, borderColor: colors.accent },
           ]}
         >
           <Text
             style={[
               styles.streakText,
-              { color: colors.accent },
+              {
+                color: tier.tier === 3 ? colors.accent : colors.accent,
+              },
             ]}
           >
-            {bannerStreak} in a row! {getStreakMessage(bannerStreak)}
+            {tier.emoji} {bannerStreak} in a row {tier.tier >= 2 ? " \u2014 " + tier.message : ""}
           </Text>
+          {tier.tier === 3 && (
+            <Text style={[styles.streakArabic, { color: "rgba(196, 164, 100, 0.7)" }]}>
+              {"\u0645\u0627 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647"}
+            </Text>
+          )}
         </Animated.View>
       )}
 
@@ -178,13 +202,18 @@ const styles = StyleSheet.create({
     right: spacing.xl,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.lg,
-    borderRadius: radii.lg,
-    borderWidth: 2,
+    borderRadius: radii.full,
+    borderWidth: 1.5,
     alignItems: "center",
     zIndex: 100,
   },
   streakText: {
     ...typography.bodyLarge,
     fontWeight: "700",
+  },
+  streakArabic: {
+    fontFamily: "Amiri_400Regular",
+    fontSize: 14,
+    marginTop: 2,
   },
 });

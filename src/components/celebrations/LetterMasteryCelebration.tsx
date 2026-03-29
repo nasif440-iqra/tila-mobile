@@ -77,9 +77,9 @@ export function LetterMasteryCelebration({
     >
       <Pressable onPress={handleDismiss} style={styles.pressable}>
         <Animated.View style={[styles.content, contentAnimatedStyle]}>
-          {/* WarmGlow behind letter */}
+          {/* WarmGlow behind letter -- upgraded intensity */}
           <View style={styles.glowContainer}>
-            <WarmGlow size={180} opacity={0.2} />
+            <WarmGlow size={220} animated pulseMin={0.15} pulseMax={0.4} />
           </View>
 
           {/* Arabic letter(s) */}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from "react";
-import { StyleSheet, Pressable, Text } from "react-native";
+import { StyleSheet, Pressable, Text, View } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -12,6 +12,7 @@ import { typography, spacing } from "../../design/tokens";
 import { springs } from "../../design/animations";
 import { hapticMilestone, hapticTap } from "../../design/haptics";
 import { MID_CELEBRATE_COPY, pickCopy } from "../../engine/engagement";
+import { WarmGlow } from "../onboarding/WarmGlow";
 
 // ── Types ──
 
@@ -53,6 +54,11 @@ export function QuizCelebration({ onDismiss }: QuizCelebrationProps) {
           }}
           style={styles.midCelebContent}
         >
+          {/* Warm glow behind the celebration */}
+          <View style={styles.glowContainer}>
+            <WarmGlow size={200} animated pulseMin={0.15} pulseMax={0.4} />
+          </View>
+
           <Text style={styles.midCelebEmoji}>
             {"\uD83C\uDF1F"}
           </Text>
@@ -83,6 +89,14 @@ const styles = StyleSheet.create({
   midCelebContent: {
     alignItems: "center",
     padding: spacing.xxl,
+  },
+  glowContainer: {
+    position: "absolute",
+    top: -40,
+    alignItems: "center",
+    justifyContent: "center",
+    width: 200,
+    height: 200,
   },
   midCelebEmoji: {
     fontSize: 56,

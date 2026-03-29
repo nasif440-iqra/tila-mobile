@@ -1,5 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSequence,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import { useColors } from "../design/theme";
 import { typography, spacing } from "../design/tokens";
 import {
@@ -55,6 +62,10 @@ export function LessonQuiz({
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
+  // Screen flash animations
+  const wrongFlashOpacity = useSharedValue(0);
+  const goldTintOpacity = useSharedValue(0);
+
   // Track original question count for progress display
   const originalQCount = useRef(totalQuestions);
   useEffect(() => {
@@ -105,6 +116,18 @@ export function LessonQuiz({
     setIsCorrect(false);
   }, [questionIndex]);
 
+  // Gold tint on streak milestones
+  const prevStreakForFlash = useRef(0);
+  useEffect(() => {
+    if (streak > prevStreakForFlash.current && [3, 5, 7].includes(streak)) {
+      goldTintOpacity.value = withSequence(
+        withTiming(1, { duration: 200, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 600, easing: Easing.in(Easing.cubic) })
+      );
+    }
+    prevStreakForFlash.current = streak;
+  }, [streak, goldTintOpacity]);
+
   // Handle option press
   const handleSelect = useCallback(
     (optionId: number) => {
@@ -126,9 +149,14 @@ export function LessonQuiz({
         }, 800);
       } else {
         playWrong();
+        // Red flash on wrong answer
+        wrongFlashOpacity.value = withSequence(
+          withTiming(1, { duration: 80 }),
+          withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) })
+        );
       }
     },
-    [answered, currentQuestion, handleAnswer]
+    [answered, currentQuestion, handleAnswer, wrongFlashOpacity]
   );
 
   // Handle "Got it" press on wrong answer panel
@@ -139,6 +167,15 @@ export function LessonQuiz({
     );
     handleAnswer(opt, false);
   }, [currentQuestion, selectedId, handleAnswer]);
+
+  // Animated flash styles
+  const wrongFlashStyle = useAnimatedStyle(() => ({
+    opacity: wrongFlashOpacity.value,
+  }));
+
+  const goldTintStyle = useAnimatedStyle(() => ({
+    opacity: goldTintOpacity.value,
+  }));
 
   // Loading state
   if (!currentQuestion) {
@@ -162,6 +199,26 @@ export function LessonQuiz({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Wrong answer red flash overlay */}
+      <Animated.View
+        style={[
+          styles.screenFlash,
+          { backgroundColor: "rgba(189, 82, 77, 0.08)" },
+          wrongFlashStyle,
+        ]}
+        pointerEvents="none"
+      />
+
+      {/* Streak gold tint overlay */}
+      <Animated.View
+        style={[
+          styles.screenFlash,
+          { backgroundColor: "rgba(196, 164, 100, 0.06)" },
+          goldTintStyle,
+        ]}
+        pointerEvents="none"
+      />
+
       {/* Mid-celebration overlay */}
       {showMidCelebrate && (
         <QuizCelebration onDismiss={dismissMidCelebrate} />
@@ -214,5 +271,9 @@ const styles = StyleSheet.create({
   loadingText: {
     ...typography.body,
     textAlign: "center",
+  },
+  screenFlash: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 150,
   },
 });

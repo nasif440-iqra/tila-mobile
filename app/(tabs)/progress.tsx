@@ -4,8 +4,10 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Alert,
+  Pressable,
 } from "react-native";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -13,11 +15,14 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useColors } from "../../src/design/theme";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
 import { useProgress } from "../../src/hooks/useProgress";
+import { useDatabase } from "../../src/db/provider";
+import { resetProgress } from "../../src/engine/progress";
 import { LESSONS } from "../../src/data/lessons";
 import {
   getPhaseCounts,
@@ -42,7 +47,26 @@ const PHASES = [
 export default function ProgressScreen() {
   const colors = useColors();
   const router = useRouter();
+  const db = useDatabase();
   const progress = useProgress();
+
+  const handleResetProgress = useCallback(() => {
+    Alert.alert(
+      "Reset All Progress?",
+      "This will erase all lessons, mastery, and streaks. You'll go through onboarding again. This cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset Everything",
+          style: "destructive",
+          onPress: async () => {
+            await resetProgress(db);
+            router.replace("/onboarding");
+          },
+        },
+      ]
+    );
+  }, [db, router]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -166,6 +190,13 @@ export default function ProgressScreen() {
       edges={["top"]}
       style={[styles.container, { backgroundColor: colors.bg }]}
     >
+      {/* Warm gradient ambient layer */}
+      <LinearGradient
+        colors={[colors.bgWarm, "transparent"]}
+        locations={[0, 1]}
+        style={{ position: "absolute", top: 0, left: 0, right: 0, height: 300, zIndex: 0 }}
+        pointerEvents="none"
+      />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -231,6 +262,16 @@ export default function ProgressScreen() {
           />
         </Animated.View>
 
+        {/* Reset progress */}
+        <Pressable
+          onPress={handleResetProgress}
+          style={[styles.resetButton, { borderColor: colors.border }]}
+        >
+          <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
+            Reset All Progress
+          </Text>
+        </Pressable>
+
         {/* Bottom padding for tab bar */}
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
@@ -254,5 +295,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  resetButton: {
+    marginTop: spacing.xxxxl,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    borderTopWidth: 1,
   },
 });

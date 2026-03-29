@@ -12,6 +12,7 @@ import Animated, {
   runOnJS,
   interpolateColor,
 } from "react-native-reanimated";
+import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii, shadows, fontFamilies } from "../design/tokens";
@@ -131,16 +132,24 @@ export function LessonSummary({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Animated.View entering={FadeIn.duration(500)} style={styles.content}>
+      {/* Warm ambient gradient */}
+      <LinearGradient
+        colors={[colors.bgWarm, "transparent"]}
+        locations={[0, 1]}
+        style={styles.ambientGradient}
+        pointerEvents="none"
+      />
+
+      <Animated.View entering={FadeIn.duration(500)} style={[styles.content, { backgroundColor: colors.bgCard }]}>
         {/* 1. Result icon with score-proportional WarmGlow */}
         <View style={{ alignItems: "center", justifyContent: "center" }}>
           {percentage >= 50 && (
             <WarmGlow
-              size={percentage >= 80 ? 140 : 100}
+              size={percentage >= 80 ? 180 : 120}
               animated
               color="rgba(196,164,100,0.3)"
-              pulseMin={percentage >= 80 ? 0.08 : 0.04}
-              pulseMax={percentage >= 80 ? 0.22 : 0.10}
+              pulseMin={percentage >= 80 ? 0.15 : 0.08}
+              pulseMax={percentage >= 80 ? 0.4 : 0.2}
             />
           )}
           <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>
@@ -254,14 +263,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
   },
+  ambientGradient: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 300,
+  },
   content: {
     width: "100%",
     maxWidth: 380,
     alignItems: "center",
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.xxl,
-    borderRadius: radii.xl,
-    ...shadows.card,
+    borderRadius: radii.xxl,
+    ...shadows.cardLifted,
   },
   iconCircle: {
     width: 80,
