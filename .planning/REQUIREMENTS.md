@@ -40,9 +40,9 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 ### Celebrations & Feedback
 
 - [x] **CEL-01**: Tiered celebration system — small wins get subtle warmth, big wins get genuine excitement
-- [ ] **CEL-02**: Lesson completion celebration with animated visual effect (confetti, particles, or burst)
+- [x] **CEL-02**: Lesson completion celebration with animated visual effect (confetti, particles, or burst)
 - [x] **CEL-03**: Letter mastery celebration is a bigger deal than a single correct answer
-- [ ] **CEL-04**: Phase completion gets a special milestone celebration
+- [x] **CEL-04**: Phase completion gets a special milestone celebration
 - [ ] **CEL-05**: Warm Islamic encouragement messages replace generic "Great job!" text
 
 ### Mindful Moments
@@ -133,9 +133,9 @@ Explicitly excluded. Documented to prevent scope creep.
 | LES-05 | Phase 4 | Complete |
 | LES-06 | Phase 4 | Complete |
 | CEL-01 | Phase 5 | Complete |
-| CEL-02 | Phase 5 | Pending |
+| CEL-02 | Phase 5 | Complete |
 | CEL-03 | Phase 5 | Complete |
-| CEL-04 | Phase 5 | Pending |
+| CEL-04 | Phase 5 | Complete |
 | CEL-05 | Phase 5 | Pending |
 | PROG-01 | Phase 6 | Pending |
 | PROG-02 | Phase 6 | Pending |
