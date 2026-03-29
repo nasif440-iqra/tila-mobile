@@ -1,9 +1,13 @@
 // src/analytics/sentry.ts
 import * as Sentry from '@sentry/react-native';
 
-const SENTRY_DSN = 'https://467c433b59b68c88ed9f74e4bd670802@o4511118918483968.ingest.us.sentry.io/4511118922416128';
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN ?? '';
 
 export function initSentry(): void {
+  if (!SENTRY_DSN) {
+    console.warn('Sentry init skipped: EXPO_PUBLIC_SENTRY_DSN is not set');
+    return;
+  }
   Sentry.init({
     dsn: SENTRY_DSN,
     tracesSampleRate: 0,
