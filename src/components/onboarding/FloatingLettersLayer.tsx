@@ -20,18 +20,18 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 // Fallback: reduce to 8 letters.
 // More motion, more randomness — letters drift further and at varied speeds
 const floatingLetters = [
-  { char: "\u0628", top: "2%", left: "6%", size: 32, opacity: 0.10, axis: "y" as const, range: 18, duration: 9000 },
-  { char: "\u0646", top: "6%", left: "55%", size: 28, opacity: 0.08, axis: "x" as const, range: -14, duration: 11000 },
-  { char: "\u0643", top: "9%", left: "82%", size: 26, opacity: 0.09, axis: "y" as const, range: 12, duration: 13000 },
-  { char: "\u0639", top: "20%", left: "2%", size: 30, opacity: 0.09, axis: "x" as const, range: 16, duration: 10000 },
-  { char: "\u0642", top: "18%", left: "90%", size: 24, opacity: 0.08, axis: "y" as const, range: -20, duration: 8000 },
-  { char: "\u062F", top: "38%", left: "4%", size: 28, opacity: 0.07, axis: "y" as const, range: 15, duration: 12000 },
-  { char: "\u0633", top: "42%", left: "88%", size: 26, opacity: 0.09, axis: "x" as const, range: -12, duration: 9500 },
-  { char: "\u0631", top: "60%", left: "8%", size: 30, opacity: 0.10, axis: "x" as const, range: 14, duration: 11000 },
-  { char: "\u064A", top: "56%", left: "93%", size: 24, opacity: 0.08, axis: "y" as const, range: -16, duration: 10500 },
-  { char: "\u0645", top: "75%", left: "12%", size: 26, opacity: 0.09, axis: "y" as const, range: 18, duration: 8500 },
-  { char: "\u0647", top: "73%", left: "48%", size: 30, opacity: 0.08, axis: "x" as const, range: -14, duration: 12500 },
-  { char: "\u062A", top: "80%", left: "84%", size: 28, opacity: 0.09, axis: "y" as const, range: 15, duration: 9000 },
+  { char: "\u0628", top: "2%", left: "6%", size: 27, opacity: 0.06, axis: "y" as const, range: 18, duration: 9000 },
+  { char: "\u0646", top: "6%", left: "55%", size: 24, opacity: 0.05, axis: "x" as const, range: -14, duration: 11000 },
+  { char: "\u0643", top: "9%", left: "82%", size: 22, opacity: 0.05, axis: "y" as const, range: 12, duration: 13000 },
+  { char: "\u0639", top: "20%", left: "2%", size: 26, opacity: 0.05, axis: "x" as const, range: 16, duration: 10000 },
+  { char: "\u0642", top: "18%", left: "90%", size: 20, opacity: 0.05, axis: "y" as const, range: -20, duration: 8000 },
+  { char: "\u062F", top: "38%", left: "4%", size: 24, opacity: 0.04, axis: "y" as const, range: 15, duration: 12000 },
+  { char: "\u0633", top: "42%", left: "88%", size: 22, opacity: 0.05, axis: "x" as const, range: -12, duration: 9500 },
+  { char: "\u0631", top: "60%", left: "8%", size: 26, opacity: 0.06, axis: "x" as const, range: 14, duration: 11000 },
+  { char: "\u064A", top: "56%", left: "93%", size: 20, opacity: 0.05, axis: "y" as const, range: -16, duration: 10500 },
+  { char: "\u0645", top: "75%", left: "12%", size: 22, opacity: 0.05, axis: "y" as const, range: 18, duration: 8500 },
+  { char: "\u0647", top: "73%", left: "48%", size: 26, opacity: 0.05, axis: "x" as const, range: -14, duration: 12500 },
+  { char: "\u062A", top: "80%", left: "84%", size: 24, opacity: 0.05, axis: "y" as const, range: 15, duration: 9000 },
 ];
 
 function FloatingLetter({
