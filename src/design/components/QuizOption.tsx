@@ -136,14 +136,15 @@ export function QuizOption({
 const styles = StyleSheet.create({
   base: {
     width: "100%",
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.xl,
     paddingHorizontal: spacing.xl,
     borderRadius: radii.lg,
     borderWidth: borderWidths.thick,
     alignItems: "center",
     justifyContent: "center",
+    minHeight: 56,
   },
   text: {
-    ...typography.body,
+    ...typography.bodyLarge,
   },
 });

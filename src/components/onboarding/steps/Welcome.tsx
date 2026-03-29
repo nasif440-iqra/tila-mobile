@@ -36,15 +36,12 @@ export function Welcome({ onNext }: { onNext: () => void }) {
         </Animated.View>
       }
     >
-      {/* Warm ambient glow — animated pulsing */}
-      <WarmGlow size={360} animated pulseMin={0.08} pulseMax={0.18} />
-
-      {/* Branded logo mark */}
+      {/* Branded logo mark — larger for impact */}
       <Animated.View
         entering={FadeIn.delay(logoDelay).duration(SPLASH_STAGGER_DURATION)}
         style={{ marginBottom: spacing.xxl, zIndex: 1 }}
       >
-        <BrandedLogo width={120} height={160} />
+        <BrandedLogo width={180} height={240} />
       </Animated.View>
 
       {/* App name */}
