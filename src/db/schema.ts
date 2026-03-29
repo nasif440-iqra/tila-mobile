@@ -4,7 +4,7 @@
  * Single-user design — no user_id columns.
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS user_profile (
@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS mastery_confusions (
   confusion_key TEXT NOT NULL PRIMARY KEY,
   count INTEGER NOT NULL DEFAULT 0 CHECK (count >= 0),
   last_seen TEXT,
+  categories TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

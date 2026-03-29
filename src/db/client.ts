@@ -45,6 +45,17 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (2)");
   }
+
+  if (currentVersion < 3) {
+    try {
+      await db.execAsync(
+        "ALTER TABLE mastery_confusions ADD COLUMN categories TEXT;"
+      );
+    } catch {
+      // Column may already exist if DB was created fresh with v3 schema
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (3)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {
