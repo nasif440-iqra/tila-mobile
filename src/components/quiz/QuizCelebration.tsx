@@ -1,7 +1,17 @@
+import { useEffect, useMemo } from "react";
 import { StyleSheet, Pressable, Text } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeOut,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useColors } from "../../design/theme";
 import { typography, spacing } from "../../design/tokens";
+import { springs } from "../../design/animations";
+import { hapticMilestone, hapticTap } from "../../design/haptics";
+import { MID_CELEBRATE_COPY, pickCopy } from "../../engine/engagement";
 
 // ── Types ──
 
@@ -14,26 +24,49 @@ interface QuizCelebrationProps {
 export function QuizCelebration({ onDismiss }: QuizCelebrationProps) {
   const colors = useColors();
 
+  const contentScale = useSharedValue(0.9);
+  const subtitle = useMemo(
+    () => pickCopy((MID_CELEBRATE_COPY as any).default),
+    []
+  );
+
+  useEffect(() => {
+    hapticMilestone();
+    contentScale.value = withSpring(1, springs.bouncy);
+  }, [contentScale]);
+
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: contentScale.value }],
+  }));
+
   return (
     <Animated.View
       entering={FadeIn.duration(300)}
       exiting={FadeOut.duration(300)}
       style={[styles.midCelebOverlay, { backgroundColor: `${colors.bg}E6` }]}
     >
-      <Pressable onPress={onDismiss} style={styles.midCelebContent}>
-        <Text style={styles.midCelebEmoji}>
-          {"\uD83C\uDF1F"}
-        </Text>
-        <Text style={[styles.midCelebTitle, { color: colors.primary }]}>
-          Keep going!
-        </Text>
-        <Text style={[styles.midCelebSubtitle, { color: colors.textSoft }]}>
-          You{"\u2019"}re halfway there
-        </Text>
-        <Text style={[styles.midCelebTap, { color: colors.textMuted }]}>
-          Tap to continue
-        </Text>
-      </Pressable>
+      <Animated.View style={scaleStyle}>
+        <Pressable
+          onPress={() => {
+            hapticTap();
+            onDismiss();
+          }}
+          style={styles.midCelebContent}
+        >
+          <Text style={styles.midCelebEmoji}>
+            {"\uD83C\uDF1F"}
+          </Text>
+          <Text style={[styles.midCelebTitle, { color: colors.primary }]}>
+            Keep going!
+          </Text>
+          <Text style={[styles.midCelebSubtitle, { color: colors.textSoft }]}>
+            {subtitle}
+          </Text>
+          <Text style={[styles.midCelebTap, { color: colors.textMuted }]}>
+            Tap to continue
+          </Text>
+        </Pressable>
+      </Animated.View>
     </Animated.View>
   );
 }
