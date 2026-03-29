@@ -130,8 +130,8 @@ Plans:
   3. If the app crashes, an error boundary catches it gracefully and offers a recovery path (restart/retry)
 **Plans:** 2 plans
 Plans:
-- [ ] 07-01-PLAN.md — Create AppLoadingScreen, ErrorFallback, EmptyState components with Wave 0 tests
-- [ ] 07-02-PLAN.md — Wire components into _layout.tsx, provider.tsx, progress.tsx + visual checkpoint
+- [x] 07-01-PLAN.md — Create AppLoadingScreen, ErrorFallback, EmptyState components with Wave 0 tests
+- [x] 07-02-PLAN.md — Wire components into _layout.tsx, provider.tsx, progress.tsx + visual checkpoint
 **UI hint**: yes
 
 ## Progress
@@ -147,4 +147,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Lesson Experience | 3/4 | Executing | - |
 | 5. Celebrations & Feedback | 3/3 | Complete | 2026-03-29 |
 | 6. Progress Screen | 2/2 | Complete | 2026-03-29 |
-| 7. Loading & Error States | 0/2 | Not started | - |
+| 7. Loading & Error States | 2/2 | Checkpoint pending | - |
