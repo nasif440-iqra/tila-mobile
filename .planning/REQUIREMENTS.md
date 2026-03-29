@@ -30,12 +30,12 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 
 ### Lesson Experience
 
-- [ ] **LES-01**: Lesson intro screen sets the tone with beautiful letter presentation
-- [ ] **LES-02**: Quiz interactions feel responsive with smooth state transitions
-- [ ] **LES-03**: Correct answers get a warm subtle celebration (sparkle + haptic)
-- [ ] **LES-04**: Wrong answers give clear but encouraging feedback (shake + gentle correction)
-- [ ] **LES-05**: Lesson summary celebrates completion with visual excitement (confetti/particles for good scores)
-- [ ] **LES-06**: Exercise screens (guided reveal, tap-in-order, build-up reader, etc.) feel polished and consistent
+- [x] **LES-01**: Lesson intro screen sets the tone with beautiful letter presentation
+- [x] **LES-02**: Quiz interactions feel responsive with smooth state transitions
+- [x] **LES-03**: Correct answers get a warm subtle celebration (sparkle + haptic)
+- [x] **LES-04**: Wrong answers give clear but encouraging feedback (shake + gentle correction)
+- [x] **LES-05**: Lesson summary celebrates completion with visual excitement (confetti/particles for good scores)
+- [x] **LES-06**: Exercise screens (guided reveal, tap-in-order, build-up reader, etc.) feel polished and consistent
 
 ### Celebrations & Feedback
 
@@ -126,12 +126,12 @@ Explicitly excluded. Documented to prevent scope creep.
 | HOME-02 | Phase 3 | Pending |
 | HOME-03 | Phase 3 | In Progress |
 | HOME-04 | Phase 3 | In Progress |
-| LES-01 | Phase 4 | Pending |
-| LES-02 | Phase 4 | Pending |
-| LES-03 | Phase 4 | Pending |
-| LES-04 | Phase 4 | Pending |
-| LES-05 | Phase 4 | Pending |
-| LES-06 | Phase 4 | Pending |
+| LES-01 | Phase 4 | Complete |
+| LES-02 | Phase 4 | Complete |
+| LES-03 | Phase 4 | Complete |
+| LES-04 | Phase 4 | Complete |
+| LES-05 | Phase 4 | Complete |
+| LES-06 | Phase 4 | Complete |
 | CEL-01 | Phase 5 | Pending |
 | CEL-02 | Phase 5 | Pending |
 | CEL-03 | Phase 5 | Pending |
