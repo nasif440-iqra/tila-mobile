@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { SlideInDown } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, shadows } from "../../design/tokens";
 import { ArabicText, Button, HearButton } from "../../design/components";
+import { WRONG_ENCOURAGEMENT, pickCopy } from "../../engine/engagement";
 
 // ── Types ──
 
@@ -27,11 +29,16 @@ export function WrongAnswerPanel({
 }: WrongAnswerPanelProps) {
   const colors = useColors();
 
-  const explanationText =
-    explanation ??
-    (correctLetter
-      ? `The correct answer is ${correctLetter.name} (${correctLetter.letter})`
-      : "Not quite -- try again next time!");
+  const encouragement = useMemo(
+    () => (pickCopy as (pool: string[]) => string)(WRONG_ENCOURAGEMENT as unknown as string[]),
+    []
+  );
+
+  const explanationText = explanation
+    ? `${encouragement} ${explanation}`
+    : correctLetter
+      ? `${encouragement} The correct answer is ${correctLetter.name} (${correctLetter.letter})`
+      : "Not quite -- try again next time!";
 
   return (
     <Animated.View

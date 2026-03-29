@@ -1,7 +1,14 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, borderWidths } from "../../design/tokens";
+import { springs } from "../../design/animations";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
 
 const OPTIONS_GRID_MAX_WIDTH = 340;
@@ -28,6 +35,20 @@ export function QuizQuestion({
   onPlayAudio,
 }: QuizQuestionProps) {
   const colors = useColors();
+
+  // Correct feedback pulse animation
+  const correctScale = useSharedValue(0.95);
+
+  useEffect(() => {
+    if (answered && isCorrect) {
+      correctScale.value = 0.95;
+      correctScale.value = withSpring(1, springs.press);
+    }
+  }, [answered, isCorrect, correctScale]);
+
+  const correctPulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: correctScale.value }],
+  }));
 
   // Question type detection
   const isAudioQuestion = question.hasAudio;
@@ -155,6 +176,7 @@ export function QuizQuestion({
               backgroundColor: colors.primarySoft,
               borderColor: colors.primary,
             },
+            correctPulseStyle,
           ]}
         >
           <Text style={[styles.correctFeedbackText, { color: colors.primary }]}>
