@@ -8,7 +8,16 @@ import {
   type ProgressState,
   type UserProfileUpdate,
 } from "../engine/progress";
-import type { QuestionAttempt } from "../types/quiz";
+import type { QuestionAttempt, QuizResultItem } from "../types/quiz";
+import { normalizeEntityKey, mergeQuizResultsIntoMastery } from "../engine/mastery.js";
+import {
+  saveMasteryEntity,
+  saveMasterySkill,
+  saveMasteryConfusion,
+  type EntityState,
+  type SkillState,
+  type ConfusionState,
+} from "../engine/progress";
 
 export function useProgress() {
   const db = useDatabase();
@@ -30,7 +39,8 @@ export function useProgress() {
       lessonId: number,
       accuracy: number,
       passed: boolean,
-      questions: QuestionAttempt[]
+      questions: QuestionAttempt[],
+      quizResultItems?: QuizResultItem[]
     ) => {
       const attemptId = await saveCompletedLesson(
         db,
@@ -42,9 +52,36 @@ export function useProgress() {
         await saveQuestionAttempts(db, attemptId, questions);
       }
       await refresh();
+
+      // Wire mastery pipeline if quizResultItems provided
+      if (quizResultItems && quizResultItems.length > 0) {
+        const today = new Date().toISOString().slice(0, 10);
+        const currentMastery = state?.mastery ?? { entities: {}, skills: {}, confusions: {} };
+
+        // Enrich results with targetKey
+        const enriched = quizResultItems.map((r) => ({
+          ...r,
+          targetKey: normalizeEntityKey(r.targetId, r),
+        }));
+
+        const updatedMastery = mergeQuizResultsIntoMastery(currentMastery, enriched, today);
+
+        // Persist updated entities
+        for (const [key, entity] of Object.entries(updatedMastery.entities)) {
+          await saveMasteryEntity(db, key, entity as EntityState);
+        }
+        for (const [key, skill] of Object.entries(updatedMastery.skills)) {
+          await saveMasterySkill(db, key, skill as SkillState);
+        }
+        for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
+          await saveMasteryConfusion(db, key, confusion as ConfusionState);
+        }
+        await refresh();
+      }
+
       return attemptId;
     },
-    [db, refresh]
+    [db, refresh, state]
   );
 
   const updateProfile = useCallback(
