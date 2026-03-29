@@ -1,6 +1,6 @@
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ViewStyle } from "react-native";
 import { useColors } from "../../design/theme";
-import { spacing, typography, radii, fontFamilies } from "../../design/tokens";
+import { spacing, typography, radii, fontFamilies, shadows } from "../../design/tokens";
 import { ArabicText } from "../../design/components";
 import { ARABIC_LETTERS } from "../../data/letters";
 import { deriveMasteryState } from "../../engine/mastery";
@@ -12,17 +12,28 @@ export interface LetterMasteryGridProps {
   today: string;
 }
 
+interface MasteryStyle {
+  bg: string;
+  border: string;
+  textColor: string;
+  nameColor: string;
+  opacity: number;
+  shadow?: ViewStyle;
+}
+
 function getMasteryStyle(
   state: string,
   colors: ReturnType<typeof useColors>
-): { bg: string; border: string; textColor: string; nameColor: string } {
+): MasteryStyle {
   switch (state) {
     case "retained":
       return {
-        bg: colors.primarySoft,
+        bg: colors.primaryDark,
         border: colors.primary,
-        textColor: colors.primaryDark,
-        nameColor: colors.primary,
+        textColor: colors.primarySoft,
+        nameColor: colors.primarySoft,
+        opacity: 1.0,
+        shadow: shadows.cardLifted,
       };
     case "accurate":
       return {
@@ -30,6 +41,7 @@ function getMasteryStyle(
         border: colors.primary,
         textColor: colors.primaryDark,
         nameColor: colors.primary,
+        opacity: 1.0,
       };
     case "unstable":
       return {
@@ -37,6 +49,7 @@ function getMasteryStyle(
         border: colors.accent,
         textColor: colors.text,
         nameColor: colors.accent,
+        opacity: 1.0,
       };
     case "introduced":
       return {
@@ -44,14 +57,16 @@ function getMasteryStyle(
         border: colors.border,
         textColor: colors.textSoft,
         nameColor: colors.textMuted,
+        opacity: 1.0,
       };
     default:
-      // not started
+      // not_started
       return {
         bg: colors.bgCard,
         border: "transparent",
         textColor: colors.textMuted,
         nameColor: colors.textMuted,
+        opacity: 0.35,
       };
   }
 }
@@ -70,7 +85,6 @@ export default function LetterMasteryGrid({
         const entity = entities[entityKey];
         const state = entity ? deriveMasteryState(entity, today) : "not_started";
         const learned = learnedIds.includes(letter.id);
-        const started = entity && entity.attempts > 0;
         const masteryStyle = getMasteryStyle(state, colors);
 
         return (
@@ -82,8 +96,9 @@ export default function LetterMasteryGrid({
                   backgroundColor: masteryStyle.bg,
                   borderColor: masteryStyle.border,
                   borderWidth: state !== "not_started" ? 2 : 1.5,
-                  opacity: started || learned ? 1 : 0.35,
+                  opacity: masteryStyle.opacity,
                 },
+                masteryStyle.shadow,
               ]}
             >
               <ArabicText
@@ -99,7 +114,7 @@ export default function LetterMasteryGrid({
               >
                 {learned
                   ? letter.name
-                  : started
+                  : entity && entity.attempts > 0
                   ? `${entity.correct}/${entity.attempts}`
                   : "\u2014"}
               </Text>
