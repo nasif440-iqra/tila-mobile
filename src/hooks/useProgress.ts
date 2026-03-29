@@ -51,12 +51,14 @@ export function useProgress() {
       if (questions.length > 0) {
         await saveQuestionAttempts(db, attemptId, questions);
       }
-      await refresh();
 
       // Wire mastery pipeline if quizResultItems provided
       if (quizResultItems && quizResultItems.length > 0) {
         const today = new Date().toISOString().slice(0, 10);
-        const currentMastery = state?.mastery ?? { entities: {}, skills: {}, confusions: {} };
+        // Read fresh mastery directly from DB — avoids stale React state
+        // that would not yet reflect the saveCompletedLesson writes above.
+        const freshProgress = await loadProgress(db);
+        const currentMastery = freshProgress.mastery;
 
         // Enrich results with targetKey
         const enriched = quizResultItems.map((r) => ({
@@ -76,12 +78,14 @@ export function useProgress() {
         for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
           await saveMasteryConfusion(db, key, confusion as ConfusionState);
         }
-        await refresh();
       }
+
+      // Single refresh at the end after all writes are complete
+      await refresh();
 
       return attemptId;
     },
-    [db, refresh, state]
+    [db, refresh]
   );
 
   const updateProfile = useCallback(
