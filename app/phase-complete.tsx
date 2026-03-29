@@ -2,10 +2,19 @@ import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useColors } from "../src/design/theme";
 import { typography, spacing, radii, fontFamilies } from "../src/design/tokens";
 import { ArabicText, Button } from "../src/design/components";
+import { WarmGlow } from "../src/components/onboarding/WarmGlow";
+import { hapticMilestone } from "../src/design/haptics";
+import { springs } from "../src/design/animations";
 import { useHabit } from "../src/hooks/useHabit";
 import { track } from "../src/analytics";
 import { LESSONS } from "../src/data/lessons";
@@ -47,6 +56,22 @@ export default function PhaseCompleteScreen() {
   const nextPhaseTitle = NEXT_PHASE[phaseNum];
   const currentWird = habit?.currentWird ?? 0;
 
+  // Milestone haptic on mount
+  useEffect(() => {
+    hapticMilestone();
+  }, []);
+
+  // Scale entrance for Arabic centerpiece
+  const arabicScale = useSharedValue(0.92);
+
+  useEffect(() => {
+    arabicScale.value = withSpring(1, springs.gentle);
+  }, []);
+
+  const arabicScaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: arabicScale.value }],
+  }));
+
   useEffect(() => {
     const phaseLessons = LESSONS.filter((l) => l.phase === phaseNum);
     track('phase_completed', {
@@ -58,25 +83,36 @@ export default function PhaseCompleteScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.primary }]}>
       <View style={styles.content}>
-        {/* Arabic centerpiece */}
-        <Animated.View entering={FadeIn.duration(800)} style={styles.arabicWrap}>
-          <ArabicText size="display" color={colors.accent} style={{ fontSize: 72 }}>
-            {"\u0627\u0644\u062D\u0645\u062F \u0644\u0644\u0647"}
-          </ArabicText>
+        {/* Arabic centerpiece with milestone WarmGlow */}
+        <Animated.View entering={FadeIn.duration(800)} style={[styles.arabicWrap, { alignItems: "center", justifyContent: "center" }]}>
+          <Animated.View style={arabicScaleStyle}>
+            <View style={{ alignItems: "center", justifyContent: "center" }}>
+              <WarmGlow
+                size={200}
+                animated
+                color="rgba(196,164,100,0.25)"
+                pulseMin={0.06}
+                pulseMax={0.18}
+              />
+              <ArabicText size="display" color={colors.accent} style={{ fontSize: 72 }}>
+                {"\u0627\u0644\u062D\u0645\u062F \u0644\u0644\u0647"}
+              </ArabicText>
+            </View>
+          </Animated.View>
         </Animated.View>
 
         {/* Phase Complete label */}
-        <Animated.View entering={FadeInDown.delay(200).duration(500)}>
+        <Animated.View entering={FadeInDown.delay(300).duration(500)}>
           <Text style={[styles.label, { color: colors.accent }]}>Phase Complete</Text>
         </Animated.View>
 
         {/* Phase title */}
-        <Animated.View entering={FadeInDown.delay(350).duration(500)}>
+        <Animated.View entering={FadeInDown.delay(500).duration(500)}>
           <Text style={[styles.title, { color: colors.white }]}>{info.title}</Text>
         </Animated.View>
 
         {/* Affirmation */}
-        <Animated.View entering={FadeInDown.delay(500).duration(500)}>
+        <Animated.View entering={FadeInDown.delay(700).duration(500)}>
           <Text style={[styles.affirmation, { color: "rgba(255,255,255,0.7)" }]}>
             {info.affirmation}
           </Text>
@@ -85,7 +121,7 @@ export default function PhaseCompleteScreen() {
         {/* Wird badge */}
         {currentWird > 0 && (
           <Animated.View
-            entering={FadeInDown.delay(650).duration(500)}
+            entering={FadeInDown.delay(900).duration(500)}
             style={[styles.wirdBadge, { borderColor: "rgba(255,255,255,0.12)" }]}
           >
             <Text style={{ fontSize: 13, color: colors.accent }}>{"☽"}</Text>
@@ -99,7 +135,7 @@ export default function PhaseCompleteScreen() {
         {/* Next phase unlock card */}
         {nextPhaseTitle ? (
           <Animated.View
-            entering={FadeInDown.delay(800).duration(600)}
+            entering={FadeInDown.delay(1100).duration(600)}
             style={styles.unlockCard}
           >
             <Text style={[styles.unlockLabel, { color: colors.accent }]}>Unlocked</Text>
@@ -107,7 +143,7 @@ export default function PhaseCompleteScreen() {
             <Text style={styles.unlockSub}>Your next chapter awaits.</Text>
           </Animated.View>
         ) : (
-          <Animated.View entering={FadeInDown.delay(800).duration(600)}>
+          <Animated.View entering={FadeInDown.delay(1100).duration(600)}>
             <Text style={styles.completionNote}>
               You have completed every phase. May this knowledge stay with you.
             </Text>
@@ -116,7 +152,7 @@ export default function PhaseCompleteScreen() {
 
         {/* Continue button */}
         <Animated.View
-          entering={FadeInDown.delay(1000).duration(500)}
+          entering={FadeInDown.delay(1300).duration(500)}
           style={styles.buttonWrap}
         >
           <Button
