@@ -9,15 +9,16 @@ const SOURCE_PATH = path.resolve(
 const source = fs.readFileSync(SOURCE_PATH, "utf-8");
 
 describe("LES-03: QuizQuestion correct feedback", () => {
-  it("imports springs from design/animations", () => {
-    expect(source).toMatch(/import.*springs.*from.*design\/animations/);
-  });
-
-  it("contains springs.press for correct feedback pulse", () => {
-    expect(source).toMatch(/springs\.press/);
+  it("renders QuizOption with state prop for correct/wrong feedback", () => {
+    expect(source).toMatch(/optionState/);
+    expect(source).toMatch(/state={optionState}/);
   });
 
   it("does NOT import from design/haptics (haptics owned by QuizOption)", () => {
     expect(source).not.toMatch(/import.*from.*design\/haptics/);
+  });
+
+  it("does NOT render a separate correct feedback bubble (feedback is on the option card)", () => {
+    expect(source).not.toMatch(/correctFeedback/);
   });
 });
