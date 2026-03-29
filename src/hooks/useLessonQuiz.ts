@@ -31,6 +31,7 @@ export default function useLessonQuiz(
   dismissMidCelebrate: () => void;
   handleAnswer: (selectedOption: any, correct: boolean) => void;
   isComplete: boolean;
+  error: string | null;
   results: { correct: number; total: number; questions: QuizResultItem[] };
 } {
   const [questions, setQuestions] = useState<any[]>([]);
@@ -42,6 +43,7 @@ export default function useLessonQuiz(
   const [showMidCelebrate, setShowMidCelebrate] = useState(false);
   const [midShown, setMidShown] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const generatedRef = useRef(false);
   const questionStartRef = useRef<number>(Date.now());
 
@@ -53,7 +55,7 @@ export default function useLessonQuiz(
     const progress = { completedLessonIds, mastery };
     const qs = generateLessonQuestions(lesson, progress);
     if (!qs || qs.length === 0) {
-      setIsComplete(true);
+      setError('No questions could be generated for this lesson. Please try a different lesson or contact support.');
       return;
     }
     setQuestions(qs);
@@ -142,6 +144,7 @@ export default function useLessonQuiz(
     dismissMidCelebrate,
     handleAnswer,
     isComplete,
+    error,
     results: {
       correct: correctCount,
       total: quizResults.length,
