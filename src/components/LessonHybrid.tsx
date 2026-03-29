@@ -12,11 +12,6 @@ import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import useLessonHybrid, { type Stage } from "../hooks/useLessonHybrid";
 import { springs, durations } from "../design/animations";
-import {
-  TRANSITION_FADE_IN,
-  TRANSITION_FADE_OUT,
-  TRANSITION_FADE_IN_DELAY,
-} from "./onboarding/animations";
 
 // Exercise components
 import { ComprehensionExercise } from "./exercises/ComprehensionExercise";
@@ -48,17 +43,9 @@ const STAGE_LABELS: Record<Stage, string> = {
 function StageIndicator({ stage, colors }: { stage: Stage; colors: any }) {
   const label = STAGE_LABELS[stage] ?? "Learning";
 
-  const stageColors: Record<Stage, { text: string; bg: string }> = {
-    guided: { text: colors.primary, bg: colors.primarySoft },
-    buildup: { text: colors.accent, bg: colors.accentLight },
-    free: { text: colors.textMuted, bg: colors.bg },
-  };
-
-  const sc = stageColors[stage] ?? stageColors.guided;
-
   return (
-    <View style={[styles.stageBadge, { backgroundColor: sc.bg }]}>
-      <Text style={[styles.stageBadgeText, { color: sc.text }]}>{label}</Text>
+    <View style={[styles.stageBadge, { backgroundColor: colors.primarySoft }]}>
+      <Text style={[styles.stageBadgeText, { color: colors.primary }]}>{label}</Text>
     </View>
   );
 }
@@ -257,8 +244,8 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
       <View style={styles.exerciseArea}>
         <Animated.View
           key={hybrid.exerciseIndex}
-          entering={FadeIn.duration(TRANSITION_FADE_IN).delay(TRANSITION_FADE_IN_DELAY)}
-          exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+          entering={FadeIn.duration(durations.normal)}
+          exiting={FadeOut.duration(durations.fast)}
           style={styles.exerciseWrapper}
         >
           {renderExercise()}
@@ -310,15 +297,15 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   stageBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: 3,
-    borderRadius: radii.full,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   stageBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 0.6,
-    textTransform: "uppercase",
+    fontFamily: "Inter",
+    fontSize: 13,
+    fontWeight: "600",
+    letterSpacing: 0.4,
   },
   exerciseArea: {
     flex: 1,
