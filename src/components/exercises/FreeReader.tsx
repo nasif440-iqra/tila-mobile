@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { useAudioPlayer } from "expo-audio";
+import { hapticSuccess, hapticTap } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText, Button } from "../../design/components";
@@ -70,12 +70,12 @@ export function FreeReader({ exercise, onComplete }: Props) {
   }, [flowState, playAudio]);
 
   const handleReadItRight = useCallback(() => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    hapticSuccess();
     onComplete({ correct: true, targetId: exercise.targetId, selfAssessed: true });
   }, [onComplete, exercise.targetId]);
 
   const handleGotItNow = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     onComplete({
       correct: true,
       targetId: exercise.targetId,

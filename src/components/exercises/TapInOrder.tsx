@@ -8,7 +8,7 @@ import Animated, {
   FadeIn,
   FadeInDown,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { hapticSuccess, hapticError } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText } from "../../design/components";
@@ -122,7 +122,7 @@ export function TapInOrder({ exercise, onComplete }: Props) {
 
       if (index === tappedCount) {
         // Correct tap
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        hapticSuccess();
         const next = tappedCount + 1;
         setTappedCount(next);
 
@@ -134,7 +134,7 @@ export function TapInOrder({ exercise, onComplete }: Props) {
         }
       } else {
         // Wrong tap - shake
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        hapticError();
         shakeValues[index].value = withSequence(
           withTiming(-4, { duration: 50 }),
           withTiming(4, { duration: 50 }),

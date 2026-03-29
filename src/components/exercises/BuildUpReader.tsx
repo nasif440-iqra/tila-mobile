@@ -1,8 +1,8 @@
 import { useState, useCallback } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { useAudioPlayer } from "expo-audio";
+import { hapticTap } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, shadows } from "../../design/tokens";
 import { ArabicText, Button, HearButton } from "../../design/components";
@@ -85,7 +85,7 @@ export function BuildUpReader({ exercise, onComplete }: Props) {
   }, [audioPlayer]);
 
   const handleNext = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    hapticTap();
     if (isFullWord) {
       onComplete({ correct: true, targetId: segments[segments.length - 1]?.letterId });
     } else {
