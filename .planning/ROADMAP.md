@@ -116,8 +116,8 @@ Plans:
   4. Stats (lessons completed, letters mastered, streak) are presented with beautiful typography and clear hierarchy
 **Plans:** 2 plans
 Plans:
-- [ ] 06-01-PLAN.md — LetterMasteryGrid 5-state visuals + PhasePanel animated progress bars
-- [ ] 06-02-PLAN.md — StatsRow polish + progress.tsx staggered entrance animations
+- [x] 06-01-PLAN.md — LetterMasteryGrid 5-state visuals + PhasePanel animated progress bars
+- [x] 06-02-PLAN.md — StatsRow polish + progress.tsx staggered entrance animations
 **UI hint**: yes
 
 ### Phase 7: Loading & Error States
