@@ -52,7 +52,7 @@ const layoutStyles = StyleSheet.create({
   splashContent: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: SCREEN_HEIGHT * 0.15,
+    paddingTop: SCREEN_HEIGHT * 0.12,
   },
   centeredContent: {
     alignItems: "center",

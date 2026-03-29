@@ -3,7 +3,6 @@ import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated"
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
 import { typography, spacing, fontFamilies } from "../../../design/tokens";
-import { WarmGlow } from "../WarmGlow";
 import { BrandedLogo } from "../BrandedLogo";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import {
@@ -39,9 +38,9 @@ export function Welcome({ onNext }: { onNext: () => void }) {
       {/* Branded logo mark — larger for impact */}
       <Animated.View
         entering={FadeIn.delay(logoDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={{ marginBottom: spacing.xxl, zIndex: 1 }}
+        style={{ marginBottom: 20, zIndex: 1 }}
       >
-        <BrandedLogo width={180} height={240} />
+        <BrandedLogo width={140} height={186} />
       </Animated.View>
 
       {/* App name */}
@@ -80,28 +79,31 @@ export function Welcome({ onNext }: { onNext: () => void }) {
 
 const styles = StyleSheet.create({
   appName: {
-    fontSize: 44,
-    letterSpacing: 5.3,
+    fontSize: 36,
+    letterSpacing: 4,
     textAlign: "center",
-    lineHeight: 52,
+    lineHeight: 44,
   },
   brandMotto: {
-    fontSize: 11,
+    fontSize: 10,
     fontFamily: fontFamilies.bodySemiBold,
     letterSpacing: 2,
     textTransform: "uppercase",
     textAlign: "center",
     marginTop: spacing.sm,
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   tagline: {
     ...typography.body,
-    fontSize: 16,
-    lineHeight: 26,
+    fontSize: 15,
+    lineHeight: 22,
     textAlign: "center",
     maxWidth: 300,
   },
   fullWidthBtn: {
+    maxWidth: 280,
     width: "100%",
+    alignSelf: "center" as const,
+    paddingVertical: 14,
   },
 });
