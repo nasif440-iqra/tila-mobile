@@ -144,6 +144,16 @@ export const CLOSING_QUOTES = [
   "He who does not give up hope in His mercy is truly blessed.",
 ];
 
+// ─── Letter mastery celebration copy ────────────────────────────────────────
+
+export const LETTER_MASTERY_COPY = [
+  "MashaAllah! You've truly learned {letter}.",
+  "Alhamdulillah -- {letter} is now part of your reading.",
+  "SubhanAllah, {letter} is yours to keep.",
+  "{letter} is mastered. Your effort has paid off.",
+  "You can now read {letter} with confidence. MashaAllah.",
+];
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 export function pickCopy(arr) {
