@@ -3,12 +3,16 @@ import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
+  useDerivedValue,
   withSpring,
+  interpolateColor,
   SlideInDown,
   SlideOutUp,
 } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
+import { springs } from "../../design/animations";
+import { hapticSuccess } from "../../design/haptics";
 
 // ── Types ──
 
@@ -48,14 +52,20 @@ export function QuizProgress({
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
-    progressWidth.value = withSpring(progressPct, {
-      stiffness: 120,
-      damping: 20,
-    });
+    progressWidth.value = withSpring(progressPct, springs.gentle);
   }, [progressPct, progressWidth]);
+
+  const nearComplete = useDerivedValue(() =>
+    progressWidth.value > 85 ? 1 : 0
+  );
 
   const progressBarStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value}%`,
+    backgroundColor: interpolateColor(
+      nearComplete.value,
+      [0, 1],
+      [colors.primary, colors.accent]
+    ),
   }));
 
   // Streak banner detection
@@ -64,6 +74,7 @@ export function QuizProgress({
       streak > prevStreakRef.current &&
       STREAK_MILESTONES.includes(streak as 3 | 5 | 7)
     ) {
+      hapticSuccess();
       setBannerStreak(streak);
       const timer = setTimeout(() => setBannerStreak(null), 1500);
       return () => clearTimeout(timer);
@@ -108,7 +119,6 @@ export function QuizProgress({
           <Animated.View
             style={[
               styles.progressFill,
-              { backgroundColor: colors.primary },
               progressBarStyle,
             ]}
           />
@@ -140,13 +150,13 @@ const styles = StyleSheet.create({
   },
   progressTrack: {
     flex: 1,
-    height: 6,
-    borderRadius: 3,
+    height: 4,
+    borderRadius: 2,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    borderRadius: 3,
+    borderRadius: 2,
   },
   progressCounter: {
     ...typography.caption,
