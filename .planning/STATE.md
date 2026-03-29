@@ -59,6 +59,7 @@ Progress: [████████░░] 79%
 | Phase 03 P01 | 151 | 3 tasks | 5 files |
 | Phase 03 P02 | 216 | 2 tasks | 3 files |
 | Phase 04 P00 | 22 | 2 tasks | 6 files |
+| Phase 04 P01 | ~120 | 3 tasks | 9 files |
 | Phase 04 P03 | 152 | 2 tasks | 4 files |
 
 ## Accumulated Context
@@ -83,6 +84,8 @@ Recent decisions affecting current work:
 - [Phase 04]: Source-audit test pattern: read source as string + regex assertions instead of rendering
 - [Phase 04]: WarmGlow pulseMin/pulseMax tuned lower for letter cards (0.05/0.15) to keep intro subtle
 - [Phase 04]: Score-proportional celebration pattern: haptic tier + WarmGlow size + visual intensity scale with percentage
+- [Phase 04]: Stage badges use unified primarySoft/primary (removed per-stage color variation for consistency)
+- [Phase 04]: Exercise transitions use design system durations instead of onboarding animation constants
 
 ### Pending Todos
 
