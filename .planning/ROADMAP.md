@@ -84,7 +84,7 @@ Plans:
 **Plans:** 4 plans
 Plans:
 - [x] 04-00-PLAN.md — Wave 0: Test stubs for all 6 phase requirements (LES-01 through LES-06)
-- [ ] 04-01-PLAN.md — Exercise haptic migration + LessonHybrid spring/haptic migration + GuidedReveal WarmGlow + stage badges (D-11) + exercise fades (D-12)
+- [x] 04-01-PLAN.md — Exercise haptic migration + LessonHybrid spring/haptic migration + GuidedReveal WarmGlow + stage badges (D-11) + exercise fades (D-12)
 - [ ] 04-02-PLAN.md — Quiz polish: QuizProgress springs + color transition, QuizCelebration scale + haptic + copy, QuizQuestion correct pulse, WrongAnswerPanel encouragement
 - [x] 04-03-PLAN.md — LessonIntro WarmGlow + staggered scale entrance, LessonSummary score-proportional celebration + count-up color interpolation
 **UI hint**: yes
@@ -133,7 +133,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 1. Design Foundation & Transitions | 2/4 | Executing | - |
 | 2. Onboarding Wow Factor | 1/4 | In Progress|  |
 | 3. Home Screen | 2/2 | Checkpoint pending | - |
-| 4. Lesson Experience | 0/4 | Planned | - |
+| 4. Lesson Experience | 3/4 | Executing | - |
 | 5. Celebrations & Feedback | 0/TBD | Not started | - |
 | 6. Progress Screen | 0/TBD | Not started | - |
 | 7. Loading & Error States | 0/TBD | Not started | - |
