@@ -1,0 +1,93 @@
+<h2>Phase 3: Polish — Overview</h2>
+<p class="subtitle">Six areas of refinement to make the app feel cohesive and premium</p>
+
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #e74c3c;">
+    <h3 style="color: #e74c3c; margin: 0 0 8px;">1. Shadow Consistency</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">Add missing shadows to OptionCard, WrongAnswerPanel, LessonSummary content. Standardize shadow usage across all card-like elements.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">StartingPoint</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">WrongAnswerPanel</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonSummary</span>
+    </div>
+  </div>
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #3498db;">
+    <h3 style="color: #3498db; margin: 0 0 8px;">2. Spacing Refinement</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">Fix cramped StatsRow (gap sm→md, padding md→lg). Increase section header bottom margins. Tighten PhasePanel list spacing.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">StatsRow</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">progress.tsx</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">PhasePanel</span>
+    </div>
+  </div>
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #2ecc71;">
+    <h3 style="color: #2ecc71; margin: 0 0 8px;">3. Hard-coded Cleanup</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">Replace all hard-coded <code>9999</code> with <code>radii.full</code>. Replace proportional border-radius (width/2) with calculated values. Use tokens everywhere possible.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">HeroCard</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonGrid</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">PhasePanel</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonIntro</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonSummary</span>
+    </div>
+  </div>
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #f39c12;">
+    <h3 style="color: #f39c12; margin: 0 0 8px;">4. Border Weight Tokens</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">Add <code>borderWidths</code> tokens: thin (1), normal (1.5), thick (2). Apply consistently — interactive = thick, informational = normal, subtle = thin.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">tokens.ts</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">StartingPoint</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">QuizOption</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonGrid</span>
+    </div>
+  </div>
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #9b59b6;">
+    <h3 style="color: #9b59b6; margin: 0 0 8px;">5. Card Padding Uniformity</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">StatsRow cards use <code>md</code> (12px) while Card base uses <code>xl</code> (24px). Bring StatsRow up to <code>lg</code> (16px) for breathing room while respecting the tight 4-column layout.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">StatsRow</span>
+    </div>
+  </div>
+
+  <div style="background: #1a1a2e; border-radius: 12px; padding: 20px; border-left: 4px solid #1abc9c;">
+    <h3 style="color: #1abc9c; margin: 0 0 8px;">6. Visual Hierarchy Tweaks</h3>
+    <p style="color: #ccc; font-size: 14px; margin: 0;">Add subtle shadow to LessonSummary content area. Standardize LessonGrid completed node shadow (soft→card). Minor section gap adjustments.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonSummary</span>
+      <span style="background: #2a2a4a; color: #aaa; padding: 4px 8px; border-radius: 6px; font-size: 11px;">LessonGrid</span>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top: 32px; background: #1a1a2e; border-radius: 12px; padding: 20px; border: 1px solid #333;">
+  <h3 style="color: #e0d4c0; margin: 0 0 12px;">Scope Boundary</h3>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div>
+      <p style="color: #2ecc71; font-weight: 600; margin: 0 0 6px;">✓ IN SCOPE</p>
+      <ul style="color: #ccc; font-size: 13px; margin: 0; padding-left: 16px;">
+        <li>Shadow consistency across cards/panels</li>
+        <li>Spacing fixes (cramped → balanced)</li>
+        <li>Hard-coded values → tokens</li>
+        <li>Border weight standardization</li>
+        <li>Card padding uniformity</li>
+        <li>Minor hierarchy adjustments</li>
+      </ul>
+    </div>
+    <div>
+      <p style="color: #e74c3c; font-weight: 600; margin: 0 0 6px;">✗ NOT IN SCOPE</p>
+      <ul style="color: #ccc; font-size: 13px; margin: 0; padding-left: 16px;">
+        <li>New components (no LetterCircle component)</li>
+        <li>Animations or transitions (Phase 4)</li>
+        <li>Color or typography changes (Phase 2 done)</li>
+        <li>Layout or structural changes (Phase 1 done)</li>
+        <li>Lottie, skeletons, haptics (Phase 4)</li>
+      </ul>
+    </div>
+  </div>
+</div>

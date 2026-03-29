@@ -7,7 +7,7 @@ import Animated, {
   withTiming,
   FadeInDown,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { hapticSuccess, hapticError } from "../../design/haptics";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText, Button } from "../../design/components";
@@ -68,13 +68,13 @@ export function SpotTheBreak({ exercise, onComplete }: Props) {
       setSelected(index);
 
       if (index === correctIndex) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        hapticSuccess();
         setDone(true);
         setTimeout(() => {
           onComplete({ correct: true, targetId: breakerLetterId });
         }, 1200);
       } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        hapticError();
         shakeValues[index].value = withSequence(
           withTiming(-4, { duration: 50 }),
           withTiming(4, { duration: 50 }),
