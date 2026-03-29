@@ -83,7 +83,7 @@ Plans:
   5. All exercise types (guided reveal, tap-in-order, build-up reader, free reader) share a consistent polished look
 **Plans:** 4 plans
 Plans:
-- [ ] 04-00-PLAN.md — Wave 0: Test stubs for all 6 phase requirements (LES-01 through LES-06)
+- [x] 04-00-PLAN.md — Wave 0: Test stubs for all 6 phase requirements (LES-01 through LES-06)
 - [ ] 04-01-PLAN.md — Exercise haptic migration + LessonHybrid spring/haptic migration + GuidedReveal WarmGlow + stage badges (D-11) + exercise fades (D-12)
 - [ ] 04-02-PLAN.md — Quiz polish: QuizProgress springs + color transition, QuizCelebration scale + haptic + copy, QuizQuestion correct pulse, WrongAnswerPanel encouragement
 - [ ] 04-03-PLAN.md — LessonIntro WarmGlow + staggered scale entrance, LessonSummary score-proportional celebration + count-up color interpolation
