@@ -7,10 +7,11 @@ import Animated, {
   FadeIn,
   FadeOut,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
+import { hapticTap } from "../design/haptics";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import useLessonHybrid, { type Stage } from "../hooks/useLessonHybrid";
+import { springs, durations } from "../design/animations";
 import {
   TRANSITION_FADE_IN,
   TRANSITION_FADE_OUT,
@@ -96,10 +97,7 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
-    progressWidth.value = withSpring(hybrid.progress, {
-      stiffness: 120,
-      damping: 20,
-    });
+    progressWidth.value = withSpring(hybrid.progress, springs.gentle);
   }, [hybrid.progress]);
 
   const progressAnimatedStyle = useAnimatedStyle(() => ({
@@ -140,6 +138,7 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
   );
 
   const handleBack = useCallback(() => {
+    hapticTap();
     // Navigate away from lesson
     const { router } = require("expo-router");
     router.back();
