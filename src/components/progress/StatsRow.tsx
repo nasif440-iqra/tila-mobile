@@ -39,7 +39,13 @@ export default function StatsRow({
           <Text
             style={[
               typography.statNumber,
-              { color: colors.primary, textAlign: "center" },
+              {
+                fontFamily: fontFamilies.headingMedium,
+                color: stat.label === "Accuracy" && stat.value !== "\u2014" && parseInt(stat.value) > 80
+                  ? colors.accent
+                  : colors.primary,
+                textAlign: "center",
+              },
             ]}
           >
             {stat.value}
@@ -61,7 +67,8 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    padding: spacing.lg,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
     alignItems: "center",
   },
   statLabel: {
