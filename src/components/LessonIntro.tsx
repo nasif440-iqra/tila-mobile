@@ -1,12 +1,19 @@
 import { View, Text, StyleSheet } from "react-native";
-import { useCallback } from "react";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { useCallback, useEffect } from "react";
+import Animated, {
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+} from "react-native-reanimated";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import { ArabicText, Button, HearButton } from "../design/components";
 import { getLetter } from "../data/letters";
 import { getLetterAsset } from "../audio/player";
+import { WarmGlow } from "./onboarding/WarmGlow";
+import { springs, staggers } from "../design/animations";
 
 // ── Types ──
 
@@ -21,15 +28,29 @@ function LetterCard({
   letterId,
   audioType,
   isSmall,
+  index,
 }: {
   letterId: number;
   audioType: "sound" | "name";
   isSmall: boolean;
+  index: number;
 }) {
   const colors = useColors();
   const letter = getLetter(letterId);
   const audioSource = getLetterAsset(letterId, audioType);
   const player = useAudioPlayer(audioSource);
+
+  // Staggered scale entrance
+  const scale = useSharedValue(0.9);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      scale.value = withSpring(1, springs.gentle);
+    }, 150 + index * staggers.fast.delay);
+    return () => clearTimeout(timer);
+  }, []);
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   const handlePlay = useCallback(async () => {
     if (!player) return;
@@ -40,20 +61,29 @@ function LetterCard({
   if (!letter) return null;
 
   return (
-    <View style={styles.letterItem}>
-      <View
-        style={[
-          styles.letterCircle,
-          isSmall ? styles.letterCircleSmall : undefined,
-          { backgroundColor: colors.primarySoft },
-        ]}
-      >
-        <ArabicText
-          size={isSmall ? "large" : "display"}
-          color={colors.primaryDark}
+    <Animated.View style={[styles.letterItem, scaleStyle]}>
+      <View style={{ alignItems: "center", justifyContent: "center" }}>
+        <WarmGlow
+          size={isSmall ? 120 : 160}
+          animated
+          color="rgba(196,164,100,0.3)"
+          pulseMin={0.05}
+          pulseMax={0.15}
+        />
+        <View
+          style={[
+            styles.letterCircle,
+            isSmall ? styles.letterCircleSmall : undefined,
+            { backgroundColor: colors.primarySoft },
+          ]}
         >
-          {letter.letter}
-        </ArabicText>
+          <ArabicText
+            size={isSmall ? "large" : "display"}
+            color={colors.primaryDark}
+          >
+            {letter.letter}
+          </ArabicText>
+        </View>
       </View>
       <Text
         style={[
@@ -72,7 +102,7 @@ function LetterCard({
           />
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
@@ -118,12 +148,13 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
         {/* Letter cards with individual audio */}
         {letterIds.length > 0 && (
           <View style={styles.lettersRow}>
-            {letterIds.map((id: number) => (
+            {letterIds.map((id: number, idx: number) => (
               <LetterCard
                 key={id}
                 letterId={id}
                 audioType={audioType}
                 isSmall={isSmall}
+                index={idx}
               />
             ))}
           </View>
