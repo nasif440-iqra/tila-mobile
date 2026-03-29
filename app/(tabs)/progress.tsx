@@ -5,10 +5,17 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withDelay,
+} from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useColors } from "../../src/design/theme";
 import { typography, spacing } from "../../src/design/tokens";
+import { durations, easings, staggers } from "../../src/design/animations";
 import { useProgress } from "../../src/hooks/useProgress";
 import { LESSONS } from "../../src/data/lessons";
 import {
@@ -73,6 +80,45 @@ export default function ProgressScreen() {
     return { totalCorrect, totalAttempts, accuracy };
   }, [mastery.entities]);
 
+  // ── Staggered entrance animations ──
+  const statsOpacity = useSharedValue(0);
+  const statsTranslateY = useSharedValue(12);
+  const phasesOpacity = useSharedValue(0);
+  const phasesTranslateY = useSharedValue(12);
+  const masteryOpacity = useSharedValue(0);
+  const masteryTranslateY = useSharedValue(12);
+
+  useEffect(() => {
+    const timingConfig = { duration: durations.normal, easing: easings.contentReveal };
+
+    // Stats section (immediate)
+    statsOpacity.value = withTiming(1, timingConfig);
+    statsTranslateY.value = withTiming(0, timingConfig);
+
+    // Phases section (staggered)
+    phasesOpacity.value = withDelay(staggers.normal.delay, withTiming(1, timingConfig));
+    phasesTranslateY.value = withDelay(staggers.normal.delay, withTiming(0, timingConfig));
+
+    // Mastery section (more stagger)
+    masteryOpacity.value = withDelay(staggers.normal.delay * 2, withTiming(1, timingConfig));
+    masteryTranslateY.value = withDelay(staggers.normal.delay * 2, withTiming(0, timingConfig));
+  }, []);
+
+  const statsAnimStyle = useAnimatedStyle(() => ({
+    opacity: statsOpacity.value,
+    transform: [{ translateY: statsTranslateY.value }],
+  }));
+
+  const phasesAnimStyle = useAnimatedStyle(() => ({
+    opacity: phasesOpacity.value,
+    transform: [{ translateY: phasesTranslateY.value }],
+  }));
+
+  const masteryAnimStyle = useAnimatedStyle(() => ({
+    opacity: masteryOpacity.value,
+    transform: [{ translateY: masteryTranslateY.value }],
+  }));
+
   if (progress.loading) {
     return (
       <SafeAreaView
@@ -96,60 +142,65 @@ export default function ProgressScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Header ── */}
-        <Text style={[typography.pageTitle, { color: colors.brown, marginBottom: spacing.xl }]}>
-          Your Progress
-        </Text>
+        {/* ── Header + Stats ── */}
+        <Animated.View style={statsAnimStyle}>
+          <Text style={[typography.pageTitle, { color: colors.brown, marginBottom: spacing.xl }]}>
+            Your Progress
+          </Text>
 
-        {/* ── Stats Row ── */}
-        <StatsRow
-          learnedCount={learnedIds.length}
-          totalDone={totalDone}
-          totalLessons={totalLessons}
-          accuracy={stats.accuracy}
-          hasAttempts={stats.totalAttempts > 0}
-          currentPhase={currentLesson.phase}
-        />
+          <StatsRow
+            learnedCount={learnedIds.length}
+            totalDone={totalDone}
+            totalLessons={totalLessons}
+            accuracy={stats.accuracy}
+            hasAttempts={stats.totalAttempts > 0}
+            currentPhase={currentLesson.phase}
+          />
+        </Animated.View>
 
         {/* ── Phase Progress ── */}
-        <Text
-          style={[
-            typography.sectionHeader,
-            { color: colors.brownLight, marginTop: spacing.xxxxl, marginBottom: spacing.lg },
-          ]}
-        >
-          Phase Progress
-        </Text>
+        <Animated.View style={phasesAnimStyle}>
+          <Text
+            style={[
+              typography.sectionHeader,
+              { color: colors.brownLight, marginTop: spacing.xxxxl, marginBottom: spacing.lg },
+            ]}
+          >
+            Phase Progress
+          </Text>
 
-        {PHASES.map((phase) => (
-          <View key={phase.key} style={{ marginBottom: spacing.md }}>
-            <PhasePanel
-              label={phase.label}
-              done={phaseCounts[phase.done] as number}
-              total={phaseCounts[phase.total] as number}
-            />
-          </View>
-        ))}
+          {PHASES.map((phase) => (
+            <View key={phase.key} style={{ marginBottom: spacing.md }}>
+              <PhasePanel
+                label={phase.label}
+                done={phaseCounts[phase.done] as number}
+                total={phaseCounts[phase.total] as number}
+              />
+            </View>
+          ))}
+        </Animated.View>
 
         {/* ── Letter Mastery Grid ── */}
-        <Text
-          style={[
-            typography.sectionHeader,
-            {
-              color: colors.brownLight,
-              marginTop: spacing.xxxxl,
-              marginBottom: spacing.lg,
-            },
-          ]}
-        >
-          Letter Mastery
-        </Text>
+        <Animated.View style={masteryAnimStyle}>
+          <Text
+            style={[
+              typography.sectionHeader,
+              {
+                color: colors.brownLight,
+                marginTop: spacing.xxxxl,
+                marginBottom: spacing.lg,
+              },
+            ]}
+          >
+            Letter Mastery
+          </Text>
 
-        <LetterMasteryGrid
-          entities={mastery.entities ?? {}}
-          learnedIds={learnedIds}
-          today={today}
-        />
+          <LetterMasteryGrid
+            entities={mastery.entities ?? {}}
+            learnedIds={learnedIds}
+            today={today}
+          />
+        </Animated.View>
 
         {/* Bottom padding for tab bar */}
         <View style={{ height: spacing.xxxl }} />
