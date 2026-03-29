@@ -1,7 +1,7 @@
 # Tila Launch Roadmap: Trust → Habit → Money → Polish
 
 **Date:** 2026-03-29
-**Status:** Approved (v2 — replaces original 3-track design)
+**Status:** Final (v3 — frozen, ready for execution)
 **Goal:** Get to $10k MRR. Not "make the app nicer."
 **Deferred:** Curriculum expansion (Phase 5+), badges, streak flames, adaptive engine, weekly summaries, interleaved review injection, React.memo sweep, and all other second-order optimizations.
 
@@ -220,7 +220,7 @@ Wire the daily return loop. Minimum viable retention.
 
 Ship the paywall. This is where the app becomes a business.
 
-**C1-C2 start during Phase B** — RevenueCat needs an Expo development build and EAS-based testing. This is native module work with calendar time. Starting early prevents a bottleneck.
+**C1-C2 start during Phase B — this is a calendar-risk item, not just a coding task.** RevenueCat's Expo SDK (`react-native-purchases`) requires a development build — IAP does not work in Expo Go. EAS build queues, App Store Connect product setup, sandbox testing accounts, and Google Play Console configuration all take real calendar days. If you wait until "Phase C" to start, you create a multi-day bottleneck where paywall code is ready but you can't test it. Start C1-C2 as soon as Phase A is in progress.
 
 ### Entitlement Matrix
 
@@ -229,15 +229,15 @@ This is the single source of truth for what's free vs. premium.
 | Feature | Free (no account) | Trial (7 days) | Premium | Expired (was premium) |
 |---------|-------------------|-----------------|---------|----------------------|
 | Onboarding (9 steps) | Yes | Yes | Yes | Yes |
-| Lessons 1-6 | Yes | Yes | Yes | Yes |
-| Lessons 7-106 | No | Yes | Yes | No |
+| Lessons 1-7 | Yes | Yes | Yes | Yes |
+| Lessons 8-106 | No | Yes | Yes | No |
 | Daily goal display | Yes | Yes | Yes | Yes |
 | Goal celebration | Yes | Yes | Yes | Yes |
 | Streak tracking | Yes | Yes | Yes | Yes |
-| Wrong-answer teaching (lessons 1-6) | Yes | Yes | Yes | Yes |
-| Wrong-answer teaching (lessons 7+) | N/A | Yes | Yes | N/A |
-| Review of letters from lessons 1-6 | Yes | Yes | Yes | Yes |
-| Review of premium letters (lessons 7+) | No | Yes | Yes | **Yes** |
+| Wrong-answer teaching (lessons 1-7) | Yes | Yes | Yes | Yes |
+| Wrong-answer teaching (lessons 8+) | N/A | Yes | Yes | N/A |
+| Review of letters from lessons 1-7 | Yes | Yes | Yes | Yes |
+| Review of premium letters (lessons 8+) | No | Yes | Yes | **Yes** |
 | Review counts toward streak | Yes | Yes | Yes | Yes |
 | Post-lesson review prompt | Yes | Yes | Yes | Yes |
 | Micro-review sessions | Yes | Yes | Yes | Yes (free letters only unless premium letters earned during trial/sub) |
@@ -245,7 +245,7 @@ This is the single source of truth for what's free vs. premium.
 **Key entitlement decisions:**
 - **Premium letters earned during trial/subscription are reviewable after expiry.** The user already learned them. Blocking review would feel punitive and cause skill regression — bad for brand and re-conversion. They can review, but they can't start new lessons.
 - **Streak tracking is always free.** Streaks drive daily return. Gating streaks behind premium would kill the retention loop that makes people want to subscribe.
-- **Wrong-answer teaching is free for lessons 1-6.** The teaching quality is part of what convinces users to subscribe — they need to feel the difference.
+- **Wrong-answer teaching is free for lessons 1-7.** The teaching quality is part of what convinces users to subscribe — they need to feel the difference.
 - **Goal celebration is always free.** Same reason as streaks — it's the daily reward moment.
 
 ### C1: RevenueCat Integration
@@ -273,23 +273,24 @@ This is the single source of truth for what's free vs. premium.
    - `isPremium(): boolean` — checks RevenueCat entitlement status
    - `isTrialing(): boolean` — active trial
    - `trialDaysRemaining(): number` — for countdown display
-   - `canAccessLesson(lessonId: number): boolean` — lessons 1-6 always true, 7+ requires premium/trial
+   - `canAccessLesson(lessonId: number): boolean` — lessons 1-7 always true, 8+ requires premium/trial
    - `canReviewLetter(letterId: number, learnedDuringPremium: boolean): boolean` — always true if letter was learned
 2. Create `EntitlementProvider` React Context that wraps the app (alongside Theme and Database)
-3. Add `premium_letters_learned TEXT` (JSON array) to user_profile — tracks which letters were accessed during premium/trial, so review remains available after expiry
-4. Gate lesson navigation: `app/lesson/[id].tsx` checks `canAccessLesson()` before entering, redirects to paywall if not entitled
+3. Create `premium_letter_access` table: `entity_key TEXT PRIMARY KEY, first_accessed_at TEXT, access_tier TEXT CHECK(access_tier IN ('free','trial','premium'))`. When a user completes a lesson during trial/premium, record each taught letter's entity key. This is cleaner than a JSON blob in user_profile — survives sync, multi-device, and analytics queries without parsing.
+4. `canReviewLetter()` checks: is entity_key in `premium_letter_access`? If yes, review is always allowed regardless of current entitlement status.
+5. Gate lesson navigation: `app/lesson/[id].tsx` checks `canAccessLesson()` before entering, redirects to paywall if not entitled
 
 **Files:** New `src/monetization/entitlements.ts`, `src/monetization/provider.tsx`, `app/lesson/[id].tsx`, `app/_layout.tsx`, `src/db/schema.ts`
 
-### C3: Paywall Trigger — Mini-Checkpoint After Lesson 6
+### C3: Paywall Trigger — After Lesson 7 (Family Summary)
 **What:** The moment the user transitions from free to "time to subscribe." This must feel like a real milestone, not an arbitrary wall.
 
 **Fix:**
-1. After completing lesson 6 (Ba · Ta · Tha family group), show a mini-celebration: "You just learned your first letter family — Ba, Ta, and Tha. You can tell them apart by their dots."
+1. After completing lesson 7 ("Ba · Ta · Tha — the dot family, all three together"), show a mini-celebration: "You just learned your first letter family. You can tell Ba, Ta, and Tha apart by counting their dots."
 2. Then transition to trial offer: "Ready to learn the rest of the alphabet? Start your free 7-day trial."
-3. Lesson 6 is chosen because it completes the first family group (lessons 1-7 teach Alif + Ba/Ta/Tha) and ends with the family summary lesson. The user has genuinely learned something — this isn't an arbitrary number.
-4. If user declines: return to home. Lessons 1-6 remain accessible. Tapping lesson 7+ shows paywall.
-5. If user hasn't completed lesson 6 but tries to access lesson 7+ directly (e.g., from review or deep link): show paywall immediately.
+3. Lesson 7 is the family summary lesson — the emotional payoff where the user proves they can distinguish all three letters. This is the real milestone, not an arbitrary number. Lessons 1-6 build toward it; lesson 7 is the proof.
+4. If user declines: return to home. Lessons 1-7 remain accessible. Tapping lesson 8+ shows paywall.
+5. If user hasn't completed lesson 7 but tries to access lesson 8+ directly (e.g., from review or deep link): show paywall immediately.
 
 **Files:** `app/lesson/[id].tsx`, new `src/components/paywall/TrialOffer.tsx`
 
@@ -319,7 +320,7 @@ This is the single source of truth for what's free vs. premium.
 1. **Day 1-4:** No interruption. User has full access. Small subtle badge in home header: "Trial — 5 days left"
 2. **Day 5-6:** Gentle in-app banner on home screen: "Your trial ends in X days. Subscribe to keep learning." Tapping opens paywall.
 3. **Day 7 (expiry):** RevenueCat handles the billing transition. If user didn't cancel and chose a plan, subscription auto-starts (standard App Store behavior). If user cancelled during trial, entitlement revokes.
-4. **Post-expiry:** User can still open app, see full progress, access lessons 1-6, review any letters they learned during trial. Tapping lesson 7+ shows paywall. Home screen shows subtle "Upgrade to continue" card where hero card was.
+4. **Post-expiry:** User can still open app, see full progress, access lessons 1-7, review any letters they learned during trial. Tapping lesson 8+ shows paywall. Home screen shows subtle "Upgrade to continue" card where hero card was.
 5. **Trial days remaining:** Read from RevenueCat's `CustomerInfo.entitlements` — don't compute locally.
 
 **Files:** `app/(tabs)/index.tsx`, `src/monetization/entitlements.ts`
@@ -369,16 +370,35 @@ This is the single source of truth for what's free vs. premium.
 ### Phase C Exit Criteria
 - [ ] RevenueCat SDK installed and configured in Expo development build
 - [ ] Sandbox purchase completes successfully on iOS and Android
-- [ ] Lesson 7+ blocked for free users, accessible for trial/premium users
-- [ ] Paywall shows after lesson 6 completion with mini-celebration
+- [ ] Lesson 8+ blocked for free users, accessible for trial/premium users
+- [ ] Paywall shows after lesson 7 completion with mini-celebration
 - [ ] Paywall shows when free user taps locked lesson
 - [ ] Annual plan preselected, monthly visible, both with 7-day trial
 - [ ] Trial countdown badge appears on home screen during trial
-- [ ] Post-expiry: user can review learned letters but can't start lesson 7+
+- [ ] Post-expiry: user can review learned letters but can't start lesson 8+
 - [ ] Restore purchases works (tested: purchase on device A, restore on device B in sandbox)
 - [ ] All C6 analytics events firing and visible in PostHog
 - [ ] Scholarship email link works (opens compose with correct subject)
 - [ ] `paywall_shown` → `trial_started` → `subscription_started` funnel visible in PostHog
+
+### Phase C Decision Thresholds
+
+These are the numbers that tell you if the business is working. Check after 500+ paywall impressions.
+
+| Metric | Healthy | Investigate | Broken |
+|--------|---------|-------------|--------|
+| `paywall_shown` → `trial_started` | >25% | 15-25% | <15% |
+| `trial_started` → `subscription_started` | >40% | 25-40% | <25% |
+| `paywall_shown` → `paywall_dismissed` (no action) | <50% | 50-70% | >70% |
+| `review_prompt_shown` → `review_prompt_accepted` | >30% | 15-30% | <15% |
+| Annual vs monthly split (of conversions) | >60% annual | 40-60% | <40% annual |
+
+**What to do when a metric is broken:**
+- **Low paywall → trial:** The paywall copy, design, or timing is wrong. Test different value messaging (JTBD framing, not feature lists). Consider moving the trigger earlier or later.
+- **Low trial → subscription:** The product isn't proving enough value during the 7-day window. Check: are trial users completing lessons? Are they hitting the review loop? Is the habit forming?
+- **High paywall dismissal:** Users aren't convinced at all. Either the free tier is too generous (they don't feel they need more) or the premium pitch is too weak.
+- **Low review prompt acceptance:** The "quick review" value prop isn't landing. Test different copy, or surface review differently (e.g., inline on home screen instead of post-lesson).
+- **Low annual share:** The annual savings aren't visible enough, or the monthly price feels acceptable. Make the annual discount more prominent.
 
 ---
 
