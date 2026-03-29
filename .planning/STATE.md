@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-03-28)
 Phase: 07
 Plan: Not started
 Status: Executing Phase 07
-Last activity: 2026-03-29
+Last activity: 2026-03-29 - Completed quick task 260329-fav: Refine first onboarding welcome screen to match web reference
 
 Progress: [█████████░] 90%
 
@@ -107,6 +107,12 @@ None yet.
 
 - Research flag: Lottie color theming at runtime has limited capability (affects Phase 5 celebrations)
 - Skia shader effects for Arabic calligraphy glow deferred to v2 (VIS requirements)
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260329-fav | Refine first onboarding welcome screen to match web reference | 2026-03-29 | 77b5ac3 | [260329-fav-refine-first-onboarding-welcome-screen-t](./quick/260329-fav-refine-first-onboarding-welcome-screen-t/) |
 
 ## Session Continuity
 
