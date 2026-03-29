@@ -71,8 +71,8 @@ export const fontFamilies = {
 export const typography = {
   arabicDisplay: {
     fontFamily: fontFamilies.arabicRegular,
-    fontSize: 48,
-    lineHeight: 72,
+    fontSize: 72,
+    lineHeight: 100,
   },
   arabicLarge: {
     fontFamily: fontFamilies.arabicRegular,
@@ -191,29 +191,29 @@ export const shadows = {
   card: {
     shadowColor: "#163323",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.12,
     shadowRadius: 20,
-    elevation: 3,
+    elevation: 4,
   },
   cardLifted: {
     shadowColor: "#163323",
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.14,
     shadowRadius: 32,
-    elevation: 5,
+    elevation: 6,
   },
   soft: {
     shadowColor: "#163323",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.22,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
   },
   hero: {
     shadowColor: "#163323",
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.12,
     shadowRadius: 40,
-    elevation: 6,
+    elevation: 8,
   },
 } as const;

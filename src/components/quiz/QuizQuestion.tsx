@@ -1,7 +1,8 @@
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { useColors } from "../../design/theme";
-import { typography, spacing } from "../../design/tokens";
+import { typography, spacing, radii } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
+import { WarmGlow } from "../onboarding/WarmGlow";
 
 const OPTIONS_GRID_MAX_WIDTH = 400;
 
@@ -14,6 +15,54 @@ interface QuizQuestionProps {
   isCorrect: boolean;
   onSelect: (optionId: number) => void;
   onPlayAudio: () => void | Promise<void>;
+}
+
+// ── Letter circle prompt (shared between letter-to-sound and letter-to-name) ──
+
+function LetterPrompt({
+  prompt,
+  subtext,
+  children,
+}: {
+  prompt: string;
+  subtext?: string;
+  children?: React.ReactNode;
+}) {
+  const colors = useColors();
+
+  return (
+    <View style={styles.promptCenter}>
+      {/* Glow + circle container */}
+      <View style={styles.letterCircleWrapper}>
+        <WarmGlow
+          size={180}
+          animated
+          color="rgba(196,164,100,0.3)"
+          pulseMin={0.1}
+          pulseMax={0.3}
+        />
+        <View
+          style={[
+            styles.letterCircle,
+            {
+              backgroundColor: colors.primarySoft,
+              borderColor: "rgba(255, 255, 255, 0.8)",
+            },
+          ]}
+        >
+          <ArabicText size="display" color={colors.primaryDark}>
+            {prompt}
+          </ArabicText>
+        </View>
+      </View>
+      {subtext && (
+        <Text style={[styles.promptSubtext, { color: colors.textSoft }]}>
+          {subtext}
+        </Text>
+      )}
+      {children}
+    </View>
+  );
 }
 
 // ── Component ──
@@ -62,19 +111,12 @@ export function QuizQuestion({
         </View>
       )}
 
-      {/* Letter to sound: show large Arabic letter + hear button */}
+      {/* Letter to sound: show large Arabic letter in circle + hear button */}
       {isLetterToSound && (
-        <View style={styles.promptCenter}>
-          <ArabicText size="display" color={colors.text}>
-            {question.prompt}
-          </ArabicText>
-          {question.promptSubtext && (
-            <Text
-              style={[styles.promptSubtext, { color: colors.textSoft }]}
-            >
-              {question.promptSubtext}
-            </Text>
-          )}
+        <LetterPrompt
+          prompt={question.prompt}
+          subtext={question.promptSubtext}
+        >
           <View style={{ marginTop: spacing.sm }}>
             <HearButton
               onPlay={onPlayAudio}
@@ -82,23 +124,15 @@ export function QuizQuestion({
               accessibilityLabel="Hear this letter"
             />
           </View>
-        </View>
+        </LetterPrompt>
       )}
 
-      {/* Letter to name: show large Arabic letter + prompt */}
+      {/* Letter to name: show large Arabic letter in circle + prompt */}
       {isLetterToName && (
-        <View style={styles.promptCenter}>
-          <ArabicText size="display" color={colors.text}>
-            {question.prompt}
-          </ArabicText>
-          {question.promptSubtext && (
-            <Text
-              style={[styles.promptSubtext, { color: colors.textSoft }]}
-            >
-              {question.promptSubtext}
-            </Text>
-          )}
-        </View>
+        <LetterPrompt
+          prompt={question.prompt}
+          subtext={question.promptSubtext}
+        />
       )}
 
       {/* Visual / default question: show prompt text */}
@@ -177,6 +211,19 @@ const styles = StyleSheet.create({
   replayText: {
     ...typography.bodySmall,
     fontWeight: "600",
+  },
+  letterCircleWrapper: {
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  letterCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
   },
   optionsGrid: {
     flexDirection: "row",

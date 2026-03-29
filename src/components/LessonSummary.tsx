@@ -12,11 +12,10 @@ import Animated, {
   runOnJS,
   interpolateColor,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii, shadows, fontFamilies } from "../design/tokens";
-import { Button } from "../design/components";
+import { Button, WarmGradient } from "../design/components";
 import { getSFXAsset } from "../audio/player";
 import {
   getCompletionTier,
@@ -133,12 +132,7 @@ export function LessonSummary({
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Warm ambient gradient */}
-      <LinearGradient
-        colors={[colors.bgWarm, "transparent"]}
-        locations={[0, 1]}
-        style={styles.ambientGradient}
-        pointerEvents="none"
-      />
+      <WarmGradient color={colors.bgWarm} height={300} />
 
       <Animated.View entering={FadeIn.duration(500)} style={[styles.content, { backgroundColor: colors.bgCard }]}>
         {/* 1. Result icon with score-proportional WarmGlow */}
@@ -262,13 +256,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.xxl,
-  },
-  ambientGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
   },
   content: {
     width: "100%",

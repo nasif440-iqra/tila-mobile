@@ -9,6 +9,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useColors } from "../design/theme";
 import { typography, spacing } from "../design/tokens";
+import { WarmGradient } from "../design/components";
 import {
   playCorrect,
   playWrong,
@@ -199,6 +200,9 @@ export function LessonQuiz({
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Warm ambient gradient */}
+      <WarmGradient color={colors.bgWarm} height={280} />
+
       {/* Wrong answer red flash overlay */}
       <Animated.View
         style={[

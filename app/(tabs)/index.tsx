@@ -12,11 +12,11 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useColors } from "../../src/design/theme";
 import { spacing, typography } from "../../src/design/tokens";
 import { durations, easings } from "../../src/design/animations";
+import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { LESSONS } from "../../src/data/lessons";
@@ -107,12 +107,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
       {/* Warm gradient ambient layer */}
-      <LinearGradient
-        colors={[colors.bgWarm, "transparent"]}
-        locations={[0, 1]}
-        style={styles.ambientGradient}
-        pointerEvents="none"
-      />
+      <WarmGradient color={colors.bgWarm} height={300} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -160,14 +155,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  ambientGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 300,
-    zIndex: 0,
   },
   loadingContainer: {
     flex: 1,

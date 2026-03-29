@@ -8,11 +8,10 @@ import Animated, {
   withDelay,
   withTiming,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAudioPlayer } from "expo-audio";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii, shadows, borderWidths } from "../design/tokens";
-import { ArabicText, Button, HearButton } from "../design/components";
+import { ArabicText, Button, HearButton, WarmGradient } from "../design/components";
 import { getLetter } from "../data/letters";
 import { getLetterAsset } from "../audio/player";
 import { WarmGlow } from "./onboarding/WarmGlow";
@@ -141,12 +140,7 @@ export function LessonIntro({ lesson, onStart }: LessonIntroProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Warm ambient gradient */}
-      <LinearGradient
-        colors={[colors.bgWarm, "transparent"]}
-        locations={[0, 1]}
-        style={styles.ambientGradient}
-        pointerEvents="none"
-      />
+      <WarmGradient color={colors.bgWarm} height={280} />
 
       {/* Header area */}
       <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
@@ -223,13 +217,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxxl,
     paddingBottom: spacing.xxl,
-  },
-  ambientGradient: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 280,
   },
   header: {
     alignItems: "center",
