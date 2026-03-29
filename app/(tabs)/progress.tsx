@@ -15,11 +15,11 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useColors } from "../../src/design/theme";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
+import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useDatabase } from "../../src/db/provider";
 import { resetProgress } from "../../src/engine/progress";
@@ -191,12 +191,7 @@ export default function ProgressScreen() {
       style={[styles.container, { backgroundColor: colors.bg }]}
     >
       {/* Warm gradient ambient layer */}
-      <LinearGradient
-        colors={[colors.bgWarm, "transparent"]}
-        locations={[0, 1]}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, height: 300, zIndex: 0 }}
-        pointerEvents="none"
-      />
+      <WarmGradient color={colors.bgWarm} height={300} />
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}

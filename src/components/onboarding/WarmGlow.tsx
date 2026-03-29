@@ -8,7 +8,6 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
-import { LinearGradient } from "expo-linear-gradient";
 
 interface WarmGlowProps {
   size?: number;
@@ -19,7 +18,63 @@ interface WarmGlowProps {
   pulseMax?: number;
 }
 
-// Internal: static variant -- no Reanimated hooks
+/**
+ * Radial glow effect using concentric View layers.
+ * Replaces the previous LinearGradient-based implementation which crashed
+ * on-device with "Unimplemented component: ViewManagerAdapter_ExpoLinearGradient".
+ */
+
+function parseColor(color: string): { r: number; g: number; b: number } {
+  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+  if (match) {
+    return { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]) };
+  }
+  // Default warm gold
+  return { r: 196, g: 164, b: 100 };
+}
+
+// Concentric rings that simulate a radial gradient
+function GlowLayers({
+  size,
+  opacity,
+  color,
+}: {
+  size: number;
+  opacity: number;
+  color: string;
+}) {
+  const { r, g, b } = parseColor(color);
+
+  // 4 concentric layers: inner (most opaque) → outer (fading)
+  const layers = [
+    { scale: 0.35, opacityMul: 1.0 },
+    { scale: 0.55, opacityMul: 0.6 },
+    { scale: 0.75, opacityMul: 0.3 },
+    { scale: 1.0, opacityMul: 0.1 },
+  ];
+
+  return (
+    <>
+      {layers.map((layer, i) => {
+        const layerSize = size * layer.scale;
+        return (
+          <View
+            key={i}
+            style={{
+              position: "absolute",
+              width: layerSize,
+              height: layerSize,
+              borderRadius: layerSize / 2,
+              backgroundColor: `rgba(${r}, ${g}, ${b}, ${opacity * layer.opacityMul})`,
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
+// Internal: static variant
 function StaticWarmGlow({
   size,
   opacity,
@@ -27,7 +82,7 @@ function StaticWarmGlow({
 }: {
   size: number;
   opacity: number;
-  color?: string;
+  color: string;
 }) {
   return (
     <View
@@ -35,31 +90,16 @@ function StaticWarmGlow({
         position: "absolute",
         width: size,
         height: size,
-        borderRadius: size / 2,
-        overflow: "hidden",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <LinearGradient
-        colors={[
-          color ?? `rgba(196, 164, 100, ${opacity})`,
-          color ? color.replace(/[\d.]+\)$/, `${opacity * 0.4})`) : `rgba(196, 164, 100, ${opacity * 0.4})`,
-          "transparent",
-        ]}
-        locations={[0, 0.5, 0.85]}
-        style={{
-          position: "absolute",
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-        }}
-        start={{ x: 0.5, y: 0.5 }}
-        end={{ x: 1, y: 1 }}
-      />
+      <GlowLayers size={size} opacity={opacity} color={color} />
     </View>
   );
 }
 
-// Internal: animated variant -- uses Reanimated hooks + breathing scale
+// Internal: animated variant with breathing scale + opacity
 function AnimatedWarmGlow({
   size,
   color,
@@ -67,7 +107,7 @@ function AnimatedWarmGlow({
   pulseMax,
 }: {
   size: number;
-  color?: string;
+  color: string;
   pulseMin: number;
   pulseMax: number;
 }) {
@@ -119,37 +159,23 @@ function AnimatedWarmGlow({
           position: "absolute",
           width: size,
           height: size,
-          borderRadius: size / 2,
-          overflow: "hidden",
+          alignItems: "center",
+          justifyContent: "center",
         },
         animStyle,
       ]}
     >
-      <LinearGradient
-        colors={[
-          color ?? `rgba(196, 164, 100, ${midOpacity * 2.5})`,
-          color ? color.replace(/[\d.]+\)$/, `${midOpacity * 1.2})`) : `rgba(196, 164, 100, ${midOpacity * 1.2})`,
-          "transparent",
-        ]}
-        locations={[0, 0.45, 0.8]}
-        style={{
-          width: size,
-          height: size,
-          borderRadius: size / 2,
-        }}
-        start={{ x: 0.5, y: 0.5 }}
-        end={{ x: 1, y: 1 }}
-      />
+      <GlowLayers size={size} opacity={midOpacity * 2.5} color={color} />
     </Animated.View>
   );
 }
 
-// Public API -- thin wrapper that delegates based on animated prop
+// Public API
 export function WarmGlow({
   size = 340,
   opacity = 0.12,
   animated = false,
-  color,
+  color = "rgba(196, 164, 100, 0.3)",
   pulseMin = 0.08,
   pulseMax = 0.25,
 }: WarmGlowProps) {
