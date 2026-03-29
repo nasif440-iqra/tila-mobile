@@ -52,10 +52,10 @@ Requirements for UI overhaul v1. Each maps to roadmap phases.
 
 ### Progress Screen
 
-- [ ] **PROG-01**: Progress screen feels informative and motivating, not just a data dump
+- [x] **PROG-01**: Progress screen feels informative and motivating, not just a data dump
 - [ ] **PROG-02**: Letter mastery grid is visually clear with distinct states
 - [ ] **PROG-03**: Phase progress indicators are polished with smooth progress bars
-- [ ] **PROG-04**: Stats are presented beautifully with clear hierarchy
+- [x] **PROG-04**: Stats are presented beautifully with clear hierarchy
 
 ### Loading & Error States
 
@@ -137,10 +137,10 @@ Explicitly excluded. Documented to prevent scope creep.
 | CEL-03 | Phase 5 | Complete |
 | CEL-04 | Phase 5 | Complete |
 | CEL-05 | Phase 5 | Pending |
-| PROG-01 | Phase 6 | Pending |
+| PROG-01 | Phase 6 | Complete |
 | PROG-02 | Phase 6 | Pending |
 | PROG-03 | Phase 6 | Pending |
-| PROG-04 | Phase 6 | Pending |
+| PROG-04 | Phase 6 | Complete |
 | STATE-01 | Phase 7 | Pending |
 | STATE-02 | Phase 7 | Pending |
 | STATE-03 | Phase 7 | Pending |
