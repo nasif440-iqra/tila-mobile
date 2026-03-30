@@ -37,10 +37,10 @@ export function Welcome({ onNext }: { onNext: () => void }) {
     >
       {/* Branded logo mark — larger for impact */}
       <Animated.View
-        entering={FadeIn.delay(logoDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={{ marginBottom: 20, zIndex: 1 }}
+        entering={FadeInDown.delay(logoDelay).duration(SPLASH_STAGGER_DURATION)}
+        style={{ marginBottom: -20, zIndex: 1 }}
       >
-        <BrandedLogo width={140} height={186} />
+        <BrandedLogo width={320} height={426} />
       </Animated.View>
 
       {/* App name */}
@@ -79,15 +79,15 @@ export function Welcome({ onNext }: { onNext: () => void }) {
 
 const styles = StyleSheet.create({
   appName: {
-    fontSize: 36,
-    letterSpacing: 4,
+    fontSize: 48,
+    letterSpacing: 5,
     textAlign: "center",
-    lineHeight: 44,
+    lineHeight: 56,
   },
   brandMotto: {
-    fontSize: 10,
+    fontSize: 12,
     fontFamily: fontFamilies.bodySemiBold,
-    letterSpacing: 2,
+    letterSpacing: 2.5,
     textTransform: "uppercase",
     textAlign: "center",
     marginTop: spacing.sm,
@@ -95,8 +95,8 @@ const styles = StyleSheet.create({
   },
   tagline: {
     ...typography.body,
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 18,
+    lineHeight: 26,
     textAlign: "center",
     maxWidth: 300,
   },

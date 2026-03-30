@@ -35,13 +35,13 @@ export function ProgressBar({
 const progressStyles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    gap: 4,
+    gap: 3,
     width: "100%",
   },
   track: {
     flex: 1,
-    height: 4,
-    borderRadius: 2,
+    height: 2.5,
+    borderRadius: 1.5,
     overflow: "hidden",
   },
   fill: {

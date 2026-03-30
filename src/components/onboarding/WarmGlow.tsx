@@ -8,6 +8,7 @@ import Animated, {
   withTiming,
   Easing,
 } from "react-native-reanimated";
+import Svg, { Defs, RadialGradient, Stop, Rect } from "react-native-svg";
 
 interface WarmGlowProps {
   size?: number;
@@ -19,22 +20,26 @@ interface WarmGlowProps {
 }
 
 /**
- * Radial glow effect using concentric View layers.
- * Replaces the previous LinearGradient-based implementation which crashed
- * on-device with "Unimplemented component: ViewManagerAdapter_ExpoLinearGradient".
+ * Radial glow effect using SVG RadialGradient for smooth falloff.
+ * Replaces the concentric-ring View approach which created visible "staircase" banding.
  */
 
-function parseColor(color: string): { r: number; g: number; b: number } {
-  const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-  if (match) {
-    return { r: parseInt(match[1]), g: parseInt(match[2]), b: parseInt(match[3]) };
+function parseColor(color: string): { r: number; g: number; b: number; a: number } {
+  const rgbaMatch = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (rgbaMatch) {
+    return {
+      r: parseInt(rgbaMatch[1]),
+      g: parseInt(rgbaMatch[2]),
+      b: parseInt(rgbaMatch[3]),
+      a: rgbaMatch[4] ? parseFloat(rgbaMatch[4]) : 1,
+    };
   }
   // Default warm gold
-  return { r: 196, g: 164, b: 100 };
+  return { r: 196, g: 164, b: 100, a: 0.3 };
 }
 
-// Concentric rings that simulate a radial gradient
-function GlowLayers({
+// SVG glow with true radial gradient — smooth falloff matching web
+function GlowSvg({
   size,
   opacity,
   color,
@@ -44,37 +49,24 @@ function GlowLayers({
   color: string;
 }) {
   const { r, g, b } = parseColor(color);
-
-  // 4 concentric layers: inner (most opaque) → outer (fading)
-  const layers = [
-    { scale: 0.35, opacityMul: 1.0 },
-    { scale: 0.55, opacityMul: 0.6 },
-    { scale: 0.75, opacityMul: 0.3 },
-    { scale: 1.0, opacityMul: 0.1 },
-  ];
+  const hex = `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 
   return (
-    <>
-      {layers.map((layer, i) => {
-        const layerSize = size * layer.scale;
-        return (
-          <View
-            key={i}
-            style={{
-              position: "absolute",
-              width: layerSize,
-              height: layerSize,
-              borderRadius: layerSize / 2,
-              backgroundColor: `rgba(${r}, ${g}, ${b}, ${opacity * layer.opacityMul})`,
-            }}
-          />
-        );
-      })}
-    </>
+    <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <Defs>
+        <RadialGradient id={`glow-${size}`} cx="50%" cy="50%" r="50%">
+          <Stop offset="0%" stopColor={hex} stopOpacity={opacity} />
+          <Stop offset="45%" stopColor={hex} stopOpacity={opacity * 0.5} />
+          <Stop offset="70%" stopColor={hex} stopOpacity={opacity * 0.15} />
+          <Stop offset="100%" stopColor={hex} stopOpacity={0} />
+        </RadialGradient>
+      </Defs>
+      <Rect x={0} y={0} width={size} height={size} fill={`url(#glow-${size})`} />
+    </Svg>
   );
 }
 
-// Internal: static variant
+// Static glow
 function StaticWarmGlow({
   size,
   opacity,
@@ -93,13 +85,14 @@ function StaticWarmGlow({
         alignItems: "center",
         justifyContent: "center",
       }}
+      pointerEvents="none"
     >
-      <GlowLayers size={size} opacity={opacity} color={color} />
+      <GlowSvg size={size} opacity={opacity} color={color} />
     </View>
   );
 }
 
-// Internal: animated variant with breathing scale + opacity
+// Animated glow with breathing scale + opacity
 function AnimatedWarmGlow({
   size,
   color,
@@ -117,28 +110,16 @@ function AnimatedWarmGlow({
   useEffect(() => {
     pulseOpacity.value = withRepeat(
       withSequence(
-        withTiming(pulseMax, {
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-        }),
-        withTiming(pulseMin, {
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-        }),
+        withTiming(pulseMax, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(pulseMin, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
       false,
     );
     pulseScale.value = withRepeat(
       withSequence(
-        withTiming(1.08, {
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-        }),
-        withTiming(1, {
-          duration: 2000,
-          easing: Easing.inOut(Easing.ease),
-        }),
+        withTiming(1.06, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
       ),
       -1,
       false,
@@ -150,7 +131,8 @@ function AnimatedWarmGlow({
     transform: [{ scale: pulseScale.value }],
   }));
 
-  const midOpacity = (pulseMin + pulseMax) / 2;
+  // Static base opacity — animated opacity multiplies on top
+  const baseOpacity = (pulseMin + pulseMax) / 2;
 
   return (
     <Animated.View
@@ -164,13 +146,14 @@ function AnimatedWarmGlow({
         },
         animStyle,
       ]}
+      pointerEvents="none"
     >
-      <GlowLayers size={size} opacity={midOpacity * 2.5} color={color} />
+      <GlowSvg size={size} opacity={baseOpacity * 2} color={color} />
     </Animated.View>
   );
 }
 
-// Public API
+// Public API — drop-in replacement, same props
 export function WarmGlow({
   size = 340,
   opacity = 0.12,

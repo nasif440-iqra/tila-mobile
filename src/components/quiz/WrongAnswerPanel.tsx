@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Animated, { SlideInDown } from "react-native-reanimated";
+import Animated, { FadeInUp } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii, shadows } from "../../design/tokens";
+import { typography, spacing, fontFamilies } from "../../design/tokens";
 import { ArabicText, Button, HearButton } from "../../design/components";
 import { WRONG_ENCOURAGEMENT, pickCopy } from "../../engine/engagement";
 
@@ -14,6 +14,7 @@ interface WrongAnswerPanelProps {
   chosenLetter: { letter: string; name: string } | null;
   isSoundQuestion: boolean;
   onPlayCorrect: () => void | Promise<void>;
+  onPlayChosen?: () => void | Promise<void>;
   onContinue: () => void;
 }
 
@@ -25,6 +26,7 @@ export function WrongAnswerPanel({
   chosenLetter,
   isSoundQuestion,
   onPlayCorrect,
+  onPlayChosen,
   onContinue,
 }: WrongAnswerPanelProps) {
   const colors = useColors();
@@ -38,44 +40,46 @@ export function WrongAnswerPanel({
     ? `${encouragement} ${explanation}`
     : correctLetter
       ? `${encouragement} The correct answer is ${correctLetter.name} (${correctLetter.letter})`
-      : "Not quite -- try again next time!";
+      : "Not quite \u2014 try again next time!";
 
   return (
     <Animated.View
-      entering={SlideInDown.springify().stiffness(300).damping(25)}
+      entering={FadeInUp.duration(350)}
       style={[
-        styles.wrongPanel,
+        styles.panel,
         { backgroundColor: colors.dangerLight },
       ]}
     >
-      {/* Explanation */}
-      <View style={styles.wrongExplanationRow}>
-        <Text style={[styles.wrongIcon, { color: colors.danger }]}>
+      {/* Explanation row */}
+      <View style={styles.explanationRow}>
+        <Text style={[styles.icon, { color: colors.danger }]}>
           {"\u2717"}
         </Text>
-        <Text
-          style={[styles.wrongExplanation, { color: colors.dangerDark }]}
-        >
+        <Text style={[styles.explanationText, { color: colors.dangerDark }]}>
           {explanationText}
         </Text>
       </View>
 
-      {/* Visual comparison: chosen vs correct */}
+      {/* Visual comparison: chosen (de-emphasized) → correct (emphasized) */}
       {chosenLetter && correctLetter && !isSoundQuestion && (
         <View style={styles.compareRow}>
-          <View style={styles.compareItem}>
-            <ArabicText size="large" color={colors.danger}>
+          {/* Chosen — visually de-emphasized */}
+          <View style={[styles.compareItem, { opacity: 0.5 }]}>
+            <ArabicText size="large" color={colors.danger} style={{ fontSize: 32, lineHeight: 44 }}>
               {chosenLetter.letter}
             </ArabicText>
             <Text style={[styles.compareName, { color: colors.dangerDark }]}>
               {chosenLetter.name}
             </Text>
           </View>
+
           <Text style={[styles.compareArrow, { color: colors.textMuted }]}>
             {"\u2192"}
           </Text>
+
+          {/* Correct — visually emphasized */}
           <View style={styles.compareItem}>
-            <ArabicText size="large" color={colors.primary}>
+            <ArabicText size="large" color={colors.primary} style={{ fontSize: 32, lineHeight: 44 }}>
               {correctLetter.letter}
             </ArabicText>
             <Text style={[styles.compareName, { color: colors.primary }]}>
@@ -85,21 +89,36 @@ export function WrongAnswerPanel({
         </View>
       )}
 
-      {/* Hear button for sound questions */}
+      {/* Audio buttons for sound questions */}
       {isSoundQuestion && (
         <View style={styles.hearRow}>
-          <HearButton
-            onPlay={onPlayCorrect}
-            size={40}
-            accessibilityLabel="Hear correct answer"
-          />
-          <Text style={[styles.hearLabel, { color: colors.dangerDark }]}>
-            Hear correct
-          </Text>
+          <View style={styles.hearBtn}>
+            <HearButton
+              onPlay={onPlayCorrect}
+              size={36}
+              accessibilityLabel="Hear correct answer"
+            />
+            <Text style={[styles.hearLabel, { color: colors.primary }]}>
+              Hear correct
+            </Text>
+          </View>
+          {/* "Hear your pick" — only when chosen differs from correct */}
+          {onPlayChosen && chosenLetter && correctLetter && chosenLetter.name !== correctLetter.name && (
+            <View style={styles.hearBtn}>
+              <HearButton
+                onPlay={onPlayChosen}
+                size={36}
+                accessibilityLabel="Hear your pick"
+              />
+              <Text style={[styles.hearLabel, { color: colors.danger }]}>
+                Hear your pick
+              </Text>
+            </View>
+          )}
         </View>
       )}
 
-      {/* Continue button */}
+      {/* Continue CTA */}
       <Button
         title="Got It"
         onPress={onContinue}
@@ -112,23 +131,23 @@ export function WrongAnswerPanel({
 // ── Styles ──
 
 const styles = StyleSheet.create({
-  wrongPanel: {
-    borderRadius: radii.xl,
+  panel: {
+    borderRadius: 20,
     padding: spacing.lg,
+    paddingBottom: spacing.md,
     gap: spacing.md,
-    ...shadows.card,
   },
-  wrongExplanationRow: {
+  explanationRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
   },
-  wrongIcon: {
+  icon: {
     fontSize: 18,
     fontWeight: "700",
     marginTop: 1,
   },
-  wrongExplanation: {
+  explanationText: {
     ...typography.bodySmall,
     fontWeight: "600",
     lineHeight: 20,
@@ -147,17 +166,22 @@ const styles = StyleSheet.create({
   compareName: {
     ...typography.caption,
     fontWeight: "700",
+    marginTop: 2,
   },
   compareArrow: {
     ...typography.body,
   },
   hearRow: {
     flexDirection: "row",
+    justifyContent: "center",
+    gap: spacing.xxl,
+  },
+  hearBtn: {
     alignItems: "center",
-    gap: spacing.md,
+    gap: spacing.xs,
   },
   hearLabel: {
-    ...typography.bodySmall,
-    fontWeight: "600",
+    fontSize: 11,
+    fontFamily: fontFamilies.bodySemiBold,
   },
 });

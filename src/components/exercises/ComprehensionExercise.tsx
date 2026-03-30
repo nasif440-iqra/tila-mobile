@@ -98,9 +98,9 @@ export function ComprehensionExercise({ exercise, onComplete }: Props) {
 
   function getOptionState(option: ComprehensionOption) {
     if (!answered) return "default" as const;
-    if (option.id === selectedId && isCorrect) return "correct" as const;
-    if (option.id === selectedId && !isCorrect) return "wrong" as const;
-    if (option.isCorrect && !isCorrect) return "correct" as const; // reveal correct
+    if (option.id === selectedId && isCorrect) return "selectedCorrect" as const;
+    if (option.id === selectedId && !isCorrect) return "selectedWrong" as const;
+    if (option.isCorrect && !isCorrect) return "revealedCorrect" as const;
     return "dimmed" as const;
   }
 

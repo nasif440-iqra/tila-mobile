@@ -33,43 +33,59 @@ export default function StatsRow({
   ];
 
   return (
-    <View style={styles.statsRow}>
+    <View style={styles.grid}>
       {stats.map((stat) => (
-        <Card key={stat.label} style={styles.statCard}>
-          <Text
-            style={[
-              typography.statNumber,
-              {
-                fontFamily: fontFamilies.headingMedium,
-                color: stat.label === "Accuracy" && stat.value !== "\u2014" && parseInt(stat.value) > 80
-                  ? colors.accent
-                  : colors.primary,
-                textAlign: "center",
-              },
-            ]}
-          >
-            {stat.value}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>
-            {stat.label}
-          </Text>
-        </Card>
+        <View key={stat.label} style={styles.cellWrapper}>
+          <Card style={styles.statCard}>
+            <Text
+              style={[
+                styles.statValue,
+                {
+                  color:
+                    stat.label === "Accuracy" &&
+                    stat.value !== "\u2014" &&
+                    parseInt(stat.value) > 80
+                      ? colors.accent
+                      : colors.primary,
+                },
+              ]}
+              numberOfLines={1}
+            >
+              {stat.value}
+            </Text>
+            <Text
+              style={[styles.statLabel, { color: colors.textMuted }]}
+              numberOfLines={1}
+            >
+              {stat.label}
+            </Text>
+          </Card>
+        </View>
       ))}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  statsRow: {
+  grid: {
     flexDirection: "row",
-    gap: spacing.sm,
+    flexWrap: "wrap",
+    gap: spacing.md,
     marginBottom: spacing.xl,
   },
+  cellWrapper: {
+    width: "47%",
+    flexGrow: 1,
+  },
   statCard: {
-    flex: 1,
-    paddingVertical: spacing.xl,
+    paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     alignItems: "center",
+  },
+  statValue: {
+    fontFamily: fontFamilies.headingMedium,
+    fontSize: 28,
+    lineHeight: 36,
   },
   statLabel: {
     ...typography.caption,

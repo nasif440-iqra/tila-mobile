@@ -129,7 +129,7 @@ export function BrandedLogo({ width = 120, height = 160 }: BrandedLogoProps) {
   }));
 
   return (
-    <Svg width={width} height={height} viewBox="0 0 400 480" fill="none">
+    <Svg width={width} height={height} viewBox="0 0 400 320" fill="none">
       {/* Glow circles */}
       <AnimatedCircle
         cx={200}
