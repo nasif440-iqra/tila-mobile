@@ -27,6 +27,7 @@ import {
 } from "../engine/engagement";
 import { WarmGlow } from "./onboarding/WarmGlow";
 import { hapticMilestone, hapticSuccess, hapticTap } from "../design/haptics";
+import { playLessonComplete, playLessonCompletePerfect } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { LESSONS } from "../data/lessons";
 
@@ -370,6 +371,15 @@ export function LessonSummary({
     else hapticTap();
   }, []);
 
+  // SFX on mount — plays alongside haptics above
+  useEffect(() => {
+    if (!passed) return;
+    if (isPerfect) {
+      playLessonCompletePerfect();
+    } else {
+      playLessonComplete();
+    }
+  }, []);
 
   // Score circle styling — varies by score tier
   const circleColor = isPerfect ? colors.primary
