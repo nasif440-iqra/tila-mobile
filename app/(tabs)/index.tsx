@@ -447,6 +447,21 @@ export default function HomeScreen() {
           </Pressable>
         )}
 
+        {/* ── Upgrade Card (expired users) ── */}
+        {stage === "expired" && (
+          <Pressable
+            onPress={() => showPaywall("expired_card")}
+            style={[styles.upgradeCard, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}
+          >
+            <Text style={[styles.upgradeCardTitle, { color: colors.text }]}>
+              Upgrade to Continue
+            </Text>
+            <Text style={[styles.upgradeCardSub, { color: colors.textSoft }]}>
+              Pick up where you left off with Tila Premium.
+            </Text>
+          </Pressable>
+        )}
+
         {/* ── Urgent Review (above hero) ── */}
         {hasReview && isReviewUrgent && (
           <View style={styles.sectionGap}>
@@ -491,6 +506,18 @@ export default function HomeScreen() {
           <View style={styles.sectionGapTight}>
             <MomentumBanner momentum={momentum} colors={colors} enterDelay={150} />
           </View>
+        )}
+
+        {/* ── Upsell Card (free users past lesson 7) ── */}
+        {stage === "free" && completedLessonIds.includes(FREE_LESSON_CUTOFF) && (
+          <Pressable
+            onPress={() => showPaywall("home_upsell")}
+            style={[styles.upsellCard, { backgroundColor: colors.primarySoft, borderColor: "rgba(22,51,35,0.1)" }]}
+          >
+            <Text style={[styles.upsellCardText, { color: colors.primary }]}>
+              Unlock all lessons &#x2192;
+            </Text>
+          </Pressable>
         )}
 
         {/* ── Journey Path ── */}
@@ -682,6 +709,39 @@ const styles = StyleSheet.create({
   reviewFullBtnText: {
     fontFamily: fontFamilies.bodySemiBold,
     fontSize: 14,
+  },
+
+  // Upgrade card (expired)
+  upgradeCard: {
+    borderRadius: radii.xxl,
+    borderWidth: 1,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    alignItems: "center",
+    marginBottom: spacing.lg,
+  },
+  upgradeCardTitle: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 16,
+    marginBottom: spacing.xs,
+  },
+  upgradeCardSub: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodyRegular,
+  },
+
+  // Upsell card (free users past lesson 7)
+  upsellCard: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  upsellCardText: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodySemiBold,
   },
 
   // Momentum banner
