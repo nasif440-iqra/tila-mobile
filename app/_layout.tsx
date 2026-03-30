@@ -26,6 +26,7 @@ import {
 } from "@expo-google-fonts/lora";
 import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme";
 import { DatabaseProvider } from "../src/db/provider";
+import { initRevenueCat } from "../src/monetization/revenuecat";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
@@ -48,6 +49,10 @@ export default function RootLayout() {
     Lora_700Bold,
     Lora_400Regular_Italic,
   });
+
+  useEffect(() => {
+    initRevenueCat();
+  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

@@ -1,5 +1,17 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)",
+      "Bash(cat \"/c/Users/Nasif/Desktop/Iqra AI/tila-mobile/.planning/phases/05-celebrations-feedback/\"*-VERIFICATION.md)",
+      "Bash(grep -rn \"getCorrectPool\\\\|STREAK_COPY\\\\|CONTINUATION_COPY\\\\|UNLOCK_COPY\" '/c/Users/Nasif/Desktop/Iqra AI/tila-mobile/' --include=*.tsx --include=*.ts --include=*.js)",
+      "Bash(grep -rn \"getCorrectPool\\\\|STREAK_COPY\\\\|CONTINUATION_COPY\\\\|UNLOCK_COPY\" '/c/Users/Nasif/Desktop/Iqra AI/tila-mobile/' --include=*.tsx --include=*.ts)",
+      "Bash(grep -rn getCorrectPool '/c/Users/Nasif/Desktop/Iqra AI/tila-mobile/' --include=*.js)",
+      "WebSearch",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" verify plan-structure \".planning/phases/07-loading-error-states/07-01-PLAN.md\")",
+      "Bash(node \"$HOME/.claude/get-shit-done/bin/gsd-tools.cjs\" verify plan-structure \".planning/phases/07-loading-error-states/07-02-PLAN.md\")",
+      "Bash(npm run:*)"
+    ],
     "defaultMode": "bypassPermissions"
   }
 }
