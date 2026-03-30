@@ -4,6 +4,7 @@ import { useColors } from "../../../design/theme";
 import { ArabicText } from "../../../design/components";
 import { fontFamilies, spacing } from "../../../design/tokens";
 import { hapticSelection } from "../../../design/haptics";
+import { playSacredMoment } from "../../../audio/player";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 
 const BISMILLAH_HOLD = 4000; // longer hold — let it breathe
@@ -14,6 +15,7 @@ export function BismillahMoment({ onNext }: { onNext: () => void }) {
 
   useEffect(() => {
     hapticSelection();
+    playSacredMoment();
     timerRef.current = setTimeout(onNext, BISMILLAH_HOLD);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
