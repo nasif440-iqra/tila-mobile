@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { playCorrect, playWrong } from "../../../audio/player";
 import { View, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
@@ -23,8 +24,9 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
     setIsCorrect(correct);
     setAnswerChecked(true);
     if (correct) {
-      // correct
+      playCorrect();
     } else {
+      playWrong();
       setTimeout(() => {
         setAnswerChecked(false);
         setIsCorrect(null);
