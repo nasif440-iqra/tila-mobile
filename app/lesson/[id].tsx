@@ -13,6 +13,10 @@ import { LessonHybrid } from "../../src/components/LessonHybrid";
 import { LessonSummary } from "../../src/components/LessonSummary";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
+import { useSubscription, useCanAccessLesson, FREE_LESSON_CUTOFF } from "../../src/monetization/hooks";
+import { savePremiumLessonGrant } from "../../src/engine/progress";
+import { useDatabase } from "../../src/db/provider";
+import { Linking } from "react-native";
 import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
@@ -45,8 +49,11 @@ export default function LessonScreen() {
   const lessonId = parseInt(id as string, 10);
   const lesson = LESSONS.find((l: any) => l.id === lessonId);
 
+  const db = useDatabase();
   const progress = useProgress();
   const { recordPractice } = useHabit();
+  const { isPremiumActive, stage: subStage, showPaywall } = useSubscription();
+  const canAccess = useCanAccessLesson(lessonId);
 
   const [stage, setStage] = useState<Stage>("intro");
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
@@ -103,6 +110,11 @@ export default function LessonScreen() {
         attempts,
         results.questions  // QuizResultItem[] -- feeds mastery pipeline
       );
+
+      // Record premium lesson grant if applicable
+      if (passed && lesson!.id > FREE_LESSON_CUTOFF && isPremiumActive) {
+        await savePremiumLessonGrant(db, lesson!.id);
+      }
 
       // Record practice for habit/wird on pass
       if (passed) {
@@ -166,7 +178,7 @@ export default function LessonScreen() {
         setStage("summary");
       }
     },
-    [lesson, progress, recordPractice]
+    [lesson, progress, recordPractice, isPremiumActive, db]
   );
 
   const handleContinue = useCallback(() => {
@@ -232,6 +244,38 @@ export default function LessonScreen() {
     );
   }
 
+  // ── Lesson locked gate ──
+
+  if (lesson && !canAccess) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+        <View style={styles.errorContent}>
+          <Text style={[typography.heading2, { color: colors.text, textAlign: "center" }]}>
+            Premium Lesson
+          </Text>
+          <Text
+            style={[
+              typography.body,
+              { color: colors.textMuted, textAlign: "center", marginTop: spacing.md },
+            ]}
+          >
+            {subStage === "unknown"
+              ? "Couldn't verify your subscription. Connect to the internet to continue."
+              : "This lesson requires Tila Premium."}
+          </Text>
+          <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
+            {subStage !== "unknown" && (
+              <Button title="Start Free Trial" onPress={async () => {
+                const outcome = await showPaywall("lesson_locked");
+              }} />
+            )}
+            <Button title="Go Home" variant="ghost" onPress={() => router.replace("/(tabs)")} />
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   // ── Stage rendering ──
 
   const isHybrid = lesson?.lessonType === "hybrid";
@@ -290,6 +334,9 @@ export default function LessonScreen() {
           onRetry={handleRetry}
           onBack={() => router.replace("/(tabs)")}
           onReview={() => router.replace("/lesson/review")}
+          showTrialCTA={lesson.id === FREE_LESSON_CUTOFF && !isPremiumActive && subStage !== "unknown"}
+          onStartTrial={() => showPaywall("lesson_7_summary")}
+          onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
         />
       );
     }
