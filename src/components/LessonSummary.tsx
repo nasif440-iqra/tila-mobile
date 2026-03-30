@@ -145,9 +145,11 @@ interface LessonSummaryProps {
   accuracy: number; // 0-1
   threshold?: number | null; // pass threshold (0-1), null = no gating
   goalCompleted?: boolean;
+  reviewItemCount?: number; // number of letters due for review (B5)
   onContinue: () => void;
   onRetry: () => void;
   onBack?: () => void;
+  onReview?: () => void; // navigate to review session (B5)
 }
 
 // ── Icons ──
@@ -272,9 +274,11 @@ export function LessonSummary({
   accuracy,
   threshold,
   goalCompleted,
+  reviewItemCount,
   onContinue,
   onRetry,
   onBack,
+  onReview,
 }: LessonSummaryProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -723,7 +727,36 @@ export function LessonSummary({
           </Text>
         </Animated.View>
 
-        {/* ── 6. Action buttons ── */}
+        {/* ── 6. Review prompt (B5) — shown when due letters exist after passing ── */}
+        {passed && reviewItemCount != null && reviewItemCount > 0 && onReview && (
+          <Animated.View
+            entering={FadeIn.delay(800).duration(400)}
+            style={[
+              styles.reviewPromptCard,
+              {
+                backgroundColor: colors.accentLight,
+                borderColor: "rgba(196,164,100,0.35)",
+              },
+            ]}
+          >
+            <Text style={[styles.reviewPromptHeadline, { color: colors.text }]}>
+              {reviewItemCount} {reviewItemCount === 1 ? "letter" : "letters"} ready for a quick review
+            </Text>
+            <Text style={[styles.reviewPromptSub, { color: colors.textSoft }]}>
+              Takes about 2 minutes
+            </Text>
+            <Pressable
+              onPress={() => { hapticTap(); onReview(); }}
+              style={[styles.reviewPromptBtn, { backgroundColor: colors.accent }]}
+            >
+              <Text style={[styles.reviewPromptBtnText, { color: "#1a1a1a" }]}>
+                Review now
+              </Text>
+            </Pressable>
+          </Animated.View>
+        )}
+
+        {/* ── 7. Action buttons ── */}
         <Animated.View entering={FadeIn.delay(850).duration(400)} style={styles.actions}>
           <Button title="Continue" onPress={onContinue} />
           {onBack && (
@@ -1019,5 +1052,38 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     maxWidth: 280,
     alignSelf: "center",
+  },
+
+  // Review prompt card (B5)
+  reviewPromptCard: {
+    width: "100%",
+    borderRadius: radii.xxl,
+    borderWidth: 1,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  reviewPromptHeadline: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 15,
+    textAlign: "center",
+    marginBottom: spacing.xs,
+  },
+  reviewPromptSub: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodyRegular,
+    textAlign: "center",
+    marginBottom: spacing.md,
+  },
+  reviewPromptBtn: {
+    borderRadius: radii.lg,
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    alignItems: "center",
+  },
+  reviewPromptBtnText: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 14,
   },
 });
