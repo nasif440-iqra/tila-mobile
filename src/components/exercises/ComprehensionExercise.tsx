@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { hapticSuccess, hapticError } from "../../design/haptics";
+import { playCorrect, playWrong } from "../../audio/player";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText, Button, QuizOption } from "../../design/components";
@@ -62,12 +63,14 @@ export function ComprehensionExercise({ exercise, onComplete }: Props) {
       setIsCorrect(correct);
 
       if (correct) {
+        playCorrect();
         hapticSuccess();
         timerRef.current = setTimeout(
           () => onComplete({ correct: true, selectedOption: option, targetId }),
           850
         );
       } else {
+        playWrong();
         hapticError();
         // Wait for "Got it" button press
       }

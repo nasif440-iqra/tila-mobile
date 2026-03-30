@@ -9,6 +9,7 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 import { hapticSuccess, hapticError } from "../../design/haptics";
+import { playCorrect, playWrong } from "../../audio/player";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText } from "../../design/components";
@@ -127,6 +128,7 @@ export function TapInOrder({ exercise, onComplete }: Props) {
         setTappedCount(next);
 
         if (next === letters.length) {
+          playCorrect();
           setDone(true);
           setTimeout(() => {
             onComplete({ correct: true, targetId: letters[0]?.id });
@@ -134,6 +136,7 @@ export function TapInOrder({ exercise, onComplete }: Props) {
         }
       } else {
         // Wrong tap - shake
+        playWrong();
         hapticError();
         shakeValues[index].value = withSequence(
           withTiming(-4, { duration: 50 }),
