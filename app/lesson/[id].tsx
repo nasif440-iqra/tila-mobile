@@ -17,6 +17,7 @@ import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
+import { playLessonStart } from "../../src/audio/player";
 import { durations } from "../../src/design/animations";
 import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery.js";
 import { getLetter } from "../../src/data/letters.js";
@@ -242,7 +243,7 @@ export default function LessonScreen() {
   function renderStage() {
     // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
     if (stage === "intro" && !skipIntro && !isHybrid) {
-      return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} onBack={() => router.back()} />;
+      return <LessonIntro lesson={lesson} onStart={() => { playLessonStart(); setStage("quiz"); }} onBack={() => router.back()} />;
     }
 
     // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
