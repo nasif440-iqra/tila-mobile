@@ -8,13 +8,27 @@ export type { EventMap, EventName } from './events';
 
 let _initialized = false;
 
-export function initAnalytics(): void {
+export function initAnalytics(analyticsConsent: boolean | null): void {
   if (_initialized) return;
   _initialized = true;
 
-  try { initPostHog(); } catch (e) { console.warn('PostHog init failed:', e); }
+  // Sentry crash reporting always runs (legitimate interest exemption)
   try { initSentry(); } catch (e) { console.warn('Sentry init failed:', e); }
 
+  // PostHog only if user explicitly consented
+  if (analyticsConsent === true) {
+    try { initPostHog(); } catch (e) { console.warn('PostHog init failed:', e); }
+    const ph = getPostHog();
+    if (ph) {
+      const anonId = ph.getAnonymousId();
+      if (anonId) setSentryUser(anonId);
+    }
+  }
+}
+
+/** Enable PostHog mid-session after user grants consent */
+export function enablePostHog(): void {
+  try { initPostHog(); } catch (e) { console.warn('PostHog init failed:', e); }
   const ph = getPostHog();
   if (ph) {
     const anonId = ph.getAnonymousId();

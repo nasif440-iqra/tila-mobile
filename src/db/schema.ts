@@ -4,7 +4,7 @@
  * Single-user design — no user_id columns.
  */
 
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS user_profile (
@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
   wird_intro_seen INTEGER NOT NULL DEFAULT 0 CHECK (wird_intro_seen IN (0, 1)),
   post_lesson_onboard_seen INTEGER NOT NULL DEFAULT 0 CHECK (post_lesson_onboard_seen IN (0, 1)),
   return_hadith_last_shown TEXT,
+  analytics_consent INTEGER CHECK (analytics_consent IN (0, 1)),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

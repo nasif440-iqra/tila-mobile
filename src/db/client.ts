@@ -56,6 +56,17 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (3)");
   }
+
+  if (currentVersion < 4) {
+    try {
+      await db.execAsync(
+        "ALTER TABLE user_profile ADD COLUMN analytics_consent INTEGER CHECK (analytics_consent IN (0, 1));"
+      );
+    } catch {
+      // Column may already exist if DB was created fresh with v4 schema
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (4)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {
