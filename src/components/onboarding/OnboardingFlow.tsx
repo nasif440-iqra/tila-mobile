@@ -15,6 +15,7 @@ import { spacing } from "../../design/tokens";
 import { durations } from "../../design/animations";
 import {
   playLetterName,
+  playOnboardingComplete,
 } from "../../audio/player";
 import type { OnboardingDraft } from "../../types/onboarding";
 import { track } from "../../analytics";
@@ -107,6 +108,7 @@ export function OnboardingFlow() {
         starting_point: draft.startingPoint ?? 'unknown',
         duration_seconds: Math.round((Date.now() - onboardingStartRef.current) / 1000),
       });
+      playOnboardingComplete();
       // Only navigate after successful save
       setTimeout(() => {
         router.replace("/(tabs)");
