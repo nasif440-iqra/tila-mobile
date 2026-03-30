@@ -2,19 +2,21 @@ import {
   View,
   Text,
   ScrollView,
+  Pressable,
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withDelay,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useColors } from "../../src/design/theme";
-import { spacing, typography } from "../../src/design/tokens";
+import { spacing, typography, fontFamilies, radii } from "../../src/design/tokens";
 import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
@@ -23,15 +25,265 @@ import { LESSONS } from "../../src/data/lessons";
 import {
   getCurrentLesson,
   getLessonsCompletedCount,
+  getLearnedLetterIds,
+  planReviewSession,
 } from "../../src/engine/selectors";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import HeroCard from "../../src/components/home/HeroCard";
 import LessonGrid from "../../src/components/home/LessonGrid";
+import { hapticTap } from "../../src/design/haptics";
+import Svg, { Circle, Path } from "react-native-svg";
+
+// ── Logo Mark ──
+
+function TilaLogoMark({ size = 28, color = "#163323" }: { size?: number; color?: string }) {
+  const s = size / 28; // scale factor from base 28
+  return (
+    <Svg width={size} height={size} viewBox="0 0 28 28" fill="none">
+      {/* Crescent */}
+      <Circle cx="14" cy="12" r="8" fill={color} />
+      <Circle cx="17" cy="10" r="6.5" fill="#F8F6F0" />
+      {/* Arch */}
+      <Path
+        d="M6 26 L6 14 Q6 2 14 1 Q22 2 22 14 L22 26"
+        stroke={color}
+        strokeWidth={1.2}
+        strokeLinecap="round"
+        fill="none"
+        opacity={0.5}
+      />
+      {/* Keystone */}
+      <Circle cx="14" cy="1" r="1.2" fill={color} opacity={0.6} />
+    </Svg>
+  );
+}
 
 // ── Constants ──
 
 const SCROLL_BOTTOM_INSET = 96;
+const DEFAULT_DAILY_GOAL = 1;
+// Convert minutes → lesson count (avg ~3 min/lesson)
+function goalMinutesToLessons(minutes: number | null): number {
+  if (!minutes) return DEFAULT_DAILY_GOAL;
+  if (minutes <= 3) return 1;
+  if (minutes <= 5) return 2;
+  return 3; // 10 min
+}
+
+// ── Phase labels ──
+
+const PHASE_LABELS: Record<number, string> = {
+  1: "Letter Recognition",
+  2: "Letter Sounds",
+  3: "Harakat (Vowels)",
+  4: "Connected Forms",
+};
+
+// ── Momentum copy ──
+
+function getMomentumCopy(
+  completedIds: number[],
+  currentPhase: number
+): { line1: string; line2: string } | null {
+  const phaseLabel = PHASE_LABELS[currentPhase];
+  if (!phaseLabel) return null;
+
+  const phaseLessons = LESSONS.filter((l) => l.phase === currentPhase);
+  const phaseCompleted = phaseLessons.filter((l) => completedIds.includes(l.id)).length;
+
+  if (phaseCompleted === 0) return null;
+  if (phaseCompleted >= phaseLessons.length) return null;
+
+  const ratio = phaseCompleted / phaseLessons.length;
+
+  if (ratio < 0.25) {
+    return {
+      line1: `You\u2019ve started ${phaseLabel}.`,
+      line2: "Complete a few more lessons to build momentum.",
+    };
+  }
+  if (ratio < 0.5) {
+    return {
+      line1: `You\u2019re making progress in ${phaseLabel}.`,
+      line2: "Keep going \u2014 you\u2019re building a strong foundation.",
+    };
+  }
+  if (ratio < 0.75) {
+    return {
+      line1: `Over halfway through ${phaseLabel}!`,
+      line2: "The finish line is getting closer.",
+    };
+  }
+  return {
+    line1: `Almost done with ${phaseLabel}.`,
+    line2: "Just a few more lessons to complete this phase.",
+  };
+}
+
+// ── Greeting subtitle ──
+
+function getGreetingSubtitle(lessonsCompleted: number, learnedCount: number): string {
+  if (lessonsCompleted === 0) return "Begin your\njourney";
+  if (lessonsCompleted === 1) return "You\u2019ve started\nlearning Quran";
+  if (learnedCount < 10) return `${learnedCount} letters down`;
+  return `${learnedCount} letters and growing`;
+}
+
+// ── Daily Goal Pill ──
+
+function DailyGoalPill({
+  todayCount,
+  goal,
+  colors,
+}: {
+  todayCount: number;
+  goal: number;
+  colors: any;
+}) {
+  const done = Math.min(todayCount, goal);
+  return (
+    <View style={[styles.dailyPill, { borderColor: colors.border }]}>
+      <Text style={[styles.dailyPillLabel, { color: colors.textMuted }]}>Today</Text>
+      <Text style={[styles.dailyPillCount, { color: colors.text }]}>
+        {done}/{goal}
+      </Text>
+    </View>
+  );
+}
+
+// ── Review Card ──
+
+function ReviewCard({
+  totalItems,
+  isUrgent,
+  hasUnstable,
+  colors,
+  onStart,
+  enterDelay = 0,
+}: {
+  totalItems: number;
+  isUrgent: boolean;
+  hasUnstable: boolean;
+  colors: any;
+  onStart: () => void;
+  enterDelay?: number;
+}) {
+  const headline = isUrgent ? "Strengthen your letters" : "Review ready";
+  const subtitle = hasUnstable
+    ? "Some letters need more practice before you move on."
+    : totalItems >= 4
+      ? "Keep your letters solid \u2014 a few minutes will help."
+      : `${totalItems} letter${totalItems !== 1 ? "s" : ""} to revisit.`;
+
+  // Entrance animation — opacity only, no layout shift
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    opacity.value = withDelay(
+      enterDelay,
+      withTiming(1, { duration: durations.slow, easing: easings.contentReveal }),
+    );
+  }, []);
+  const entranceStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View style={entranceStyle}>
+      <View
+        style={[
+          styles.reviewCard,
+          isUrgent ? styles.reviewCardUrgent : styles.reviewCardNormal,
+          {
+            backgroundColor: isUrgent ? colors.accentLight : colors.bgCard,
+            borderColor: isUrgent ? colors.accent : colors.border,
+          },
+        ]}
+      >
+        <View style={styles.reviewRow}>
+          {/* Icon circle */}
+          <View
+            style={[
+              styles.reviewIcon,
+              { backgroundColor: isUrgent ? colors.accent : colors.primarySoft },
+            ]}
+          >
+            <Text style={{ fontSize: 18, lineHeight: 22, color: isUrgent ? colors.white : colors.primary }}>
+              {"\u263D"}
+            </Text>
+          </View>
+
+          {/* Text */}
+          <View style={styles.reviewTextWrap}>
+            <Text style={[styles.reviewHeadline, { color: colors.text }]}>{headline}</Text>
+            <Text style={[styles.reviewSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
+          </View>
+
+          {/* Inline button (non-urgent) */}
+          {!isUrgent && (
+            <Pressable
+              onPress={() => { hapticTap(); onStart(); }}
+              style={[styles.reviewInlineBtn, { borderColor: colors.primary }]}
+            >
+              <Text style={[styles.reviewInlineBtnText, { color: colors.primary }]}>Review</Text>
+            </Pressable>
+          )}
+        </View>
+
+        {/* Full-width CTA (urgent) */}
+        {isUrgent && (
+          <Pressable
+            onPress={() => { hapticTap(); onStart(); }}
+            style={[styles.reviewFullBtn, { backgroundColor: colors.primary }]}
+          >
+            <Text style={[styles.reviewFullBtnText, { color: colors.white }]}>Start review</Text>
+          </Pressable>
+        )}
+      </View>
+    </Animated.View>
+  );
+}
+
+// ── Momentum Banner ──
+
+function MomentumBanner({
+  momentum,
+  colors,
+  enterDelay = 0,
+}: {
+  momentum: { line1: string; line2: string };
+  colors: any;
+  enterDelay?: number;
+}) {
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    opacity.value = withDelay(
+      enterDelay,
+      withTiming(1, { duration: durations.slow, easing: easings.contentReveal }),
+    );
+  }, []);
+  const entranceStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
+
+  return (
+    <Animated.View style={entranceStyle}>
+      <View
+        style={[
+          styles.momentumBanner,
+          {
+            backgroundColor: colors.accentLight,
+            borderLeftColor: colors.accent,
+          },
+        ]}
+      >
+        <Text style={[styles.momentumLine1, { color: colors.textSoft }]}>
+          <Text style={{ color: colors.accent, fontSize: 12 }}>{"\u2726"} </Text>
+          {momentum.line1}
+        </Text>
+        <Text style={[styles.momentumLine2, { color: colors.textMuted }]}>
+          {momentum.line2}
+        </Text>
+      </View>
+    </Animated.View>
+  );
+}
 
 // ── Main screen ──
 
@@ -55,6 +307,20 @@ export default function HomeScreen() {
     opacity: headerOpacity.value,
   }));
 
+  // Greeting entrance
+  const greetingOpacity = useSharedValue(0);
+  const greetingY = useSharedValue(8);
+
+  useEffect(() => {
+    greetingOpacity.value = withDelay(60, withTiming(1, { duration: durations.slow, easing: easings.contentReveal }));
+    greetingY.value = withDelay(60, withTiming(0, { duration: durations.slow, easing: easings.contentReveal }));
+  }, []);
+
+  const greetingEntranceStyle = useAnimatedStyle(() => ({
+    opacity: greetingOpacity.value,
+    transform: [{ translateY: greetingY.value }],
+  }));
+
   // Redirect to onboarding if user hasn't completed it yet
   const onboarded = progress.onboarded ?? false;
   const returnHadithLastShown = progress.returnHadithLastShown ?? null;
@@ -67,7 +333,6 @@ export default function HomeScreen() {
       return;
     }
 
-    // Check if user should see the return hadith screen
     const lastPractice = habit?.lastPracticeDate;
     if (lastPractice) {
       const gap = getDayDifference(today, lastPractice);
@@ -80,14 +345,30 @@ export default function HomeScreen() {
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery;
-  const lessonsCompleted = getLessonsCompletedCount(completedLessonIds);
+  const dailyGoal = useMemo(() => goalMinutesToLessons(progress.onboardingDailyGoal ?? null), [progress.onboardingDailyGoal]);
 
-  const nextLesson = getCurrentLesson(completedLessonIds);
+  // Memoize expensive selector computations
+  const lessonsCompleted = useMemo(() => getLessonsCompletedCount(completedLessonIds), [completedLessonIds]);
+  const learnedLetterIds = useMemo(() => getLearnedLetterIds(completedLessonIds), [completedLessonIds]);
+  const nextLesson = useMemo(() => getCurrentLesson(completedLessonIds), [completedLessonIds]);
+  const reviewPlan = useMemo(() => mastery ? planReviewSession(mastery, today) : null, [mastery, today]);
+
   const allDone = !nextLesson || completedLessonIds.length >= LESSONS.length;
   const currentPhase = nextLesson?.phase ?? 1;
 
-  // Wird streak
+  // Wird streak + daily count
   const currentWird = habit?.currentWird ?? 0;
+  const todayLessonCount = habit?.todayLessonCount ?? 0;
+
+  // Review data
+  const hasReview = reviewPlan?.hasReviewWork ?? false;
+  const isReviewUrgent = reviewPlan?.isUrgent ?? false;
+
+  // Momentum
+  const momentum = useMemo(() => getMomentumCopy(completedLessonIds, currentPhase), [completedLessonIds, currentPhase]);
+
+  // Greeting
+  const greetingSubtitle = useMemo(() => getGreetingSubtitle(lessonsCompleted, learnedLetterIds.length), [lessonsCompleted, learnedLetterIds.length]);
 
   // Loading state
   if (progress.loading) {
@@ -104,9 +385,12 @@ export default function HomeScreen() {
     router.push({ pathname: '/lesson/[id]', params: { id: String(lessonId) } });
   }
 
+  function handleStartReview() {
+    router.push('/lesson/review');
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
-      {/* Warm gradient ambient layer */}
       <WarmGradient color={colors.bgWarm} height={300} />
       <ScrollView
         style={styles.scrollView}
@@ -115,11 +399,41 @@ export default function HomeScreen() {
       >
         {/* ── Header ── */}
         <View style={styles.header}>
-          <Animated.View style={headerEntranceStyle}>
+          <Animated.View style={[styles.headerBrand, headerEntranceStyle]}>
+            <TilaLogoMark size={28} color={colors.primary} />
             <Text style={[styles.appName, { color: colors.brown }]}>tila</Text>
           </Animated.View>
-          {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
+          <Animated.View style={[styles.headerRight, headerEntranceStyle]}>
+            {dailyGoal > 0 && (
+              <DailyGoalPill todayCount={todayLessonCount} goal={dailyGoal} colors={colors} />
+            )}
+            {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
+          </Animated.View>
         </View>
+
+        {/* ── Greeting ── */}
+        <Animated.View style={[styles.greeting, greetingEntranceStyle]}>
+          <Text style={[styles.greetingLabel, { color: colors.textMuted }]}>
+            ASSALAMU ALAIKUM
+          </Text>
+          <Text style={[styles.greetingTitle, { color: colors.text }]}>
+            {greetingSubtitle}
+          </Text>
+        </Animated.View>
+
+        {/* ── Urgent Review (above hero) ── */}
+        {hasReview && isReviewUrgent && (
+          <View style={styles.sectionGap}>
+            <ReviewCard
+              totalItems={reviewPlan!.totalItems}
+              isUrgent={true}
+              hasUnstable={(reviewPlan!.unstable?.length ?? 0) > 0}
+              colors={colors}
+              onStart={handleStartReview}
+              enterDelay={100}
+            />
+          </View>
+        )}
 
         {/* ── Hero Card ── */}
         <HeroCard
@@ -132,18 +446,36 @@ export default function HomeScreen() {
           enterDelay={80}
         />
 
+        {/* ── Non-urgent Review (below hero) ── */}
+        {hasReview && !isReviewUrgent && (
+          <View style={styles.sectionGap}>
+            <ReviewCard
+              totalItems={reviewPlan!.totalItems}
+              isUrgent={false}
+              hasUnstable={false}
+              colors={colors}
+              onStart={handleStartReview}
+              enterDelay={140}
+            />
+          </View>
+        )}
+
+        {/* ── Momentum Banner ── */}
+        {momentum && (
+          <View style={styles.sectionGapTight}>
+            <MomentumBanner momentum={momentum} colors={colors} enterDelay={150} />
+          </View>
+        )}
+
         {/* ── Journey Path ── */}
         <LessonGrid
           currentPhase={currentPhase}
           nextLessonId={nextLesson?.id ?? null}
           completedLessonIds={completedLessonIds}
-          mastery={mastery}
-          today={today}
           onStartLesson={handleStartLesson}
           enterDelay={160}
         />
 
-        {/* Bottom spacer for tab bar */}
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
     </SafeAreaView>
@@ -174,9 +506,158 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  headerBrand: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   appName: {
     ...typography.pageTitle,
+  },
+
+  // Daily goal pill
+  dailyPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: 10,
+    borderRadius: radii.full,
+    borderWidth: 1,
+  },
+  dailyPillLabel: {
+    fontSize: 11,
+    fontFamily: fontFamilies.bodyMedium,
+  },
+  dailyPillCount: {
+    fontSize: 12,
+    fontFamily: fontFamilies.bodySemiBold,
+  },
+
+  // Greeting
+  greeting: {
+    marginBottom: spacing.xl,
+  },
+  greetingLabel: {
+    fontSize: 11,
+    fontFamily: fontFamilies.bodySemiBold,
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
+    marginBottom: 6,
+  },
+  greetingTitle: {
+    fontFamily: fontFamilies.headingRegular,
+    fontSize: 28,
+    lineHeight: 33,
+  },
+
+  // Section gaps — consistent vertical rhythm
+  sectionGap: {
+    marginBottom: spacing.xl,
+  },
+  sectionGapTight: {
+    marginBottom: spacing.lg,
+  },
+
+  // Review card
+  reviewCard: {
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  reviewCardNormal: {
+    padding: spacing.lg,
+    borderWidth: 1,
+    shadowColor: "#163323",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  reviewCardUrgent: {
+    paddingTop: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    borderWidth: 1.5,
+    shadowColor: "#C4A464",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  reviewRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+  },
+  reviewIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  reviewTextWrap: {
+    flex: 1,
+  },
+  reviewHeadline: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 15,
+  },
+  reviewSubtitle: {
+    fontSize: 12,
+    fontFamily: fontFamilies.bodyRegular,
+    lineHeight: 17,
+    marginTop: 3,
+  },
+  reviewInlineBtn: {
+    borderRadius: radii.md,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderWidth: 1.5,
+  },
+  reviewInlineBtnText: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 13,
+  },
+  reviewFullBtn: {
+    borderRadius: radii.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    marginTop: 14,
+    alignItems: "center",
+  },
+  reviewFullBtnText: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 14,
+  },
+
+  // Momentum banner
+  momentumBanner: {
+    borderLeftWidth: 3,
+    borderRadius: 12,
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    paddingVertical: 14,
+    paddingHorizontal: spacing.lg,
+  },
+  momentumLine1: {
+    fontSize: 14,
+    fontFamily: fontFamilies.bodyRegular,
+    lineHeight: 21,
+    marginBottom: 3,
+  },
+  momentumLine2: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodyRegular,
+    lineHeight: 20,
+    paddingLeft: 18,
   },
 });
