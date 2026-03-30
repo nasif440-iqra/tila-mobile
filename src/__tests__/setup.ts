@@ -17,3 +17,35 @@ vi.mock("@sentry/react-native", () => ({
   captureMessage: vi.fn(),
   addBreadcrumb: vi.fn(),
 }));
+
+vi.mock("react-native-purchases", () => ({
+  default: {
+    getCustomerInfo: vi.fn().mockResolvedValue({
+      entitlements: { active: {}, all: {} },
+      managementURL: null,
+    }),
+    addCustomerInfoUpdateListener: vi.fn(),
+    removeCustomerInfoUpdateListener: vi.fn(),
+    configure: vi.fn(),
+    setLogLevel: vi.fn(),
+  },
+  LOG_LEVEL: { VERBOSE: "VERBOSE" },
+}));
+
+vi.mock("react-native-purchases-ui", () => ({
+  default: {
+    presentPaywall: vi.fn().mockResolvedValue(0),
+  },
+  PAYWALL_RESULT: {
+    NOT_PRESENTED: 0,
+    ERROR: 1,
+    CANCELLED: 2,
+    PURCHASED: 3,
+    RESTORED: 4,
+  },
+}));
+
+vi.mock("react-native", () => ({
+  Platform: { OS: "ios" },
+  Alert: { alert: vi.fn() },
+}));
