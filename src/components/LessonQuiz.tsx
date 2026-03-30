@@ -19,6 +19,7 @@ import {
   playWrong,
   playLetterName,
   playLetterSound,
+  playQuizStart,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations.js";
@@ -81,6 +82,11 @@ export function LessonQuiz({
   // Screen flash animations
   const wrongFlashOpacity = useSharedValue(0);
   const goldTintOpacity = useSharedValue(0);
+
+  // Play quiz start sound on mount
+  useEffect(() => {
+    playQuizStart();
+  }, []);
 
   // Track original question count — snapshot when first available
   const originalQCount = useRef(0);

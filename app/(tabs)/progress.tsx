@@ -7,7 +7,7 @@ import {
   Alert,
   Pressable,
 } from "react-native";
-import { useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -17,6 +17,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useColors } from "../../src/design/theme";
+import { playProgressReveal } from "../../src/audio/player";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
@@ -33,6 +34,7 @@ import { getTodayDateString } from "../../src/engine/dateUtils";
 import StatsRow from "../../src/components/progress/StatsRow";
 import PhasePanel from "../../src/components/progress/PhasePanel";
 import LetterMasteryGrid from "../../src/components/progress/LetterMasteryGrid";
+import { PhaseDetailSheet } from "../../src/components/progress/PhaseDetailSheet";
 import { EmptyState } from "../../src/components/feedback/EmptyState";
 
 // ── Phase metadata ──
@@ -91,6 +93,23 @@ export default function ProgressScreen() {
   const totalDone = completedLessonIds.length;
   const totalLessons = LESSONS.length;
 
+  // Phase detail sheet state
+  const [selectedPhase, setSelectedPhase] = useState<{
+    key: number;
+    label: string;
+  } | null>(null);
+
+  const handlePhasePress = useCallback(
+    (key: number, label: string) => {
+      setSelectedPhase({ key, label });
+    },
+    []
+  );
+
+  const handlePhaseClose = useCallback(() => {
+    setSelectedPhase(null);
+  }, []);
+
   // Stats
   const stats = useMemo(() => {
     const entities = mastery.entities ?? {};
@@ -114,6 +133,12 @@ export default function ProgressScreen() {
   const phasesTranslateY = useSharedValue(12);
   const masteryOpacity = useSharedValue(0);
   const masteryTranslateY = useSharedValue(12);
+
+  useEffect(() => {
+    if (!progress.loading && completedLessonIds.length > 0) {
+      playProgressReveal();
+    }
+  }, [progress.loading]);
 
   useEffect(() => {
     const timingConfig = { duration: durations.normal, easing: easings.contentReveal };
@@ -230,6 +255,7 @@ export default function ProgressScreen() {
                 label={phase.label}
                 done={phaseCounts[phase.done] as number}
                 total={phaseCounts[phase.total] as number}
+                onPress={() => handlePhasePress(phase.key, phase.label)}
               />
             </View>
           ))}
@@ -270,6 +296,16 @@ export default function ProgressScreen() {
         {/* Bottom padding for tab bar */}
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
+
+      {/* Phase detail sheet */}
+      <PhaseDetailSheet
+        phaseKey={selectedPhase?.key ?? null}
+        phaseLabel={selectedPhase?.label ?? ""}
+        completedLessonIds={completedLessonIds}
+        currentLessonId={currentLesson.id}
+        visible={selectedPhase !== null}
+        onClose={handlePhaseClose}
+      />
     </SafeAreaView>
   );
 }
