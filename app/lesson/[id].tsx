@@ -52,6 +52,7 @@ export default function LessonScreen() {
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
   const [skipIntro, setSkipIntro] = useState(false);
   const [masteredLetters, setMasteredLetters] = useState<Array<{ letter: string; name: string }>>([]);
+  const [goalCompleted, setGoalCompleted] = useState(false);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -105,6 +106,14 @@ export default function LessonScreen() {
       // Record practice for habit/wird on pass
       if (passed) {
         await recordPractice();
+
+        // Check if daily goal was just hit
+        const dailyGoalMinutes = progress.onboardingDailyGoal ?? null;
+        const goalLessons = dailyGoalMinutes ? (dailyGoalMinutes <= 3 ? 1 : dailyGoalMinutes <= 5 ? 2 : 3) : 1;
+        const todayCount = (progress.habit?.todayLessonCount ?? 0) + 1; // +1 for the lesson just completed
+        if (todayCount >= goalLessons && todayCount - 1 < goalLessons) {
+          setGoalCompleted(true);
+        }
       }
 
       const durationSeconds = lessonStartedRef.current
@@ -233,7 +242,7 @@ export default function LessonScreen() {
   function renderStage() {
     // Show intro unless we're skipping it (retry flow) or it's a hybrid lesson
     if (stage === "intro" && !skipIntro && !isHybrid) {
-      return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} />;
+      return <LessonIntro lesson={lesson} onStart={() => setStage("quiz")} onBack={() => router.back()} />;
     }
 
     // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
@@ -269,8 +278,11 @@ export default function LessonScreen() {
           results={quizResults}
           passed={quizResults.passed}
           accuracy={quizResults.accuracy}
+          threshold={getPassThreshold(lesson.lessonMode)}
+          goalCompleted={goalCompleted}
           onContinue={handleContinue}
           onRetry={handleRetry}
+          onBack={() => router.replace("/(tabs)")}
         />
       );
     }
