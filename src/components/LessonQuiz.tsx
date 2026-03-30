@@ -17,6 +17,8 @@ import { WarmGradient, Button } from "../design/components";
 import {
   playLetterName,
   playLetterSound,
+  playCorrect,
+  playWrong,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations.js";
@@ -166,8 +168,10 @@ export function LessonQuiz({
       const correct = opt?.isCorrect === true;
       setIsCorrect(correct);
       if (correct) {
+        playCorrect();
         setTimeout(() => { handleAnswer(opt, true); }, 800);
       } else {
+        playWrong();
         wrongFlashOpacity.value = withSequence(
           withTiming(1, { duration: 80 }),
           withTiming(0, { duration: 320, easing: Easing.out(Easing.cubic) })
