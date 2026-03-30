@@ -27,6 +27,7 @@ import {
 import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme";
 import { DatabaseProvider } from "../src/db/provider";
 import { initRevenueCat } from "../src/monetization/revenuecat";
+import { SubscriptionProvider } from "../src/monetization/provider";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
@@ -72,6 +73,7 @@ export default function RootLayout() {
         <ErrorFallback onRetry={resetError} />
       )}>
         <DatabaseProvider fallback={<AppLoadingScreen />}>
+          <SubscriptionProvider>
           <AnalyticsGate>
           <Stack
             screenOptions={{
@@ -97,6 +99,7 @@ export default function RootLayout() {
             />
           </Stack>
           </AnalyticsGate>
+          </SubscriptionProvider>
         </DatabaseProvider>
       </Sentry.ErrorBoundary>
     </ThemeContext.Provider>
