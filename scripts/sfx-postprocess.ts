@@ -1,4 +1,4 @@
-import { execSync, execFileSync } from "child_process";
+import { execSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
@@ -70,7 +70,7 @@ export function postProcess(
   let durationFilter = "";
   if (duration > maxDuration) {
     // Truncate and add fade-out at the end
-    durationFilter = `,atrim=0:${maxDuration}`;
+    durationFilter = `atrim=0:${maxDuration}`;
     duration = maxDuration;
   }
 
