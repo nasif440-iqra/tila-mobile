@@ -119,6 +119,18 @@ export function getLetterAsset(
   return assets[filename] ?? null;
 }
 
+// ── SFX assets ──
+
+const SFX_ASSETS = {
+  correct: require("../../assets/audio/effects/correct.wav"),
+  wrong: require("../../assets/audio/effects/wrong.wav"),
+  lesson_start: require("../../assets/audio/effects/lesson_start.wav"),
+  lesson_complete: require("../../assets/audio/effects/lesson_complete.wav"),
+  lesson_complete_perfect: require("../../assets/audio/effects/lesson_complete_perfect.wav"),
+  onboarding_complete: require("../../assets/audio/effects/onboarding_complete.wav"),
+  sacred_moment: require("../../assets/audio/effects/sacred_moment.wav"),
+} as const;
+
 // ── Mute state ──
 
 let _muted = false;
@@ -149,6 +161,80 @@ async function playVoice(source: AudioSource): Promise<void> {
   const player = getVoicePlayer();
   player.replace(source);
   player.play();
+}
+
+// ── SFX playback (priority-gated) ──
+//
+// Smaller number = higher priority. A playing sound blocks equal or
+// lower-priority requests for its guard window duration.
+
+const SFX_PRIORITY = {
+  critical: 1,     // lesson_complete_perfect, sacred_moment, onboarding_complete
+  celebration: 2,  // lesson_complete
+  feedback: 3,     // correct, wrong, lesson_start
+} as const;
+
+let _sfxPlayer: AudioPlayer | null = null;
+
+function getSFXPlayer(): AudioPlayer {
+  if (!_sfxPlayer) {
+    _sfxPlayer = createAudioPlayer();
+  }
+  return _sfxPlayer;
+}
+
+interface PlayingState {
+  priority: number;
+  startedAt: number;
+  guardMs: number;
+}
+
+let _playing: PlayingState | null = null;
+
+function playSFX(source: AudioSource, priority: number, guardMs: number): void {
+  if (_muted) return;
+  const now = Date.now();
+  if (
+    _playing &&
+    priority >= _playing.priority &&
+    now - _playing.startedAt < _playing.guardMs
+  ) {
+    return; // blocked — equal or lower importance during guard window
+  }
+  const player = getSFXPlayer();
+  player.replace(source);
+  player.play();
+  _playing = { priority, startedAt: now, guardMs };
+}
+
+// ── SFX helpers (audio-only — no haptics) ──
+
+export function playCorrect(): void {
+  playSFX(SFX_ASSETS.correct, SFX_PRIORITY.feedback, 400);
+}
+
+export function playWrong(): void {
+  playSFX(SFX_ASSETS.wrong, SFX_PRIORITY.feedback, 400);
+}
+
+export function playLessonStart(): void {
+  playSFX(SFX_ASSETS.lesson_start, SFX_PRIORITY.feedback, 400);
+}
+
+export function playLessonComplete(): void {
+  playSFX(SFX_ASSETS.lesson_complete, SFX_PRIORITY.celebration, 800);
+}
+
+export function playLessonCompletePerfect(): void {
+  playSFX(SFX_ASSETS.lesson_complete_perfect, SFX_PRIORITY.critical, 1200);
+}
+
+export function playOnboardingComplete(): void {
+  playSFX(SFX_ASSETS.onboarding_complete, SFX_PRIORITY.critical, 1200);
+}
+
+export function playSacredMoment(): void {
+  playSFX(SFX_ASSETS.sacred_moment, SFX_PRIORITY.critical, 1200);
 }
 
 // ── Voice helpers ──
