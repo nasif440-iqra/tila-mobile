@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
@@ -6,13 +6,10 @@ import Animated, {
   useDerivedValue,
   withSpring,
   interpolateColor,
-  SlideInDown,
-  SlideOutUp,
 } from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii, shadows } from "../../design/tokens";
+import { typography, spacing } from "../../design/tokens";
 import { springs } from "../../design/animations";
-import { hapticSuccess, hapticMilestone } from "../../design/haptics";
 
 // ── Types ──
 
@@ -20,24 +17,7 @@ interface QuizProgressProps {
   questionIndex: number;
   originalQCount: number;
   progressPct: number;
-  streak: number;
   isRecycled: boolean;
-}
-
-// ── Streak tiers ──
-
-const STREAK_MILESTONES = [3, 5, 7] as const;
-
-interface StreakTier {
-  message: string;
-  emoji: string;
-  tier: 1 | 2 | 3;
-}
-
-function getStreakTier(streak: number): StreakTier {
-  if (streak >= 7) return { message: "Masha'Allah!", emoji: "\uD83D\uDD25\u2728", tier: 3 };
-  if (streak >= 5) return { message: "Sharp focus!", emoji: "\u2B50\u2B50", tier: 2 };
-  return { message: "Nice streak!", emoji: "\u2728", tier: 1 };
 }
 
 // ── Component ──
@@ -46,20 +26,16 @@ export function QuizProgress({
   questionIndex,
   originalQCount,
   progressPct,
-  streak,
   isRecycled,
 }: QuizProgressProps) {
   const colors = useColors();
-
-  const [bannerStreak, setBannerStreak] = useState<number | null>(null);
-  const prevStreakRef = useRef(0);
 
   // Spring-animated progress bar
   const progressWidth = useSharedValue(0);
 
   useEffect(() => {
     progressWidth.value = withSpring(progressPct, springs.gentle);
-  }, [progressPct, progressWidth]);
+  }, [progressPct]);
 
   const nearComplete = useDerivedValue(() =>
     progressWidth.value > 85 ? 1 : 0
@@ -74,61 +50,8 @@ export function QuizProgress({
     ),
   }));
 
-  // Streak banner detection
-  useEffect(() => {
-    if (
-      streak > prevStreakRef.current &&
-      STREAK_MILESTONES.includes(streak as 3 | 5 | 7)
-    ) {
-      if (streak >= 7) {
-        hapticMilestone();
-      } else {
-        hapticSuccess();
-      }
-      setBannerStreak(streak);
-      const timer = setTimeout(() => setBannerStreak(null), streak >= 7 ? 2500 : 1500);
-      return () => clearTimeout(timer);
-    }
-    prevStreakRef.current = streak;
-  }, [streak]);
-
-  const tier = bannerStreak ? getStreakTier(bannerStreak) : null;
-
   return (
     <>
-      {/* Streak banner overlay */}
-      {bannerStreak !== null && tier && (
-        <Animated.View
-          entering={SlideInDown.springify().stiffness(300).damping(20)}
-          exiting={SlideOutUp.duration(300)}
-          style={[
-            styles.streakBanner,
-            shadows.cardLifted,
-            tier.tier === 3
-              ? { backgroundColor: colors.primary, borderColor: "rgba(196, 164, 100, 0.35)" }
-              : tier.tier === 2
-                ? { backgroundColor: colors.bgCard, borderColor: colors.accent }
-                : { backgroundColor: colors.accentLight, borderColor: colors.accent },
-          ]}
-        >
-          <Text
-            style={[
-              styles.streakText,
-              {
-                color: tier.tier === 3 ? colors.accent : colors.accent,
-              },
-            ]}
-          >
-            {tier.emoji} {bannerStreak} in a row {tier.tier >= 2 ? " \u2014 " + tier.message : ""}
-          </Text>
-          {tier.tier === 3 && (
-            <Text style={[styles.streakArabic, { color: "rgba(196, 164, 100, 0.7)" }]}>
-              {"\u0645\u0627 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647"}
-            </Text>
-          )}
-        </Animated.View>
-      )}
-
       {/* Progress bar */}
       <View style={styles.progressSection}>
         <View
@@ -156,7 +79,7 @@ export function QuizProgress({
       {/* Recycled question hint */}
       {isRecycled && (
         <Text style={[styles.recycledHint, { color: colors.textMuted }]}>
-          Review -- missed questions come back once
+          {"Review \u2014 missed questions come back once"}
         </Text>
       )}
     </>
@@ -194,26 +117,5 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     marginTop: -spacing.sm,
     marginBottom: spacing.sm,
-  },
-  streakBanner: {
-    position: "absolute",
-    top: spacing.xxxl,
-    left: spacing.xl,
-    right: spacing.xl,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.full,
-    borderWidth: 1.5,
-    alignItems: "center",
-    zIndex: 100,
-  },
-  streakText: {
-    ...typography.bodyLarge,
-    fontWeight: "700",
-  },
-  streakArabic: {
-    fontFamily: "Amiri_400Regular",
-    fontSize: 14,
-    marginTop: 2,
   },
 });

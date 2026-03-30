@@ -1,10 +1,22 @@
+import { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withSpring,
+  withDelay,
+  withTiming,
+} from "react-native-reanimated";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii } from "../../design/tokens";
+import { typography, spacing } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
 import { WarmGlow } from "../onboarding/WarmGlow";
 
-const OPTIONS_GRID_MAX_WIDTH = 400;
+const OPTIONS_MAX_WIDTH = 360;
+
+// ── Stagger spring for option entrances ──
+const OPTION_SPRING = { stiffness: 300, damping: 28, mass: 1 };
+const STAGGER_MS = 60;
 
 // ── Types ──
 
@@ -17,7 +29,43 @@ interface QuizQuestionProps {
   onPlayAudio: () => void | Promise<void>;
 }
 
-// ── Letter circle prompt (shared between letter-to-sound and letter-to-name) ──
+// ── Staggered option wrapper ──
+
+function StaggeredOption({
+  children,
+  index,
+  questionKey,
+  style,
+}: {
+  children: React.ReactNode;
+  index: number;
+  questionKey: number;
+  style?: any;
+}) {
+  const opacity = useSharedValue(0);
+  const translateY = useSharedValue(14);
+  const entranceRan = useRef<number>(-1);
+
+  useEffect(() => {
+    // Only run entrance on question change, not on answer-state changes
+    if (entranceRan.current === questionKey) return;
+    entranceRan.current = questionKey;
+
+    opacity.value = 0;
+    translateY.value = 14;
+    opacity.value = withDelay(index * STAGGER_MS, withTiming(1, { duration: 200 }));
+    translateY.value = withDelay(index * STAGGER_MS, withSpring(0, OPTION_SPRING));
+  }, [questionKey]);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
+  }));
+
+  return <Animated.View style={[animStyle, style]}>{children}</Animated.View>;
+}
+
+// ── Letter circle prompt ──
 
 function LetterPrompt({
   prompt,
@@ -32,7 +80,6 @@ function LetterPrompt({
 
   return (
     <View style={styles.promptCenter}>
-      {/* Glow + circle container */}
       <View style={styles.letterCircleWrapper}>
         <WarmGlow
           size={180}
@@ -45,7 +92,7 @@ function LetterPrompt({
           style={[
             styles.letterCircle,
             {
-              backgroundColor: colors.primarySoft,
+              backgroundColor: "#F2F5F3",
               borderColor: "rgba(255, 255, 255, 0.8)",
             },
           ]}
@@ -80,26 +127,30 @@ export function QuizQuestion({
   // Question type detection
   const isAudioQuestion = question.hasAudio;
   const isLetterToSound = question.type === "letter_to_sound";
-  const isLetterToName =
-    question.type === "letter_to_name" && !question.hasAudio;
-  const isVisualQuestion =
-    !isAudioQuestion && !isLetterToSound && !isLetterToName;
+  const isLetterToName = question.type === "letter_to_name" && !question.hasAudio;
+  const isVisualQuestion = !isAudioQuestion && !isLetterToSound && !isLetterToName;
 
-  // Option display type
-  const isArabicOption =
-    question.optionMode !== "sound" && question.type !== "letter_to_name";
+  // Option display modes
+  const isSoundOption = question.optionMode === "sound";
+  const isArabicOption = !isSoundOption && question.type !== "letter_to_name";
+
+  // Adaptive layout based on option count
+  const optCount = question.options.length;
+  const isCompact = optCount <= 2;   // vertical stack
+  const isTriple = optCount === 3;   // wrapped centered
+
+  // Stable key for entrance animations
+  const questionKey = question._qIndex ?? question.targetId ?? 0;
 
   return (
     <View style={styles.questionArea}>
-      {/* Audio question: show hear button + prompt */}
+      {/* ── Prompt area ── */}
+
       {isAudioQuestion && !isLetterToSound && (
         <View style={styles.promptCenter}>
           <HearButton onPlay={onPlayAudio} size={72} />
           <Text
-            style={[
-              styles.promptText,
-              { color: colors.brown, marginTop: spacing.lg },
-            ]}
+            style={[styles.promptText, { color: colors.brown, marginTop: spacing.lg }]}
           >
             {question.prompt}
           </Text>
@@ -111,69 +162,66 @@ export function QuizQuestion({
         </View>
       )}
 
-      {/* Letter to sound: show large Arabic letter in circle + hear button */}
       {isLetterToSound && (
-        <LetterPrompt
-          prompt={question.prompt}
-          subtext={question.promptSubtext}
-        >
+        <LetterPrompt prompt={question.prompt} subtext={question.promptSubtext}>
           <View style={{ marginTop: spacing.sm }}>
-            <HearButton
-              onPlay={onPlayAudio}
-              size={44}
-              accessibilityLabel="Hear this letter"
-            />
+            <HearButton onPlay={onPlayAudio} size={44} accessibilityLabel="Hear this letter" />
           </View>
         </LetterPrompt>
       )}
 
-      {/* Letter to name: show large Arabic letter in circle + prompt */}
       {isLetterToName && (
-        <LetterPrompt
-          prompt={question.prompt}
-          subtext={question.promptSubtext}
-        />
+        <LetterPrompt prompt={question.prompt} subtext={question.promptSubtext} />
       )}
 
-      {/* Visual / default question: show prompt text */}
       {isVisualQuestion && (
         <View style={styles.promptCenter}>
-          <Text
-            style={[styles.promptText, { color: colors.brown }]}
-          >
+          <Text style={[styles.promptText, { color: colors.brown }]}>
             {question.prompt}
           </Text>
         </View>
       )}
 
-      {/* Answer options -- 2x2 grid */}
-      <View style={styles.optionsGrid}>
-        {question.options.map((opt: any) => {
-          let optionState: "default" | "correct" | "wrong" | "dimmed" =
-            "default";
+      {/* ── Options grid — adaptive layout ── */}
+      <View
+        style={[
+          styles.optionsGrid,
+          isCompact && styles.optionsCompact,
+          isTriple && styles.optionsTriple,
+        ]}
+      >
+        {question.options.map((opt: any, idx: number) => {
+          // ── 5-state mapping ──
+          let optionState: "default" | "selectedCorrect" | "selectedWrong" | "revealedCorrect" | "dimmed" = "default";
           if (answered) {
             if (opt.id === selectedId && isCorrect) {
-              optionState = "correct";
+              optionState = "selectedCorrect";
             } else if (opt.id === selectedId && !isCorrect) {
-              optionState = "wrong";
+              optionState = "selectedWrong";
             } else if (opt.isCorrect && !isCorrect) {
-              // Reveal the correct answer when user picked wrong
-              optionState = "correct";
+              optionState = "revealedCorrect"; // NOT selectedCorrect — no celebration
             } else {
               optionState = "dimmed";
             }
           }
 
           return (
-            <QuizOption
+            <StaggeredOption
               key={opt.id}
-              label={opt.label}
-              isArabic={isArabicOption}
-              onPress={() => onSelect(opt.id)}
-              disabled={answered}
-              state={optionState}
-              style={styles.optionCell}
-            />
+              index={idx}
+              questionKey={questionKey}
+              style={isCompact ? styles.optionCompact : isTriple ? styles.optionTriple : styles.optionGrid}
+            >
+              <QuizOption
+                label={opt.label}
+                sublabel={opt.sublabel}
+                isArabic={isArabicOption}
+                isSound={isSoundOption}
+                onPress={() => onSelect(opt.id)}
+                disabled={answered}
+                state={optionState}
+              />
+            </StaggeredOption>
           );
         })}
       </View>
@@ -224,16 +272,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
   },
+
+  // ── Options layouts ──
+
+  // Default: 2x2 grid
   optionsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
-    gap: spacing.md,
+    gap: 14,
     width: "100%",
-    maxWidth: OPTIONS_GRID_MAX_WIDTH,
+    maxWidth: OPTIONS_MAX_WIDTH,
   },
-  optionCell: {
+  optionGrid: {
+    width: "47%",
+  },
+
+  // Compact: ≤2 options, vertical stack
+  optionsCompact: {
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
+    gap: 16,
+  },
+  optionCompact: {
+    width: "100%",
+  },
+
+  // Triple: 3 options, wrapped centered
+  optionsTriple: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 14,
+  },
+  optionTriple: {
     width: "47%",
   },
 });

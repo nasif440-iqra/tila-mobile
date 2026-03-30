@@ -9,20 +9,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { ArabicText, Button, Card } from "../../design/components";
 import { useColors } from "../../design/theme";
-import { typography, spacing, radii, shadows, borderWidths } from "../../design/tokens";
+import { typography, spacing, radii, borderWidths, fontFamilies } from "../../design/tokens";
 import { durations, easings, springs } from "../../design/animations";
 import { WarmGlow } from "../onboarding/WarmGlow";
 import { getLetter } from "../../data/letters";
 import type { Lesson } from "../../types/lesson";
-
-// ── Phase metadata ──
-
-const PHASE_LABELS: Record<number, string> = {
-  1: "Letter Recognition",
-  2: "Letter Sounds",
-  3: "Harakat (Vowels)",
-  4: "Connected Forms",
-};
 
 // ── Props ──
 
@@ -49,7 +40,7 @@ export default function HeroCard({
 }: HeroCardProps) {
   const colors = useColors();
 
-  // Card entrance animation: FadeIn + translateY from 12px
+  // Card entrance animation
   const cardOpacity = useSharedValue(0);
   const cardTranslateY = useSharedValue(12);
 
@@ -69,7 +60,7 @@ export default function HeroCard({
     transform: [{ translateY: cardTranslateY.value }],
   }));
 
-  // Letter circle entrance animation: scale from 0.8 to 1.0
+  // Letter circle entrance animation
   const circleScale = useSharedValue(0.8);
 
   useEffect(() => {
@@ -98,7 +89,6 @@ export default function HeroCard({
 
   const heroLetters = (lesson.teachIds || []).map((id: number) => getLetter(id)).filter(Boolean);
   const heroLetter = heroLetters[0];
-  const phaseLabel = `Phase ${currentPhase} \u2014 ${PHASE_LABELS[currentPhase] ?? ""}`;
 
   const ctaTitle = completedLessonIds.includes(lesson.id)
     ? "Review Lesson"
@@ -107,45 +97,57 @@ export default function HeroCard({
       : "Start Lesson";
 
   return (
-    <Animated.View style={cardEntranceStyle}>
-      <View style={[styles.heroCard, shadows.hero, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
+    <Animated.View style={[cardEntranceStyle, styles.heroWrap]}>
+      <View
+        style={[
+          styles.heroCard,
+          {
+            backgroundColor: colors.bgCard,
+            borderColor: colors.border,
+          },
+        ]}
+      >
         {/* Decorative corner blobs */}
         <View style={[styles.cornerBlobTopRight, { backgroundColor: colors.bg }]} />
         <View style={[styles.cornerBlobBottomLeft, { backgroundColor: "rgba(196, 164, 100, 0.05)" }]} />
 
-        {/* Phase label pill */}
-        <View style={[styles.phasePill, { backgroundColor: colors.bg }]}>
-          <Text style={[styles.phasePillText, { color: colors.accent }]}>{phaseLabel}</Text>
-        </View>
-
-        {/* Letter circle with WarmGlow behind it */}
+        {/* Letter circle with WarmGlow */}
         <Animated.View style={[styles.letterCircleWrapper, circleEntranceStyle]}>
           <WarmGlow
             animated={true}
-            size={200}
+            size={180}
             color={colors.accentGlow}
-            pulseMin={0.15}
-            pulseMax={0.45}
+            pulseMin={0.12}
+            pulseMax={0.35}
           />
-          <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft }]}>
-            <ArabicText size="display" color={colors.text}>
+          <View style={styles.letterCircle}>
+            <ArabicText size="display" color={colors.text} style={{ marginTop: 6 }}>
               {heroLetter ? heroLetter.letter : "?"}
             </ArabicText>
           </View>
         </Animated.View>
 
+        {/* Lesson pill */}
+        <View style={[styles.lessonPill, { backgroundColor: colors.bg }]}>
+          <Text style={[styles.lessonPillText, { color: colors.accent }]}>
+            Lesson {lesson.id}
+          </Text>
+        </View>
+
         {/* Lesson info */}
-        <Text style={[styles.heroTitle, { color: colors.brown }]}>{lesson.title}</Text>
+        <Text style={[styles.heroTitle, { color: colors.text }]}>{lesson.title}</Text>
         <Text style={[styles.heroDescription, { color: colors.textMuted }]}>
           {lesson.description}
         </Text>
 
         {/* CTA button */}
-        <Button
-          title={ctaTitle}
-          onPress={() => onStartLesson(lesson.id)}
-          style={styles.heroButton}
-        />
+        <View style={styles.ctaRow}>
+          <Button
+            title={ctaTitle}
+            onPress={() => onStartLesson(lesson.id)}
+            style={styles.heroButton}
+          />
+        </View>
       </View>
     </Animated.View>
   );
@@ -154,14 +156,22 @@ export default function HeroCard({
 // ── Styles ──
 
 const styles = StyleSheet.create({
+  heroWrap: {
+    marginBottom: spacing.xxl + spacing.sm,
+  },
   heroCard: {
     alignItems: "center",
-    marginBottom: spacing.xxxxl,
-    borderRadius: radii.xxl,
-    paddingVertical: spacing.xxl,
+    borderRadius: 32,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.xl,
     paddingHorizontal: spacing.xl,
     borderWidth: borderWidths.thin,
     overflow: "hidden",
+    shadowColor: "#163323",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.06,
+    shadowRadius: 40,
+    elevation: 6,
   },
   cornerBlobTopRight: {
     position: "absolute",
@@ -180,19 +190,10 @@ const styles = StyleSheet.create({
     height: 96,
     borderTopRightRadius: 96,
   },
-  phasePill: {
-    paddingVertical: spacing.xs,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.full,
-    marginBottom: spacing.lg,
-  },
-  phasePillText: {
-    ...typography.label,
-  },
   letterCircleWrapper: {
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: spacing.xl,
+    marginBottom: spacing.lg,
   },
   letterCircle: {
     width: 112,
@@ -200,19 +201,49 @@ const styles = StyleSheet.create({
     borderRadius: 56,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#F2F5F3",
     borderWidth: 2,
     borderColor: "rgba(255, 255, 255, 0.8)",
+    // Subtle inner shadow effect
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  lessonPill: {
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.full,
+    marginBottom: spacing.md,
+  },
+  lessonPillText: {
+    fontSize: 10,
+    fontFamily: fontFamilies.bodyBold,
+    letterSpacing: 0.8,
+    textTransform: "uppercase",
   },
   heroTitle: {
-    ...typography.cardHeadline,
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 22,
     textAlign: "center",
     marginBottom: spacing.sm,
   },
   heroDescription: {
     ...typography.body,
     textAlign: "center",
-    marginBottom: spacing.xxl,
+    lineHeight: 23,
+    marginBottom: spacing.xl,
     paddingHorizontal: spacing.sm,
+  },
+  ctaRow: {
+    width: "100%",
+    // Stronger CTA shadow matching web's 0 4px 16px rgba(22,51,35,0.20)
+    shadowColor: "#163323",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.20,
+    shadowRadius: 16,
+    elevation: 5,
   },
   heroButton: {
     width: "100%",

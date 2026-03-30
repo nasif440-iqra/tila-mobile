@@ -1,16 +1,17 @@
 import { useEffect } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Dimensions } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import Svg, { Defs, RadialGradient, Stop, Rect } from "react-native-svg";
 import { useColors } from "../../../design/theme";
-import { ArabicText } from "../../../design/components";
-import { spacing, fontFamilies, radii, shadows } from "../../../design/tokens";
+import { fontFamilies, spacing } from "../../../design/tokens";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import { hapticMilestone } from "../../../design/haptics";
 import {
   SPLASH_STAGGER_DURATION,
-  STILLNESS_BEAT_DURATION,
   LETTER_REVEAL_HAPTIC_DELAY,
 } from "../animations";
+
+const GLOW_SIZE = Math.min(324, Dimensions.get("window").width - 16);
 
 export function LetterReveal() {
   const colors = useColors();
@@ -23,7 +24,6 @@ export function LetterReveal() {
     return () => clearTimeout(timer);
   }, []);
 
-  const cardDelay = 400;
   const alifDelay = LETTER_REVEAL_HAPTIC_DELAY;
   const nameDelay = LETTER_REVEAL_HAPTIC_DELAY + 600;
 
@@ -37,88 +37,78 @@ export function LetterReveal() {
         YOUR FIRST LETTER
       </Animated.Text>
 
-      <View style={{ height: spacing.xxxl }} />
+      <View style={{ height: spacing.xl }} />
 
-      {/* Card container — matches reference image */}
-      <Animated.View
-        entering={FadeIn.delay(cardDelay).duration(700)}
-        style={[styles.card, { backgroundColor: colors.bgCard, ...shadows.cardLifted }]}
-      >
-        {/* Letter in circle with subtle glow ring */}
-        <View style={styles.letterCircleOuter}>
-          <View
-            style={[
-              styles.letterCircleGlow,
-              { backgroundColor: colors.accentGlow },
-            ]}
-          />
-          <View
-            style={[
-              styles.letterCircle,
-              {
-                backgroundColor: colors.primarySoft,
-                borderColor: colors.border,
-              },
-            ]}
-          >
-            {/* Alif appears after stillness beat */}
-            <Animated.View entering={FadeIn.delay(alifDelay - cardDelay).duration(800)}>
-              <ArabicText size="display" color={colors.primary}>
-                {"\u0627"}
-              </ArabicText>
-            </Animated.View>
-          </View>
-        </View>
-
-        {/* Name */}
-        <Animated.Text
-          entering={FadeInUp.delay(nameDelay - cardDelay).duration(500)}
-          style={[styles.letterName, { color: colors.brown }]}
+      {/* Large Alif with radial glow — NO card, NO circle, matching web */}
+      <View style={styles.letterContainer}>
+        {/* Warm radial glow orb */}
+        <Animated.View
+          entering={FadeIn.delay(200).duration(1200)}
+          style={styles.glowWrap}
+          pointerEvents="none"
         >
-          Alif
+          <Svg width={GLOW_SIZE} height={GLOW_SIZE} viewBox={`0 0 ${GLOW_SIZE} ${GLOW_SIZE}`}>
+            <Defs>
+              <RadialGradient id="revealGlow" cx="50%" cy="50%" r="50%">
+                <Stop offset="0%" stopColor="#C4A464" stopOpacity={0.18} />
+                <Stop offset="50%" stopColor="#C4A464" stopOpacity={0.06} />
+                <Stop offset="72%" stopColor="#C4A464" stopOpacity={0} />
+              </RadialGradient>
+            </Defs>
+            <Rect x={0} y={0} width={GLOW_SIZE} height={GLOW_SIZE} fill="url(#revealGlow)" />
+          </Svg>
+        </Animated.View>
+
+        {/* Alif — large, appears after stillness beat */}
+        <Animated.Text
+          entering={FadeIn.delay(alifDelay).duration(1000)}
+          style={[styles.letterBig, { color: colors.primaryDark }]}
+        >
+          {"\u0627"}
         </Animated.Text>
-      </Animated.View>
+      </View>
+
+      {/* Name */}
+      <Animated.Text
+        entering={FadeInUp.delay(nameDelay).duration(500)}
+        style={[styles.letterName, { color: colors.textMuted }]}
+      >
+        Alif
+      </Animated.Text>
     </OnboardingStepLayout>
   );
 }
 
 const styles = StyleSheet.create({
   firstWinLabel: {
-    fontFamily: fontFamilies.bodySemiBold,
-    fontSize: 13,
-    letterSpacing: 1.5,
+    fontFamily: fontFamilies.bodyBold,
+    fontSize: 15,
+    letterSpacing: 2.2,
+    textTransform: "uppercase",
     textAlign: "center",
   },
-  card: {
-    borderRadius: radii.xl,
-    paddingVertical: spacing.xxxl,
-    paddingHorizontal: spacing.xxl,
-    alignItems: "center",
-    width: "85%",
-  },
-  letterCircleOuter: {
+  letterContainer: {
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: spacing.lg,
   },
-  letterCircleGlow: {
+  glowWrap: {
     position: "absolute",
-    width: 160,
-    height: 160,
-    borderRadius: 80,
+    width: GLOW_SIZE,
+    height: GLOW_SIZE,
   },
-  letterCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
+  letterBig: {
+    fontFamily: fontFamilies.arabicRegular,
+    fontSize: 162,
+    lineHeight: 216,
+    textAlign: "center",
   },
   letterName: {
     fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 20,
+    fontSize: 24,
     textAlign: "center",
-    letterSpacing: 0.5,
+    letterSpacing: 1.0,
   },
 });

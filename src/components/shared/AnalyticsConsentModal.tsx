@@ -23,8 +23,8 @@ export function AnalyticsConsentModal({ visible, onAccept, onDecline }: Analytic
             Share anonymous usage data so we can make the app better for everyone. No personal information is collected.
           </Text>
           <View style={styles.buttons}>
-            <Button variant="ghost" label="No thanks" onPress={onDecline} />
-            <Button variant="primary" label="Sure" onPress={onAccept} />
+            <Button variant="ghost" title="No thanks" onPress={onDecline} />
+            <Button variant="primary" title="Sure" onPress={onAccept} />
           </View>
         </View>
       </View>
@@ -46,13 +46,13 @@ const styles = StyleSheet.create({
     padding: spacing.xl,
   },
   title: {
-    fontFamily: fontFamilies.heading,
+    fontFamily: fontFamilies.headingSemiBold,
     fontSize: 20,
     fontWeight: "600",
     marginBottom: spacing.md,
   },
   body: {
-    fontFamily: fontFamilies.body,
+    fontFamily: fontFamilies.bodyRegular,
     fontSize: 15,
     lineHeight: 22,
     marginBottom: spacing.xl,

@@ -14,9 +14,10 @@ export interface PhasePanelProps {
   label: string;
   done: number;
   total: number;
+  onPress?: () => void;
 }
 
-export default function PhasePanel({ label, done, total }: PhasePanelProps) {
+export default function PhasePanel({ label, done, total, onPress }: PhasePanelProps) {
   const colors = useColors();
 
   const pct = total > 0 ? (done / total) * 100 : 0;
@@ -33,7 +34,7 @@ export default function PhasePanel({ label, done, total }: PhasePanelProps) {
   }));
 
   return (
-    <Card style={{ padding: spacing.lg }}>
+    <Card style={{ padding: spacing.lg }} interactive={!!onPress} onPress={onPress}>
       <View style={styles.phaseHeader}>
         <View style={styles.phaseHeaderLeft}>
           {/* Status dot */}

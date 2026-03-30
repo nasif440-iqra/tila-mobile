@@ -15,10 +15,8 @@ import { ArabicText } from "../../design/components";
 import { useColors } from "../../design/theme";
 import {
   spacing,
-  typography,
   radii,
   shadows,
-  borderWidths,
   fontFamilies,
 } from "../../design/tokens";
 import { springs, staggers, easings, pressScale } from "../../design/animations";
@@ -35,7 +33,7 @@ export interface JourneyNodeProps {
   onPress: (lessonId: number) => void;
 }
 
-// ── Icon helpers (extracted from LessonGrid.tsx) ──
+// ── Icons ──
 
 function CheckIcon({ size = 16, color = "#fff" }: { size?: number; color?: string }) {
   return (
@@ -51,23 +49,13 @@ function CheckIcon({ size = 16, color = "#fff" }: { size?: number; color?: strin
   );
 }
 
-function LockIcon({ size = 14, color = "#6B6760" }: { size?: number; color?: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path
-        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-        stroke={color}
-        strokeWidth={2}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-// ── Animated Pressable ──
-
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+// ── Sizes matching web: completed/locked 40, current 44 ──
+
+const NODE_SIZE = 40;
+const CURRENT_NODE_SIZE = 44;
+const OUTLINE_W = 4; // outline: 4px solid bg — matches web
 
 // ── Component ──
 
@@ -80,7 +68,7 @@ export function JourneyNode({
 }: JourneyNodeProps) {
   const colors = useColors();
 
-  // Entrance animation
+  // Entrance
   const enterOpacity = useSharedValue(0);
   const enterTranslateY = useSharedValue(8);
 
@@ -100,9 +88,8 @@ export function JourneyNode({
     transform: [{ translateY: enterTranslateY.value }],
   }));
 
-  // Press feedback
+  // Press
   const pressScaleValue = useSharedValue(1);
-
   const pressStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pressScaleValue.value }],
   }));
@@ -110,25 +97,32 @@ export function JourneyNode({
   function handlePressIn() {
     pressScaleValue.value = withSpring(pressScale.subtle, springs.press);
   }
-
   function handlePressOut() {
     pressScaleValue.value = withSpring(1, springs.press);
   }
-
   function handlePress() {
     hapticTap();
     onPress(lesson.id);
   }
 
-  // Current node glow ring animation
-  const glowOpacity = useSharedValue(0.08);
+  // Breathing ring — current node
+  const breatheScale = useSharedValue(1);
+  const breatheOpacity = useSharedValue(0.25);
 
   useEffect(() => {
     if (state === "current") {
-      glowOpacity.value = withRepeat(
+      breatheScale.value = withRepeat(
         withSequence(
-          withTiming(0.15, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0.08, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1.08, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(1, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+        ),
+        -1,
+        false,
+      );
+      breatheOpacity.value = withRepeat(
+        withSequence(
+          withTiming(0.35, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
+          withTiming(0.15, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
         ),
         -1,
         false,
@@ -136,54 +130,56 @@ export function JourneyNode({
     }
   }, [state]);
 
-  const glowStyle = useAnimatedStyle(() => ({
-    opacity: glowOpacity.value,
+  const breatheStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: breatheScale.value }],
+    opacity: breatheOpacity.value,
   }));
 
-  // Letter preview for locked state
-  const firstLetter = lesson.teachIds?.length
-    ? getLetter(lesson.teachIds[0])
-    : undefined;
+  // Letter preview
+  const firstLetter = lesson.teachIds?.length ? getLetter(lesson.teachIds[0]) : undefined;
 
-  // Row opacity per state
-  const stateOpacity = state === "locked" ? 0.4 : state === "complete" ? 0.85 : 1;
+  // ── Circle ──
 
-  // ── Render node circle ──
-
-  function renderNodeCircle() {
+  function renderCircle() {
     if (state === "complete") {
       return (
-        <View
-          style={[
-            styles.nodeCircle,
-            styles.nodeComplete,
-            { backgroundColor: colors.primary },
-          ]}
-        >
-          <CheckIcon size={16} color={colors.accent} />
+        <View style={styles.circleWrap}>
+          {/* Outline ring — web: outline: 4px solid bg */}
+          <View style={[styles.outlineRing, { backgroundColor: colors.bg }]} />
+          <View
+            style={[
+              styles.circle,
+              { backgroundColor: colors.primary },
+              shadows.card,
+            ]}
+          >
+            <CheckIcon size={16} color={colors.accent} />
+          </View>
         </View>
       );
     }
 
     if (state === "current") {
       return (
-        <View style={styles.currentNodeWrapper}>
-          {/* Subtle glow ring */}
+        <View style={styles.currentCircleWrap}>
+          {/* Breathing ring */}
           <Animated.View
             style={[
-              styles.glowRing,
-              { backgroundColor: colors.accentGlow },
-              glowStyle,
+              styles.breathingRing,
+              { borderColor: colors.primary },
+              breatheStyle,
             ]}
           />
+          {/* Outline ring */}
+          <View style={[styles.currentOutlineRing, { backgroundColor: colors.bg }]} />
           <View
             style={[
-              styles.nodeCircle,
-              styles.nodeCurrent,
+              styles.currentCircle,
               {
                 backgroundColor: colors.bgCard,
                 borderColor: colors.primary,
               },
+              shadows.card,
             ]}
           >
             <View style={[styles.currentDot, { backgroundColor: colors.primary }]} />
@@ -194,46 +190,50 @@ export function JourneyNode({
 
     // Locked
     return (
-      <View
-        style={[
-          styles.nodeCircle,
-          styles.nodeLocked,
-          {
-            backgroundColor: colors.bg,
-            borderColor: colors.border,
-          },
-        ]}
-      >
-        {firstLetter ? (
-          <ArabicText
-            size="body"
-            color={colors.textMuted}
-            style={{ fontSize: 18, lineHeight: 24 }}
-          >
-            {firstLetter.letter}
-          </ArabicText>
-        ) : (
-          <LockIcon size={14} color={colors.textMuted} />
-        )}
+      <View style={styles.circleWrap}>
+        <View style={[styles.outlineRing, { backgroundColor: colors.bg }]} />
+        <View
+          style={[
+            styles.circle,
+            styles.circleLocked,
+            {
+              backgroundColor: colors.bg,
+              borderColor: colors.border,
+            },
+          ]}
+        >
+          {firstLetter ? (
+            <ArabicText
+              size="body"
+              color={colors.textMuted}
+              style={{ fontSize: 18, lineHeight: 24 }}
+            >
+              {firstLetter.letter}
+            </ArabicText>
+          ) : (
+            <View style={[styles.lockedDash, { backgroundColor: colors.border }]} />
+          )}
+        </View>
       </View>
     );
   }
 
-  // ── Render label ──
+  // ── Label ──
 
   function renderLabel() {
     if (state === "current") {
+      // Compact frosted card — matches web's padding: 10px 16px, borderRadius: 16
       return (
         <View
           style={[
-            styles.currentLabel,
+            styles.currentCard,
             {
               backgroundColor: colors.bgCard,
               borderColor: colors.border,
             },
           ]}
         >
-          <Text style={[styles.currentLabelTitle, { color: colors.brown }]}>
+          <Text style={[styles.currentTitle, { color: colors.text }]}>
             {lesson.title}
           </Text>
           <View style={styles.upNextRow}>
@@ -244,23 +244,30 @@ export function JourneyNode({
       );
     }
 
+    if (state === "complete") {
+      return (
+        <View>
+          <Text style={[styles.nodeTitle, { color: colors.text }]}>
+            {lesson.title}
+          </Text>
+          <View style={styles.completedRow}>
+            <CheckIcon size={10} color={colors.primary} />
+            <Text style={[styles.nodeSubtitle, { color: colors.textSoft }]}>
+              Completed
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    // Locked
     return (
       <View>
-        <Text
-          style={[
-            styles.nodeTitle,
-            { color: state === "locked" ? colors.textMuted : colors.text },
-          ]}
-        >
+        <Text style={[styles.nodeTitle, { color: colors.textMuted }]}>
           {lesson.title}
         </Text>
-        <Text
-          style={[
-            styles.nodeSubtitle,
-            { color: state === "locked" ? colors.textMuted : colors.textSoft },
-          ]}
-        >
-          {state === "complete" ? "Completed" : "Locked"}
+        <Text style={[styles.nodeSubtitle, { color: colors.textMuted }]}>
+          Locked
         </Text>
       </View>
     );
@@ -268,16 +275,18 @@ export function JourneyNode({
 
   // ── Render ──
 
+  const rowOpacity = state === "locked" ? 0.4 : state === "complete" ? 0.85 : 1;
+
   const rowStyle = [
     styles.nodeRow,
-    { transform: [{ translateX: offset }], opacity: stateOpacity },
+    { transform: [{ translateX: offset }], opacity: rowOpacity },
   ];
 
   if (state === "locked") {
     return (
       <Animated.View style={entranceStyle}>
         <View style={rowStyle}>
-          {renderNodeCircle()}
+          {renderCircle()}
           {renderLabel()}
         </View>
       </Animated.View>
@@ -292,7 +301,7 @@ export function JourneyNode({
         onPress={handlePress}
         style={[rowStyle, pressStyle]}
       >
-        {renderNodeCircle()}
+        {renderCircle()}
         {renderLabel()}
       </AnimatedPressable>
     </Animated.View>
@@ -302,67 +311,106 @@ export function JourneyNode({
 // ── Styles ──
 
 const styles = StyleSheet.create({
+  // Row — web gap: 20, marginBottom via gap: 44
   nodeRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xl,
-    marginBottom: spacing.xxxl,
+    gap: 20,
+    marginBottom: 44,
   },
-  nodeCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+
+  // ── Completed / Locked circle (40px + 4px outline) ──
+  circleWrap: {
+    width: NODE_SIZE + OUTLINE_W * 2,
+    height: NODE_SIZE + OUTLINE_W * 2,
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
   },
-  nodeComplete: {
-    ...shadows.card,
-  },
-  nodeCurrent: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: borderWidths.thick,
-    ...shadows.card,
-  },
-  nodeLocked: {
-    borderWidth: borderWidths.thick,
-  },
-  currentNodeWrapper: {
-    width: 52,
-    height: 52,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  glowRing: {
+  outlineRing: {
     position: "absolute",
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: NODE_SIZE + OUTLINE_W * 2,
+    height: NODE_SIZE + OUTLINE_W * 2,
+    borderRadius: (NODE_SIZE + OUTLINE_W * 2) / 2,
+    zIndex: 1,
+  },
+  circle: {
+    width: NODE_SIZE,
+    height: NODE_SIZE,
+    borderRadius: NODE_SIZE / 2,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
+  },
+  circleLocked: {
+    borderWidth: 2,
+  },
+  lockedDash: {
+    width: 12,
+    height: 2,
+    borderRadius: 1,
+  },
+
+  // ── Current circle (44px + outline + breathing ring) ──
+  currentCircleWrap: {
+    width: CURRENT_NODE_SIZE + OUTLINE_W * 2 + 8,
+    height: CURRENT_NODE_SIZE + OUTLINE_W * 2 + 8,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  breathingRing: {
+    position: "absolute",
+    width: CURRENT_NODE_SIZE + 8,
+    height: CURRENT_NODE_SIZE + 8,
+    borderRadius: (CURRENT_NODE_SIZE + 8) / 2,
+    borderWidth: 1.5,
+    zIndex: 0,
+  },
+  currentOutlineRing: {
+    position: "absolute",
+    width: CURRENT_NODE_SIZE + OUTLINE_W * 2,
+    height: CURRENT_NODE_SIZE + OUTLINE_W * 2,
+    borderRadius: (CURRENT_NODE_SIZE + OUTLINE_W * 2) / 2,
+    zIndex: 1,
+  },
+  currentCircle: {
+    width: CURRENT_NODE_SIZE,
+    height: CURRENT_NODE_SIZE,
+    borderRadius: CURRENT_NODE_SIZE / 2,
+    borderWidth: 2.5,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 2,
   },
   currentDot: {
     width: 12,
     height: 12,
     borderRadius: 6,
   },
-  currentLabel: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    borderRadius: radii.lg,
-    borderWidth: borderWidths.thin,
-    ...shadows.card,
+
+  // ── Current label — compact card (web: padding 10px 16px, borderRadius 16) ──
+  currentCard: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  currentLabelTitle: {
-    ...typography.cardHeadline,
+  currentTitle: {
+    fontFamily: fontFamilies.headingSemiBold,
     fontSize: 15,
+    lineHeight: 20,
   },
   upNextRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.xs,
-    marginTop: spacing.xs,
+    gap: 6,
+    marginTop: 3,
   },
   upNextDot: {
     width: 6,
@@ -370,8 +418,13 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   upNextText: {
-    ...typography.label,
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 11,
+    letterSpacing: 0.5,
+    textTransform: "uppercase",
   },
+
+  // ── Completed / Locked labels ──
   nodeTitle: {
     fontSize: 15,
     fontFamily: fontFamilies.bodyMedium,
@@ -379,6 +432,12 @@ const styles = StyleSheet.create({
   nodeSubtitle: {
     fontSize: 12,
     fontFamily: fontFamilies.bodyRegular,
-    marginTop: spacing.xs,
+    marginTop: 2,
+  },
+  completedRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 2,
   },
 });

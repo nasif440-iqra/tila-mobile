@@ -1,9 +1,18 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeInUp,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, fontFamilies } from "../../../design/tokens";
-import { WarmGlow } from "../WarmGlow";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import {
   SPLASH_STAGGER_BASE,
@@ -12,10 +21,34 @@ import {
   CTA_DURATION,
 } from "../animations";
 
+function ShimmerWord() {
+  const colors = useColors();
+  const opacity = useSharedValue(0.35);
+
+  useEffect(() => {
+    opacity.value = withRepeat(
+      withTiming(1, { duration: 1800, easing: Easing.linear }),
+      -1,
+      true,
+    );
+  }, []);
+
+  const animStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <Text style={[styles.tilawatWord, { color: colors.accent }]}>
+        Tilawat
+      </Text>
+    </Animated.View>
+  );
+}
+
 export function Tilawat({ onNext }: { onNext: () => void }) {
   const colors = useColors();
 
-  // Splash stagger: 0 = calligraphy, 1 = headline, 2 = motto
   const calligraphyDelay = 0;
   const headlineDelay = SPLASH_STAGGER_BASE;
   const mottoDelay = SPLASH_STAGGER_BASE * 2;
@@ -30,7 +63,7 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
           entering={FadeInUp.delay(ctaDelay).duration(CTA_DURATION)}
           style={{ zIndex: 1 }}
         >
-          <Button title="Begin Reading" onPress={onNext} style={styles.fullWidthBtn} />
+          <Button title="Begin" onPress={onNext} style={styles.ctaBtn} />
         </Animated.View>
       }
     >
@@ -39,29 +72,29 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         <ArabicText
           size="display"
           color={colors.primaryDark}
-          style={{ fontSize: 72, lineHeight: 100, zIndex: 1 }}
+          style={{ fontSize: 56, lineHeight: 78, zIndex: 1 }}
         >
           {"\u062A\u0650\u0644\u0627\u0648\u064E\u0629"}
         </ArabicText>
       </Animated.View>
 
-      <View style={{ height: spacing.xxl }} />
+      <View style={{ height: spacing.lg }} />
 
-      {/* Headline */}
-      <Animated.Text
+      {/* Headline — two-part layout for hierarchy */}
+      <Animated.View
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
-        style={[styles.sacredHeadline, { color: colors.brown, zIndex: 1 }]}
+        style={{ alignItems: "center", zIndex: 1 }}
       >
-        <Text
-          style={{
-            fontFamily: fontFamilies.headingItalic,
-            color: colors.accent,
-          }}
-        >
-          Tilawat
+        <Text style={[styles.headlineBody, { color: colors.brown }]}>
+          To recite the Quran
         </Text>
-        {": To recite the Quran beautifully"}
-      </Animated.Text>
+        <View style={{ flexDirection: "row", alignItems: "baseline" }}>
+          <Text style={[styles.headlineBody, { color: colors.brown }]}>
+            beautifully is{" "}
+          </Text>
+          <ShimmerWord />
+        </View>
+      </Animated.View>
 
       <View style={{ height: spacing.md }} />
 
@@ -77,20 +110,29 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
 }
 
 const styles = StyleSheet.create({
-  sacredHeadline: {
-    fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 22,
-    lineHeight: 31,
+  headlineBody: {
+    fontFamily: fontFamilies.headingRegular,
+    fontSize: 21,
+    lineHeight: 32,
     textAlign: "center",
     maxWidth: 300,
-    letterSpacing: -0.2,
+  },
+  tilawatWord: {
+    fontFamily: fontFamilies.headingItalic,
+    fontSize: 26,
+    lineHeight: 32,
+    letterSpacing: 0.5,
   },
   sacredMotto: {
-    fontSize: 13,
-    letterSpacing: 1,
+    fontFamily: fontFamilies.bodyRegular,
+    fontSize: 12,
+    letterSpacing: 1.8,
     textAlign: "center",
   },
-  fullWidthBtn: {
+  ctaBtn: {
+    maxWidth: 280,
     width: "100%",
+    alignSelf: "center" as const,
+    paddingVertical: 14,
   },
 });

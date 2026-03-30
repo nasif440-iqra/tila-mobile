@@ -1,9 +1,12 @@
-import { View, Text, StyleSheet, ViewStyle } from "react-native";
+import { useState, useCallback } from "react";
+import { View, Text, Pressable, StyleSheet, ViewStyle } from "react-native";
 import { useColors } from "../../design/theme";
-import { spacing, typography, radii, fontFamilies, shadows } from "../../design/tokens";
+import { spacing, typography, radii, shadows } from "../../design/tokens";
 import { ArabicText } from "../../design/components";
-import { ARABIC_LETTERS } from "../../data/letters";
+import { hapticTap } from "../../design/haptics";
+import { ARABIC_LETTERS, getLetter } from "../../data/letters";
 import { deriveMasteryState } from "../../engine/mastery";
+import { LetterDetailSheet } from "./LetterDetailSheet";
 import type { EntityState } from "../../types/mastery";
 
 export interface LetterMasteryGridProps {
@@ -77,18 +80,32 @@ export default function LetterMasteryGrid({
   today,
 }: LetterMasteryGridProps) {
   const colors = useColors();
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const handlePress = useCallback((letterId: number) => {
+    hapticTap();
+    setSelectedId(letterId);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelectedId(null);
+  }, []);
+
+  const selectedLetter = selectedId ? getLetter(selectedId) : null;
+  const selectedEntityKey = selectedId ? `letter:${selectedId}` : null;
+  const selectedEntity = selectedEntityKey ? entities[selectedEntityKey] ?? null : null;
 
   return (
-    <View style={styles.letterGrid}>
-      {ARABIC_LETTERS.map((letter) => {
-        const entityKey = `letter:${letter.id}`;
-        const entity = entities[entityKey];
-        const state = entity ? deriveMasteryState(entity, today) : "not_started";
-        const learned = learnedIds.includes(letter.id);
-        const masteryStyle = getMasteryStyle(state, colors);
+    <>
+      <View style={styles.letterGrid}>
+        {ARABIC_LETTERS.map((letter) => {
+          const entityKey = `letter:${letter.id}`;
+          const entity = entities[entityKey];
+          const state = entity ? deriveMasteryState(entity, today) : "not_started";
+          const learned = learnedIds.includes(letter.id);
+          const masteryStyle = getMasteryStyle(state, colors);
 
-        return (
-          <View key={letter.id} style={{ width: "25%" }}>
+          const cell = (
             <View
               style={[
                 styles.letterCell,
@@ -119,10 +136,34 @@ export default function LetterMasteryGrid({
                   : "\u2014"}
               </Text>
             </View>
-          </View>
-        );
-      })}
-    </View>
+          );
+
+          return (
+            <View key={letter.id} style={{ width: "25%" }}>
+              {learned ? (
+                <Pressable
+                  onPress={() => handlePress(letter.id)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${letter.name} letter details`}
+                >
+                  {cell}
+                </Pressable>
+              ) : (
+                cell
+              )}
+            </View>
+          );
+        })}
+      </View>
+
+      <LetterDetailSheet
+        letter={selectedLetter ?? null}
+        entity={selectedEntity}
+        today={today}
+        visible={selectedId !== null && selectedLetter !== null}
+        onClose={handleClose}
+      />
+    </>
   );
 }
 

@@ -17,10 +17,7 @@ import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
-import {
-  TRANSITION_FADE_IN,
-  TRANSITION_FADE_OUT,
-} from "../../src/components/onboarding/animations";
+import { durations } from "../../src/design/animations";
 import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery.js";
 import { getLetter } from "../../src/data/letters.js";
 import { planReviewSession } from "../../src/engine/selectors";
@@ -302,8 +299,8 @@ export default function LessonScreen() {
   return (
     <Animated.View
       key={effectiveStage}
-      entering={FadeIn.duration(TRANSITION_FADE_IN)}
-      exiting={FadeOut.duration(TRANSITION_FADE_OUT)}
+      entering={FadeIn.duration(durations.normal)}
+      exiting={FadeOut.duration(durations.micro)}
       style={{ flex: 1 }}
     >
       {renderStage()}
