@@ -23,6 +23,8 @@ import {
 } from "../../src/components/onboarding/animations";
 import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery.js";
 import { getLetter } from "../../src/data/letters.js";
+import { planReviewSession } from "../../src/engine/selectors";
+import { getTodayDateString } from "../../src/engine/dateUtils";
 import { LetterMasteryCelebration } from "../../src/components/celebrations/LetterMasteryCelebration";
 
 // ── Types ──
@@ -56,6 +58,7 @@ export default function LessonScreen() {
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
+  const today = getTodayDateString();
 
   // Capture pre-lesson state for transient screen detection
   const preCompletedRef = useRef<number[]>(completedLessonIds);
@@ -272,6 +275,10 @@ export default function LessonScreen() {
 
     // Summary stage
     if (stage === "summary" && quizResults) {
+      // Compute how many letters are due for review to show prompt (B5)
+      const reviewPlan = progress.mastery ? planReviewSession(progress.mastery, today) : null;
+      const reviewItemCount = reviewPlan?.hasReviewWork ? (reviewPlan.totalItems ?? 0) : 0;
+
       return (
         <LessonSummary
           lesson={lesson}
@@ -280,9 +287,11 @@ export default function LessonScreen() {
           accuracy={quizResults.accuracy}
           threshold={getPassThreshold(lesson.lessonMode)}
           goalCompleted={goalCompleted}
+          reviewItemCount={reviewItemCount}
           onContinue={handleContinue}
           onRetry={handleRetry}
           onBack={() => router.replace("/(tabs)")}
+          onReview={() => router.replace("/lesson/review")}
         />
       );
     }
