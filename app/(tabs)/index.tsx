@@ -21,6 +21,7 @@ import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
+import { useSubscription, FREE_LESSON_CUTOFF } from "../../src/monetization/hooks";
 import { LESSONS } from "../../src/data/lessons";
 import {
   getCurrentLesson,
@@ -291,6 +292,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const progress = useProgress();
   const { habit } = useHabit();
+  const { isPremiumActive, stage, trialDaysRemaining, showPaywall } = useSubscription();
   const today = getTodayDateString();
 
   // Header entrance animation
@@ -421,6 +423,30 @@ export default function HomeScreen() {
           </Text>
         </Animated.View>
 
+        {/* Trial badge — progressive urgency */}
+        {stage === "trial" && trialDaysRemaining != null && (
+          <Pressable onPress={() => showPaywall("home_upsell")}>
+            <Text style={[
+              styles.trialBadge,
+              {
+                color: trialDaysRemaining <= 2 ? colors.accent : colors.textMuted,
+                backgroundColor: trialDaysRemaining <= 2 ? colors.accentLight : "transparent",
+              }
+            ]}>
+              {trialDaysRemaining <= 2
+                ? `Your trial ends in ${trialDaysRemaining} day${trialDaysRemaining !== 1 ? "s" : ""}. Subscribe to keep learning.`
+                : `Trial \u00B7 ${trialDaysRemaining} days left`}
+            </Text>
+          </Pressable>
+        )}
+        {stage === "expired" && (
+          <Pressable onPress={() => showPaywall("expired_card")}>
+            <Text style={[styles.trialBadge, { color: colors.accent, backgroundColor: colors.accentLight }]}>
+              Your trial has ended.
+            </Text>
+          </Pressable>
+        )}
+
         {/* ── Urgent Review (above hero) ── */}
         {hasReview && isReviewUrgent && (
           <View style={styles.sectionGap}>
@@ -474,6 +500,13 @@ export default function HomeScreen() {
           completedLessonIds={completedLessonIds}
           onStartLesson={handleStartLesson}
           enterDelay={160}
+          isPremiumActive={isPremiumActive}
+          onLockedLessonPress={async (lessonId: number) => {
+            const outcome = await showPaywall("lesson_locked");
+            if (outcome.accessGranted) {
+              router.push({ pathname: "/lesson/[id]", params: { id: String(lessonId) } });
+            }
+          }}
         />
 
         <View style={{ height: spacing.xxxl }} />
@@ -556,6 +589,18 @@ const styles = StyleSheet.create({
     fontFamily: fontFamilies.headingRegular,
     fontSize: 28,
     lineHeight: 33,
+  },
+
+  // Trial badge
+  trialBadge: {
+    fontSize: 12,
+    fontFamily: fontFamilies.bodyMedium,
+    textAlign: "center" as const,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.lg,
+    overflow: "hidden" as const,
+    marginBottom: spacing.sm,
   },
 
   // Section gaps — consistent vertical rhythm
