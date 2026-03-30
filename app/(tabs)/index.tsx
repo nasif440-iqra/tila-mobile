@@ -223,7 +223,7 @@ function ReviewCard({
               onPress={() => { hapticTap(); onStart(); }}
               style={[styles.reviewInlineBtn, { borderColor: colors.primary }]}
             >
-              <Text style={[styles.reviewInlineBtnText, { color: colors.primary }]}>Review</Text>
+              <Text style={[styles.reviewInlineBtnText, { color: colors.primary }]}>Quick review</Text>
             </Pressable>
           )}
         </View>
@@ -234,7 +234,7 @@ function ReviewCard({
             onPress={() => { hapticTap(); onStart(); }}
             style={[styles.reviewFullBtn, { backgroundColor: colors.primary }]}
           >
-            <Text style={[styles.reviewFullBtnText, { color: colors.white }]}>Start review</Text>
+            <Text style={[styles.reviewFullBtnText, { color: colors.white }]}>Quick review</Text>
           </Pressable>
         )}
       </View>
