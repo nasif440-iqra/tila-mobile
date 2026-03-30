@@ -15,7 +15,7 @@ import { parseEntityKey } from "../mastery.js";
  * For combo entities: harakat-style questions (mark-to-sound matching).
  *
  * Weight toward entities with lower SRS sessionStreak.
- * Generate min(dueCount * 3, 15) questions.
+ * Generate min(dueCount * 3, 5) questions — micro-review by default.
  */
 export function generateReviewQs(lesson, progress) {
   const rawIds = lesson.teachIds || [];
@@ -54,7 +54,7 @@ export function generateReviewQs(lesson, progress) {
 
   // ── Letter review questions ──
   if (dueLetterIds.length > 0) {
-    const totalLetterQs = Math.min(dueLetterIds.length * 3, 15);
+    const totalLetterQs = Math.min(dueLetterIds.length * 3, 5);
     const allPool = [...dueLetterIds];
 
     // Weight toward letters with lower sessionStreak
@@ -103,7 +103,7 @@ export function generateReviewQs(lesson, progress) {
 
   // ── Combo review questions (harakat) ──
   if (dueComboIds.length > 0) {
-    const maxComboQs = Math.min(dueComboIds.length * 2, 10);
+    const maxComboQs = Math.min(dueComboIds.length * 2, 5);
     let comboQCount = 0;
 
     for (const cid of shuffle([...dueComboIds])) {
@@ -148,7 +148,7 @@ export function generateReviewQs(lesson, progress) {
     }
   }
 
-  // Cap total questions and shuffle
-  const totalQs = Math.min(totalDue * 3, 15);
+  // Cap total questions and shuffle — micro-review: 5 questions max
+  const totalQs = Math.min(totalDue * 3, 5);
   return shuffle(qs).slice(0, totalQs);
 }
