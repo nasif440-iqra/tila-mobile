@@ -30,6 +30,7 @@ import { hapticMilestone, hapticSuccess, hapticTap } from "../design/haptics";
 import { playLessonComplete, playLessonCompletePerfect } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { LESSONS } from "../data/lessons";
+import { trackScholarshipTapped } from "../monetization/analytics";
 
 // ── Confetti burst — lightweight particle overlay ──
 
@@ -149,6 +150,9 @@ interface LessonSummaryProps {
   onRetry: () => void;
   onBack?: () => void;
   onReview?: () => void; // navigate to review session (B5)
+  showTrialCTA?: boolean;
+  onStartTrial?: () => void;
+  onScholarship?: () => void;
 }
 
 // ── Icons ──
@@ -278,6 +282,9 @@ export function LessonSummary({
   onRetry,
   onBack,
   onReview,
+  showTrialCTA,
+  onStartTrial,
+  onScholarship,
 }: LessonSummaryProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -752,6 +759,39 @@ export function LessonSummary({
           </Animated.View>
         )}
 
+        {/* ── Trial CTA (lesson 7 summary for free users) ── */}
+        {passed && showTrialCTA && onStartTrial && (
+          <Animated.View
+            entering={FadeIn.delay(850).duration(400)}
+            style={[
+              styles.trialCTACard,
+              { backgroundColor: colors.primarySoft, borderColor: "rgba(22,51,35,0.15)" },
+            ]}
+          >
+            <Text style={[styles.trialCTAHeadline, { color: colors.text }]}>
+              You just learned to recognize the Arabic alphabet.
+            </Text>
+            <Text style={[styles.trialCTASub, { color: colors.textSoft }]}>
+              Ready to learn how they sound? Start your free 7-day trial.
+            </Text>
+            <Pressable
+              onPress={() => { hapticTap(); onStartTrial(); }}
+              style={[styles.trialCTABtn, { backgroundColor: colors.primary }]}
+            >
+              <Text style={[styles.trialCTABtnText, { color: "#FFFFFF" }]}>
+                Start Free Trial
+              </Text>
+            </Pressable>
+            {onScholarship && (
+              <Pressable onPress={() => { trackScholarshipTapped("lesson_7_summary"); onScholarship(); }}>
+                <Text style={[styles.trialCTAScholarship, { color: colors.textMuted }]}>
+                  Can't afford Tila? Email us
+                </Text>
+              </Pressable>
+            )}
+          </Animated.View>
+        )}
+
         {/* ── 7. Action buttons ── */}
         <Animated.View entering={FadeIn.delay(850).duration(400)} style={styles.actions}>
           <Button title="Continue" onPress={onContinue} />
@@ -1081,5 +1121,45 @@ const styles = StyleSheet.create({
   reviewPromptBtnText: {
     fontFamily: fontFamilies.bodySemiBold,
     fontSize: 14,
+  },
+
+  // Trial CTA card (lesson 7 summary)
+  trialCTACard: {
+    width: "100%",
+    borderRadius: radii.xxl,
+    borderWidth: 1,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    alignItems: "center",
+    marginBottom: spacing.md,
+  },
+  trialCTAHeadline: {
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: spacing.sm,
+  },
+  trialCTASub: {
+    fontSize: 13,
+    fontFamily: fontFamilies.bodyRegular,
+    textAlign: "center",
+    marginBottom: spacing.lg,
+    lineHeight: 20,
+  },
+  trialCTABtn: {
+    borderRadius: radii.lg,
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    alignItems: "center",
+    marginBottom: spacing.sm,
+  },
+  trialCTABtnText: {
+    fontFamily: fontFamilies.bodySemiBold,
+    fontSize: 15,
+  },
+  trialCTAScholarship: {
+    fontSize: 12,
+    fontFamily: fontFamilies.bodyRegular,
+    paddingVertical: spacing.sm,
   },
 });

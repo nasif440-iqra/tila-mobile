@@ -6,6 +6,8 @@
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { SEED_DEFAULTS } from '../db/schema';
+import { normalizeEntityKey, mergeQuizResultsIntoMastery } from './mastery.js';
+import type { QuizResultItem } from '../types/quiz';
 
 // ── State Shape Types ──────────────────────────────────────────────
 
@@ -171,6 +173,38 @@ export async function saveCompletedLesson(
   return result.lastInsertRowId;
 }
 
+/**
+ * Save mastery updates (entities, skills, confusions) without creating
+ * a lesson_attempts row. Used by review sessions where the quiz feeds
+ * the mastery pipeline but does not count as lesson progression.
+ */
+export async function saveMasteryResults(
+  db: SQLiteDatabase,
+  quizResultItems: QuizResultItem[],
+  currentMastery: ProgressState["mastery"]
+): Promise<void> {
+  if (quizResultItems.length === 0) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const enriched = quizResultItems.map((r) => ({
+    ...r,
+    targetKey: normalizeEntityKey(r.targetId, r),
+  }));
+
+  const updatedMastery = mergeQuizResultsIntoMastery(currentMastery, enriched, today);
+
+  for (const [key, entity] of Object.entries(updatedMastery.entities)) {
+    await saveMasteryEntity(db, key, entity as EntityState);
+  }
+  for (const [key, skill] of Object.entries(updatedMastery.skills)) {
+    await saveMasterySkill(db, key, skill as SkillState);
+  }
+  for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
+    await saveMasteryConfusion(db, key, confusion as ConfusionState);
+  }
+}
+
 export async function saveQuestionAttempts(
   db: SQLiteDatabase,
   attemptId: number,
@@ -320,6 +354,27 @@ export async function saveUserProfile(
   await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, ...values);
 }
 
+// ── Premium Lesson Grants ─────────────────────────────────────────
+
+export async function savePremiumLessonGrant(
+  db: SQLiteDatabase,
+  lessonId: number
+): Promise<void> {
+  await db.runAsync(
+    "INSERT OR IGNORE INTO premium_lesson_grants (lesson_id) VALUES (?)",
+    lessonId
+  );
+}
+
+export async function loadPremiumLessonGrants(
+  db: SQLiteDatabase
+): Promise<number[]> {
+  const rows = await db.getAllAsync<{ lesson_id: number }>(
+    "SELECT lesson_id FROM premium_lesson_grants ORDER BY lesson_id"
+  );
+  return rows.map((r) => r.lesson_id);
+}
+
 // ── Reset ──────────────────────────────────────────────────────────
 
 export async function resetProgress(db: SQLiteDatabase): Promise<void> {
@@ -331,6 +386,7 @@ export async function resetProgress(db: SQLiteDatabase): Promise<void> {
   await db.runAsync('DELETE FROM mastery_confusions');
   await db.runAsync('DELETE FROM habit');
   await db.runAsync('DELETE FROM user_profile');
+  await db.runAsync('DELETE FROM premium_lesson_grants');
 
   // Re-seed defaults
   await db.execAsync(SEED_DEFAULTS);
@@ -339,7 +395,7 @@ export async function resetProgress(db: SQLiteDatabase): Promise<void> {
 // ── Export / Import ────────────────────────────────────────────────
 
 export async function exportProgress(db: SQLiteDatabase): Promise<object> {
-  const [lessonAttempts, questionAttempts, entities, skills, confusions, habit, userProfile] =
+  const [lessonAttempts, questionAttempts, entities, skills, confusions, habit, userProfile, premiumGrants] =
     await Promise.all([
       db.getAllAsync('SELECT * FROM lesson_attempts ORDER BY id'),
       db.getAllAsync('SELECT * FROM question_attempts ORDER BY id'),
@@ -348,6 +404,7 @@ export async function exportProgress(db: SQLiteDatabase): Promise<object> {
       db.getAllAsync('SELECT * FROM mastery_confusions ORDER BY confusion_key'),
       db.getFirstAsync('SELECT * FROM habit WHERE id = 1'),
       db.getFirstAsync('SELECT * FROM user_profile WHERE id = 1'),
+      db.getAllAsync('SELECT * FROM premium_lesson_grants ORDER BY lesson_id'),
     ]);
 
   return {
@@ -360,6 +417,7 @@ export async function exportProgress(db: SQLiteDatabase): Promise<object> {
     masteryConfusions: confusions,
     habit,
     userProfile,
+    premiumLessonGrants: premiumGrants,
   };
 }
 
@@ -372,6 +430,7 @@ interface ImportData {
   masteryConfusions?: Array<Record<string, unknown>>;
   habit?: Record<string, unknown>;
   userProfile?: Record<string, unknown>;
+  premiumLessonGrants?: Array<Record<string, unknown>>;
 }
 
 export async function importProgress(db: SQLiteDatabase, data: ImportData): Promise<void> {
@@ -388,6 +447,7 @@ export async function importProgress(db: SQLiteDatabase, data: ImportData): Prom
     await db.runAsync('DELETE FROM mastery_confusions');
     await db.runAsync('DELETE FROM habit');
     await db.runAsync('DELETE FROM user_profile');
+    await db.runAsync('DELETE FROM premium_lesson_grants');
 
     // Import lesson attempts
     if (Array.isArray(data.lessonAttempts)) {
@@ -500,6 +560,17 @@ export async function importProgress(db: SQLiteDatabase, data: ImportData): Prom
       );
     } else {
       await db.execAsync('INSERT OR IGNORE INTO user_profile (id) VALUES (1)');
+    }
+
+    // Clear and restore premium lesson grants
+    if (Array.isArray(data.premiumLessonGrants)) {
+      for (const row of data.premiumLessonGrants) {
+        await db.runAsync(
+          'INSERT INTO premium_lesson_grants (lesson_id, granted_at) VALUES (?, ?)',
+          row.lesson_id as number,
+          row.granted_at as string
+        );
+      }
     }
   });
 }

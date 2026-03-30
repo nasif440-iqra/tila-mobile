@@ -4,7 +4,7 @@
  * Single-user design — no user_id columns.
  */
 
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS user_profile (
@@ -87,6 +87,11 @@ CREATE TABLE IF NOT EXISTS question_attempts (
 CREATE INDEX IF NOT EXISTS idx_qa_attempt ON question_attempts(attempt_id);
 CREATE INDEX IF NOT EXISTS idx_qa_entity ON question_attempts(target_entity);
 CREATE INDEX IF NOT EXISTS idx_qa_date ON question_attempts(attempted_at);
+
+CREATE TABLE IF NOT EXISTS premium_lesson_grants (
+  lesson_id INTEGER NOT NULL PRIMARY KEY,
+  granted_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
 
 CREATE TABLE IF NOT EXISTS schema_version (
   version INTEGER PRIMARY KEY,

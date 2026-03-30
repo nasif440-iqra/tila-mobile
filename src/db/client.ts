@@ -75,6 +75,21 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (4)");
   }
+
+  if (currentVersion < 5) {
+    const tableCheck = await db.getFirstAsync<{ name: string }>(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='premium_lesson_grants'"
+    );
+    if (!tableCheck) {
+      await db.execAsync(`
+        CREATE TABLE IF NOT EXISTS premium_lesson_grants (
+          lesson_id INTEGER NOT NULL PRIMARY KEY,
+          granted_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+      `);
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (5)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {
@@ -87,6 +102,7 @@ export async function resetDatabase(): Promise<void> {
     DROP TABLE IF EXISTS mastery_skills;
     DROP TABLE IF EXISTS mastery_confusions;
     DROP TABLE IF EXISTS habit;
+    DROP TABLE IF EXISTS premium_lesson_grants;
     DROP TABLE IF EXISTS user_profile;
     DROP TABLE IF EXISTS schema_version;
   `);
