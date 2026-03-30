@@ -102,6 +102,7 @@ export async function resetDatabase(): Promise<void> {
     DROP TABLE IF EXISTS mastery_skills;
     DROP TABLE IF EXISTS mastery_confusions;
     DROP TABLE IF EXISTS habit;
+    DROP TABLE IF EXISTS premium_lesson_grants;
     DROP TABLE IF EXISTS user_profile;
     DROP TABLE IF EXISTS schema_version;
   `);
