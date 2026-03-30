@@ -5,6 +5,7 @@ import {
   saveCompletedLesson,
   saveQuestionAttempts,
   saveUserProfile,
+  saveMasteryResults,
   type ProgressState,
   type UserProfileUpdate,
 } from "../engine/progress";
@@ -88,6 +89,15 @@ export function useProgress() {
     [db, refresh]
   );
 
+  const saveMasteryOnly = useCallback(
+    async (quizResultItems: QuizResultItem[]) => {
+      const freshProgress = await loadProgress(db);
+      await saveMasteryResults(db, quizResultItems, freshProgress.mastery);
+      await refresh();
+    },
+    [db, refresh]
+  );
+
   const updateProfile = useCallback(
     async (profile: UserProfileUpdate) => {
       await saveUserProfile(db, profile);
@@ -100,6 +110,7 @@ export function useProgress() {
     ...state,
     loading,
     completeLesson,
+    saveMasteryOnly,
     updateProfile,
     refresh,
   };

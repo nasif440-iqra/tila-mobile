@@ -12,7 +12,6 @@ import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { buildReviewLessonPayload } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
-import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
 import { durations } from "../../src/design/animations";
 
@@ -53,21 +52,10 @@ export default function ReviewScreen() {
   const handleQuizComplete = useCallback(
     async (results: { correct: number; total: number; questions: QuizResultItem[] }) => {
       const accuracy = results.total > 0 ? results.correct / results.total : 0;
-
-      // Review sessions always pass
       const passed = true;
 
-      // Save to database — review uses id "review" but completeLesson expects a number,
-      // so we pass 0 as a sentinel for review sessions
-      const attempts = mapQuizResultsToAttempts(results.questions);
-      await progress.completeLesson(
-        0, // review session sentinel
-        accuracy,
-        passed,
-        attempts
-      );
-
-      // Record practice for habit/wird
+      // Review sessions save mastery updates only — no lesson_attempts row.
+      await progress.saveMasteryOnly(results.questions);
       await recordPractice();
 
       setQuizResults({ ...results, accuracy, passed });
