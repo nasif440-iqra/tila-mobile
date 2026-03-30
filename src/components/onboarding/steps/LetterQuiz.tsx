@@ -4,7 +4,6 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, radii, fontFamilies } from "../../../design/tokens";
-import { playCorrect, playTap, playWrong } from "../../../audio/player";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import { STAGGER_BASE, STAGGER_DURATION } from "../animations";
 
@@ -16,7 +15,6 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
 
   function handleAnswerSelect(name: string) {
     if (answerChecked) return;
-    playTap();
     setSelectedAnswer(name);
   }
 
@@ -25,9 +23,8 @@ export function LetterQuiz({ onNext }: { onNext: () => void }) {
     setIsCorrect(correct);
     setAnswerChecked(true);
     if (correct) {
-      playCorrect();
+      // correct
     } else {
-      playWrong();
       setTimeout(() => {
         setAnswerChecked(false);
         setIsCorrect(null);

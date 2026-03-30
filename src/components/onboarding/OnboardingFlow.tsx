@@ -8,15 +8,13 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useProgress } from "../../hooks/useProgress";
 import { useColors } from "../../design/theme";
 import { spacing } from "../../design/tokens";
 import { durations } from "../../design/animations";
 import {
-  playOnboardingAdvance,
-  playOnboardingComplete,
   playLetterName,
-  playTap,
 } from "../../audio/player";
 import type { OnboardingDraft } from "../../types/onboarding";
 import { track } from "../../analytics";
@@ -48,6 +46,7 @@ const STEP_NAMES = [
 
 export function OnboardingFlow() {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const { updateProfile } = useProgress();
 
   const [step, setStep] = useState(0);
@@ -59,7 +58,6 @@ export function OnboardingFlow() {
   const onboardingStartRef = useRef(Date.now());
 
   function goNext() {
-    playOnboardingAdvance();
     setStep((s) => s + 1);
   }
 
@@ -91,7 +89,6 @@ export function OnboardingFlow() {
       audio_type: 'name' as const,
       context: 'onboarding' as const,
     });
-    playTap();
     playLetterName(1);
     setHasPlayedAudio(true);
   }, []);
@@ -99,10 +96,6 @@ export function OnboardingFlow() {
   async function handleFinish() {
     if (finishing) return;
     setFinishing(true);
-    try {
-      playOnboardingComplete();
-    } catch {}
-
     try {
       await updateProfile({
         onboarded: true,
@@ -142,9 +135,9 @@ export function OnboardingFlow() {
       {/* Floating Arabic letters — visible on steps 0-3 (Welcome through StartingPoint) */}
       {step <= STEP.STARTING_POINT && <FloatingLettersLayer color={colors.primary} />}
 
-      {/* Progress bar */}
+      {/* Progress bar — positioned close to top safe area, matching web */}
       {showProgressBar && (
-        <View style={styles.progressContainer}>
+        <View style={[styles.progressContainer, { paddingTop: insets.top + spacing.sm }]}>
           <ProgressBar current={step} total={TOTAL_STEPS} colors={colors} />
         </View>
       )}
@@ -200,7 +193,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   progressContainer: {
-    paddingTop: spacing.xxxl + spacing.sm,
     paddingHorizontal: spacing.xl,
     position: "absolute",
     top: 0,

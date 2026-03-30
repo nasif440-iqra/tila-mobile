@@ -17,7 +17,6 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useColors } from "../../src/design/theme";
-import { playProgressReveal } from "../../src/audio/player";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
@@ -133,12 +132,6 @@ export default function ProgressScreen() {
   const phasesTranslateY = useSharedValue(12);
   const masteryOpacity = useSharedValue(0);
   const masteryTranslateY = useSharedValue(12);
-
-  useEffect(() => {
-    if (!progress.loading && completedLessonIds.length > 0) {
-      playProgressReveal();
-    }
-  }, [progress.loading]);
 
   useEffect(() => {
     const timingConfig = { duration: durations.normal, easing: easings.contentReveal };
