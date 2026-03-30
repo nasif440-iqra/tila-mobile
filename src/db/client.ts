@@ -22,6 +22,9 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   // Run migrations for existing databases
   await runMigrations(db);
 
+  // Stamp the current schema version (for fresh DBs, migrations are no-ops but version must be set)
+  await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (?)", SCHEMA_VERSION);
+
   dbInstance = db;
   return db;
 }
@@ -47,23 +50,28 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   }
 
   if (currentVersion < 3) {
-    try {
+    // Check if the column already exists before trying to add it
+    const tableInfo = await db.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(mastery_confusions)"
+    );
+    const hasCategories = tableInfo.some((col) => col.name === "categories");
+    if (!hasCategories) {
       await db.execAsync(
         "ALTER TABLE mastery_confusions ADD COLUMN categories TEXT;"
       );
-    } catch {
-      // Column may already exist if DB was created fresh with v3 schema
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (3)");
   }
 
   if (currentVersion < 4) {
-    try {
+    const profileInfo = await db.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(user_profile)"
+    );
+    const hasAnalyticsConsent = profileInfo.some((col) => col.name === "analytics_consent");
+    if (!hasAnalyticsConsent) {
       await db.execAsync(
         "ALTER TABLE user_profile ADD COLUMN analytics_consent INTEGER CHECK (analytics_consent IN (0, 1));"
       );
-    } catch {
-      // Column may already exist if DB was created fresh with v4 schema
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (4)");
   }

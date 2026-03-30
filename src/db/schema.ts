@@ -97,5 +97,4 @@ CREATE TABLE IF NOT EXISTS schema_version (
 export const SEED_DEFAULTS = `
 INSERT OR IGNORE INTO user_profile (id) VALUES (1);
 INSERT OR IGNORE INTO habit (id) VALUES (1);
-INSERT OR IGNORE INTO schema_version (version) VALUES (${SCHEMA_VERSION});
 `;
