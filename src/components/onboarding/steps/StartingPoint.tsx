@@ -3,7 +3,6 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
 import { Button } from "../../../design/components";
 import { typography, spacing, radii, shadows, borderWidths } from "../../../design/tokens";
-import { playTap } from "../../../audio/player";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import { STAGGER_BASE, STAGGER_DURATION } from "../animations";
 
@@ -27,10 +26,7 @@ function OptionCard({
 }) {
   return (
     <Pressable
-      onPress={() => {
-        playTap();
-        onPress();
-      }}
+      onPress={onPress}
       style={[
         optionStyles.card,
         {

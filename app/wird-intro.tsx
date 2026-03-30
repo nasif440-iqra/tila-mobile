@@ -24,7 +24,6 @@ import { useColors } from "../src/design/theme";
 import { spacing, fontFamilies } from "../src/design/tokens";
 import { ArabicText, Button } from "../src/design/components";
 import { useProgress } from "../src/hooks/useProgress";
-import { playWirdTextAppear, playWirdComplete } from "../src/audio/player";
 
 const TOTAL_STEPS = 3;
 const REVEAL_DURATION = 600;
@@ -281,7 +280,7 @@ function StepHadith({ onNext, colors }: { onNext: () => void; colors: any }) {
     glowOpacity.value = withDelay(200, withTiming(1, { duration: 1200, easing: REVEAL_EASE }));
     glowScale.value = withDelay(200, withTiming(1, { duration: 1500, easing: REVEAL_EASE }));
 
-    const t1 = setTimeout(() => { setPhase(1); playWirdTextAppear(); }, 2800);
+    const t1 = setTimeout(() => { setPhase(1); }, 2800);
     const t2 = setTimeout(() => setPhase(2), 3800);
     const t3 = setTimeout(() => setPhase(3), 5200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
@@ -375,7 +374,7 @@ function StepMeaning({ onNext, colors }: { onNext: () => void; colors: any }) {
   const [phase, setPhase] = useState(0);
 
   useEffect(() => {
-    const t1 = setTimeout(() => { setPhase(1); playWirdTextAppear(); }, 1800);
+    const t1 = setTimeout(() => { setPhase(1); }, 1800);
     const t2 = setTimeout(() => setPhase(2), 3200);
     const t3 = setTimeout(() => setPhase(3), 4800);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
@@ -445,7 +444,7 @@ function StepFirstWird({ onComplete, colors }: { onComplete: () => void; colors:
   useEffect(() => {
     const t1 = setTimeout(() => setPhase(1), 600);
     const t2 = setTimeout(() => setPhase(2), 1600);
-    const t3 = setTimeout(() => { setPhase(3); playWirdTextAppear(); }, 3200);
+    const t3 = setTimeout(() => { setPhase(3); }, 3200);
     const t4 = setTimeout(() => setPhase(4), 4200);
     const t5 = setTimeout(() => setPhase(5), 5400);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
@@ -579,7 +578,6 @@ export default function WirdIntroScreen() {
     if (step < TOTAL_STEPS - 1) {
       setStep((s) => s + 1);
     } else {
-      playWirdComplete();
       progress.updateProfile({ wirdIntroSeen: true });
       router.replace("/(tabs)");
     }

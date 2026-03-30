@@ -4,7 +4,6 @@ import {
   type AudioSource,
   type AudioPlayer,
 } from "expo-audio";
-import * as Haptics from "expo-haptics";
 
 // ── Audio session configuration ──
 
@@ -19,36 +18,6 @@ export async function configureAudioSession(): Promise<void> {
   audioSessionConfigured = true;
 }
 
-// ── Asset map for bundled SFX ──
-
-const SFX_ASSETS = {
-  correct: require("../../assets/audio/effects/correct.wav"),
-  wrong: require("../../assets/audio/effects/wrong.wav"),
-  button_tap: require("../../assets/audio/effects/button_tap.wav"),
-  lesson_start: require("../../assets/audio/effects/lesson_start.wav"),
-  lesson_complete: require("../../assets/audio/effects/lesson_complete.mp3"),
-  lesson_complete_perfect: require("../../assets/audio/effects/lesson_complete_perfect.mp3"),
-  phase_complete: require("../../assets/audio/effects/phase_complete.wav"),
-  phase_unlock: require("../../assets/audio/effects/phase_unlock.wav"),
-  mid_lesson_celebration: require("../../assets/audio/effects/mid_lesson_celebration.wav"),
-  streak_tier1: require("../../assets/audio/effects/streak_tier1.wav"),
-  streak_tier2: require("../../assets/audio/effects/streak_tier2.wav"),
-  streak_tier3: require("../../assets/audio/effects/streak_tier3.wav"),
-  onboarding_complete: require("../../assets/audio/effects/onboarding_complete.wav"),
-  onboarding_advance: require("../../assets/audio/effects/onboarding_advance.wav"),
-  lesson_node_tap: require("../../assets/audio/effects/lesson_node_tap.wav"),
-  audio_play_button: require("../../assets/audio/effects/audio_play_button.wav"),
-  screen_transition: require("../../assets/audio/effects/screen_transition.wav"),
-  review_due: require("../../assets/audio/effects/review_due.wav"),
-  wird_milestone: require("../../assets/audio/effects/wird_milestone.wav"),
-  wird_text_appear: require("../../assets/audio/effects/wird_text_appear.wav"),
-  wird_complete: require("../../assets/audio/effects/wird_complete.wav"),
-  mastery_level_up: require("../../assets/audio/effects/mastery_level_up.wav"),
-  quiz_start: require("../../assets/audio/effects/quiz_start.wav"),
-  progress_reveal: require("../../assets/audio/effects/progress_reveal.wav"),
-} as const;
-
-export type SFXName = keyof typeof SFX_ASSETS;
 
 // ── Letter filename mapping ──
 
@@ -137,10 +106,6 @@ const SOUND_ASSETS: Record<string, AudioSource> = {
 
 // ── Public API ──
 
-export function getSFXAsset(name: SFXName): AudioSource {
-  return SFX_ASSETS[name];
-}
-
 export function getLetterAsset(
   letterId: number,
   type: "sound" | "name"
@@ -164,23 +129,13 @@ export function isMuted(): boolean {
   return _muted;
 }
 
-// ── Two-lane playback ──
+// ── Playback ──
 //
 // Voice lane: letter names / sounds — one active source, new plays interrupt prior.
-// SFX lane:   effects & UI sounds  — one active source, never interrupts voice & vice-versa.
-//
-// Both lanes use a single `AudioPlayer` that persists for the app lifetime.
+// Uses a single `AudioPlayer` that persists for the app lifetime.
 // We swap the source via `replace()` to avoid creating/destroying players.
 
-let _sfxPlayer: AudioPlayer | null = null;
 let _voicePlayer: AudioPlayer | null = null;
-
-function getSFXPlayer(): AudioPlayer {
-  if (!_sfxPlayer) {
-    _sfxPlayer = createAudioPlayer();
-  }
-  return _sfxPlayer;
-}
 
 function getVoicePlayer(): AudioPlayer {
   if (!_voicePlayer) {
@@ -189,84 +144,11 @@ function getVoicePlayer(): AudioPlayer {
   return _voicePlayer;
 }
 
-async function playSFX(source: AudioSource): Promise<void> {
-  if (_muted) return;
-  const player = getSFXPlayer();
-  player.replace(source);
-  player.play();
-}
-
 async function playVoice(source: AudioSource): Promise<void> {
   if (_muted) return;
   const player = getVoicePlayer();
   player.replace(source);
   player.play();
-}
-
-// ── SFX helpers ──
-
-export function playCorrect(): void {
-  playSFX(SFX_ASSETS.correct);
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-}
-
-export function playWrong(): void {
-  playSFX(SFX_ASSETS.wrong);
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-}
-
-export function playTap(): void {
-  playSFX(SFX_ASSETS.button_tap);
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-}
-
-export function playLessonStart(): void {
-  playSFX(SFX_ASSETS.lesson_start);
-}
-
-export function playLessonComplete(): void {
-  playSFX(SFX_ASSETS.lesson_complete);
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-}
-
-export function playCelebration(): void {
-  playSFX(SFX_ASSETS.mid_lesson_celebration);
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-}
-
-export function playStreakTier(tier: 1 | 2 | 3): void {
-  const map = { 1: SFX_ASSETS.streak_tier1, 2: SFX_ASSETS.streak_tier2, 3: SFX_ASSETS.streak_tier3 } as const;
-  playSFX(map[tier]);
-}
-
-export function playOnboardingAdvance(): void {
-  playSFX(SFX_ASSETS.onboarding_advance);
-}
-
-export function playOnboardingComplete(): void {
-  playSFX(SFX_ASSETS.onboarding_complete);
-}
-
-export function playWirdTextAppear(): void {
-  playSFX(SFX_ASSETS.wird_text_appear);
-}
-
-export function playWirdComplete(): void {
-  playSFX(SFX_ASSETS.wird_complete);
-  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-}
-
-export function playMasteryLevelUp(): void {
-  playSFX(SFX_ASSETS.mastery_level_up);
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-}
-
-export function playQuizStart(): void {
-  playSFX(SFX_ASSETS.quiz_start);
-}
-
-export function playProgressReveal(): void {
-  playSFX(SFX_ASSETS.progress_reveal);
 }
 
 // ── Voice helpers ──
