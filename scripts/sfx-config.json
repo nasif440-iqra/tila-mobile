@@ -1,0 +1,13 @@
+{
+  "provider": "elevenlabs",
+  "outputDir": "assets/audio/effects",
+  "format": "wav",
+  "sampleRate": 44100,
+  "bitDepth": 16,
+  "channels": 1,
+  "targetLUFS": -16,
+  "truePeak": -1.5,
+  "loudnessRange": 11,
+  "fadeInMs": 10,
+  "fadeOutMs": 30
+}
