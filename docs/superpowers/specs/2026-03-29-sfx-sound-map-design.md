@@ -1,251 +1,239 @@
-# SFX Sound Map Design
+# SFX Sound Map — Phase 1
 
 **Date:** 2026-03-29
-**Status:** Draft
-**Scope:** 18 sound effects mapped to specific app triggers, with integration points
+**Status:** Approved
+**Scope:** 7 manually-sourced sound effects, priority-gated playback, exact wiring points
 
-## Philosophy
+## Design Principles
 
-**Warm & present** — sound accompanies key interactions and meaningful moments. Not every button, not every animation. Sounds are earned, not constant. The app feels alive and responsive without being noisy.
+1. **Earned, not constant.** Sound accompanies moments that matter. Haptics handle everything else.
+2. **Haptics live in the UI layer.** `src/design/haptics.ts` already owns haptic feedback across 20+ components (QuizOption, LessonSummary, StreakMilestoneOverlay, Button, etc.). Audio helpers in `player.ts` are audio-only — zero haptics.
+3. **One path for all SFX.** Every sound effect goes through `playSFX()` in `src/audio/player.ts`. No direct `useAudioPlayer()` calls for effects in screens or components. This guarantees mute behavior is consistent.
+4. **Sacred moments are atmospheric, not melodic.** A single sustained tone that fades — not a sound effect.
 
-- **Haptics handle tactile feedback** for all buttons and interactions
-- **Sound is reserved for moments that matter** — answers, completions, milestones, celebrations
-- **Sacred/Islamic moments get a distinct ambient tone** — not a sound effect, an atmosphere shift
-- **No universal tap sound** — only key buttons (quiz options, lesson start, onboarding choices)
+## Current Architecture (as of this commit)
 
-## Sound Aesthetic
+`src/audio/player.ts` currently has:
+- **Voice lane only** — one `AudioPlayer` instance for letter names/sounds via `playVoice()`
+- **No SFX lane** — all SFX code was removed in the prior commit
+- **Mute state** — `_muted` flag checked by `playVoice()`, exported via `setMuted()`/`isMuted()`
+- **Exports:** `configureAudioSession`, `getLetterAsset`, `setMuted`, `isMuted`, `playLetterName`, `playLetterSound`
 
-Peaceful and tranquil baseline — warm wooden tones, gentle chimes, mellow notes. Celebratory energy scales with event importance:
+Haptics are owned by `src/design/haptics.ts` and called directly in components:
+- `hapticTap()` — QuizOption.handlePress (line 134), Button, Card, HearButton, JourneyNode, LessonSummary back buttons
+- `hapticSuccess()` — QuizOption selectedCorrect (line 80), StreakMilestoneOverlay (line 56), LessonSummary (line 369), ComprehensionExercise, TapInOrder, SpotTheBreak
+- `hapticError()` — QuizOption selectedWrong (line 90), ComprehensionExercise, TapInOrder, SpotTheBreak
+- `hapticMilestone()` — StreakMilestoneOverlay streak>=7 (line 55), LessonSummary goalCompleted (line 367), LetterReveal Alif appearance (line 22), LetterMasteryCelebration
+- `hapticSelection()` — BismillahMoment (line 16)
 
-| Intensity | Feel | Examples |
-|-----------|------|----------|
-| **low** | Subtle, barely-there, peaceful | option tap, quiz progress tick, progress reveal |
-| **medium** | Warm encouragement, gentle reward | correct answer, lesson complete, mastery level up |
-| **high** | Full celebration, excitement | phase complete, perfect score, streak milestone |
+## Priority-Gated Playback
 
-## Sound Map — 18 Sounds
+### The Problem
 
-### Feedback (3 sounds)
+The planned SFX lane will use a single `AudioPlayer`. Calling `replace()` kills any in-progress sound. Without rules, a fast sequence (e.g., two `correct` sounds within 200ms) would cut off the first.
 
-#### `correct`
-- **File:** `assets/audio/effects/correct.wav`
-- **Trigger:** User answers a quiz question correctly
-- **Where:** `src/components/LessonQuiz.tsx` — inside `handleOptionPress` when `opt.isCorrect === true`
-- **Also:** `src/components/onboarding/steps/LetterQuiz.tsx` — correct answer in onboarding quiz
-- **Also:** `src/components/exercises/ComprehensionExercise.tsx` — correct answer
-- **Also:** `src/components/exercises/TapInOrder.tsx` — correct tap
-- **Also:** `src/components/exercises/SpotTheBreak.tsx` — correct selection
-- **Intensity:** medium
-- **Duration:** ~0.5s
-- **Description:** Bright, warm chime. Instant positive reinforcement. Single ascending note with gentle resonance.
+### The Solution: Priority + Guard Window
 
-#### `wrong`
-- **File:** `assets/audio/effects/wrong.wav`
-- **Trigger:** User answers a quiz question incorrectly
-- **Where:** `src/components/LessonQuiz.tsx` — inside `handleOptionPress` when answer is wrong
-- **Also:** `src/components/onboarding/steps/LetterQuiz.tsx` — wrong answer in onboarding quiz
-- **Also:** `src/components/exercises/ComprehensionExercise.tsx` — wrong answer
-- **Also:** `src/components/exercises/TapInOrder.tsx` — wrong tap
-- **Also:** `src/components/exercises/SpotTheBreak.tsx` — wrong selection
-- **Intensity:** low
-- **Duration:** ~0.5s
-- **Description:** Soft low-pitched muted tone. Gentle negative indicator — not harsh, not punishing. Brief and mellow.
+Each sound has a **priority** (1 = highest). When a sound is playing, any new request with equal or higher priority number (i.e., equal or lower importance) is dropped until the **guard window** elapses. A higher-importance sound (lower priority number) always interrupts.
 
-#### `option_tap`
-- **File:** `assets/audio/effects/option_tap.wav`
-- **Trigger:** Selecting a quiz option, key onboarding choices, lesson start button
-- **Where:** `src/design/components/QuizOption.tsx` — inside `handlePress`
-- **Also:** `src/components/onboarding/steps/StartingPoint.tsx` — selecting starting point
-- **Also:** `src/components/onboarding/steps/LetterQuiz.tsx` — selecting answer option
-- **Intensity:** low
-- **Duration:** ~0.5s
-- **Description:** Subtle wooden tap. Like tapping polished wood. Tactile, satisfying, minimal.
+```
+SFX request arrives:
+  if muted → skip
+  if a sound is playing
+    AND new priority >= playing priority (equal or lower importance)
+    AND guard window has not elapsed
+    → drop the request
+  else → replace + play, record priority + timestamp
+```
 
-### Lesson Flow (4 sounds)
+Priority table:
 
-#### `lesson_start`
-- **File:** `assets/audio/effects/lesson_start.wav`
-- **Trigger:** Transitioning from lesson intro to quiz
-- **Where:** `src/components/LessonIntro.tsx` — when the "Start" CTA button is pressed
-- **Intensity:** medium
-- **Duration:** ~0.8s
-- **Description:** Encouraging opening tone. Warm chime with gentle resonance. Says "let's go" without being aggressive.
+| Priority | Sounds | Guard (ms) |
+|----------|--------|------------|
+| 1 | `lesson_complete_perfect`, `sacred_moment`, `onboarding_complete` | 1200 |
+| 2 | `lesson_complete` | 800 |
+| 3 | `correct`, `wrong`, `lesson_start` | 400 |
 
-#### `lesson_complete`
-- **File:** `assets/audio/effects/lesson_complete.wav`
-- **Trigger:** Lesson summary screen appears and user passed
-- **Where:** `src/components/LessonSummary.tsx` — on mount when `passed === true`
-- **Intensity:** medium
-- **Duration:** ~1.2s
-- **Description:** Warm ascending chime sequence. Two gentle tones rising. Satisfying resolution — "you did it."
+Example: `lesson_complete_perfect` (priority 1) plays. For the next 1200ms, nothing can interrupt it — not another priority-1, not a priority-3. A `correct` (priority 3) plays. For 400ms, another `correct` or `wrong` is dropped, but a `lesson_complete` (priority 2) would interrupt immediately.
 
-#### `lesson_complete_perfect`
-- **File:** `assets/audio/effects/lesson_complete_perfect.wav`
-- **Trigger:** Lesson summary screen appears and user scored 100%
-- **Where:** `src/components/LessonSummary.tsx` — on mount when `passed === true && isPerfect`
-- **Plays instead of:** `lesson_complete` (not in addition to)
-- **Intensity:** high
-- **Duration:** ~1.8s
-- **Description:** Celebratory chime sequence. Three ascending bright tones with gentle shimmer. Joyful, exciting, but still elegant. The "wow" moment.
+~15 lines of code. No queuing, no mixing, no second AudioPlayer.
 
-#### `quiz_progress`
-- **File:** `assets/audio/effects/quiz_progress.wav`
-- **Trigger:** Progress bar advances after a correct answer
-- **Where:** `src/components/LessonQuiz.tsx` — after correct answer, when progress bar animates
-- **Intensity:** low
-- **Duration:** ~0.5s
-- **Description:** Very subtle tick/advance. Barely-there forward momentum. Like a soft click of progress. Should not compete with `correct` sound — plays slightly after it (200ms delay).
+### Implementation
 
-### Celebrations & Milestones (5 sounds)
+```typescript
+interface PlayingState {
+  priority: number;
+  startedAt: number;
+  guardMs: number;
+}
 
-#### `streak_small`
-- **File:** `assets/audio/effects/streak_small.wav`
-- **Trigger:** Streak banner appears (3-5 correct in a row)
-- **Where:** `src/components/quiz/StreakBanner.tsx` — on mount when streak reaches threshold
-- **Intensity:** low-medium
-- **Duration:** ~0.6s
-- **Description:** Quick sparkle. Light, bright, brief celebration. Acknowledges the streak without breaking flow.
+let _playing: PlayingState | null = null;
 
-#### `streak_big`
-- **File:** `assets/audio/effects/streak_big.wav`
-- **Trigger:** Streak milestone overlay appears (7+ correct in a row)
-- **Where:** `src/components/quiz/StreakMilestoneOverlay.tsx` — on mount
-- **Intensity:** high
-- **Duration:** ~1.5s
-- **Description:** Triumphant mini-fanfare. Layered ascending tones with shimmer. This is a big deal — the sound should match the full-screen overlay moment.
+function playSFX(source: AudioSource, priority: number, guardMs: number): void {
+  if (_muted) return;
+  const now = Date.now();
+  if (
+    _playing &&
+    priority >= _playing.priority &&
+    now - _playing.startedAt < _playing.guardMs
+  ) {
+    return; // blocked — equal or lower importance during guard window
+  }
+  const player = getSFXPlayer();
+  player.replace(source);
+  player.play();
+  _playing = { priority, startedAt: now, guardMs };
+}
+```
 
-#### `mastery_level_up`
-- **File:** `assets/audio/effects/mastery_level_up.wav`
-- **Trigger:** Letter advances to a new mastery state, shown in lesson summary
-- **Where:** `src/components/LessonSummary.tsx` — when `letterBreakdown.strong.length > 0` (letters leveled up)
-- **Intensity:** medium
-- **Duration:** ~1.0s
-- **Description:** Ascending warm tone. Growth and progression. Like a level-up notification but gentle and encouraging.
+## Phase 1 Sound Map — 7 Sounds
 
-#### `phase_complete`
-- **File:** `assets/audio/effects/phase_complete.wav`
-- **Trigger:** Phase complete celebration screen
-- **Where:** `app/phase-complete.tsx` — on mount
-- **Intensity:** high
-- **Duration:** ~2.0s
-- **Description:** Full celebration. The biggest sonic moment in the app. Layered chimes, gentle cymbal shimmer, triumphant but warm. This happens only a few times in the entire user journey.
+### 1. `correct`
 
-#### `confetti_burst`
-- **File:** `assets/audio/effects/confetti_burst.wav`
-- **Trigger:** Confetti animation fires on lesson summary
-- **Where:** `src/components/LessonSummary.tsx` — when confetti particles spawn
-- **Intensity:** medium-high
-- **Duration:** ~0.8s
-- **Description:** Layered pop/burst. Party popper feel — multiple quick pops layered together. Joyful and surprising.
+- **Priority:** 3 | **Guard:** 400ms
+- **Trigger:** User answers correctly in a quiz or exercise
+- **Wiring points:**
+  - `src/components/LessonQuiz.tsx` line 168 — inside `handleSelect` callback, in the `if (correct)` branch, before the `setTimeout`
+  - `src/components/onboarding/steps/LetterQuiz.tsx` — inside `handleCheckAnswer`, in the `if (correct)` branch
+  - `src/components/exercises/ComprehensionExercise.tsx` — correct answer handler (alongside existing `hapticSuccess()`)
+  - `src/components/exercises/TapInOrder.tsx` — correct tap handler
+  - `src/components/exercises/SpotTheBreak.tsx` — correct selection handler
+- **Feel:** Bright, warm chime. Single ascending note with gentle resonance. ~0.5s.
 
-### Onboarding & Wird (3 sounds)
+### 2. `wrong`
 
-#### `sacred_moment`
-- **File:** `assets/audio/effects/sacred_moment.wav`
-- **Trigger:** Bismillah reveal, Hadith text display, Wird text appears
-- **Where:** `app/wird-intro.tsx` — when wird/hadith text phases reveal
-- **Also:** `src/components/onboarding/steps/BismillahMoment.tsx` — Bismillah reveal moment
-- **Also:** `app/return-welcome.tsx` — hadith card display (optional, may be too frequent)
-- **Intensity:** low
-- **Duration:** ~2.0s (sustained, not a sharp sound)
-- **Description:** Single sustained warm note. Like a soft oud string or a distant bell that fades slowly. Not a "sound effect" — an atmosphere shift. Signals reverence and stillness. This sound should make the user pause and feel the weight of the moment.
+- **Priority:** 3 | **Guard:** 400ms
+- **Trigger:** User answers incorrectly
+- **Wiring points:**
+  - `src/components/LessonQuiz.tsx` line 170 — inside `handleSelect` callback, in the `else` (wrong) branch, before `wrongFlashOpacity`
+  - `src/components/onboarding/steps/LetterQuiz.tsx` — inside `handleCheckAnswer`, in the else branch
+  - `src/components/exercises/ComprehensionExercise.tsx` — wrong answer handler
+  - `src/components/exercises/TapInOrder.tsx` — wrong tap handler
+  - `src/components/exercises/SpotTheBreak.tsx` — wrong selection handler
+- **Feel:** Soft low-pitched muted tone. Gentle, not punishing. ~0.5s.
 
-#### `first_letter`
-- **File:** `assets/audio/effects/first_letter.wav`
-- **Trigger:** Alif is revealed for the first time during onboarding
-- **Where:** `src/components/onboarding/steps/LetterReveal.tsx` — when the letter fades in (after LETTER_REVEAL_HAPTIC_DELAY ~1.1s)
-- **Intensity:** medium-high
-- **Duration:** ~1.5s
-- **Description:** Special, memorable tone. This is the user's first encounter with an Arabic letter. Should feel like a door opening. Warm, resonant, slightly magical. Distinct from every other sound in the app — this moment only happens once.
+### 3. `lesson_start`
 
-#### `onboarding_complete`
-- **File:** `assets/audio/effects/onboarding_complete.wav`
-- **Trigger:** User finishes onboarding flow
-- **Where:** `src/components/onboarding/OnboardingFlow.tsx` — inside `handleFinish` when onboarding completes
-- **Intensity:** high
-- **Duration:** ~1.5s
-- **Description:** Welcoming completion fanfare. Says "you're in, welcome to Tila." Warm, bright, celebratory but not over-the-top. Should feel like arriving, not like winning.
+- **Priority:** 3 | **Guard:** 400ms
+- **Trigger:** User taps the Start button on lesson intro, transitioning to quiz
+- **Wiring point:**
+  - `app/lesson/[id].tsx` line 245 — inside the `onStart` callback of `<LessonIntro>`, which calls `setStage("quiz")`
+- **Feel:** Encouraging opening tone. Warm chime with gentle resonance. ~0.8s. Says "let's go."
 
-### Progress & Navigation (3 sounds)
+### 4. `lesson_complete`
 
-#### `progress_reveal`
-- **File:** `assets/audio/effects/progress_reveal.wav`
-- **Trigger:** Stats and progress data animate in on the progress screen
-- **Where:** `app/(tabs)/progress.tsx` — when `!progress.loading && completedLessonIds.length > 0`
-- **Intensity:** low
-- **Duration:** ~0.8s
-- **Description:** Gentle shimmer. Stats unveiling. Like a soft curtain pull revealing something beautiful. Subtle and ambient.
+- **Priority:** 2 | **Guard:** 800ms
+- **Trigger:** Lesson summary screen mounts and user passed (not perfect)
+- **Wiring point:**
+  - `src/components/LessonSummary.tsx` — new `useEffect` on mount, fires when `passed === true && percentage < 100`. Plays alongside existing haptics (lines 367-371 already fire hapticMilestone/hapticSuccess/hapticTap based on score tier).
+- **Feel:** Warm ascending chime sequence. Two gentle tones rising. Satisfying resolution. ~1.2s.
 
-#### `unlock`
-- **File:** `assets/audio/effects/unlock.wav`
-- **Trigger:** New lesson or phase becomes available/unlocked
-- **Where:** `src/components/home/JourneyNode.tsx` or `src/components/home/LessonGrid.tsx` — when a previously locked node transitions to available
-- **Also:** Phase unlock moment if separate from phase_complete
-- **Intensity:** medium
-- **Duration:** ~0.8s
-- **Description:** Bright, exciting reveal. Something new awaits. Like a lock clicking open followed by a brief chime. Forward momentum and possibility.
+### 5. `lesson_complete_perfect`
 
-#### `return_welcome`
-- **File:** `assets/audio/effects/return_welcome.wav`
-- **Trigger:** Return welcome screen appears after user has been away
-- **Where:** `app/return-welcome.tsx` — on mount
-- **Intensity:** low
-- **Duration:** ~1.0s
-- **Description:** Warm, gentle greeting. "Welcome back." Soft, inviting tone that feels like coming home. Should comfort, not startle — the user hasn't touched the app in a while.
+- **Priority:** 1 | **Guard:** 1200ms
+- **Trigger:** Lesson summary screen mounts and user scored 100%
+- **Wiring point:**
+  - `src/components/LessonSummary.tsx` — same `useEffect` as above, fires when `passed === true && percentage === 100`. Plays **instead of** `lesson_complete`, not in addition.
+- **Feel:** Celebratory chime sequence. Three ascending bright tones with gentle shimmer. Joyful and elegant. ~1.8s. The 1200ms guard window prevents confetti or any other sound from cutting it off.
 
-## Implementation Approach
+### 6. `onboarding_complete`
 
-### Architecture
+- **Priority:** 1 | **Guard:** 1200ms
+- **Trigger:** User finishes the onboarding flow
+- **Wiring point:**
+  - `src/components/onboarding/OnboardingFlow.tsx` — inside `handleFinish()`, immediately after the successful `await updateProfile(...)` call, before navigation. The sound should only fire once the profile state is committed — if save fails, no celebration.
+- **Feel:** Welcoming completion fanfare. Warm, bright, celebratory but not over-the-top. Feels like arriving, not winning. ~1.5s.
 
-The existing `src/audio/player.ts` pattern is reused. SFX assets are bundled as static WAV files, loaded via `require()`, and played through a dedicated SFX audio player lane (separate from the voice/letter audio lane).
+### 7. `sacred_moment`
 
-### player.ts Changes
+- **Priority:** 1 | **Guard:** 1200ms
+- **Trigger:** Reverent Islamic text appears — used sparingly
+- **Wiring points:**
+  - `src/components/onboarding/steps/BismillahMoment.tsx` line 15 — inside the `useEffect` on mount, alongside existing `hapticSelection()`. This is the Bismillah reveal during onboarding.
+  - `src/components/onboarding/steps/LetterReveal.tsx` line 20 — inside the `useEffect` timeout at `LETTER_REVEAL_HAPTIC_DELAY`, alongside `hapticMilestone()`. This is Alif appearing for the first time. **Note:** this doubles as the "first letter" moment. A separate `first_letter` sound was considered but cut — `sacred_moment` covers the reverence of this moment, and the haptic milestone already handles the excitement.
+- **NOT wired to:** wird-intro (too frequent — plays every session), return-welcome hadith (too casual). Only the two most significant moments.
+- **Feel:** Single sustained warm note. Like a soft oud string or distant bell that fades slowly over ~2s. Atmospheric, not melodic. Should make the user pause. This is the hardest sound to get right — if it feels cinematic or gamey, cut it entirely.
 
-1. **Restore SFX_ASSETS map** with 18 entries (require() calls for each WAV)
-2. **Restore SFX player lane** (separate AudioPlayer instance)
-3. **Restore playSFX() internal function**
-4. **Export 18 named helper functions** — each wraps playSFX() and optionally calls Haptics:
-   - `playCorrect()` — playSFX + Haptics.notificationAsync(Success)
-   - `playWrong()` — playSFX + Haptics.notificationAsync(Error)
-   - `playOptionTap()` — playSFX + Haptics.impactAsync(Light)
-   - `playLessonStart()` — playSFX only
-   - `playLessonComplete()` — playSFX + Haptics.notificationAsync(Success)
-   - `playLessonCompletePerfect()` — playSFX + Haptics.notificationAsync(Success)
-   - `playQuizProgress()` — playSFX only
-   - `playStreakSmall()` — playSFX only
-   - `playStreakBig()` — playSFX + Haptics.impactAsync(Heavy)
-   - `playMasteryLevelUp()` — playSFX + Haptics.impactAsync(Medium)
-   - `playPhaseComplete()` — playSFX + Haptics.notificationAsync(Success)
-   - `playConfettiBurst()` — playSFX only
-   - `playSacredMoment()` — playSFX only (no haptics — keep it still)
-   - `playFirstLetter()` — playSFX + Haptics.notificationAsync(Success)
-   - `playOnboardingComplete()` — playSFX + Haptics.notificationAsync(Success)
-   - `playProgressReveal()` — playSFX only
-   - `playUnlock()` — playSFX + Haptics.impactAsync(Medium)
-   - `playReturnWelcome()` — playSFX only
+## Phase 2 Backlog (not in this implementation)
 
-### Wiring Pattern
+These sounds ship only after Phase 1 is tested and approved:
 
-Each sound is wired at a specific code location. The pattern is:
-1. Import the helper function from `../audio/player`
-2. Call it at the exact trigger point (usually inside a useEffect, callback, or event handler)
+| Sound | Trigger | Why deferred |
+|-------|---------|-------------|
+| `unlock` | New lesson/phase becomes available | Trigger is implicit (unlock state derived from progress); needs ref tracking to detect transitions — define concrete wiring before implementing |
+| `option_tap` | Quiz option selection | Haptics already cover this; test if it's missed |
+| `streak_small` | 3-5 streak banner | Low value; banner animation is sufficient |
+| `streak_big` | 7+ streak milestone overlay | Overlay + haptic may be enough |
+| `mastery_level_up` | Letter advances mastery state | Needs mastery breakdown data plumbed to summary |
+| `phase_complete` | Phase complete screen | Rare event; test with `lesson_complete_perfect` first |
+| `confetti_burst` | Confetti animation on summary | Would compete with `lesson_complete_perfect` on single lane |
+| `progress_reveal` | Progress screen stats animate in | Subtle; may not be noticed |
+| `return_welcome` | Return welcome screen | May feel intrusive after absence |
+| `quiz_progress` | Progress bar advances | Would compete with `correct` sound on single lane |
+| `first_letter` | Alif revealed in onboarding | Covered by `sacred_moment` in Phase 1 |
 
-No new architecture, no new dependencies. Same pattern used before.
+## player.ts Changes — Exact Diff
+
+### Add to player.ts
+
+1. **SFX_ASSETS map** — 7 `require()` entries for WAV files in `assets/audio/effects/`
+2. **SFX player lane** — new `_sfxPlayer` AudioPlayer instance (separate from `_voicePlayer`)
+3. **Priority-gated playback** — `PlayingState` tracking + gated `playSFX()` function (~15 lines)
+4. **7 exported helper functions** — each wraps `playSFX(source, priority, guardMs)`:
+   - `playCorrect()` — priority 3, guard 400ms
+   - `playWrong()` — priority 3, guard 400ms
+   - `playLessonStart()` — priority 3, guard 400ms
+   - `playLessonComplete()` — priority 2, guard 800ms
+   - `playLessonCompletePerfect()` — priority 1, guard 1200ms
+   - `playOnboardingComplete()` — priority 1, guard 1200ms
+   - `playSacredMoment()` — priority 1, guard 1200ms
+
+No haptics in any of these functions. Audio only.
+
+### Do NOT add
+
+- No `getSFXAsset()` export — no component should use `useAudioPlayer` for SFX
+- No `SFXName` type export — internals stay internal
+- No haptics inside helpers — all haptic feedback stays in the UI layer (`src/design/haptics.ts`)
+
+### Verify: no direct SFX playback in components
+
+`useAudioPlayer()` calls in components are acceptable **only for letter audio** (via `getLetterAsset()`). Any component that uses `useAudioPlayer` for SFX playback must be refactored to helper-based playback as part of this implementation. A repo-wide search should verify no direct SFX playback remains before wiring new sounds.
 
 ## Sourcing the Sounds
 
-Sounds will be sourced manually by the founder — not generated by AI. Each sound should be:
-- **WAV format**, 44.1kHz, 16-bit, mono
-- **Normalized** to -16 LUFS (use ffmpeg if needed)
-- **Trimmed** of leading/trailing silence
-- Placed in `assets/audio/effects/`
+Sounds are sourced manually by the founder. Requirements per file:
+- **Format:** WAV preferred (44.1kHz, 16-bit, mono). MP3 acceptable if that's what you find — expo-audio handles both. Name with matching extension (e.g., `correct.wav` or `correct.mp3`); the `require()` path in SFX_ASSETS will match.
+- **Loudness:** Target ~-16 LUFS as a starting point, but perceived balance across the set matters more than hitting one exact number. If a sound feels right at -14 or -18, keep it.
+- **Trimmed:** No leading/trailing silence
+- **Named:** `{id}.wav` or `{id}.mp3` (e.g., `correct.wav`, `sacred_moment.wav`)
+- **Location:** `assets/audio/effects/`
 
-The founder will find and provide each sound file. Implementation will wire them into the app.
+## Files Modified
+
+| Action | File | What changes |
+|--------|------|-------------|
+| Modify | `src/audio/player.ts` | Add SFX_ASSETS (7 entries), SFX player lane, priority-gated playback, 7 helper exports |
+| Modify | `src/components/LessonQuiz.tsx` | Import + call `playCorrect()`/`playWrong()` in `handleSelect` |
+| Modify | `src/components/LessonSummary.tsx` | Import + call `playLessonComplete()`/`playLessonCompletePerfect()` in mount effect |
+| Modify | `src/components/onboarding/OnboardingFlow.tsx` | Import + call `playOnboardingComplete()` in `handleFinish` |
+| Modify | `src/components/onboarding/steps/BismillahMoment.tsx` | Import + call `playSacredMoment()` in mount effect |
+| Modify | `src/components/onboarding/steps/LetterReveal.tsx` | Import + call `playSacredMoment()` in timeout effect |
+| Modify | `src/components/onboarding/steps/LetterQuiz.tsx` | Import + call `playCorrect()`/`playWrong()` in answer handler |
+| Modify | `app/lesson/[id].tsx` | Import + call `playLessonStart()` in onStart callback |
+| Modify | `src/components/exercises/ComprehensionExercise.tsx` | Import + call `playCorrect()`/`playWrong()` |
+| Modify | `src/components/exercises/TapInOrder.tsx` | Import + call `playCorrect()`/`playWrong()` |
+| Modify | `src/components/exercises/SpotTheBreak.tsx` | Import + call `playCorrect()`/`playWrong()` |
+| Create | `assets/audio/effects/*` | 7 manually-sourced sound files (WAV or MP3) |
+
+**No new dependencies** and no broad architectural rewrite. This is a small extension to the existing audio module — adding an SFX player lane and priority-gated playback alongside the existing voice lane. Same bundled-asset pattern as letter audio.
 
 ## Out of Scope
 
 - Runtime/dynamic audio generation
-- Letter pronunciation audio (already exists, stays untouched)
-- Adaptive volume based on device/time-of-day
-- User-facing sound settings UI (mute toggle already exists)
-- SFX generation pipeline (removed — sounds are manually sourced)
+- Letter pronunciation audio (untouched)
+- Adaptive volume
+- Sound settings UI beyond existing mute toggle
+- SFX generation pipeline (removed, staying removed)
+- Multi-lane mixing / simultaneous playback
+- Phase 2 sounds (backlog above)
