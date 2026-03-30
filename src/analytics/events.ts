@@ -64,6 +64,49 @@ export interface ReturnWelcomeShownProps {
   longest_wird: number;
 }
 
+export interface PaywallShownProps {
+  trigger: "lesson_7_summary" | "lesson_locked" | "expired_card" | "home_upsell";
+  offering_id?: string;
+}
+
+export interface PaywallResultProps {
+  trigger: "lesson_7_summary" | "lesson_locked" | "expired_card" | "home_upsell";
+  result: "purchased" | "restored" | "cancelled" | "error";
+}
+
+export interface PurchaseCompletedProps {
+  product_id: string;
+  plan: "monthly" | "annual";
+  is_trial: boolean;
+  price?: number;
+  currency?: string;
+}
+
+export interface PurchaseFailedProps {
+  product_id: string;
+  error_code?: string;
+  error_message?: string;
+}
+
+export interface RestoreCompletedProps {
+  success: boolean;
+  entitlements_restored: number;
+}
+
+export interface TrialExpiredProps {
+  days_used: number;
+  lessons_completed_during_trial: number;
+}
+
+export interface EntitlementChangedProps {
+  old_stage: "free" | "trial" | "paid" | "expired" | "unknown";
+  new_stage: "free" | "trial" | "paid" | "expired" | "unknown";
+}
+
+export interface ScholarshipLinkTappedProps {
+  trigger: string;
+}
+
 export interface EventMap {
   app_opened: AppOpenedProps;
   onboarding_step_viewed: OnboardingStepViewedProps;
@@ -75,6 +118,14 @@ export interface EventMap {
   letter_audio_played: LetterAudioPlayedProps;
   mastery_state_changed: MasteryStateChangedProps;
   return_welcome_shown: ReturnWelcomeShownProps;
+  paywall_shown: PaywallShownProps;
+  paywall_result: PaywallResultProps;
+  purchase_completed: PurchaseCompletedProps;
+  purchase_failed: PurchaseFailedProps;
+  restore_completed: RestoreCompletedProps;
+  trial_expired: TrialExpiredProps;
+  entitlement_changed: EntitlementChangedProps;
+  scholarship_link_tapped: ScholarshipLinkTappedProps;
 }
 
 export type EventName = keyof EventMap;
