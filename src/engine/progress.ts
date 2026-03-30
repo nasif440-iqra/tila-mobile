@@ -78,8 +78,8 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
         skill_key: string; correct: number; attempts: number; last_seen: string | null;
       }>('SELECT skill_key, correct, attempts, last_seen FROM mastery_skills'),
       db.getAllAsync<{
-        confusion_key: string; count: number; last_seen: string | null; categories: string | null;
-      }>('SELECT confusion_key, count, last_seen, categories FROM mastery_confusions'),
+        confusion_key: string; count: number; last_seen: string | null; categories?: string | null;
+      }>('SELECT * FROM mastery_confusions'),
       db.getFirstAsync<{
         last_practice_date: string | null; current_wird: number;
         longest_wird: number; today_lesson_count: number;

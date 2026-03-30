@@ -10,17 +10,17 @@
  * null = never gates progression (review sessions).
  */
 const MODE_THRESHOLDS = {
-  recognition: 0.6,
-  sound: 0.6,
-  contrast: 0.6,
-  checkpoint: 0.7,
-  "harakat-intro": 0.5,
-  harakat: 0.6,
-  "harakat-mixed": 0.6,
+  recognition: 0.8,
+  sound: 0.8,
+  contrast: 0.8,
+  checkpoint: 0.8,
+  "harakat-intro": 0.8,
+  harakat: 0.8,
+  "harakat-mixed": 0.8,
   review: null,
 };
 
-const DEFAULT_THRESHOLD = 0.6;
+const DEFAULT_THRESHOLD = 0.8;
 
 /**
  * Get the pass threshold for a given lesson mode.
