@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { router } from "expo-router";
@@ -14,6 +14,9 @@ import { buildReviewLessonPayload } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
 import type { QuizResultItem } from '../../src/types/quiz';
 import { durations } from "../../src/design/animations";
+import { useSubscription, usePremiumReviewRights, FREE_LESSON_CUTOFF } from "../../src/monetization/hooks";
+import { loadPremiumLessonGrants } from "../../src/engine/progress";
+import { useDatabase } from "../../src/db/provider";
 
 // ── Types ──
 
@@ -31,21 +34,42 @@ interface QuizResults {
 
 export default function ReviewScreen() {
   const colors = useColors();
+  const db = useDatabase();
   const progress = useProgress();
   const { recordPractice } = useHabit();
+  const { isPremiumActive } = useSubscription();
 
   const [stage, setStage] = useState<Stage>("quiz");
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
+  const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    loadPremiumLessonGrants(db).then(setGrantedLessonIds);
+  }, [db]);
+
+  const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
   const today = getTodayDateString();
 
-  // Build pseudo-lesson from SRS review planner
-  const reviewLesson = useMemo(
-    () => buildReviewLessonPayload(mastery, completedLessonIds, today),
-    [mastery, completedLessonIds, today]
-  );
+  // Build pseudo-lesson from SRS review planner, filtered by premium rights
+  const reviewLesson = useMemo(() => {
+    const payload = buildReviewLessonPayload(mastery, completedLessonIds, today);
+    if (!payload) return null;
+
+    // If user is premium, no filtering needed
+    if (isPremiumActive) return payload;
+
+    // For free/expired users, filter to only reviewable letters
+    const filteredTeachIds = (payload.teachIds || []).filter(
+      (id: number) => reviewableLetterIds.includes(id)
+    );
+
+    if (filteredTeachIds.length === 0) return null;
+
+    return { ...payload, teachIds: filteredTeachIds };
+  }, [mastery, completedLessonIds, today, isPremiumActive, reviewableLetterIds]);
 
   // ── Handlers ──
 
