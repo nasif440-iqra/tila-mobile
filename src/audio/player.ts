@@ -41,6 +41,11 @@ const SFX_ASSETS = {
   screen_transition: require("../../assets/audio/effects/screen_transition.wav"),
   review_due: require("../../assets/audio/effects/review_due.wav"),
   wird_milestone: require("../../assets/audio/effects/wird_milestone.wav"),
+  wird_text_appear: require("../../assets/audio/effects/wird_text_appear.wav"),
+  wird_complete: require("../../assets/audio/effects/wird_complete.wav"),
+  mastery_level_up: require("../../assets/audio/effects/mastery_level_up.wav"),
+  quiz_start: require("../../assets/audio/effects/quiz_start.wav"),
+  progress_reveal: require("../../assets/audio/effects/progress_reveal.wav"),
 } as const;
 
 export type SFXName = keyof typeof SFX_ASSETS;
@@ -240,6 +245,28 @@ export function playOnboardingAdvance(): void {
 
 export function playOnboardingComplete(): void {
   playSFX(SFX_ASSETS.onboarding_complete);
+}
+
+export function playWirdTextAppear(): void {
+  playSFX(SFX_ASSETS.wird_text_appear);
+}
+
+export function playWirdComplete(): void {
+  playSFX(SFX_ASSETS.wird_complete);
+  Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+}
+
+export function playMasteryLevelUp(): void {
+  playSFX(SFX_ASSETS.mastery_level_up);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+}
+
+export function playQuizStart(): void {
+  playSFX(SFX_ASSETS.quiz_start);
+}
+
+export function playProgressReveal(): void {
+  playSFX(SFX_ASSETS.progress_reveal);
 }
 
 // ── Voice helpers ──
