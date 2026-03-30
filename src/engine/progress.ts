@@ -6,6 +6,8 @@
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { SEED_DEFAULTS } from '../db/schema';
+import { normalizeEntityKey, mergeQuizResultsIntoMastery } from './mastery.js';
+import type { QuizResultItem } from '../types/quiz';
 
 // ── State Shape Types ──────────────────────────────────────────────
 
@@ -169,6 +171,38 @@ export async function saveCompletedLesson(
     passed ? 1 : 0
   );
   return result.lastInsertRowId;
+}
+
+/**
+ * Save mastery updates (entities, skills, confusions) without creating
+ * a lesson_attempts row. Used by review sessions where the quiz feeds
+ * the mastery pipeline but does not count as lesson progression.
+ */
+export async function saveMasteryResults(
+  db: SQLiteDatabase,
+  quizResultItems: QuizResultItem[],
+  currentMastery: ProgressState["mastery"]
+): Promise<void> {
+  if (quizResultItems.length === 0) return;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const enriched = quizResultItems.map((r) => ({
+    ...r,
+    targetKey: normalizeEntityKey(r.targetId, r),
+  }));
+
+  const updatedMastery = mergeQuizResultsIntoMastery(currentMastery, enriched, today);
+
+  for (const [key, entity] of Object.entries(updatedMastery.entities)) {
+    await saveMasteryEntity(db, key, entity as EntityState);
+  }
+  for (const [key, skill] of Object.entries(updatedMastery.skills)) {
+    await saveMasterySkill(db, key, skill as SkillState);
+  }
+  for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
+    await saveMasteryConfusion(db, key, confusion as ConfusionState);
+  }
 }
 
 export async function saveQuestionAttempts(
