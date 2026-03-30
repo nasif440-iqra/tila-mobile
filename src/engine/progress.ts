@@ -354,6 +354,27 @@ export async function saveUserProfile(
   await db.runAsync(`UPDATE user_profile SET ${sets.join(', ')} WHERE id = 1`, ...values);
 }
 
+// ── Premium Lesson Grants ─────────────────────────────────────────
+
+export async function savePremiumLessonGrant(
+  db: SQLiteDatabase,
+  lessonId: number
+): Promise<void> {
+  await db.runAsync(
+    "INSERT OR IGNORE INTO premium_lesson_grants (lesson_id) VALUES (?)",
+    lessonId
+  );
+}
+
+export async function loadPremiumLessonGrants(
+  db: SQLiteDatabase
+): Promise<number[]> {
+  const rows = await db.getAllAsync<{ lesson_id: number }>(
+    "SELECT lesson_id FROM premium_lesson_grants ORDER BY lesson_id"
+  );
+  return rows.map((r) => r.lesson_id);
+}
+
 // ── Reset ──────────────────────────────────────────────────────────
 
 export async function resetProgress(db: SQLiteDatabase): Promise<void> {
