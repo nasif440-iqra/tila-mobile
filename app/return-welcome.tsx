@@ -16,6 +16,10 @@ export default function ReturnWelcomeScreen() {
   const progress = useProgress();
   const { habit } = useHabit();
 
+  const currentWird = habit?.currentWird ?? 0;
+  const longestWird = habit?.longestWird ?? 0;
+  const streakBroke = currentWird === 0 && longestWird > 0;
+
   useEffect(() => {
     const lastPractice = habit?.lastPracticeDate;
     const daysSince = lastPractice
@@ -24,7 +28,9 @@ export default function ReturnWelcomeScreen() {
 
     track('return_welcome_shown', {
       days_since_last_practice: daysSince,
-      current_wird: habit?.currentWird ?? 0,
+      current_wird: currentWird,
+      streak_broke: streakBroke,
+      longest_wird: longestWird,
     });
   }, []);
 
@@ -62,19 +68,34 @@ export default function ReturnWelcomeScreen() {
           </Card>
         </Animated.View>
 
-        {/* Encouragement */}
+        {/* Encouragement — compassionate recovery if streak broke, otherwise normal message */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-          <Text style={[styles.encouragement, { color: colors.textSoft }]}>
-            Every return is a step forward. Pick up right where you left off.
-          </Text>
+          {streakBroke ? (
+            <View style={styles.recoveryWrap}>
+              <Text style={[styles.encouragement, { color: colors.textSoft }]}>
+                Your streak ended — but your longest streak of{" "}
+                <Text style={[styles.streakHighlight, { color: colors.accent }]}>
+                  {longestWird} {longestWird === 1 ? "day" : "days"}
+                </Text>{" "}
+                is yours forever. Every new day is a fresh start.
+              </Text>
+            </View>
+          ) : (
+            <Text style={[styles.encouragement, { color: colors.textSoft }]}>
+              Every return is a step forward. Pick up right where you left off.
+            </Text>
+          )}
         </Animated.View>
 
-        {/* Continue button */}
+        {/* Continue / Start new streak button */}
         <Animated.View
           entering={FadeInDown.delay(800).duration(500)}
           style={styles.buttonWrap}
         >
-          <Button title="Continue" onPress={handleContinue} />
+          <Button
+            title={streakBroke ? "Start a new streak" : "Continue"}
+            onPress={handleContinue}
+          />
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -138,5 +159,12 @@ const styles = StyleSheet.create({
   buttonWrap: {
     width: "100%",
     maxWidth: 320,
+  },
+  recoveryWrap: {
+    maxWidth: 300,
+    alignItems: "center",
+  },
+  streakHighlight: {
+    fontFamily: fontFamilies.bodySemiBold,
   },
 });
