@@ -54,6 +54,7 @@ export interface ProgressState {
   wirdIntroSeen: boolean;
   postLessonOnboardSeen: boolean;
   returnHadithLastShown: string | null;
+  analyticsConsent: boolean | null;
 }
 
 // Re-export for backwards compatibility; local import needed for function signatures
@@ -88,8 +89,8 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
         starting_point: string | null; motivation: string | null;
         daily_goal: number | null; commitment_complete: number;
         wird_intro_seen: number; post_lesson_onboard_seen: number;
-        return_hadith_last_shown: string | null;
-      }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown FROM user_profile WHERE id = 1'),
+        return_hadith_last_shown: string | null; analytics_consent: number | null;
+      }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown, analytics_consent FROM user_profile WHERE id = 1'),
     ]);
 
   // Transform rows to domain types
@@ -142,13 +143,14 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
   const wirdIntroSeen = profileRow ? profileRow.wird_intro_seen === 1 : false;
   const postLessonOnboardSeen = profileRow ? profileRow.post_lesson_onboard_seen === 1 : false;
   const returnHadithLastShown = profileRow ? profileRow.return_hadith_last_shown : null;
+  const analyticsConsent = profileRow?.analytics_consent === 1 ? true : profileRow?.analytics_consent === 0 ? false : null;
 
   return {
     completedLessonIds,
     mastery: { entities, skills, confusions },
     habit, onboarded, onboardingStartingPoint, onboardingMotivation,
     onboardingDailyGoal, onboardingCommitmentComplete, onboardingVersion,
-    wirdIntroSeen, postLessonOnboardSeen, returnHadithLastShown,
+    wirdIntroSeen, postLessonOnboardSeen, returnHadithLastShown, analyticsConsent,
   };
 }
 
@@ -261,6 +263,7 @@ export interface UserProfileUpdate {
   wirdIntroSeen?: boolean;
   postLessonOnboardSeen?: boolean;
   returnHadithLastShown?: string | null;
+  analyticsConsent?: boolean;
 }
 
 export async function saveUserProfile(
@@ -305,6 +308,10 @@ export async function saveUserProfile(
   if (profile.returnHadithLastShown !== undefined) {
     sets.push('return_hadith_last_shown = ?');
     values.push(profile.returnHadithLastShown);
+  }
+  if (profile.analyticsConsent !== undefined) {
+    sets.push('analytics_consent = ?');
+    values.push(profile.analyticsConsent ? 1 : 0);
   }
 
   if (sets.length === 0) return;
