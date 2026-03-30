@@ -18,6 +18,10 @@ export function getWrongExplanation(chosenId, correctId, mode) {
     } else {
       parts.push(`${c.name} sounds like "${c.transliteration}" while ${t.name} sounds like "${t.transliteration}" \u2014 quite different once you hear it.`);
     }
+    // Add articulation tip if available for the correct letter
+    if (t.articulation?.tryThis) {
+      parts.push(`Try this: ${t.articulation.tryThis}`);
+    }
     parts.push("Listen again to hear the difference.");
     return parts.join(" ");
   }

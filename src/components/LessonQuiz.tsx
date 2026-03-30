@@ -21,6 +21,7 @@ import {
   playLetterSound,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
+import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations.js";
 import { track } from "../analytics";
 // haptics now handled in StreakMilestoneOverlay
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";
@@ -280,7 +281,16 @@ export function LessonQuiz({
       {answered && !isCorrect && (
         <View style={[styles.wrongPanelOverlay, { paddingBottom: Math.max(insets.bottom, spacing.xl) }]}>
           <WrongAnswerPanel
-            explanation={currentQuestion.explanation ?? null}
+            explanation={
+              currentQuestion.explanation ??
+              (selectedId && currentQuestion.targetId
+                ? lesson.lessonMode === "contrast"
+                  ? getContrastExplanation(selectedId, currentQuestion.targetId)
+                  : lesson.lessonMode === "harakat" || lesson.lessonMode === "harakat-mixed" || lesson.lessonMode === "harakat-intro"
+                    ? getHarakatWrongExplanation(currentQuestion, selectedId)
+                    : getWrongExplanation(selectedId, currentQuestion.targetId, isSoundQuestion ? "sound" : "recognition")
+                : null)
+            }
             correctLetter={correctLetter}
             chosenLetter={chosenLetter}
             isSoundQuestion={isSoundQuestion}
