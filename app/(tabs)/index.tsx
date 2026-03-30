@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -21,7 +21,9 @@ import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
-import { useSubscription, FREE_LESSON_CUTOFF } from "../../src/monetization/hooks";
+import { useSubscription, FREE_LESSON_CUTOFF, usePremiumReviewRights } from "../../src/monetization/hooks";
+import { loadPremiumLessonGrants } from "../../src/engine/progress";
+import { useDatabase } from "../../src/db/provider";
 import { LESSONS } from "../../src/data/lessons";
 import {
   getCurrentLesson,
@@ -290,10 +292,21 @@ function MomentumBanner({
 
 export default function HomeScreen() {
   const colors = useColors();
+  const db = useDatabase();
   const progress = useProgress();
   const { habit } = useHabit();
   const { isPremiumActive, stage, trialDaysRemaining, showPaywall } = useSubscription();
   const today = getTodayDateString();
+
+  const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!progress.loading) {
+      loadPremiumLessonGrants(db).then(setGrantedLessonIds);
+    }
+  }, [db, progress.loading]);
+
+  const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);
 
   // Header entrance animation
   const headerOpacity = useSharedValue(0);
@@ -353,7 +366,27 @@ export default function HomeScreen() {
   const lessonsCompleted = useMemo(() => getLessonsCompletedCount(completedLessonIds), [completedLessonIds]);
   const learnedLetterIds = useMemo(() => getLearnedLetterIds(completedLessonIds), [completedLessonIds]);
   const nextLesson = useMemo(() => getCurrentLesson(completedLessonIds), [completedLessonIds]);
-  const reviewPlan = useMemo(() => mastery ? planReviewSession(mastery, today) : null, [mastery, today]);
+  const reviewPlan = useMemo(() => {
+    if (!mastery) return null;
+    const plan = planReviewSession(mastery, today);
+
+    // If user is premium, no filtering needed
+    if (isPremiumActive) return plan;
+
+    // For free/expired users, filter review items to only reviewable letters
+    const filteredItems = plan.items.filter((key: string) => {
+      const match = key.match(/^letter:(\d+)$/);
+      if (!match) return true; // keep non-letter items (combos, etc.)
+      return reviewableLetterIds.includes(parseInt(match[1], 10));
+    });
+
+    return {
+      ...plan,
+      items: filteredItems,
+      totalItems: filteredItems.length,
+      hasReviewWork: filteredItems.length > 0,
+    };
+  }, [mastery, today, isPremiumActive, reviewableLetterIds]);
 
   const allDone = !nextLesson || completedLessonIds.length >= LESSONS.length;
   const currentPhase = nextLesson?.phase ?? 1;
