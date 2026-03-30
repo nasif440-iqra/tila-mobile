@@ -60,6 +60,8 @@ export interface MasteryStateChangedProps {
 export interface ReturnWelcomeShownProps {
   days_since_last_practice: number;
   current_wird: number;
+  streak_broke: boolean;
+  longest_wird: number;
 }
 
 export interface EventMap {
