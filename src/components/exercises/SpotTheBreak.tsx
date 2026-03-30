@@ -8,6 +8,7 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 import { hapticSuccess, hapticError } from "../../design/haptics";
+import { playCorrect, playWrong } from "../../audio/player";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii } from "../../design/tokens";
 import { ArabicText, Button } from "../../design/components";
@@ -68,12 +69,14 @@ export function SpotTheBreak({ exercise, onComplete }: Props) {
       setSelected(index);
 
       if (index === correctIndex) {
+        playCorrect();
         hapticSuccess();
         setDone(true);
         setTimeout(() => {
           onComplete({ correct: true, targetId: breakerLetterId });
         }, 1200);
       } else {
+        playWrong();
         hapticError();
         shakeValues[index].value = withSequence(
           withTiming(-4, { duration: 50 }),
