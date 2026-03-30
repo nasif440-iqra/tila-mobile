@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "../design/theme";
 import { typography, spacing, radii, fontFamilies } from "../design/tokens";
 import { Button, ArabicText, WarmGradient } from "../design/components";
-import { getSFXAsset } from "../audio/player";
+import { getSFXAsset, playMasteryLevelUp } from "../audio/player";
 import {
   getCompletionTier,
   getSummaryMessaging,
@@ -370,6 +370,13 @@ export function LessonSummary({
     else if (percentage >= 80) hapticMilestone();
     else if (percentage >= 50) hapticSuccess();
     else hapticTap();
+  }, []);
+
+  // Mastery level-up sound — fires when passed and mastery breakdown reveals strong letters
+  useEffect(() => {
+    if (passed && letterBreakdown && letterBreakdown.strong.length > 0) {
+      playMasteryLevelUp();
+    }
   }, []);
 
   // Score circle styling — varies by score tier
