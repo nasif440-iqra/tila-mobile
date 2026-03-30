@@ -386,6 +386,7 @@ export async function resetProgress(db: SQLiteDatabase): Promise<void> {
   await db.runAsync('DELETE FROM mastery_confusions');
   await db.runAsync('DELETE FROM habit');
   await db.runAsync('DELETE FROM user_profile');
+  await db.runAsync('DELETE FROM premium_lesson_grants');
 
   // Re-seed defaults
   await db.execAsync(SEED_DEFAULTS);
@@ -394,7 +395,7 @@ export async function resetProgress(db: SQLiteDatabase): Promise<void> {
 // ── Export / Import ────────────────────────────────────────────────
 
 export async function exportProgress(db: SQLiteDatabase): Promise<object> {
-  const [lessonAttempts, questionAttempts, entities, skills, confusions, habit, userProfile] =
+  const [lessonAttempts, questionAttempts, entities, skills, confusions, habit, userProfile, premiumGrants] =
     await Promise.all([
       db.getAllAsync('SELECT * FROM lesson_attempts ORDER BY id'),
       db.getAllAsync('SELECT * FROM question_attempts ORDER BY id'),
@@ -403,6 +404,7 @@ export async function exportProgress(db: SQLiteDatabase): Promise<object> {
       db.getAllAsync('SELECT * FROM mastery_confusions ORDER BY confusion_key'),
       db.getFirstAsync('SELECT * FROM habit WHERE id = 1'),
       db.getFirstAsync('SELECT * FROM user_profile WHERE id = 1'),
+      db.getAllAsync('SELECT * FROM premium_lesson_grants ORDER BY lesson_id'),
     ]);
 
   return {
@@ -415,6 +417,7 @@ export async function exportProgress(db: SQLiteDatabase): Promise<object> {
     masteryConfusions: confusions,
     habit,
     userProfile,
+    premiumLessonGrants: premiumGrants,
   };
 }
 
@@ -427,6 +430,7 @@ interface ImportData {
   masteryConfusions?: Array<Record<string, unknown>>;
   habit?: Record<string, unknown>;
   userProfile?: Record<string, unknown>;
+  premiumLessonGrants?: Array<Record<string, unknown>>;
 }
 
 export async function importProgress(db: SQLiteDatabase, data: ImportData): Promise<void> {
@@ -443,6 +447,7 @@ export async function importProgress(db: SQLiteDatabase, data: ImportData): Prom
     await db.runAsync('DELETE FROM mastery_confusions');
     await db.runAsync('DELETE FROM habit');
     await db.runAsync('DELETE FROM user_profile');
+    await db.runAsync('DELETE FROM premium_lesson_grants');
 
     // Import lesson attempts
     if (Array.isArray(data.lessonAttempts)) {
@@ -555,6 +560,17 @@ export async function importProgress(db: SQLiteDatabase, data: ImportData): Prom
       );
     } else {
       await db.execAsync('INSERT OR IGNORE INTO user_profile (id) VALUES (1)');
+    }
+
+    // Clear and restore premium lesson grants
+    if (Array.isArray(data.premiumLessonGrants)) {
+      for (const row of data.premiumLessonGrants) {
+        await db.runAsync(
+          'INSERT INTO premium_lesson_grants (lesson_id, granted_at) VALUES (?, ?)',
+          row.lesson_id as number,
+          row.granted_at as string
+        );
+      }
     }
   });
 }
