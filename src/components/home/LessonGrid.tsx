@@ -11,6 +11,7 @@ import { useColors } from "../../design/theme";
 import { spacing, fontFamilies } from "../../design/tokens";
 import { durations, easings, staggers } from "../../design/animations";
 import { LESSONS } from "../../data/lessons";
+import { FREE_LESSON_CUTOFF } from "../../monetization/hooks";
 import { JourneyNode } from "./JourneyNode";
 
 // ── Phase labels for inline dividers ──
@@ -120,6 +121,8 @@ export interface LessonGridProps {
   completedLessonIds: number[];
   onStartLesson: (lessonId: number) => void;
   enterDelay?: number;
+  isPremiumActive?: boolean;
+  onLockedLessonPress?: (lessonId: number) => void;
 }
 
 // ── Component ──
@@ -129,6 +132,8 @@ export default function LessonGrid({
   completedLessonIds,
   onStartLesson,
   enterDelay = 0,
+  isPremiumActive,
+  onLockedLessonPress,
 }: LessonGridProps) {
   const colors = useColors();
 
@@ -195,7 +200,12 @@ export default function LessonGrid({
         {windowLessons.map((lesson: any, i: number) => {
           const complete = completedLessonIds.includes(lesson.id);
           const isCurrent = lesson.id === nextLessonId;
-          const state = complete ? "complete" : isCurrent ? "current" : "locked";
+          const isProgressionLocked = !complete && !isCurrent;
+
+          // Premium-locked: pedagogically unlocked (current or future) BUT beyond free cutoff and no subscription
+          const isPremiumLocked = !isProgressionLocked && !complete && lesson.id > FREE_LESSON_CUTOFF && !isPremiumActive;
+
+          const state = complete ? "complete" : (isCurrent && !isPremiumLocked) ? "current" : "locked";
           const offset = OFFSETS[i % OFFSETS.length];
 
           const showPhaseDivider = !seenPhases.has(lesson.phase) && i > 0;
@@ -220,7 +230,8 @@ export default function LessonGrid({
                 state={state}
                 offset={offset}
                 enterDelay={enterDelay + 200 + i * staggers.fast.delay}
-                onPress={onStartLesson}
+                onPress={isPremiumLocked && onLockedLessonPress ? onLockedLessonPress : onStartLesson}
+                premiumLocked={isPremiumLocked}
               />
             </View>
           );

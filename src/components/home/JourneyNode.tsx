@@ -31,6 +31,7 @@ export interface JourneyNodeProps {
   offset: number;
   enterDelay?: number;
   onPress: (lessonId: number) => void;
+  premiumLocked?: boolean;
 }
 
 // ── Icons ──
@@ -65,6 +66,7 @@ export function JourneyNode({
   offset,
   enterDelay = 0,
   onPress,
+  premiumLocked = false,
 }: JourneyNodeProps) {
   const colors = useColors();
 
@@ -266,8 +268,8 @@ export function JourneyNode({
         <Text style={[styles.nodeTitle, { color: colors.textMuted }]}>
           {lesson.title}
         </Text>
-        <Text style={[styles.nodeSubtitle, { color: colors.textMuted }]}>
-          Locked
+        <Text style={[styles.nodeSubtitle, { color: premiumLocked ? colors.accent : colors.textMuted }]}>
+          {premiumLocked ? "\uD83D\uDD12 Premium" : "Locked"}
         </Text>
       </View>
     );
@@ -282,7 +284,7 @@ export function JourneyNode({
     { transform: [{ translateX: offset }], opacity: rowOpacity },
   ];
 
-  if (state === "locked") {
+  if (state === "locked" && !premiumLocked) {
     return (
       <Animated.View style={entranceStyle}>
         <View style={rowStyle}>
