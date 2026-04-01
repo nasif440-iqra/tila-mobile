@@ -87,10 +87,12 @@ Plans:
   2. App Store Connect privacy questionnaire answers are documented, reflecting actual PostHog/Sentry/RevenueCat data collection
   3. Running `expo prebuild` and inspecting the generated iOS config confirms `supportsTablet: false` is present (iPad letterbox mode)
   4. A production EAS build installs and launches correctly on a physical device
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: TBD
+- [ ] 05-01-PLAN.md — Privacy policy + in-app link + privacy questionnaire (LAUNCH-01, LAUNCH-02)
+- [ ] 05-02-PLAN.md — iPad prebuild verification + App Store metadata (LAUNCH-03)
+- [ ] 05-03-PLAN.md — Production EAS build + device verification reviewer run (LAUNCH-04)
 
 ## Progress
 
@@ -104,4 +106,4 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 | 2. Crash Containment | 1/2 | In progress | - |
 | 3. Monetization Hardening | 1/1 | Complete   | 2026-04-01 |
 | 4. Type & Test Cleanup | 1/2 | In Progress|  |
-| 5. Launch Ops Checklist | 0/0 | Not started | - |
+| 5. Launch Ops Checklist | 0/3 | Not started | - |
