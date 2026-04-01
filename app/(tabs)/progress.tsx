@@ -22,7 +22,10 @@ import { durations, easings, staggers } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useDatabase } from "../../src/db/provider";
+import { useSubscription } from "../../src/monetization/hooks";
 import { resetProgress } from "../../src/engine/progress";
+import Purchases from "react-native-purchases";
+import { trackRestoreCompleted, trackRestoreFailed } from "../../src/monetization/analytics";
 import { LESSONS } from "../../src/data/lessons";
 import {
   getPhaseCounts,
@@ -50,6 +53,37 @@ export default function ProgressScreen() {
   const router = useRouter();
   const db = useDatabase();
   const progress = useProgress();
+  const { isPremiumActive, refresh: refreshSubscription } = useSubscription();
+  const [restoring, setRestoring] = useState(false);
+
+  const handleRestorePurchases = useCallback(async () => {
+    setRestoring(true);
+    try {
+      const info = await Purchases.restorePurchases();
+      const activeCount = Object.keys(info.entitlements.active).length;
+      trackRestoreCompleted({ success: true, entitlements_restored: activeCount });
+      await refreshSubscription();
+      Alert.alert(
+        activeCount > 0 ? "Purchases Restored" : "No Purchases Found",
+        activeCount > 0
+          ? "Your subscription has been restored successfully."
+          : "We couldn't find any previous purchases for this account.",
+        [{ text: "OK" }]
+      );
+    } catch (e: any) {
+      trackRestoreFailed({
+        error_code: e?.code?.toString(),
+        error_message: e?.message ?? "Unknown error",
+      });
+      Alert.alert(
+        "Restore Failed",
+        "We couldn't restore your purchases. Please check your internet connection and try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setRestoring(false);
+    }
+  }, [refreshSubscription]);
 
   const handleResetProgress = useCallback(() => {
     Alert.alert(
@@ -276,6 +310,23 @@ export default function ProgressScreen() {
           />
         </Animated.View>
 
+        {/* Restore purchases — only shown when not actively premium */}
+        {!isPremiumActive && (
+          <Pressable
+            onPress={handleRestorePurchases}
+            disabled={restoring}
+            style={[styles.restoreButton, { borderColor: colors.border }]}
+          >
+            {restoring ? (
+              <ActivityIndicator size="small" color={colors.textMuted} />
+            ) : (
+              <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
+                Restore Purchases
+              </Text>
+            )}
+          </Pressable>
+        )}
+
         {/* Reset progress */}
         <Pressable
           onPress={handleResetProgress}
@@ -320,8 +371,14 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
   },
-  resetButton: {
+  restoreButton: {
     marginTop: spacing.xxxxl,
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    borderTopWidth: 1,
+  },
+  resetButton: {
+    marginTop: spacing.lg,
     paddingVertical: spacing.md,
     alignItems: "center",
     borderTopWidth: 1,
