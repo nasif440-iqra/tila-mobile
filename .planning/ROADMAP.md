@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Correctness Blockers** - Fix the 5 known bugs that crash or corrupt data, with regression tests
 - [ ] **Phase 2: Crash Containment** - Add defensive shell so unknown failures are caught, not fatal
-- [ ] **Phase 3: Monetization Hardening** - Make subscription flow bulletproof for offline and edge cases
+- [x] **Phase 3: Monetization Hardening** - Make subscription flow bulletproof for offline and edge cases (completed 2026-04-01)
 - [ ] **Phase 4: Type & Test Cleanup** - Remove critical `any` types, add regression tests, establish coverage baseline
 - [ ] **Phase 5: Launch Ops Checklist** - Privacy policy, App Store metadata, iPad QA, production build
 
@@ -62,7 +62,7 @@ Plans:
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01: TBD
+- [x] 03-01: TBD
 
 ### Phase 4: Type & Test Cleanup
 **Goal**: Critical type holes are closed and regression tests validate all prior fixes
@@ -101,6 +101,6 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 |-------|----------------|--------|-----------|
 | 1. Correctness Blockers | 1/3 | In progress | - |
 | 2. Crash Containment | 1/2 | In progress | - |
-| 3. Monetization Hardening | 0/0 | Not started | - |
+| 3. Monetization Hardening | 1/1 | Complete   | 2026-04-01 |
 | 4. Type & Test Cleanup | 0/0 | Not started | - |
 | 5. Launch Ops Checklist | 0/0 | Not started | - |
