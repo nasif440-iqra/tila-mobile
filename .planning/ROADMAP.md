@@ -67,6 +67,10 @@ Plans:
 **Goal**: Users feel personally known — the app uses their name and understands their motivation
 **Depends on**: Phase 1 or 2 (either)
 **Requirements**: CONV-01, CONV-02, CONV-04
+**Plans:** 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — Data layer + NameMotivation onboarding step (CONV-01)
+- [ ] 03-02-PLAN.md — Personalized home greeting + wird tooltip (CONV-02, CONV-04)
 **Success Criteria** (what must be TRUE):
   1. Onboarding flow includes an optional name input step that stores the name in user profile
   2. First wird/streak badge appearance shows a one-time explanation of the wird concept
@@ -151,7 +155,7 @@ Phase 2 (cleanup) ───────┘                                      
 |-------|----------------|--------|-----------|
 | 1. Lesson Flow Hardening | 0/1 | Not started | - |
 | 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
-| 3. Onboarding & Personalization | 0/TBD | Not started | - |
+| 3. Onboarding & Personalization | 0/2 | Planned | - |
 | 4. Value Communication | 0/TBD | Not started | - |
 | 5. Conversion Surfaces | 0/TBD | Not started | - |
 | 6. App Store Submission | 0/TBD | Not started | - |
