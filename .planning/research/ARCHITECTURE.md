@@ -1,354 +1,419 @@
-# Architecture Patterns
+# Architecture Patterns: Hardening & Error Handling
 
-**Domain:** Mobile app UI overhaul (React Native / Expo)
-**Researched:** 2026-03-28
+**Domain:** React Native / Expo production app hardening
+**Researched:** 2026-03-31
 
-## Recommended Architecture
+## Current Architecture (Baseline)
 
-The UI overhaul should be structured as a **progressive layering system** that adds visual quality without touching existing business logic. The key insight from the codebase is that Tila already has clean separation between engine (pure JS), hooks (bridge), and UI (screens + components). The overhaul operates exclusively within the UI layer and the design system that feeds it.
-
-### Architecture Diagram
+Tila's existing layered architecture is well-structured for hardening. The key insight: hardening works *with* these layers, not against them.
 
 ```
-                     UNTOUCHED (engine, hooks, db, data)
-  ┌────────────────────────────────────────────────────────────────┐
-  │  src/engine/  ←  src/hooks/  ←  src/db/  ←  src/data/         │
-  └─────────────────────────┬──────────────────────────────────────┘
-                            │ (data flows up via hooks, unchanged)
-                            │
-  ┌─────────────────────────▼──────────────────────────────────────┐
-  │                    UI OVERHAUL SCOPE                            │
-  │                                                                │
-  │  ┌─── Layer 1: Design Foundation ───────────────────────────┐  │
-  │  │  src/design/tokens.ts      — Color, type, spacing tokens │  │
-  │  │  src/design/theme.ts       — ThemeContext, useColors()    │  │
-  │  │  src/design/animations.ts  — Animation presets (NEW)      │  │
-  │  └──────────────────────────┬───────────────────────────────┘  │
-  │                             │                                  │
-  │  ┌─── Layer 2: Primitive Components ────────────────────────┐  │
-  │  │  src/design/components/   — Button, Card, QuizOption,    │  │
-  │  │                             ArabicText, HearButton       │  │
-  │  │  + NEW primitives:          Badge, ProgressRing,         │  │
-  │  │                             SectionHeader, Divider       │  │
-  │  └──────────────────────────┬───────────────────────────────┘  │
-  │                             │                                  │
-  │  ┌─── Layer 3: Feature Components ─────────────────────────┐   │
-  │  │  src/components/          — Onboarding, Quiz, Home,      │  │
-  │  │                             Progress, Exercises, Lesson* │  │
-  │  │  (consume design system, never define own tokens)        │  │
-  │  └──────────────────────────┬───────────────────────────────┘  │
-  │                             │                                  │
-  │  ┌─── Layer 4: Screens ─────────────────────────────────────┐  │
-  │  │  app/                     — Thin orchestrators that       │  │
-  │  │                             compose feature components    │  │
-  │  │  (transition configs, navigation animation setup)        │  │
-  │  └──────────────────────────────────────────────────────────┘  │
-  └────────────────────────────────────────────────────────────────┘
+ThemeContext.Provider
+  Sentry.ErrorBoundary         <-- already exists (root level)
+    DatabaseProvider
+      SubscriptionProvider
+        AnalyticsGate
+          Stack Navigator
+            Screen Components
+              Feature Components
+                Design System Components
 ```
+
+**Data flow (unchanged by hardening):**
+```
+Screen -> Hook -> Engine -> SQLite
+  UI        Bridge   Pure JS   Persistence
+```
+
+## Recommended Hardening Architecture
+
+### Error Boundary Placement
+
+Error boundaries catch rendering/lifecycle errors only -- not event handlers, async code, or promises. Place them where recovery makes sense, not everywhere.
+
+**Layer 1: Root boundary (EXISTS)**
+- `Sentry.ErrorBoundary` in `_layout.tsx` already catches catastrophic failures
+- Shows `ErrorFallback` with retry
+- This is correct and sufficient for the root level
+
+**Layer 2: Screen-level boundaries (ADD)**
+- Wrap each screen's *content* (not the screen component itself -- Expo Router owns that)
+- Goal: if the lesson screen crashes, the user can navigate back to home; if home crashes, the lesson screen still works
+- Place inside the screen component, wrapping the return JSX
+- Use `react-error-boundary` (recommended in STACK.md) with `onError` callback to Sentry
+
+```
+app/(tabs)/index.tsx:
+  ErrorBoundary (onError -> Sentry, FallbackComponent -> ScreenErrorFallback)
+    HomeContent
+
+app/lesson/[id].tsx:
+  ErrorBoundary (onError -> Sentry, FallbackComponent -> ScreenErrorFallback)
+    LessonContent
+
+app/(tabs)/progress.tsx:
+  ErrorBoundary (onError -> Sentry, FallbackComponent -> ScreenErrorFallback)
+    ProgressContent
+```
+
+**Layer 3: Feature-level boundaries (SELECTIVE)**
+- Only for components that are independently useful when siblings fail
+- The quiz area within a lesson: if celebration animation crashes, quiz should survive
+- NOT needed for every component -- that is over-engineering
+
+Candidates for feature-level boundaries:
+- `LessonQuiz` / `LessonHybrid` (protect quiz from celebration/summary crashes)
+- Home screen hero card (protect lesson grid if hero data is bad)
+- SubscriptionProvider children (protect app if RevenueCat crashes)
+
+**Do NOT add boundaries around:**
+- Individual design system components (Button, Card, ArabicText)
+- Individual quiz options
+- Navigation components
+- Pure display components
 
 ### Component Boundaries
 
-| Component | Responsibility | Communicates With | Overhaul Role |
-|-----------|---------------|-------------------|---------------|
-| `src/design/tokens.ts` | Color, typography, spacing, shadow, radius, border-width definitions | Nothing (leaf) | Foundation layer: all visual decisions originate here |
-| `src/design/theme.ts` | ThemeContext, `useColors()`, `useTheme()` | tokens.ts | Delivery mechanism: how tokens reach components |
-| `src/design/animations.ts` (NEW) | Animation timing presets, spring configs, easing curves | tokens.ts (for durations mapped to semantic intent) | Single source of truth for all motion constants |
-| `src/design/components/` | Primitive UI atoms (Button, Card, etc.) | tokens.ts, theme.ts | Must embody the design system; all new primitives live here |
-| `src/components/` | Feature-specific composites (LessonQuiz, OnboardingFlow, etc.) | design system, hooks, engine selectors | Apply design system to domain-specific layouts |
-| `app/` | Screen orchestrators, navigation config | components, hooks | Configure transitions, compose feature components |
+| Component | Responsibility | Error Strategy | Communicates With |
+|-----------|---------------|----------------|-------------------|
+| `ErrorBoundary` (react-error-boundary) | Catch render errors per-screen, report to Sentry, show contextual recovery UI | `onError` -> `Sentry.captureException`, `FallbackComponent` -> retry/navigate | Sentry, screen content |
+| `DatabaseProvider` (enhanced) | Initialize DB with timeout, show error state on failure | Promise timeout + error state + retry | SQLite, all hooks |
+| Audio player (hardened) | Catch all audio errors silently | try/catch every play call, never throw | expo-audio |
+| `SubscriptionProvider` (enhanced) | Handle RevenueCat SDK failures gracefully | Default to free tier on any error | RevenueCat SDK |
+| Engine functions (defensive) | Return safe defaults on bad input | Null checks, fallback returns | Static data, SQLite |
+| Hooks (defensive) | Handle null/undefined from engine, loading states | Optional chaining, null-safe defaults, error state | Engine, DB, UI |
 
----
+### Data Flow with Error Handling
+
+```
+Screen
+  |-- ErrorBoundary (react-error-boundary)
+  |     |-- catches: rendering crashes, bad state -> shows retry UI
+  |     |-- reports: onError -> Sentry.captureException with screen tag
+  |
+  |-- Hook (useProgress, useLessonQuiz)
+  |     |-- defensive: null-safe returns, loading states, error field
+  |     |-- catches: DB errors in try/catch -> returns error state
+  |
+  |-- Engine (mastery.js, questions/, selectors.js)
+  |     |-- defensive: validates inputs, returns safe defaults
+  |     |-- never throws: returns null/empty on bad input
+  |
+  |-- SQLite (db/client.ts)
+  |     |-- defensive: migration errors caught individually
+  |     |-- timeout: getDatabase() has 10s timeout
+  |     |-- recovery: show "DB failed" screen, offer retry
+  |
+  |-- Audio (player.ts)
+  |     |-- defensive: every play() wrapped in try/catch
+  |     |-- silent failure: audio errors never surface to user
+  |
+  |-- RevenueCat (monetization/)
+        |-- defensive: all SDK calls check init state first
+        |-- fallback: default to free tier on any failure
+```
 
 ## Patterns to Follow
 
-### Pattern 1: Token-First Styling (Already Established, Enforce Strictly)
+### Pattern 1: Screen Error Boundary with react-error-boundary
 
-**What:** Every visual value (color, spacing, radius, border-width, shadow, font) must come from `tokens.ts`. No inline magic numbers.
+**What:** Use `react-error-boundary`'s `ErrorBoundary` component with `onError` reporting to Sentry and a themed `FallbackComponent`.
 
-**When:** Always. This is the non-negotiable foundation.
+**When:** Every screen-level component in `app/`.
 
-**Why it matters for overhaul:** The existing codebase has ~20 instances of raw numbers that bypass tokens (documented in Phase 1 spec). Each one is a visual inconsistency. Token-first means you change `tokens.ts` and the entire app updates.
-
-**Example (current, already good):**
+**Example:**
 ```typescript
-// Button.tsx — uses tokens correctly
-const styles = StyleSheet.create({
-  base: {
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    borderRadius: radii.lg,
-  },
-});
+import { ErrorBoundary } from "react-error-boundary";
+import * as Sentry from "@sentry/react-native";
+
+function ScreenErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
+  const colors = useColors();
+  return (
+    <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <Text>Something went wrong</Text>
+      <Text>Your progress is saved.</Text>
+      <Button onPress={resetErrorBoundary} title="Try Again" />
+      <Button onPress={() => router.replace("/")} title="Go Home" />
+    </View>
+  );
+}
+
+// In screen component:
+export default function LessonScreen() {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ScreenErrorFallback}
+      onError={(error, info) => {
+        Sentry.withScope((scope) => {
+          scope.setTag("screen", "lesson");
+          scope.setExtra("componentStack", info.componentStack);
+          Sentry.captureException(error);
+        });
+      }}
+    >
+      <LessonScreenContent />
+    </ErrorBoundary>
+  );
+}
 ```
 
-### Pattern 2: Animation Presets via Shared Constants
+### Pattern 2: Database Initialization with Timeout
 
-**What:** All animation timing, spring configs, and easing parameters defined in a central location. Components never hardcode animation values.
+**What:** Wrap `getDatabase()` in a timeout so the app never hangs on DB init. Show an error screen with retry if init fails.
 
-**When:** Any component that animates.
+**When:** `DatabaseProvider` -- the single point where DB is initialized.
 
-**Why:** The existing codebase has animation constants scattered across files. The onboarding `animations.ts` file is a start, but the pattern needs to extend app-wide. Reanimated 4.2 (already installed) supports CSS-style animations alongside worklets, but the worklet-based API with shared constants is the right approach for this app because animations are interaction-driven (press feedback, state transitions), not declarative CSS loops.
-
-**What to create:** `src/design/animations.ts`
+**Example:**
 ```typescript
-// Spring configs — named by feel, not by numbers
-export const springs = {
-  /** Snappy press feedback (buttons, options) */
-  press: { stiffness: 400, damping: 25 },
-  /** Bouncy entrance (cards, modals) */
-  bouncy: { stiffness: 300, damping: 18 },
-  /** Gentle settle (layout shifts, reordering) */
-  gentle: { stiffness: 200, damping: 20 },
-  /** Quick snap (toggles, switches) */
-  snap: { stiffness: 500, damping: 30 },
-} as const;
+export function DatabaseProvider({ children, fallback }: Props) {
+  const [db, setDb] = useState<SQLiteDatabase | null>(null);
+  const [error, setError] = useState<Error | null>(null);
 
-// Duration presets — for withTiming-based animations
-export const durations = {
-  instant: 100,
-  fast: 200,
-  normal: 300,
-  slow: 500,
-  dramatic: 700,
-} as const;
+  const initialize = useCallback(async () => {
+    setError(null);
+    try {
+      const database = await Promise.race([
+        getDatabase(),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Database initialization timed out")), 10_000)
+        ),
+      ]);
+      setDb(database);
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      Sentry.captureException(e);
+    }
+  }, []);
 
-// Stagger presets — for lists and sequential entrances
-export const staggers = {
-  fast: { base: 80, duration: 300 },
-  normal: { base: 150, duration: 500 },
-  dramatic: { base: 250, duration: 700 },
-} as const;
+  useEffect(() => { initialize(); }, [initialize]);
+
+  if (error) return <DatabaseErrorScreen error={error} onRetry={initialize} />;
+  if (!db) return <>{fallback}</>;
+  return <DatabaseContext.Provider value={db}>{children}</DatabaseContext.Provider>;
+}
 ```
 
-**Current state:** Button and QuizOption both hardcode `{ stiffness: 400, damping: 25 }` — already the same values but duplicated. The onboarding animations.ts has stagger constants but only for onboarding. This pattern centralizes everything.
+### Pattern 3: Silent Audio Failure
 
-### Pattern 3: State-Driven Animation (Duolingo Pattern)
+**What:** Wrap every audio playback call in try/catch. Audio failure should never crash the app or show an error to the user -- it silently fails.
 
-**What:** Components animate in response to state changes, not imperative calls. The component receives a state prop and decides how to animate.
+**When:** Every function in `src/audio/player.ts`.
 
-**When:** Interactive elements with multiple visual states (quiz options, lesson nodes, celebration moments).
-
-**Why:** This is exactly how Duolingo structures animation. Developers update state; the component decides what "correct", "wrong", "celebrating" looks like. Already partially implemented in `QuizOption` (state prop drives correct/wrong animations) — extend this pattern to all interactive elements.
-
-**Example (already exists in QuizOption):**
+**Example:**
 ```typescript
-// QuizOption receives state, animates internally
-type QuizOptionState = "default" | "correct" | "wrong" | "dimmed";
-
-// useEffect watches state and triggers appropriate animation
-useEffect(() => {
-  if (state === "correct") {
-    scale.value = withSequence(
-      withTiming(1.04, { duration: 150 }),
-      withTiming(1, { duration: 150 })
-    );
+async function playVoice(source: AudioSource): Promise<void> {
+  if (_muted) return;
+  try {
+    const player = getVoicePlayer();
+    player.replace(source);
+    player.play();
+  } catch (e) {
+    // Audio failure is non-critical -- log but never throw
+    console.warn("[Audio] playVoice failed:", e);
   }
-}, [state]);
+}
+
+function playSFX(source: AudioSource, priority: number, guardMs: number): void {
+  if (_muted) return;
+  try {
+    // ... existing priority logic ...
+    const player = getSFXPlayer();
+    player.replace(source);
+    player.play();
+    _playing = { priority, startedAt: Date.now(), guardMs };
+  } catch (e) {
+    console.warn("[Audio] SFX playback failed:", e);
+  }
+}
 ```
 
-**Extend to:** Lesson grid nodes (locked/available/current/completed states), hero card (idle/celebrating), streak badge (incrementing).
+### Pattern 4: Engine Input Validation
 
-### Pattern 4: Layered Celebration System
+**What:** Every engine function validates its inputs and returns safe defaults instead of throwing. The engine layer should be impossible to crash with bad data.
 
-**What:** Small wins get micro-feedback (haptic + subtle scale). Medium wins get visual celebration (confetti burst, glow pulse). Big wins get full-screen moments (dedicated celebration screen with Lottie or complex Reanimated sequence).
+**When:** All functions in `src/engine/`.
 
-**When:** Lesson completion, streak milestones, phase completion, mastery level-ups.
+**Example:**
+```javascript
+// Before (can crash on null mastery)
+export function mergeQuizResultsIntoMastery(mastery, results, today) {
+  for (const result of results) {
+    const entity = mastery.entities[result.targetKey];
+    // crashes if mastery is null
+  }
+}
 
-**Why:** The app already has `QuizCelebration.tsx` and `phase-complete.tsx` screens, but celebration is inconsistent. A tiered system ensures the right emotional weight for each achievement without cheapening bigger moments.
+// After (defensive)
+export function mergeQuizResultsIntoMastery(mastery, results, today) {
+  if (!mastery || !results || !Array.isArray(results)) {
+    return mastery ?? { entities: {}, skills: {}, confusions: {} };
+  }
+  const entities = mastery.entities ?? {};
+  // ... safe access throughout
+}
+```
 
-**Tiers:**
-| Tier | Trigger | Animation | Haptic |
-|------|---------|-----------|--------|
-| Micro | Correct answer, option tap | Scale pulse (1.04x), color transition | Light impact |
-| Small | Quiz streak (3+ correct), lesson complete | Confetti burst, success glow | Success notification |
-| Medium | Phase milestone, streak milestone | Dedicated overlay with particle effects | Medium impact |
-| Large | Phase complete, first lesson ever | Full-screen celebration route | Heavy impact + success |
+### Pattern 5: Hook Error State
 
-### Pattern 5: Screen Composition (Thin Orchestrator Pattern)
+**What:** Every data hook returns an `error` field alongside `loading` and data. Screens can show contextual error UI without crashing.
 
-**What:** Screen files in `app/` stay thin. They compose feature components, configure navigation, and manage high-level state transitions. They never contain styling logic or animation definitions.
+**When:** All hooks in `src/hooks/`.
 
-**When:** Always. Already the established pattern — reinforce during overhaul.
+**Example:**
+```typescript
+export function useProgress() {
+  const [state, setState] = useState<ProgressState | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-**Why:** The current `app/(tabs)/index.tsx` is a good example at ~130 lines: it loads data via hooks, handles navigation guards, and composes `HeroCard` + `LessonGrid`. Keep all screens this thin.
+  const refresh = useCallback(async () => {
+    try {
+      const data = await loadProgress(db);
+      setState(data);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e : new Error(String(e)));
+      Sentry.captureException(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [db]);
 
-### Pattern 6: Progressive Enhancement Guard
+  return { ...state, loading, error, refresh, /* ... */ };
+}
+```
 
-**What:** Every visual change must be reversible by reverting a single file. Token changes revert via `tokens.ts`. Component changes revert via the component file. No change should have surprise cascading effects.
+### Pattern 6: RevenueCat Initialization Guard
 
-**When:** During the entire overhaul.
+**What:** Track whether RevenueCat SDK was successfully configured. Guard all SDK calls behind this check. Never call `Purchases.*` methods on an unconfigured SDK.
 
-**Why:** This is a live app with real users. The existing Phase 1 spec demonstrates this discipline (token definitions stayed unchanged, only usage was fixed). Each subsequent phase should maintain this property.
+**When:** All code in `src/monetization/`.
 
----
+**Example:**
+```typescript
+let _initialized = false;
+
+export function initRevenueCat(): void {
+  // ... existing logic ...
+  Purchases.configure({ apiKey });
+  _initialized = true;
+}
+
+export function isRevenueCatReady(): boolean {
+  return _initialized;
+}
+
+// In SubscriptionProvider:
+useEffect(() => {
+  if (!isRevenueCatReady()) {
+    setLoading(false); // Default to free tier
+    return;
+  }
+  Purchases.getCustomerInfo()
+    .then(/* ... */)
+    .catch(() => setLoading(false));
+}, []);
+```
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Inline Style Overrides That Bypass Tokens
+### Anti-Pattern 1: Error Boundary Everywhere
+**What:** Wrapping every component in an error boundary.
+**Why bad:** Adds component tree depth, hurts performance, fragments the UI. User sees random "something went wrong" boxes scattered across the screen.
+**Instead:** Three levels max: root, screen, select feature components.
 
-**What:** Components accepting `style` props and overriding token values inline.
+### Anti-Pattern 2: Swallowing Errors Silently
+**What:** Empty `catch {}` blocks that hide failures.
+**Why bad:** Bugs ship undetected. Sentry stays empty while users have degraded experiences. The v2 migration `catch {}` is the poster child for this.
+**Instead:** Catch, log to Sentry (or console.warn for non-critical), return safe default. Every catch block should either report or have a comment explaining why silence is correct.
 
-**Why bad:** Every `style={{ marginTop: 20 }}` is a token bypass that creates inconsistency. During overhaul, these multiply quickly as "quick fixes."
+### Anti-Pattern 3: Defensive Coding in Render Functions
+**What:** Adding null checks and try/catch inside JSX render functions.
+**Why bad:** Makes render functions unreadable. Error boundaries exist for this purpose.
+**Instead:** Validate data in hooks/engine. If render receives bad data, let the error boundary catch it.
 
-**Instead:** If a component needs variant spacing, add a variant prop. If a layout needs different spacing, compose with a wrapper using token values. The current codebase has several inline style overrides in screens — clean these up, don't add more.
+### Anti-Pattern 4: Retry Loops for Local Operations
+**What:** Automatic retry with exponential backoff for DB or audio operations.
+**Why bad:** For local operations (not network), if it fails once it usually fails again. Retry loops just delay the inevitable and waste battery.
+**Instead:** Single retry on user tap. For DB init, one automatic attempt then show error screen.
 
-### Anti-Pattern 2: Animation Logic in Screen Files
+### Anti-Pattern 5: Global Error Handler as Primary Strategy
+**What:** Using `ErrorUtils.setGlobalHandler()` as the main error strategy.
+**Why bad:** Global handler catches uncaught errors but cannot recover the component tree. The app is left in a broken state with no navigation.
+**Instead:** Global handler as a last resort (Sentry already does this via its native integration). Error boundaries for component tree recovery.
 
-**What:** Defining `useSharedValue`, `useAnimatedStyle`, and animation sequences directly in screen files.
+## Hardening Order (Build Sequence)
 
-**Why bad:** Screen files become animation code dumps. Animation logic is not reusable. Timing values scatter across the codebase.
+The order matters because each layer protects the layers above it. Fix from the bottom up.
 
-**Instead:** Animation behavior belongs in components or custom hooks. Screens only pass state; components decide how to animate that state. The `app/lesson/[id].tsx` currently has stage transition logic that should live in a `useLessonTransition` hook or in the stage wrapper component.
+### Phase 1: Foundation (fix first -- blocks everything)
+1. **Database initialization safety** -- timeout + error screen + retry
+   - Without a working DB, nothing else works
+   - Current: no timeout, no error handling in DatabaseProvider
+   - Risk: app hangs forever on DB init failure
 
-### Anti-Pattern 3: Component-Level Theme Decisions
+2. **Critical bug fixes** -- quiz ref reset, streak race condition, midnight routing
+   - These cause visible broken behavior during App Store review
+   - Independent of each other, can be fixed in parallel
 
-**What:** A component deciding which shade of a color to use based on its own logic rather than receiving a semantic token.
+3. **Unhandled promise rejection audit** -- catch all fire-and-forget async
+   - `initRevenueCat()` in _layout.tsx, audio playback, subscription queries
+   - Production Hermes treats unhandled rejections as crashes
 
-**Why bad:** Creates theme fragmentation. Dark mode becomes a nightmare — every component has its own color logic.
+### Phase 2: Containment Layer
+4. **Screen-level error boundaries** -- `react-error-boundary` on each screen
+   - Depends on: root boundary already existing (it does)
+   - Wrap each screen: home, lesson, progress, onboarding
+   - Each boundary reports to Sentry with screen tag
 
-**Instead:** Use semantic tokens. The existing `tokens.ts` already does this well (`primarySoft`, `dangerLight`, `accentGlow` are semantic). Keep extending this pattern. Components should consume `colors.primarySoft`, never compute `opacity(colors.primary, 0.2)` inline.
+5. **Audio defensive wrapper** -- try/catch on all playback
+   - Current: no error handling in player.ts
+   - Silent failure -- audio bugs should never crash the app
 
-### Anti-Pattern 4: Premature Lottie/Rive Integration
+6. **RevenueCat graceful degradation** -- init guard + free-tier default
+   - Current: SubscriptionProvider catches some errors but not all paths
+   - Ensure unconfigured SDK = free tier, not crash
 
-**What:** Adding Lottie or Rive animations before the animation architecture (presets, celebration tiers, spring configs) is established.
+### Phase 3: Data Safety
+7. **Migration safety** -- transaction wrapping + PRAGMA checks
+   - Fix v2 migration bare catch, standardize on PRAGMA pattern
+   - Transaction-wrap all migrations so failures roll back cleanly
 
-**Why bad:** Lottie files are opaque blobs. If you commit to Lottie early, you lose the ability to theme animations with your token system. Also, each Lottie file adds ~30-100KB to the bundle.
+8. **Engine input validation** -- null/undefined guards
+   - Pure JS layer, easy to test, zero UI risk
+   - Prevents cascading crashes from bad data flowing up
 
-**Instead:** Build the celebration system first with Reanimated (already installed). The existing Reanimated 4.2 can handle confetti, particle effects, and complex sequences on the UI thread at 60fps. Only add Lottie later for character animations or extremely complex motion that would be impractical to code, if ever needed.
+### Phase 4: Quality Gate
+9. **Hook error states** -- add error field to all hooks
+   - Enables screens to show contextual error UI
+   - Depends on engine being defensive (Phase 3)
 
-### Anti-Pattern 5: Shared Element Transitions
+10. **Type safety** -- hook return types, eliminate critical `any`
+    - Compile-time safety net for future changes
 
-**What:** Letter cards morphing from grid to lesson view, hero card expanding into lesson screen.
-
-**Why bad:** The Phase 4a spec explicitly defers these: "too complex for the payoff." React Native shared element transitions remain fragile across navigation boundaries, especially with Expo Router. They require layout measurement that conflicts with spring-based animations.
-
-**Instead:** Use directional slide + fade transitions (already planned in Phase 4a). These create perceived connection between screens without the implementation complexity.
-
----
-
-## Suggested Build Order
-
-The existing 4-phase structure is well-designed. The build order below maps to the phases and explains architectural dependencies.
-
-### Phase 1: Structural Consistency (Foundation)
-
-**Dependencies:** None. This is the base layer.
-
-**What:** Replace all raw magic numbers with token references. Standardize layout patterns (OnboardingStepLayout footer slot, consistent content widths). Create animation timing presets file.
-
-**Architectural significance:** Establishes the discipline that every subsequent phase depends on. After Phase 1, a component's layout is predictable from its token usage alone. This is the "boring but critical" phase.
-
-**Build from:** `src/design/animations.ts` (new) then screen-by-screen token cleanup starting with onboarding (highest-visibility surface).
-
-### Phase 2: Design System Refinement (Tokens + Typography)
-
-**Dependencies:** Phase 1 complete (all values use tokens, so token changes propagate cleanly).
-
-**What:** Add brown color tokens, enforce typography role assignments (serif italic for titles, serif regular for headings, sans for body), add `xxxxl` spacing token.
-
-**Architectural significance:** This is a pure token-layer change. Because Phase 1 ensured all components use tokens, the entire app updates by changing `tokens.ts`. No component files need to change for color/typography (they already reference token names); only color *assignments* in components change (e.g., `colors.text` to `colors.brown` for headings).
-
-**Build from:** `tokens.ts` changes first, then sweep through components updating which semantic token they use.
-
-### Phase 3: Visual Polish (Consistency Pass)
-
-**Dependencies:** Phase 2 complete (design system is finalized, so polish pass won't need re-doing).
-
-**What:** Add missing shadows, standardize border widths with new tokens, fix spacing inconsistencies, ensure every card-like surface follows the same visual rules.
-
-**Architectural significance:** This phase introduces `borderWidths` tokens and extends `shadows` — additions to the token layer that Phase 2 intentionally deferred. After Phase 3, the design system is complete: any new component built using the tokens will automatically look premium.
-
-**Build from:** Token additions first (`borderWidths`), then component sweep for shadow/border consistency.
-
-### Phase 4: Motion + Delight (Animation + Celebration)
-
-**Dependencies:** Phases 1-3 complete (animation layered on top of stable, polished visuals).
-
-**What:** Screen transitions (lesson slide-up, exercise cross-fade, onboarding step flow), celebration system (tiered by achievement significance), micro-interactions (press feedback standardization).
-
-**Architectural significance:** This is the most complex phase architecturally. It touches the `app/` layer (navigation animation config), the component layer (entering/exiting animations), and the design layer (animation presets). Already broken into sub-phases (4a: transitions, 4b: celebrations, 4c: loading states) — this decomposition is correct and should be maintained.
-
-**Build from:** Animation presets (if not done in Phase 1) then navigation transitions (4a) then component-level animations (4b) then loading/empty states (4c).
-
-### Cross-Phase Dependency Graph
-
-```
-Phase 1: Structure
-  └── tokens used everywhere → Phase 2 can safely change token values
-      └── Phase 2: Design System
-          └── visual rules finalized → Phase 3 can polish without re-doing
-              └── Phase 3: Polish
-                  └── stable visual baseline → Phase 4 adds motion on top
-                      └── Phase 4a: Transitions
-                          └── Phase 4b: Celebrations
-                              └── Phase 4c: Loading States
-```
-
-Each phase produces a complete, shippable state. You can stop after any phase and the app is improved.
-
----
-
-## How to Layer Visual Improvements Without Breaking Existing Functionality
-
-### Principle 1: The Engine Firewall
-
-The `src/engine/`, `src/hooks/`, `src/db/`, and `src/data/` directories are a strict no-touch zone. The UI overhaul has zero reason to modify these. The current architecture already enforces this: hooks expose data, screens consume it. Verify this invariant by checking that no PR in the overhaul modifies files outside `src/design/`, `src/components/`, and `app/`.
-
-### Principle 2: Token Changes Are Global by Design
-
-When you change `spacing.xl` from 24 to 28 in `tokens.ts`, every component using that token updates. This is a feature during overhaul — it means you can globally adjust spacing with a single change. But it also means: **do not change token values mid-phase**. Set them at phase start and hold.
-
-### Principle 3: Component Isolation Through Props
-
-Each component receives data via props and styling via tokens. A component does not reach up to parent state or sideways to sibling components. This means you can overhaul `HeroCard` without touching `LessonGrid`, even though they appear on the same screen. The screen (`app/(tabs)/index.tsx`) composes them independently.
-
-### Principle 4: Test the Boundaries, Not the Visuals
-
-The existing unit tests cover engine logic (mastery, questions, selectors, outcomes). These should never break during UI overhaul — they test the layer below the one being modified. If a UI change breaks an engine test, something has gone wrong architecturally.
-
-For the UI layer, validate via:
-- `npm run typecheck` — ensures design token changes don't break type contracts
-- `npm run lint` — catches import issues
-- Manual testing on device — the only way to verify visual correctness
-- Screenshot comparison (manual) — before/after for each screen per phase
-
-### Principle 5: One Direction at a Time
-
-Don't mix concerns across phases:
-- Phase 1: spacing/layout only (no color changes)
-- Phase 2: tokens only (no component structure changes)
-- Phase 3: visual consistency only (no new animations)
-- Phase 4: motion only (no design system changes)
-
-This makes regressions traceable. If spacing breaks after Phase 3, you know Phase 3 introduced it (Phase 3 doesn't touch spacing).
-
----
+11. **Test coverage** -- engine tests, migration tests, coverage tooling
+    - Validates all fixes, catches regressions
 
 ## Scalability Considerations
 
-| Concern | Current (10 screens) | At 30 screens | At 50+ screens |
-|---------|---------------------|---------------|----------------|
-| Token consistency | Manual discipline | Need lint rule enforcing token usage | Automated: ESLint plugin banning raw numbers in style objects |
-| Animation performance | Fine — few animations | Monitor: Reanimated worklets stay on UI thread | Profile: ensure no JS-thread animation bottlenecks on mid-range Android |
-| Component library growth | 5 primitives in design/ | ~10-15 primitives | Consider Storybook-like catalog for visual regression testing |
-| Theme propagation | Context-based, works fine | Context re-render could become expensive | Consider `useMemo` on theme value or split into color/spacing contexts |
-| Bundle size | Small, no heavy animation deps | Lottie files could balloon | Budget: cap animation assets at 500KB total |
+| Concern | Current (hundreds) | At 10K users | At 100K users |
+|---------|-------------------|--------------|---------------|
+| Error volume | Console.warn only | Need Sentry alerting rules | Add sampling to avoid quota |
+| DB migrations | Run on startup, fine | Same -- local DB | Same -- still local |
+| Error boundaries | Screen-level sufficient | Same | Same |
+| Audio errors | Silent fail, fine | Same | Same |
+| Crash recovery | App restart | Same for offline app | Same |
 
-The current architecture handles the 10-screen app well. The main scalability risk is animation performance on low-end Android when Phase 4 adds motion to many surfaces simultaneously. Mitigation: use `react-native-reanimated`'s `reduceMotion` API to respect system accessibility settings, and test on a mid-range Android device throughout Phase 4.
-
----
+Tila is offline-first with local SQLite. Most scalability concerns (connection pooling, rate limiting, caching) do not apply. The architecture stays the same at any user count. The only scaling concern is Sentry event volume -- configure sampling above 10K users.
 
 ## Sources
 
-- Codebase analysis: `src/design/tokens.ts`, `src/design/theme.ts`, `src/design/components/`, `src/components/onboarding/animations.ts`
-- Existing phase specs: `docs/superpowers/specs/2026-03-27-ui-phase{1,2,3,4a}-*.md`
-- [React Native Reanimated performance guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/performance/)
-- [Reanimated 4 overview — Callstack](https://www.callstack.com/podcasts/reanimated-4-is-the-future-of-smooth-react-native-animations)
-- [Duolingo streak animation design](https://blog.duolingo.com/streak-milestone-design-animation/)
-- [Duolingo LottieFiles case study](https://lottiefiles.com/case-studies/duolingo)
-- [Micro-interactions in UX — IxDF](https://ixdf.org/literature/article/micro-interactions-ux)
-- [React Native architecture 2025](https://globaldev.tech/blog/react-native-architecture)
-
----
-
-*Architecture research: 2026-03-28*
+- [Sentry React Native Error Boundary](https://docs.sentry.io/platforms/react-native/integrations/error-boundary/) -- HIGH confidence, official docs
+- [react-error-boundary npm](https://www.npmjs.com/package/react-error-boundary) -- HIGH confidence, v6.1.1 React 19 compatible
+- [React Native Error Boundaries - Advanced Techniques](https://www.reactnative.university/blog/react-native-error-boundaries) -- MEDIUM confidence
+- [Expo Error Recovery](https://docs.expo.dev/eas-update/error-recovery/) -- HIGH confidence, official docs
+- [Expo SQLite Documentation](https://docs.expo.dev/versions/latest/sdk/sqlite/) -- HIGH confidence, official docs
+- [React Error Boundaries](https://react.dev/reference/react/Component) -- HIGH confidence, official docs
+- [Stop React Native Crashes: Production-Ready Error Handling](https://dzone.com/articles/react-native-error-handling-guide) -- MEDIUM confidence
+- Codebase audit of `app/_layout.tsx`, `src/db/client.ts`, `src/db/provider.tsx`, `src/audio/player.ts`, `src/hooks/`, `src/monetization/provider.tsx` -- direct evidence

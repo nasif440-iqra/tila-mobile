@@ -1,242 +1,136 @@
-# Feature Research: Premium UI for Arabic/Quran Learning App
+# Feature Landscape: Stability & App Store Readiness
 
-**Domain:** Educational mobile app — Arabic alphabet/Quran reading for converts and new Muslims
-**Researched:** 2026-03-28
-**Confidence:** MEDIUM-HIGH (based on competitor analysis, design research, and current codebase audit)
+**Domain:** Mobile app hardening for App Store submission (Expo 55 / React Native 0.83)
+**Researched:** 2026-03-31
+**Overall confidence:** HIGH (based on official Apple guidelines, Expo docs, codebase audit)
 
-## Current State
+## Table Stakes
 
-Tila has completed UI Phases 1-4a: structural consistency, design system (brown/green/gold/cream palette with role-based typography), polish pass (shadows, border tokens), and screen/step transitions. What remains is Phase 4b (celebrations, haptics, empty states) and Phase 4c (loading skeletons, micro-interactions). The app has a solid design foundation but lacks the emotional polish that separates "clean" from "premium."
-
-The current QuizCelebration component is a simple emoji + text overlay with fade animation. No confetti, no particle effects, no haptics, no Lottie. This is the biggest gap between current state and premium feel.
-
----
-
-## Feature Landscape
-
-### Table Stakes (Users Expect These)
-
-Features users assume exist. Missing these = product feels incomplete or unpolished.
+Features the App Store review process and users expect. Missing = rejection or user churn on first session.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| **Smooth screen transitions** | Every modern app has them; jarring jumps feel broken | LOW | Phase 4a complete. Lesson slide-up, stage fades, exercise crossfades, onboarding step transitions all implemented. |
-| **Consistent visual hierarchy** | Users unconsciously expect headings, body, captions to look intentional | LOW | Phase 2 complete. Role-based typography with brown/green/gold system. |
-| **Loading states** | Blank screens while DB initializes feel like crashes | MEDIUM | Not yet implemented. DatabaseProvider returns `null` during init. Need skeleton screens or maintained splash. |
-| **Error states** | Unhandled errors crash the entire app; users expect graceful recovery | MEDIUM | No error boundary exists. Critical gap from CONCERNS.md. |
-| **Empty states** | First-time screens with no data need guidance, not blank space | LOW | Progress screen with zero mastery, home screen before any completion. Need illustrated empty states with encouraging copy. |
-| **Haptic feedback on quiz answers** | Correct/incorrect taps without haptics feel like tapping dead glass | LOW | Haptics exist on some exercise buttons but not systematically applied. Need consistent pattern: light tap on selection, success notch on correct, error buzz on incorrect. |
-| **Celebration on lesson complete** | Every learning app celebrates completion; silence feels dismissive | MEDIUM | LessonSummary exists but is static text. Needs animation, possibly confetti or particle burst. |
-| **Streak visualization** | Wird/habit tracking exists in engine but visual representation is minimal | LOW | useHabit hook exists. Need a visually engaging streak counter on home screen -- flame, plant growth, or similar metaphor. |
-| **Progress bar within lessons** | Users need to know how far through a lesson they are | LOW | QuizProgress component exists. Verify it uses design tokens and animates smoothly. |
+| **Error boundaries at screen level** | Unhandled render errors crash entire app. Apple testers reject on first crash (Guideline 2.1 Performance) | Low | `Sentry.ErrorBoundary` exists at root level. Need per-screen boundaries so one broken screen does not take down the whole app. Each boundary should offer "Go Home" recovery action. |
+| **Database initialization error handling** | DB failure = blank screen forever = rejection. Currently `DatabaseProvider` returns `null` on failure with no recovery path | Medium | Show error screen with retry button on DB init failure. Keep splash screen visible until DB is ready. Log to Sentry. Current code: `getDatabase()` has no `.catch()`. |
+| **Graceful audio failure handling** | Unhandled promise rejections from `expo-audio` = crash reports. Apple flags unhandled rejections | Low | Wrap all audio playback in try/catch. Audio failure must never block quiz flow -- silently degrade (skip sound, continue). |
+| **Silent migration error handling** | Current `catch {}` swallows ALTER TABLE errors. DB could be in inconsistent state after partial migration failure | Low | Log actual errors to Sentry. Distinguish "column already exists" (safe) from real failures (needs recovery screen). |
+| **Quiz hook state reset between lessons** | Known critical bug: quiz state leaks between lesson transitions causing stale questions to appear | Medium | Identified in deep codebase audit. Must reset cleanly on lesson mount/unmount. Affects core learning experience. |
+| **Streak counter race condition fix** | Known bug: rapid taps cause race condition in wird streak counter, double-counting or corrupting data | Low | Debounce taps or use SQLite transaction-level locking. Data integrity issue. |
+| **Midnight boundary routing fix** | Known bug: home screen routing breaks when a session spans midnight | Low | Date comparison fix in selectors. Affects returning users who use the app late at night. |
+| **RevenueCat graceful degradation** | If SDK fails to initialize (no network, bad API key), app must still work for free content. Apple tests in airplane mode | Low | Verify subscription checks return "free tier" defaults on SDK failure, not crashes. Check `initRevenueCat()` error path. |
+| **iPad rendering compatibility** | Apple rejects apps that render broken on iPad even with `supportsTablet: false`. App runs at iPhone resolution in iPad letterbox mode but must be usable | Low | Test on iPad simulator. Known Expo issue: `supportsTablet: false` may be ignored during prebuild. Ensure no clipped buttons or unreadable text. |
+| **Minimum touch targets (44x44pt)** | Apple HIG requirement. Reviewers flag small tap targets, especially in quiz interfaces | Low | Audit all interactive elements. Arabic letter quiz options and navigation buttons are highest risk areas. |
+| **Privacy policy URL** | Required for all iOS apps since 2018. App Store Connect submission is blocked without one | Low | Not a code feature -- needs a hosted privacy policy page URL entered in App Store Connect. Must disclose PostHog analytics and Sentry crash data collection. |
+| **App Store metadata completeness** | Placeholder content, missing screenshots, or "coming soon" text = automatic rejection (Guideline 2.1 App Completeness). This accounts for over 40% of unresolved rejection cases | Low | Ensure all screens have real content. No lorem ipsum, no empty states that look unfinished. Need 1024x1024 app icon, screenshots for each device size. |
+| **Crash-free launch sequence** | Apple tests cold start on physical devices. Crash or hang on first launch = instant rejection | Medium | Font loading -> splash hide -> DB init timing must be bulletproof. If DB hangs, user currently sees blank screen. Splash should stay visible until everything is ready. |
+| **Non-exempt encryption declaration** | Required or submission is blocked | Done | Already configured: `ITSAppUsesNonExemptEncryption: false` in `app.config.ts`. No action needed. |
 
-### Differentiators (Competitive Advantage)
+## Differentiators
 
-Features that elevate Tila from "good enough" to "this app is special." These create the wow factor and emotional connection that drives retention, especially for the target audience of converts who may feel anxious about learning Arabic.
+Features that set the app apart from typical indie apps. Not required for submission but signal quality.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| **Onboarding "first letter" moment** | The moment a convert sees their first Arabic letter and hears it spoken should feel sacred and exciting -- a spiritual milestone, not a flashcard | MEDIUM | LetterReveal and LetterAudio steps exist but are simple fade-ins. Elevate with: gold particle emergence, gentle calligraphy animation, haptic pulse when letter appears, brief moment of stillness before audio plays. This is Tila's equivalent of Headspace's first breathing exercise. |
-| **Tiered celebration system** | Small wins (correct answer) get subtle warmth; big wins (lesson complete, letter mastered, phase complete) get genuine excitement -- matching the reverent-but-joyful tone | HIGH | Currently one celebration type (QuizCelebration with emoji). Need 3-4 tiers: (1) correct answer sparkle + haptic, (2) mid-lesson encouragement (existing, needs polish), (3) lesson complete with confetti/particles, (4) milestone celebrations (first letter mastered, phase complete) with special animations. |
-| **Letter mastery garden/constellation** | Visualize letter progress as something growing or illuminating -- each mastered letter adds to a beautiful visual that users want to come back and complete | HIGH | LetterMasteryGrid exists as colored cells. Transform into an Islamic geometric pattern or constellation where mastered letters glow/illuminate, creating a visual artifact of the learning journey. This is the "screenshot and share" moment. |
-| **Calligraphic letter animations** | Show Arabic letters being drawn stroke-by-stroke, not just appearing -- honors the calligraphic tradition | HIGH | Would need SVG path animations or pre-rendered Lottie files for each letter. Major asset creation effort but deeply differentiating for an Arabic learning app. Defer to v2. |
-| **Breathing/mindful moments** | Brief mindful pauses before lessons ("Bismillah" moment) that acknowledge the sacred nature of Quran learning | LOW | Simple implementation: 2-3 second animated screen with bismillah calligraphy and gentle fade before lesson starts. Unique to Quran-learning apps. Sets emotional tone without adding friction. |
-| **Warm encouragement system** | Context-aware encouraging messages that reference Islamic concepts of patience, barakah, and growth -- not generic "Great job!" | LOW | Copy/content work. Replace generic celebration text with themed messages: "Every letter brings you closer to the Quran", "The Prophet said the one who struggles with Quran gets double reward." Deeply resonant for target audience. |
-| **Gold-accented progress rings** | Use the existing gold accent color for animated circular progress indicators around lesson nodes and stats | MEDIUM | Animated SVG circles or Reanimated-driven progress rings. The gold-on-cream aesthetic aligns perfectly with Islamic manuscript tradition. |
-| **Sound design on celebrations** | Subtle audio cues on correct answers and celebrations -- gentle chime, not gamified sound effects | MEDIUM | Audio player singleton exists. Need tasteful sound assets. The tone should be warm and organic (soft bell, gentle tone) not arcade-like. |
+| **EAS Update (OTA updates)** | Push JS-only fixes without App Store re-review. Critical for post-launch: review takes 24-48 hours, OTA is instant | Medium | Add `expo-updates` package, configure update channels (preview + production). Enables fixing a production crash in minutes instead of days. Best practice: use fingerprint to detect native changes vs. OTA-eligible changes. |
+| **CI/CD pipeline (GitHub Actions)** | Catch regressions before they ship. No CI exists currently -- all quality checks are manual | Low | Add GitHub Actions workflow: `npm run validate && npm test` on every PR. Prevents shipping broken builds. Low effort, high value. |
+| **Test coverage for critical paths** | Engine unit tests exist (mastery, questions, selectors) but hooks and components are untested. Tests validate bug fixes | Medium | Write Vitest tests for the 5 critical bugs and key flows (DB init, quiz lifecycle, streak counting). Focus on engine + hooks, skip component rendering tests. |
+| **Type-safe quiz pipeline** | 30+ explicit `any` types in the question -> quiz -> options flow. A single field rename silently breaks the UI at runtime | High | Define `Question`, `QuizOption`, `Lesson` types in `src/types/` and propagate through pipeline. Most impactful type safety improvement but touches many files across hooks, components, and engine. |
+| **Database transaction batching** | `saveQuestionAttempts()` does O(n) individual INSERTs. Batching into a single transaction improves reliability (atomic commit) and performance | Low | Wrap in `db.withTransactionAsync()`. Prevents partial saves if app is killed mid-quiz completion. |
+| **Structured Sentry error context** | Attach user progress state, lesson ID, mastery data to Sentry error reports for faster debugging | Low | Currently Sentry captures crashes but without business context. Add breadcrumbs for: lesson start, question answered, lesson complete, subscription check. |
+| **Recovery UI (not just crash screen)** | Users can tap "Retry" or "Go Home" instead of force-quitting the app | Low | `resetErrorBoundary` pattern in error fallback components. Already partially implemented with `ErrorFallback` component. |
+| **Data export before destructive operations** | `resetProgress()` and `resetDatabase()` both destroy all user data with no backup or confirmation | Low | Export current state to temp file before reset/import. Safety net for users and for debugging data loss reports. |
+| **Basic accessibility improvements** | 25 accessibility annotations exist across 17 files -- reasonable start but incomplete. Full VoiceOver support is a differentiator for an Islamic app (visually impaired users learning Quran) | Medium | Focus on quiz flow: question text, answer options, correct/wrong feedback need proper labels and roles. Not required for App Store but strongly valued by the community. |
 
-### Anti-Features (Commonly Requested, Often Problematic)
+## Anti-Features
 
-Features that seem good but would hurt Tila's identity, performance, or user experience.
+Features to explicitly NOT build during this stability milestone.
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| **Duolingo-style character mascot** | Duo the owl is beloved; mascots create emotional connection | Tila's identity is warm + sacred, not cartoon. A mascot trivializes Quran learning for this audience. Art cost is enormous. | Use calligraphic flourishes and geometric patterns as the visual personality. The Arabic letters themselves are the "characters." |
-| **Leaderboards/social competition** | Gamification drives engagement in Duolingo | Quran learning is personal and sacred. Competition creates anxiety for converts already intimidated by Arabic. Requires cloud sync (out of scope). | Focus on personal streaks and milestones. "You vs yesterday" not "You vs others." |
-| **Complex gamification (XP, levels, gems)** | Duolingo's XP/gem economy is addictive | Over-gamification cheapens the sacred content. Adds massive state management complexity. Tila's mastery system (not_started through retained) IS the progression. | Use the existing mastery states as the progression system. Visualize them beautifully rather than adding a parallel XP system. |
-| **Animated backgrounds everywhere** | Movement catches the eye, feels modern | Kills 60fps on mid-range Android. Drains battery. Competes with Arabic letter content for attention. | Reserve animation for moments of delight (celebrations, transitions, letter reveals). Static backgrounds with subtle texture. |
-| **Dark mode (now)** | Users want it; it's standard | Already scoped out of this milestone. The warm cream palette IS the brand identity. Dark mode needs careful thought to not lose the manuscript feel. | Ship light-only, do dark mode as dedicated milestone with proper brown-to-sand token mapping (tokens already defined in darkColors). |
-| **Lottie animations for everything** | Lottie makes everything smoother | Each Lottie file is 10-200KB. 28 letters x multiple animations = massive bundle for offline-first app. lottie-react-native adds ~300KB. | Use Reanimated (already installed, v4.2.1) for most animations. Reserve Lottie for max 2-3 key moments if Reanimated falls short. |
-| **Parallax scrolling on home screen** | Feels premium, Apple uses it | Home screen has a lesson grid that needs to be scannable. Parallax makes functional content harder to use. | Apply parallax only to decorative elements (background pattern) if at all. Keep content scroll simple. |
-| **Custom page transitions per screen** | Each screen feeling unique | Creates cognitive overhead. Maintaining N transition types is a testing nightmare. | 3 transition types max: slide-up for modal screens (lessons), fade for in-place changes (stages), push for navigation. Already implemented in Phase 4a. |
-| **Heavy Skia shader effects** | Skia enables beautiful ambient glows, noise textures, particle systems | @shopify/react-native-skia is a large dependency (~2MB), not yet in the project, and shader effects are CPU-intensive on low-end Android. | Stick with Reanimated for all animations. Skia is overkill for this app's animation needs. |
-
----
+| Anti-Feature | Why Avoid | What to Do Instead |
+|--------------|-----------|-------------------|
+| **Full TypeScript migration of engine `.js` files** | 3300 lines of working business logic across 11 files. Migration risks introducing bugs in the most critical code path. Stability milestone = minimize blast radius | Fix bugs in `.js` files as-is. Add `.d.ts` declaration files for type safety at import boundaries if absolutely needed. Migrate in a dedicated refactor milestone. |
+| **Dark mode activation** | Tokens exist but activating it means testing every screen in two color modes. Doubles QA surface for zero App Store benefit | Keep `themeMode` forced to "light". Ship dark mode in a dedicated UX milestone after launch. |
+| **E2E testing framework (Detox/Maestro)** | Complex setup, infrastructure cost, flaky on CI, high time investment. Targeted unit tests on critical paths give 80% of the value for 20% of the effort | Write focused Vitest tests for critical bugs and key flows. Skip E2E infrastructure entirely for now. |
+| **Global state management (Zustand/Redux)** | Scope creep. Current SQLite + hooks pattern works. Adding state management during stability milestone is the opposite of stability | Keep current architecture. The pattern is sound -- the issues are bugs, not architecture. |
+| **ORM/query builder (Drizzle)** | Over-engineering for 8 tables. Introduces a major new dependency and requires rewriting all DB queries | Fix migration patterns in raw SQL. The current approach is fine for this app's scale. |
+| **App Tracking Transparency (ATT) prompt** | PostHog does first-party analytics only, no cross-app tracking. ATT is only required for advertising/cross-app tracking. Adding it degrades onboarding UX for zero benefit | Declare "No tracking" in App Store Connect privacy questionnaire. Do NOT add the ATT permission prompt. |
+| **In-app review prompt (StoreKit)** | Nice-to-have but adds complexity, Apple has strict timing rules, and it is a growth feature not a stability feature | Defer to a growth milestone after App Store launch is successful. |
+| **Performance profiling infrastructure** | Dev workflow concern, not a hardening feature. Only investigate if a specific performance bug is found during testing | React Native 0.83 with New Architecture should perform well. Profile only if 60fps drops on test devices. |
+| **Cloud sync / backend** | Entirely different architecture. No bearing on App Store approval | Out of scope. Future milestone. |
+| **Push notifications** | Requires APNs setup, permissions, backend infrastructure. Not needed for App Store approval of a learning app | Out of scope. Future milestone. |
 
 ## Feature Dependencies
 
 ```
-[Error Boundary]
-    +-- required-before --> [Loading States / Skeletons]
-    |                         +-- required-before --> [Empty States]
-    |
-[Haptic Feedback System]
-    +-- enhances --> [Tiered Celebration System]
-    |                   +-- requires --> [Reanimated Particle/Confetti Effects]
-    |                   +-- enhances --> [Sound Design on Celebrations]
-    |
-[Streak Visualization]
-    +-- reads-from --> [useHabit hook] (already exists)
-    |
-[Letter Mastery Garden]
-    +-- reads-from --> [useMastery / useProgress hooks] (already exist)
-    +-- requires --> [Gold Progress Rings] (shared animation primitives)
-    |
-[Breathing/Mindful Moments]
-    +-- independent (can ship alone)
-    |
-[Warm Encouragement System]
-    +-- independent (copy changes, no tech dependencies)
-    |
-[Onboarding Letter Moment]
-    +-- enhances --> [Haptic Feedback System]
-    +-- enhances --> [Sound Design]
+CI/CD pipeline -----> (catches all downstream regressions)
+       |
+       v
+DB init error handling ---> Error boundaries at screen level
+       |                           |
+       v                           v
+Migration safety fix          Recovery UI (boundaries render fallback)
+       |
+       v
+Quiz hook state reset (independent critical bug)
+Audio error handling (independent, no dependencies)
+Streak counter fix (independent, no dependencies)
+Midnight routing fix (independent, no dependencies)
+RevenueCat degradation (independent, no dependencies)
+       |
+       v
+Test coverage (tests validate the bug fixes above)
+       |
+       v
+iPad testing (do after all UI bugs are fixed)
+App Store metadata + privacy policy (do last, before submission)
+       |
+       v
+EAS Update setup (for post-launch hotfixes, does not block submission)
 ```
 
-### Dependency Notes
+## MVP Recommendation
 
-- **Error Boundary before Loading States:** If the DB fails to initialize, the skeleton needs to give way to an error screen. Error boundary must exist first.
-- **Haptics enhance Celebrations:** The tiered celebration system works without haptics, but haptics make the correct-answer sparkle and lesson-complete burst feel physically real. Implement together.
-- **Reanimated is sufficient for celebrations:** Can implement confetti/particles with Reanimated (already installed). No need for Lottie dependency unless Reanimated results feel insufficient after testing.
-- **Streak Visualization is independent:** Only reads from existing useHabit hook. Can ship at any time.
-- **Warm Encouragement is pure content:** No tech dependencies. Can be a copy pass done alongside any work.
-- **Gold Progress Rings and Letter Mastery Garden share animation primitives:** Build the ring animation utility first, then both features can use it.
+**Phase 1 -- Critical bug fixes** (blocks submission):
+1. Database init failure recovery + splash screen hold
+2. Quiz hook state reset between lessons
+3. Audio error handling (try/catch everywhere)
+4. Streak counter race condition fix
+5. Midnight boundary routing fix
+6. Migration error handling (log real errors, ignore safe ones)
 
----
+**Phase 2 -- Error boundaries + monetization safety** (submission safety net):
+1. Screen-level error boundaries with recovery UI
+2. RevenueCat offline/failure fallback
+3. Database transaction batching for quiz saves
 
-## MVP Definition
+**Phase 3 -- Type safety + testing** (quality gate before submission):
+1. Hook return type interfaces (eliminate critical `any` types)
+2. Vitest tests for all Phase 1 bug fixes
+3. Sentry breadcrumbs for lesson flow
 
-### Launch With (Phase 4b -- immediate next)
+**Phase 4 -- App Store submission prep** (final gate):
+1. iPad compatibility testing
+2. Touch target audit (44x44pt minimum)
+3. Privacy policy page + App Store Connect metadata
+4. App Store screenshots and description
+5. EAS production build + TestFlight
 
-The minimum set to make the app feel emotionally complete.
-
-- [ ] **Error boundary** -- App crash on render error is unacceptable. Wrap root layout with recovery screen. (Critical gap from CONCERNS.md, prerequisite for everything else)
-- [ ] **Haptic feedback pattern** -- Consistent haptics via expo-haptics: light impact on quiz tap, success notification on correct, error notification on wrong, medium impact on lesson complete.
-- [ ] **Lesson complete celebration** -- Upgrade LessonSummary with animated entrance, Reanimated-based confetti or gold particle burst, encouraging message.
-- [ ] **Correct/incorrect micro-feedback** -- Subtle gold sparkle/glow on correct answers, gentle shake on incorrect. Enhance existing QuizOption feedback states.
-- [ ] **Empty states** -- Progress screen with zero data, home screen guidance for new users. Warm illustrations or styled text with encouraging copy, not blank space.
-- [ ] **Streak counter on home** -- Show Wird streak prominently on home screen with animated flame or similar metaphor.
-
-### Add After Validation (Phase 4c)
-
-Features to add once core celebrations feel right.
-
-- [ ] **Loading skeletons** -- Replace blank DB init screen with shimmer skeletons matching actual layout. Keep splash visible until DB ready as interim.
-- [ ] **Breathing/Bismillah moment** -- Brief mindful pause before lessons. Test if users find it calming or friction-adding.
-- [ ] **Gold progress rings** -- Animated circular progress around lesson nodes and stats. Upgrade from flat progress bars.
-- [ ] **Sound design** -- Subtle audio cues on correct answers and celebrations. Requires tasteful sound asset sourcing.
-- [ ] **Warm encouragement copy** -- Replace generic celebration text with Islamic-themed encouragement messages.
-- [ ] **Onboarding letter moment enhancement** -- Gold particles, haptic pulse, moment of stillness on first letter reveal.
-
-### Future Consideration (v2+)
-
-Features to defer until the app is validated and growing.
-
-- [ ] **Letter mastery constellation/garden** -- Beautiful visualization of learning journey. High art direction effort.
-- [ ] **Calligraphic stroke animations** -- SVG path animations for letter drawing. Major asset creation. Extraordinary differentiator but expensive.
-- [ ] **Phase/milestone special celebrations** -- Unique animations for completing entire phases or mastering letter groups.
-- [ ] **Dark mode** -- Already deferred with token groundwork in place (darkColors defined).
-
----
-
-## Feature Prioritization Matrix
-
-| Feature | User Value | Implementation Cost | Priority |
-|---------|------------|---------------------|----------|
-| Error boundary | HIGH | LOW | P1 |
-| Haptic feedback pattern | HIGH | LOW | P1 |
-| Lesson complete celebration | HIGH | MEDIUM | P1 |
-| Correct/incorrect micro-feedback | HIGH | LOW | P1 |
-| Empty states | MEDIUM | LOW | P1 |
-| Streak counter on home | MEDIUM | LOW | P1 |
-| Loading skeletons | MEDIUM | MEDIUM | P2 |
-| Breathing/Bismillah moment | MEDIUM | LOW | P2 |
-| Gold progress rings | MEDIUM | MEDIUM | P2 |
-| Sound design | MEDIUM | MEDIUM | P2 |
-| Warm encouragement copy | MEDIUM | LOW | P2 |
-| Onboarding letter moment | HIGH | MEDIUM | P2 |
-| Letter mastery constellation | HIGH | HIGH | P3 |
-| Calligraphic stroke animations | HIGH | HIGH | P3 |
-| Phase milestone celebrations | MEDIUM | HIGH | P3 |
-
-**Priority key:**
-- P1: Must have for this milestone (Phase 4b)
-- P2: Should have, add in Phase 4c or polish pass
-- P3: Future milestone, defer until core is proven
-
----
-
-## Competitor Feature Analysis
-
-| Feature | Duolingo | Headspace | Quran.com | Tila (Current) | Tila (Target) |
-|---------|----------|-----------|-----------|----------------|---------------|
-| **Onboarding wow** | Character intro, first lesson immediately | Breathing exercise, calming visuals | Minimal, reader-focused | 8-step flow with floating letters, good but not special | Sacred letter reveal moment, gold particles, haptic pulse |
-| **Celebrations** | XP burst, character reactions, sound effects, confetti | Gentle completion, breathing visuals | None (reader app) | Single emoji overlay at halfway point | 3-4 tier system from subtle sparkle to confetti burst |
-| **Progress viz** | Skill tree, crown levels, daily graph | Streak calendar, minutes tracked | Surah completion %, bookmark | Letter mastery grid (colored cells), stats row | Gold rings, illuminating constellation (v2), streak flame |
-| **Haptics** | On correct/incorrect, celebrations, streak | Breathing rhythm haptics | Minimal | Some button haptics, inconsistent | Systematic: selection, correct, incorrect, celebration |
-| **Micro-interactions** | Button bounce, option highlight, progress fill | Breathing circle expand/contract | Page turn, bookmark | FadeIn/Down on content, quiz option feedback | Enhanced quiz feedback, sparkle on correct, progress ring fill |
-| **Emotional tone** | Playful, gamified, competitive | Calm, mindful, supportive | Reverent, minimal | Functional with warm colors | Warm + sacred: encouraging without trivializing |
-| **Sound** | Extensive SFX library (coin, ding, whoosh) | Ambient, meditation bells | Quran recitation | Letter pronunciation only | Subtle chimes on achievement, organic tones |
-| **Empty states** | Character illustrations with CTAs | Guided first session | "Start reading" prompt | Blank/default views | Illustrated, encouraging, Islamic-themed |
-
-### Key Insight from Competitor Analysis
-
-Tila occupies a unique position between Duolingo (gamified, playful) and Headspace (mindful, calm). The target emotional register is closer to Headspace's warmth and intentionality, but with Duolingo's progressive-disclosure learning model. No competitor combines sacred reverence with learning delight for this specific audience. The "warm + sacred" direction is genuinely differentiated.
-
-Quran.com is a reading/recitation app, not a learning app -- it is not a direct competitor for the learning experience. But its aesthetic reverence for the text is a reference point for how Tila should treat Arabic letters.
-
----
-
-## Implementation Notes
-
-### Animation Library Strategy
-
-- **Reanimated (already installed, v4.2.1):** Use for ALL transition animations, micro-interactions, sparkle/glow effects, progress ring animations, and celebration effects including confetti. This is the workhorse. No new dependencies needed.
-- **Lottie (not installed, avoid adding):** Each Lottie file adds 10-200KB bundle weight. For an offline-first app with 28 letters, this adds up fast. Reanimated can handle everything Tila needs. Only reconsider if Reanimated confetti/particles feel insufficient after real device testing.
-- **Skia (not installed, avoid adding):** @shopify/react-native-skia is ~2MB and overkill for this app's needs. Ambient glow and particle effects can be achieved with Reanimated opacity/transform animations on simple View elements.
-
-### Haptic Strategy
-
-- Use `expo-haptics` (part of Expo SDK, may need to be added to package.json).
-- Four haptic presets: `selection` (light tap on quiz option select), `success` (notification success on correct), `error` (notification error on incorrect), `celebration` (medium impact on lesson complete).
-- Create a `useHaptics()` hook that wraps expo-haptics, respects device capabilities, and provides the four named presets.
-
-### Performance Constraints
-
-- All animations must target 60fps on mid-range Android (constraint from PROJECT.md).
-- Confetti/particle effects: limit to 20-30 elements max, use `useSharedValue` and `withTiming`/`withSpring` from Reanimated, run on UI thread.
-- Test on physical Android device or emulator with performance monitor.
-- Keep total new animation code under control -- prefer composable animation utilities over per-screen custom animations.
-
-### Celebration Tier Design
-
-| Tier | Trigger | Visual | Haptic | Sound (future) |
-|------|---------|--------|--------|-----------------|
-| 1 - Sparkle | Correct answer | Gold glow pulse on option, checkmark fade-in | Light success | Soft chime |
-| 2 - Encourage | Mid-lesson milestone (existing QuizCelebration) | Enhanced overlay with animated gold stars, better typography | Medium impact | Encouraging tone |
-| 3 - Celebrate | Lesson complete | Confetti burst (gold + green particles), animated summary card entrance | Strong success | Celebration melody |
-| 4 - Milestone | First letter mastered, phase complete | Full-screen gold particle shower, special message, progress update animation | Strong impact x2 | Special achievement |
-
----
+**Defer to post-launch milestone:**
+- CI/CD pipeline (set up immediately after launch for update workflow)
+- EAS Update OTA setup (critical for post-launch but does not block initial submission)
+- Full TypeScript migration
+- Accessibility improvements
+- Data export safety net
 
 ## Sources
 
-- [Duolingo Brand Guidelines](https://design.duolingo.com/) -- Design system reference
-- [Duolingo Case Study](https://octet.design/journal/duolingo-case-study/) -- Gamification and engagement patterns
-- [How to Design Like Duolingo](https://www.uinkits.com/blog-post/how-to-design-like-duolingo-gamification-engagement) -- Gamification mechanics
-- [The Duolingo Handbook](https://www.everydayux.net/the-duolingo-handbook-9-lessons-for-designing-world-class-products/) -- Product design principles
-- [Headspace Emotion-Driven Design](https://www.neointeraction.com/blogs/headspace-a-case-study-on-successful-emotion-driven-ui-ux-design.php) -- Emotional UX patterns
-- [Headspace Onboarding Teardown](https://tearthemdown.medium.com/product-teardown-headspace-user-onboarding-personalisation-b6effd0df1d7) -- Onboarding personalization
-- [Education App Design Trends 2025](https://lollypop.design/blog/2025/august/top-education-app-design-trends-2025/) -- Micro-interactions, gamification
-- [2025 Haptics Guide](https://saropa-contacts.medium.com/2025-guide-to-haptics-enhancing-mobile-ux-with-tactile-feedback-676dd5937774) -- Haptic feedback best practices
-- [Android Haptics UX Design](https://source.android.com/docs/core/interaction/haptics/haptics-ux-design) -- Platform haptic patterns
-- [React Native Confetti Tutorial](https://dev.to/barrymichaeldoyle/react-native-tutorial-how-to-implement-a-celebration-confetti-burst-3if2) -- Implementation reference
-- [react-native-fast-confetti](https://github.com/AlirezaHadjar/react-native-fast-confetti) -- Skia confetti library (reference, not recommended for Tila)
-- [Shopify Reanimated Confetti](https://shopify.engineering/building-arrives-confetti-in-react-native-with-reanimated) -- Reanimated confetti pattern
-- [Mobile Onboarding Best Practices 2025](https://webisoft.com/articles/mobile-onboarding-best-practices/) -- Onboarding patterns
-- [Duolingo Gamification Strategies](https://www.strivecloud.io/blog/gamification-examples-boost-user-retention-duolingo) -- Streak and achievement patterns
-- [Haptics Design Principles - Android](https://developer.android.com/develop/ui/views/haptics/haptics-principles) -- Less is more principle
-
----
-*Feature research for: Tila UI Overhaul -- Premium Polish*
-*Researched: 2026-03-28*
+- [Expo App Store Best Practices](https://docs.expo.dev/distribution/app-stores/) -- iPad compatibility, privacy policy, metadata requirements
+- [App Store Review Guidelines Checklist 2025](https://nextnative.dev/blog/app-store-review-guidelines) -- rejection reasons, completeness requirements, crash criteria
+- [Apple App Store Rejection Reasons 2025](https://twinr.dev/blogs/apple-app-store-rejection-reasons-2025/) -- Guideline 2.1 Performance, 4.2 Minimum Functionality
+- [Top Reasons iOS Apps Get Rejected 2026](https://www.eitbiz.com/blog/top-reasons-ios-apps-get-rejected-by-the-app-store-and-fixes/) -- metadata completeness, crash patterns
+- [React Native Error Boundaries - Advanced Techniques](https://www.reactnative.university/blog/react-native-error-boundaries) -- layered error handling, strategic placement
+- [Stop React Native Crashes: Production-Ready Error Handling](https://dzone.com/articles/react-native-error-handling-guide) -- three-layer error architecture
+- [Expo OTA Update Best Practices](https://expo.dev/blog/5-ota-update-best-practices-every-mobile-team-should-know) -- channels, fingerprinting, update API
+- [React Native Accessibility Best Practices 2025](https://www.accessibilitychecker.org/blog/react-native-accessibility/) -- VoiceOver, touch targets, WCAG
+- [Expo supportsTablet Issue #32344](https://github.com/expo/expo/issues/32344) -- known bug where setting is ignored
+- Internal: `.planning-archive-ui-overhaul/codebase/CONCERNS.md` -- deep codebase audit with 5 critical bugs, technical debt catalog
+- Internal: `.planning/PROJECT.md` -- milestone scope, known bugs, constraints
