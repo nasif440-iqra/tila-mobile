@@ -95,6 +95,17 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (5)");
   }
+
+  if (currentVersion < 6) {
+    const profileInfo = await db.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(user_profile)"
+    );
+    const hasName = profileInfo.some((col) => col.name === "name");
+    if (!hasName) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN name TEXT;");
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (6)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {

@@ -4,7 +4,7 @@
  * Single-user design — no user_id columns.
  */
 
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 export const CREATE_TABLES = `
 CREATE TABLE IF NOT EXISTS user_profile (
@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS user_profile (
   onboarding_version INTEGER NOT NULL DEFAULT 0 CHECK (onboarding_version >= 0),
   starting_point TEXT CHECK (starting_point IN ('new', 'some_arabic', 'rusty', 'can_read')),
   motivation TEXT CHECK (motivation IN ('read_quran', 'pray_confidently', 'connect_heritage', 'teach_children', 'personal_growth')),
+  name TEXT,
   daily_goal INTEGER CHECK (daily_goal >= 1),
   commitment_complete INTEGER NOT NULL DEFAULT 0 CHECK (commitment_complete IN (0, 1)),
   wird_intro_seen INTEGER NOT NULL DEFAULT 0 CHECK (wird_intro_seen IN (0, 1)),

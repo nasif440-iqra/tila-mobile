@@ -53,6 +53,7 @@ export interface ProgressState {
   onboardingDailyGoal: number | null;
   onboardingCommitmentComplete: boolean;
   onboardingVersion: number;
+  userName: string | null;
   wirdIntroSeen: boolean;
   postLessonOnboardSeen: boolean;
   returnHadithLastShown: string | null;
@@ -89,10 +90,10 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
       db.getFirstAsync<{
         onboarded: number; onboarding_version: number;
         starting_point: string | null; motivation: string | null;
-        daily_goal: number | null; commitment_complete: number;
+        name: string | null; daily_goal: number | null; commitment_complete: number;
         wird_intro_seen: number; post_lesson_onboard_seen: number;
         return_hadith_last_shown: string | null; analytics_consent: number | null;
-      }>('SELECT onboarded, onboarding_version, starting_point, motivation, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown, analytics_consent FROM user_profile WHERE id = 1'),
+      }>('SELECT onboarded, onboarding_version, starting_point, motivation, name, daily_goal, commitment_complete, wird_intro_seen, post_lesson_onboard_seen, return_hadith_last_shown, analytics_consent FROM user_profile WHERE id = 1'),
     ]);
 
   // Transform rows to domain types
@@ -146,13 +147,14 @@ export async function loadProgress(db: SQLiteDatabase): Promise<ProgressState> {
   const postLessonOnboardSeen = profileRow ? profileRow.post_lesson_onboard_seen === 1 : false;
   const returnHadithLastShown = profileRow ? profileRow.return_hadith_last_shown : null;
   const analyticsConsent = profileRow?.analytics_consent === 1 ? true : profileRow?.analytics_consent === 0 ? false : null;
+  const userName = profileRow?.name ?? null;
 
   return {
     completedLessonIds,
     mastery: { entities, skills, confusions },
     habit, onboarded, onboardingStartingPoint, onboardingMotivation,
     onboardingDailyGoal, onboardingCommitmentComplete, onboardingVersion,
-    wirdIntroSeen, postLessonOnboardSeen, returnHadithLastShown, analyticsConsent,
+    userName, wirdIntroSeen, postLessonOnboardSeen, returnHadithLastShown, analyticsConsent,
   };
 }
 
@@ -292,6 +294,7 @@ export interface UserProfileUpdate {
   onboardingVersion?: number;
   startingPoint?: string | null;
   motivation?: string | null;
+  name?: string | null;
   dailyGoal?: number | null;
   commitmentComplete?: boolean;
   wirdIntroSeen?: boolean;
@@ -322,6 +325,10 @@ export async function saveUserProfile(
   if (profile.motivation !== undefined) {
     sets.push('motivation = ?');
     values.push(profile.motivation);
+  }
+  if (profile.name !== undefined) {
+    sets.push('name = ?');
+    values.push(profile.name);
   }
   if (profile.dailyGoal !== undefined) {
     sets.push('daily_goal = ?');
