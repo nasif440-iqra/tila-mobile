@@ -1,8 +1,8 @@
 # Phase 4: Type & Test Cleanup — Technical Spec
 
-**Purpose:** Remove critical `any` types from 3 hook interfaces so TypeScript catches bugs at compile time, and install coverage tooling to establish a measurable baseline. Three requirements (QUAL-01, QUAL-02, QUAL-03).
+**Purpose:** Remove critical `any` types from useLessonQuiz (including internal usage and the JS generator boundary), verify the current test suite, and install coverage tooling to establish a measurable baseline. Three requirements (QUAL-01, QUAL-02, QUAL-03).
 
-**Context:** Phases 1-3 added 55+ regression tests across 10 test files. This phase addresses the type safety gaps that let those bugs exist in the first place, and ensures the test suite has coverage measurement.
+**Context:** Phases 1-3 added regression tests across the milestone. This phase addresses the type safety gaps that let those bugs exist in the first place, and ensures the test suite has coverage measurement.
 
 ---
 
@@ -35,15 +35,21 @@ export default function useLessonQuiz(
 - `QuizResultItem` — `src/types/quiz.ts` (already used for results)
 
 **Types that need creating:**
-- A `Question` type for `currentQuestion` — the question generators in `src/engine/questions/` return objects with `targetId`, `type`, `options`, `isHarakat`, `hasAudio`, etc. This needs a proper interface.
-- A typed option for `selectedOption` in `handleAnswer` — likely `{ id: number | string; isCorrect: boolean; text: string }` or similar, matching what question options look like.
+- A `Question` type for `currentQuestion` — the question generators in `src/engine/questions/` return objects with `targetId`, `type`, `options`, `isHarakat`, `hasAudio`, `prompt`, `optionMode`, etc. This needs a proper interface.
+- A `QuestionOption` type — the repo uses `label` (not `text`), sometimes `sublabel`, requires `id` and exactly one `isCorrect: true`. The validator also allows questions with no `prompt` as long as `hasAudio` is true, and checks `optionMode` for `letter_to_sound`. The types must reflect the real shape, not a guessed one.
+
+**JS/TS boundary consideration:** `useLessonQuiz` imports `generateLessonQuestions` from `src/engine/questions/index.js` — the entire question generation layer is plain `.js`. The `tsconfig.json` only includes `.ts` and `.tsx`. So adding a TS `Question` interface alone won't fully type the generator boundary at compile time. Options:
+- **Option A (recommended):** Create the `Question` and `QuestionOption` interfaces in `src/types/question.ts`, use them in `useLessonQuiz.ts`, and add a JSDoc `@type` annotation or a `.d.ts` declaration file for the question engine's exports. This types the boundary without migrating the .js files.
+- **Option B:** Migrate `src/engine/questions/index.js` to `.ts`. More thorough but higher blast radius — out of scope for a stability milestone.
 
 **Proposed fix:**
 - Replace `lesson: any` with `lesson: Lesson` (import from `src/types/lesson.ts`)
 - Replace `mastery: any` with `mastery: ProgressState["mastery"]` (import from `src/engine/progress.ts`)
-- Create a `Question` interface in `src/types/quiz.ts` (or `src/types/question.ts`) based on what question generators actually return — inspect the generators to get the real shape
+- Create `Question` and `QuestionOption` interfaces in `src/types/question.ts` based on actual generator output — must use `label` (not `text`), include `sublabel?`, `optionMode?`, `hasAudio?`, `prompt?`, and match the validator's expectations
 - Replace `currentQuestion: any` with `Question | null`
-- Type `selectedOption` in `handleAnswer` — at minimum `{ id: number | string }` or the full option interface
+- Type `selectedOption` in `handleAnswer` with `QuestionOption`
+- Also fix internal `any` usage: `useState<any[]>([])` → `useState<Question[]>([])`, `.find((o: any) =>` → `.find((o: QuestionOption) =>`
+- Add a `.d.ts` declaration file or JSDoc for the JS question generator boundary (Option A)
 - Ensure `npm run typecheck` passes after all changes
 
 ### useProgress — already mostly typed
@@ -71,38 +77,27 @@ export default function useLessonQuiz(
 
 ## Fix 2: Regression test suite verification (QUAL-02)
 
-**What this is:** Verify that the existing 55+ regression tests from Phases 1-3 cover all the fixed flows. This is NOT "write new tests from scratch" — the tests already exist.
+**What this is:** Verify that the current repo test suite covers the required flows. This is NOT "write new tests from scratch" — the repo already has a substantial test suite that has grown across multiple phases and milestones.
 
-**Current test inventory (from Phases 1-3):**
-
-| File | Phase | What it covers | Tests |
-|------|-------|---------------|-------|
-| `db-init.test.ts` | 1 | DB init state machine, timeout, retry | 5 |
-| `migration-v2.test.ts` | 1 | Migration PRAGMA checks | 3 |
-| `quiz-lesson-reset.test.ts` | 1 | Quiz key-based reset | 1 |
-| `midnight-redirect.test.ts` | 1 | Pinned session date | 2 |
-| `habit-race.test.ts` | 1 | Exclusive transaction serialization | 4 |
-| `audio-safety.test.ts` | 2 | Audio try/catch wrappers | 6 |
-| `promise-safety.test.ts` | 2 | Guarded async loaders | 12 |
-| `screen-boundary.test.ts` | 2 | Error boundary wiring | 14 |
-| `restore-purchases.test.ts` | 3 | Restore button + handler | 7 |
-| `monetization-events.test.ts` | 3 | Paywall failure analytics | 1 |
+**Important:** Do NOT hardcode stale filenames or test counts. The `src/__tests__/` directory contains files from Phases 1-3 of this milestone AND pre-existing tests from earlier work (e.g., `checkpoint-classifier.test.ts`, `confusion-persistence.test.ts`, `empty-quiz.test.ts`, `mastery-pipeline.test.ts`, `quiz-contract.test.ts`, `subscription-types.test.ts`). The exact inventory should be discovered at execution time, not frozen into this spec.
 
 **Required coverage areas (from success criteria):**
-- DB init ✓
-- Migration handling ✓
-- Streak logic ✓
-- Quiz transitions ✓
-- Monetization edge cases ✓
+- DB init
+- Migration handling
+- Streak logic
+- Quiz transitions
+- Monetization edge cases
 
 **Proposed fix:**
 - Run `npm test` and verify all tests pass
-- If any gaps found in coverage areas, add targeted tests
-- Document the final test count and pass rate
+- Inspect the current `src/__tests__/` contents to confirm each required area has coverage
+- If any required area lacks a test, add a targeted test
+- Document the actual test count and pass rate at execution time
 
 **What "fixed" looks like:**
 - `npm test` runs full suite — all green
-- Every Phase 1-3 fix has at least one regression test
+- Each required coverage area has at least one passing test
+- Test count and pass rate documented in SUMMARY (discovered at execution time, not assumed)
 
 ---
 
@@ -119,11 +114,13 @@ export default function useLessonQuiz(
   coverage: {
     provider: 'v8',
     reporter: ['text', 'json-summary'],
-    include: ['src/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
+    include: ['src/**/*.{ts,tsx,js,jsx}', 'app/**/*.{ts,tsx,js,jsx}'],
     exclude: ['src/__tests__/**', 'node_modules/**'],
   }
   ```
-- Run `npm test -- --coverage` and record the baseline percentage
+  **Important:** The include globs MUST cover `.js` files. The repo is ~31% JavaScript — `src/engine/questions/` is entirely `.js`. Excluding `.js` would give a misleading baseline that ignores real production code.
+- Add a `"coverage": "vitest run --coverage"` script to `package.json` for convenience (alongside existing `"test": "vitest run"`)
+- Run `npm run coverage` and record the baseline percentage
 - Do NOT set a coverage threshold or enforcement gate — this phase establishes the baseline only
 
 **What "fixed" looks like:**
@@ -137,7 +134,7 @@ export default function useLessonQuiz(
 
 | # | Fix | Severity | Files | Risk if unfixed |
 |---|-----|----------|-------|-----------------|
-| 1 | Remove `any` from useLessonQuiz | HIGH | src/hooks/useLessonQuiz.ts, src/types/ | Type errors invisible at compile time |
+| 1 | Remove `any` from useLessonQuiz + type JS boundary | HIGH | src/hooks/useLessonQuiz.ts, src/types/, .d.ts or JSDoc | Type errors invisible at compile time |
 | 2 | Regression suite verification | LOW | None (verification task) | Confidence gap |
 | 3 | Coverage baseline | LOW | vitest.config.ts, package.json | No way to measure test quality |
 
@@ -148,4 +145,4 @@ export default function useLessonQuiz(
 ---
 
 *Spec created: 2026-04-01*
-*For expert review before implementation*
+*Revised: 2026-04-01 after expert review — expanded QUAL-01 to cover internal any + JS generator boundary with .d.ts, fixed QuestionOption schema (label not text), removed stale test inventory from QUAL-02, added .js to coverage globs in QUAL-03*

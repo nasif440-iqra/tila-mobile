@@ -14,26 +14,30 @@ Remove critical `any` types from hook interfaces (primarily useLessonQuiz), veri
 ## Implementation Decisions
 
 ### Fix 1: Type safety
-- **D-01:** useLessonQuiz is the primary target — 4 `any` types in its signature
+- **D-01:** useLessonQuiz is the primary target — `any` in signature AND internal usage (`useState<any[]>`, `.find((o: any) =>`)
 - **D-02:** Replace `lesson: any` with `Lesson` (already exists in `src/types/lesson.ts`)
 - **D-03:** Replace `mastery: any` with `ProgressState["mastery"]` (already exists in `src/engine/progress.ts`)
-- **D-04:** Create a `Question` interface based on what question generators actually return — inspect generators for real shape
-- **D-05:** Type `selectedOption` in `handleAnswer` with at minimum `{ id: number | string }`
-- **D-06:** useProgress and useMastery are already typed — verify, don't change
+- **D-04:** Create `Question` and `QuestionOption` interfaces — must use `label` (not `text`), include `sublabel?`, `optionMode?`, `hasAudio?`, `prompt?`, match validator expectations
+- **D-05:** Type `selectedOption` in `handleAnswer` with `QuestionOption`
+- **D-06:** Also fix internal `any`: `useState<any[]>` → `useState<Question[]>`, `.find((o: any)` → `.find((o: QuestionOption)`
+- **D-07:** JS boundary: `src/engine/questions/index.js` is plain .js, tsconfig only includes .ts/.tsx. Add a `.d.ts` declaration file or JSDoc for the generator exports (Option A — don't migrate .js to .ts)
+- **D-08:** useProgress and useMastery are already typed — verify, don't change
 
 ### Fix 2: Test suite verification
-- **D-07:** Run `npm test` — verify all 55+ tests from Phases 1-3 pass
-- **D-08:** If gaps found, add targeted tests — not a rewrite
+- **D-09:** Run `npm test` — verify current repo test suite passes (do NOT hardcode stale filenames/counts)
+- **D-10:** Inspect `src/__tests__/` at execution time to confirm each required area has coverage
+- **D-11:** If gaps found, add targeted tests — not a rewrite
 
 ### Fix 3: Coverage tooling
-- **D-09:** Install `@vitest/coverage-v8` (^4.1.2 — match Vitest version)
-- **D-10:** Add coverage config to `vitest.config.ts` with v8 provider, text + json-summary reporters
-- **D-11:** Record baseline percentage — do NOT set enforcement thresholds
+- **D-12:** Install `@vitest/coverage-v8` (^4.1.2 — match Vitest version)
+- **D-13:** Coverage include globs MUST cover `.js` files — repo is ~31% JS, `src/engine/questions/` is entirely .js
+- **D-14:** Add `"coverage": "vitest run --coverage"` script to package.json
+- **D-15:** Record baseline percentage — do NOT set enforcement thresholds
 
 ### Claude's Discretion
-- Exact Question interface shape (based on generator inspection)
-- Whether to put Question type in `src/types/quiz.ts` or a new `src/types/question.ts`
-- Whether `selectedOption` gets a full interface or just `{ id: number | string }`
+- Whether to put Question/QuestionOption in `src/types/quiz.ts` or a new `src/types/question.ts`
+- Whether to use `.d.ts` or JSDoc for the JS generator boundary typing
+- Test file organization for any new tests added to fill gaps
 
 </decisions>
 
