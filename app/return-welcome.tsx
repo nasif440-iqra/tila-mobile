@@ -6,6 +6,7 @@ import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../src/design/theme";
 import { typography, spacing, radii, fontFamilies } from "../src/design/tokens";
 import { Button, Card } from "../src/design/components";
+import { CrescentIcon } from "../src/design/CrescentIcon";
 import { useProgress } from "../src/hooks/useProgress";
 import { getTodayDateString, getDayDifference } from "../src/engine/dateUtils";
 import { track } from "../src/analytics";
@@ -48,7 +49,7 @@ export default function ReturnWelcomeScreen() {
           entering={FadeIn.duration(600)}
           style={[styles.crescentCircle, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}
         >
-          <Text style={{ fontSize: 32 }}>{"\u263D"}</Text>
+          <CrescentIcon size={32} color={colors.accent} />
         </Animated.View>
 
         {/* Welcome back label */}

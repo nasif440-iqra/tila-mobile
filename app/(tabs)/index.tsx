@@ -22,6 +22,7 @@ import { ScreenErrorFallback } from "../../src/components/feedback/ScreenErrorFa
 import { spacing, typography, fontFamilies, radii } from "../../src/design/tokens";
 import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
+import { CrescentIcon } from "../../src/design/CrescentIcon";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useHabit } from "../../src/hooks/useHabit";
 import { useSubscription, FREE_LESSON_CUTOFF, usePremiumReviewRights } from "../../src/monetization/hooks";
@@ -212,9 +213,7 @@ function ReviewCard({
               { backgroundColor: isUrgent ? colors.accent : colors.primarySoft },
             ]}
           >
-            <Text style={{ fontSize: 18, lineHeight: 22, color: isUrgent ? colors.white : colors.primary }}>
-              {"\u263D"}
-            </Text>
+            <CrescentIcon size={18} color={isUrgent ? colors.white : colors.primary} />
           </View>
 
           {/* Text */}
