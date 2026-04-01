@@ -6,6 +6,7 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  Linking,
 } from "react-native";
 import { useState, useEffect, useMemo, useCallback } from "react";
 import Animated, {
@@ -38,6 +39,10 @@ import PhasePanel from "../../src/components/progress/PhasePanel";
 import LetterMasteryGrid from "../../src/components/progress/LetterMasteryGrid";
 import { PhaseDetailSheet } from "../../src/components/progress/PhaseDetailSheet";
 import { EmptyState } from "../../src/components/feedback/EmptyState";
+
+// ── Privacy policy URL ──
+// Replace this with the hosted URL before App Store submission
+const PRIVACY_POLICY_URL = "https://tila.app/privacy";
 
 // ── Phase metadata ──
 
@@ -325,6 +330,16 @@ export default function ProgressScreen() {
           </Pressable>
         )}
 
+        {/* Privacy Policy */}
+        <Pressable
+          onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+          style={styles.privacyLink}
+        >
+          <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
+            Privacy Policy
+          </Text>
+        </Pressable>
+
         {/* Reset progress */}
         <Pressable
           onPress={handleResetProgress}
@@ -379,6 +394,11 @@ const styles = StyleSheet.create({
     minHeight: 44,
     justifyContent: "center",
     alignItems: "center",
+  },
+  privacyLink: {
+    alignSelf: "center",
+    paddingVertical: spacing.md,
+    marginTop: spacing.xl,
   },
   resetButton: {
     marginTop: spacing.xxxxl,
