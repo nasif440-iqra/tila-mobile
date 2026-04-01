@@ -20,8 +20,11 @@ import { useColors } from "../../src/design/theme";
 import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
+import Purchases from "react-native-purchases";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useDatabase } from "../../src/db/provider";
+import { useSubscription } from "../../src/monetization/hooks";
+import { trackRestoreCompleted } from "../../src/monetization/analytics";
 import { resetProgress } from "../../src/engine/progress";
 import { LESSONS } from "../../src/data/lessons";
 import {
@@ -68,6 +71,35 @@ export default function ProgressScreen() {
       ]
     );
   }, [db, router]);
+
+  const [restoring, setRestoring] = useState(false);
+  const { stage, refresh } = useSubscription();
+
+  const handleRestorePurchases = useCallback(async () => {
+    setRestoring(true);
+    try {
+      const info = await Purchases.restorePurchases();
+      const activeCount = Object.keys(info.entitlements.active).length;
+      trackRestoreCompleted({ success: true, entitlements_restored: activeCount });
+      await refresh();
+      Alert.alert(
+        activeCount > 0 ? "Purchases Restored" : "No Purchases Found",
+        activeCount > 0
+          ? "Your subscription has been restored."
+          : "We couldn't find any previous purchases for this account.",
+        [{ text: "OK" }]
+      );
+    } catch {
+      trackRestoreCompleted({ success: false, entitlements_restored: 0 });
+      Alert.alert(
+        "Restore Failed",
+        "Please check your internet connection and try again.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setRestoring(false);
+    }
+  }, [refresh]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -276,6 +308,23 @@ export default function ProgressScreen() {
           />
         </Animated.View>
 
+        {/* Restore purchases — shown for non-premium users */}
+        {stage !== "trial" && stage !== "paid" && (
+          <Pressable
+            onPress={handleRestorePurchases}
+            disabled={restoring}
+            style={[styles.restoreButton, { borderColor: colors.border }]}
+          >
+            {restoring ? (
+              <ActivityIndicator size="small" color={colors.primary} />
+            ) : (
+              <Text style={[typography.bodySmall, { color: colors.primary }]}>
+                Restore Purchases
+              </Text>
+            )}
+          </Pressable>
+        )}
+
         {/* Reset progress */}
         <Pressable
           onPress={handleResetProgress}
@@ -319,6 +368,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
     paddingBottom: spacing.xxl,
+  },
+  restoreButton: {
+    alignSelf: "center",
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    borderWidth: 1,
+    borderRadius: 8,
+    marginTop: spacing.xxxl,
+    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
   resetButton: {
     marginTop: spacing.xxxxl,
