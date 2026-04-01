@@ -26,8 +26,8 @@ See: .planning/PROJECT.md (updated 2026-03-31)
 ## Current Position
 
 Phase: 4
-Plan: Not started
-Status: Phase complete — ready for verification
+Current Plan: 1 of 2
+Status: Executing — plan 1 complete
 Last activity: 2026-04-01
 
 Progress: [###.......] 33%
@@ -55,6 +55,7 @@ Progress: [###.......] 33%
 | Phase 02 P01 | 3m | 2 tasks | 6 files |
 | Phase 02 P02 | 2m30s | 2 tasks | 6 files |
 | Phase 03 P01 | 5m | 3 tasks | 5 files |
+| Phase 04 P01 | 3m | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -74,6 +75,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Return true during loading in useCanAccessLesson -- assume-premium is better UX than false-lock
 - [Phase 03]: No custom caching layer -- RevenueCat SDK already caches CustomerInfo on-device
 - [Phase 03]: Restore button on Progress tab, hidden when actively premium
+- [Phase 04-01]: Used .d.ts declaration file for JS question generator boundary instead of .js migration
+- [Phase 04-01]: Used Partial<> for generateHybridExercises progress param (connected-forms/reading don't use progress)
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T16:10:29.812Z
-Stopped at: Phase 4 spec written, awaiting expert review
+Last session: 2026-04-01T16:49:16Z
+Stopped at: Completed 04-01-PLAN.md
 Resume file: .planning/phases/04-type-test-cleanup/04-CONTEXT.md

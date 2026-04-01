@@ -75,7 +75,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 04-01-PLAN.md — Remove any types from useLessonQuiz + type JS generator boundary (QUAL-01)
+- [x] 04-01-PLAN.md — Remove any types from useLessonQuiz + type JS generator boundary (QUAL-01)
 - [ ] 04-02-PLAN.md — Verify regression test suite + install coverage tooling with baseline (QUAL-02, QUAL-03)
 
 ### Phase 5: Launch Ops Checklist
@@ -103,5 +103,5 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 | 1. Correctness Blockers | 1/3 | In progress | - |
 | 2. Crash Containment | 1/2 | In progress | - |
 | 3. Monetization Hardening | 1/1 | Complete   | 2026-04-01 |
-| 4. Type & Test Cleanup | 0/2 | Not started | - |
+| 4. Type & Test Cleanup | 1/2 | In Progress|  |
 | 5. Launch Ops Checklist | 0/0 | Not started | - |
