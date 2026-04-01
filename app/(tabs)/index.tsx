@@ -6,7 +6,7 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from "react-native";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -37,9 +37,15 @@ import {
 } from "../../src/engine/selectors";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
+import { WirdTooltip } from "../../src/components/home/WirdTooltip";
 import HeroCard from "../../src/components/home/HeroCard";
 import LessonGrid from "../../src/components/home/LessonGrid";
 import { hapticTap } from "../../src/design/haptics";
+import {
+  getGreetingLine1,
+  getMotivationSubtitle,
+  MOTIVATION_SUBTITLES,
+} from "../../src/utils/greetingHelpers";
 import Svg, { Circle, Path } from "react-native-svg";
 
 // ── Logo Mark ──
@@ -126,15 +132,6 @@ function getMomentumCopy(
     line1: `Almost done with ${phaseLabel}.`,
     line2: "Just a few more lessons to complete this phase.",
   };
-}
-
-// ── Greeting subtitle ──
-
-function getGreetingSubtitle(lessonsCompleted: number, learnedCount: number): string {
-  if (lessonsCompleted === 0) return "Begin your\njourney";
-  if (lessonsCompleted === 1) return "You\u2019ve started\nlearning Quran";
-  if (learnedCount < 10) return `${learnedCount} letters down`;
-  return `${learnedCount} letters and growing`;
 }
 
 // ── Daily Goal Pill ──
@@ -296,6 +293,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const db = useDatabase();
   const progress = useProgress();
+  const { updateProfile } = progress;
   const { habit } = useHabit();
   const { isPremiumActive, stage, trialDaysRemaining, showPaywall } = useSubscription();
   const [today] = useState(() => getTodayDateString());
@@ -416,8 +414,29 @@ export default function HomeScreen() {
   // Momentum
   const momentum = useMemo(() => getMomentumCopy(completedLessonIds, currentPhase), [completedLessonIds, currentPhase]);
 
-  // Greeting
-  const greetingSubtitle = useMemo(() => getGreetingSubtitle(lessonsCompleted, learnedLetterIds.length), [lessonsCompleted, learnedLetterIds.length]);
+  // Personalized greeting
+  const userName = progress.userName ?? null;
+  const motivation = progress.onboardingMotivation ?? null;
+
+  const greetingLine1 = useMemo(() => getGreetingLine1(userName), [userName]);
+  const greetingLine2 = useMemo(
+    () => getMotivationSubtitle(motivation, lessonsCompleted, learnedLetterIds.length),
+    [motivation, lessonsCompleted, learnedLetterIds.length]
+  );
+
+  // Wird tooltip
+  const [showWirdTooltip, setShowWirdTooltip] = useState(false);
+
+  useEffect(() => {
+    if (currentWird > 0 && !progress.wirdIntroSeen) {
+      setShowWirdTooltip(true);
+    }
+  }, [currentWird, progress.wirdIntroSeen]);
+
+  const handleWirdTooltipDismiss = useCallback(async () => {
+    setShowWirdTooltip(false);
+    await updateProfile({ wirdIntroSeen: true });
+  }, [updateProfile]);
 
   // Loading state
   if (progress.loading) {
@@ -465,16 +484,17 @@ export default function HomeScreen() {
               <DailyGoalPill todayCount={todayLessonCount} goal={dailyGoal} colors={colors} />
             )}
             {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
+            <WirdTooltip visible={showWirdTooltip} onDismiss={handleWirdTooltipDismiss} />
           </Animated.View>
         </View>
 
         {/* ── Greeting ── */}
         <Animated.View style={[styles.greeting, greetingEntranceStyle]}>
           <Text style={[styles.greetingLabel, { color: colors.textMuted }]}>
-            ASSALAMU ALAIKUM
+            {greetingLine1}
           </Text>
           <Text style={[styles.greetingTitle, { color: colors.text }]}>
-            {greetingSubtitle}
+            {greetingLine2}
           </Text>
         </Animated.View>
 
