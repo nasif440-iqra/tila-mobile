@@ -293,10 +293,11 @@ export default function LessonScreen() {
     // Quiz stage (also entered directly when skipIntro is true or for hybrid lessons)
     if (stage === "quiz" || (stage === "intro" && (skipIntro || isHybrid))) {
       if (isHybrid) {
-        return <LessonHybrid lesson={lesson} onComplete={handleQuizComplete} />;
+        return <LessonHybrid key={lesson.id} lesson={lesson} onComplete={handleQuizComplete} />;
       }
       return (
         <LessonQuiz
+          key={lesson.id}
           lesson={lesson}
           completedLessonIds={completedLessonIds}
           mastery={mastery}
