@@ -25,13 +25,13 @@ Harden subscription flows for offline use, add a standalone restore purchases su
 - **D-07:** Call `Purchases.restorePurchases()` — this is the correct RevenueCat method
 - **D-08:** Show loading indicator during restore (disable button + ActivityIndicator)
 - **D-09:** Success: call `trackRestoreCompleted()` + `refresh()` from useSubscription
-- **D-10:** Failure: show Alert with clear message + call `trackRestoreFailed()` (new event)
+- **D-10:** Failure: show Alert with clear message + call `trackRestoreCompleted({ success: false, entitlements_restored: 0 })` (reuse existing event, no new type needed)
 - **D-11:** Only show button when subscription state is not actively premium
 
 ### Fix 3: Failure analytics completeness
-- **D-12:** Add `restore_failed` event type to events.ts + `trackRestoreFailed` to analytics.ts
+- **D-12:** Failed restores use existing `trackRestoreCompleted({ success: false, entitlements_restored: 0 })` — no new event type
 - **D-13:** In `PAYWALL_RESULT.ERROR`: add `trackPurchaseFailed()` call AND Alert.alert() (currently silent to user)
-- **D-14:** In `PAYWALL_RESULT.NOT_PRESENTED`: add `trackPaywallResult({ trigger, result: "not_presented" })` (currently no event)
+- **D-14:** In `PAYWALL_RESULT.NOT_PRESENTED`: add `trackPaywallResult({ trigger, result: "not_presented" })` — note: `PaywallResultProps.result` type must expand to include `"not_presented"` (currently only allows `"purchased" | "restored" | "cancelled" | "error"`)
 - **D-15:** Every user-initiated failure path must have both user-facing message AND analytics event
 - **D-16:** Purchase/restore SUCCESS analytics already work — do not break them
 

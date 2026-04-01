@@ -98,7 +98,7 @@ The Progress screen already exists and shows user stats. Add a "Restore Purchase
 4. **The direct `PAYWALL_RESULT.ERROR` case has no user-facing message.** The outer catch block shows an Alert, but the in-switch ERROR case does not. So a paywall-returned error is silent to the user, while a thrown exception shows a message. Both should show something.
 
 **Proposed fix:**
-- Add `restore_failed` event type to `src/analytics/events.ts` + `trackRestoreFailed` to `src/monetization/analytics.ts`
+- Use existing `trackRestoreCompleted({ success: false, entitlements_restored: 0 })` for failed restores — no new `restore_failed` event type needed, the event already has a `success` boolean field
 - In `PAYWALL_RESULT.ERROR` case: add `trackPurchaseFailed()` call AND an `Alert.alert()` for user visibility
 - In `PAYWALL_RESULT.NOT_PRESENTED` case: add a `trackPaywallResult({ trigger, result: "not_presented" })` call so dashboard/config issues are visible in analytics
 - In standalone restore handler (Fix 2): on failure, call `trackRestoreFailed()` + show Alert
@@ -107,7 +107,7 @@ The Progress screen already exists and shows user stats. Add a "Restore Purchase
 **What "fixed" looks like:**
 - `PAYWALL_RESULT.ERROR` fires both `paywall_result: error` and `purchase_failed`, shows Alert
 - `PAYWALL_RESULT.NOT_PRESENTED` fires `paywall_result: not_presented` (visible in dashboard)
-- Standalone restore failure fires `restore_failed` event, shows Alert
+- Standalone restore failure fires `restore_completed({ success: false })`, shows Alert
 - PostHog dashboard can track all failure and non-presentation rates
 - No silent failure paths remain for user-initiated purchase/restore actions
 
@@ -119,7 +119,7 @@ The Progress screen already exists and shows user stats. Add a "Restore Purchase
 |-----|-----------------|
 | Fix 1 | Source analysis: `useCanAccessLesson` returns `true` during loading for premium lessons. No custom caching layer added. Document airplane-mode verification result in SUMMARY. |
 | Fix 2 | Verify restore button exists in Progress tab. Verify it calls `Purchases.restorePurchases()`. Verify success calls `trackRestoreCompleted` + `refresh`. Verify failure calls `trackRestoreFailed` + shows Alert. |
-| Fix 3 | Verify `restore_failed` event type exists in events.ts. Verify `trackPurchaseFailed` is called in `PAYWALL_RESULT.ERROR` case. Verify `PAYWALL_RESULT.NOT_PRESENTED` fires analytics event. Verify ERROR case shows Alert. Source analysis for complete failure coverage — no silent user-initiated failure paths. |
+| Fix 3 | Verify failed restore calls `trackRestoreCompleted({ success: false, ... })`. Verify `trackPurchaseFailed` is called in `PAYWALL_RESULT.ERROR` case. Verify `PAYWALL_RESULT.NOT_PRESENTED` fires analytics event. Verify ERROR case shows Alert. Source analysis for complete failure coverage — no silent user-initiated failure paths. |
 
 ---
 
