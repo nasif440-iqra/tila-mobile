@@ -34,10 +34,10 @@
 
 ### Launch Ops Checklist
 
-- [ ] **LAUNCH-01**: Privacy policy URL surfaced in-app and ready for App Store Connect
-- [ ] **LAUNCH-02**: App Store Connect privacy questionnaire answers prepared based on actual PostHog/Sentry data collection
-- [ ] **LAUNCH-03**: iPad letterbox QA pass (verify supportsTablet: false persists through expo prebuild)
-- [ ] **LAUNCH-04**: Production EAS build verified on physical device
+- [x] **LAUNCH-01**: Privacy policy URL surfaced in-app and ready for App Store Connect
+- [x] **LAUNCH-02**: App Store Connect privacy questionnaire answers prepared based on actual PostHog/Sentry data collection
+- [x] **LAUNCH-03**: iPad letterbox QA pass (verify supportsTablet: false persists through expo prebuild)
+- [x] **LAUNCH-04**: Production EAS build verified on physical device
 
 ## v2 Requirements
 
@@ -80,10 +80,10 @@
 | QUAL-01 | Phase 4 | Pending |
 | QUAL-02 | Phase 4 | Pending |
 | QUAL-03 | Phase 4 | Pending |
-| LAUNCH-01 | Phase 5 | Pending |
-| LAUNCH-02 | Phase 5 | Pending |
-| LAUNCH-03 | Phase 5 | Pending |
-| LAUNCH-04 | Phase 5 | Pending |
+| LAUNCH-01 | Phase 5 | Complete |
+| LAUNCH-02 | Phase 5 | Complete |
+| LAUNCH-03 | Phase 5 | Complete |
+| LAUNCH-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 19 total
