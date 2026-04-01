@@ -15,7 +15,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { ErrorBoundary } from "react-error-boundary";
+import * as Sentry from "@sentry/react-native";
 import { useColors } from "../../src/design/theme";
+import { ScreenErrorFallback } from "../../src/components/feedback/ScreenErrorFallback";
 import { spacing, typography, fontFamilies, radii } from "../../src/design/tokens";
 import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
@@ -437,6 +440,14 @@ export default function HomeScreen() {
   }
 
   return (
+    <ErrorBoundary
+      onError={(error, info) => {
+        Sentry.captureException(error, {
+          extra: { componentStack: info.componentStack },
+        });
+      }}
+      FallbackComponent={ScreenErrorFallback}
+    >
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} edges={["top"]}>
       <WarmGradient color={colors.bgWarm} height={300} />
       <ScrollView
@@ -584,6 +595,7 @@ export default function HomeScreen() {
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
     </SafeAreaView>
+    </ErrorBoundary>
   );
 }
 

@@ -18,7 +18,7 @@
 
 - [x] **CONT-01**: Audio playback calls wrapped in try/catch — play() failures don't crash the app
 - [x] **CONT-02**: Unhandled promise rejection audit — all fire-and-forget async calls have catch paths
-- [ ] **CONT-03**: Selective screen-level error boundaries on screens with expensive async setup or monetization (not blanket-wrapping everything)
+- [x] **CONT-03**: Selective screen-level error boundaries on screens with expensive async setup or monetization (not blanket-wrapping everything)
 
 ### Monetization Hardening
 
@@ -73,7 +73,7 @@
 | CRIT-06 | Phase 1 | Complete |
 | CONT-01 | Phase 2 | Complete |
 | CONT-02 | Phase 2 | Complete |
-| CONT-03 | Phase 2 | Pending |
+| CONT-03 | Phase 2 | Complete |
 | MON-01 | Phase 3 | Pending |
 | MON-02 | Phase 3 | Pending |
 | MON-03 | Phase 3 | Pending |
