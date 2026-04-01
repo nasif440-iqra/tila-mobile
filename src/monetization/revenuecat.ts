@@ -1,5 +1,6 @@
 import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import * as Sentry from "@sentry/react-native";
 
 let _initialized = false;
 
@@ -20,9 +21,15 @@ export function initRevenueCat(): void {
     console.log("[RevenueCat] Initializing with key:", apiKey.slice(0, 10) + "...");
   }
 
-  Purchases.configure({ apiKey });
-  _initialized = true;
-  if (__DEV__) {
-    console.log("[RevenueCat] Configured successfully");
+  try {
+    Purchases.configure({ apiKey });
+    _initialized = true;
+    if (__DEV__) {
+      console.log("[RevenueCat] Configured successfully");
+    }
+  } catch (e) {
+    Sentry.captureException(e);
+    console.warn('RevenueCat init failed:', e);
+    // _initialized remains false — app defaults to free tier
   }
 }
