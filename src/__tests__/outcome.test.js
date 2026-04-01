@@ -7,13 +7,13 @@ function makeResults(correct, total) {
 
 describe("getPassThreshold", () => {
   it("returns mode-specific thresholds", () => {
-    expect(getPassThreshold("recognition")).toBe(0.6);
-    expect(getPassThreshold("sound")).toBe(0.6);
-    expect(getPassThreshold("contrast")).toBe(0.6);
-    expect(getPassThreshold("checkpoint")).toBe(0.7);
-    expect(getPassThreshold("harakat-intro")).toBe(0.5);
-    expect(getPassThreshold("harakat")).toBe(0.6);
-    expect(getPassThreshold("harakat-mixed")).toBe(0.6);
+    expect(getPassThreshold("recognition")).toBe(0.8);
+    expect(getPassThreshold("sound")).toBe(0.8);
+    expect(getPassThreshold("contrast")).toBe(0.8);
+    expect(getPassThreshold("checkpoint")).toBe(0.8);
+    expect(getPassThreshold("harakat-intro")).toBe(0.8);
+    expect(getPassThreshold("harakat")).toBe(0.8);
+    expect(getPassThreshold("harakat-mixed")).toBe(0.8);
   });
 
   it("returns null for review (never gates progression)", () => {
@@ -26,11 +26,11 @@ describe("getPassThreshold", () => {
 });
 
 describe("evaluateLessonOutcome", () => {
-  it("passes a recognition lesson at 60%", () => {
-    const r = evaluateLessonOutcome(makeResults(3, 5), "recognition");
+  it("passes a recognition lesson at 80%", () => {
+    const r = evaluateLessonOutcome(makeResults(4, 5), "recognition");
     expect(r.passed).toBe(true);
-    expect(r.accuracy).toBe(0.6);
-    expect(r.threshold).toBe(0.6);
+    expect(r.accuracy).toBe(0.8);
+    expect(r.threshold).toBe(0.8);
   });
 
   it("fails a recognition lesson below 60%", () => {
@@ -38,22 +38,22 @@ describe("evaluateLessonOutcome", () => {
     expect(r.passed).toBe(false);
   });
 
-  it("checkpoint requires 70%", () => {
-    const at65 = evaluateLessonOutcome(makeResults(65, 100), "checkpoint");
-    expect(at65.passed).toBe(false);
-    expect(at65.threshold).toBe(0.7);
+  it("checkpoint requires 80%", () => {
+    const at75 = evaluateLessonOutcome(makeResults(75, 100), "checkpoint");
+    expect(at75.passed).toBe(false);
+    expect(at75.threshold).toBe(0.8);
 
-    const at70 = evaluateLessonOutcome(makeResults(7, 10), "checkpoint");
-    expect(at70.passed).toBe(true);
+    const at80 = evaluateLessonOutcome(makeResults(8, 10), "checkpoint");
+    expect(at80.passed).toBe(true);
   });
 
-  it("harakat-intro is lenient at 50%", () => {
-    const at50 = evaluateLessonOutcome(makeResults(3, 6), "harakat-intro");
-    expect(at50.passed).toBe(true);
-    expect(at50.threshold).toBe(0.5);
+  it("harakat-intro requires 80%", () => {
+    const at83 = evaluateLessonOutcome(makeResults(5, 6), "harakat-intro");
+    expect(at83.passed).toBe(true);
+    expect(at83.threshold).toBe(0.8);
 
-    const at33 = evaluateLessonOutcome(makeResults(2, 6), "harakat-intro");
-    expect(at33.passed).toBe(false);
+    const at50 = evaluateLessonOutcome(makeResults(3, 6), "harakat-intro");
+    expect(at50.passed).toBe(false);
   });
 
   it("review always passes with null threshold", () => {
@@ -78,7 +78,7 @@ describe("evaluateLessonOutcome", () => {
   });
 
   it("unknown mode uses default threshold", () => {
-    const r = evaluateLessonOutcome(makeResults(6, 10), "unknown-mode");
+    const r = evaluateLessonOutcome(makeResults(8, 10), "unknown-mode");
     expect(r.passed).toBe(true);
     expect(r.threshold).toBe(DEFAULT_THRESHOLD);
   });
@@ -108,13 +108,13 @@ describe("lesson completion integration", () => {
     expect(outcome.passed).toBe(true);
   });
 
-  it("checkpoint at 65% fails with 70% threshold", () => {
-    const outcome = evaluateLessonOutcome(makeResults(65, 100), "checkpoint");
+  it("checkpoint at 75% fails with 80% threshold", () => {
+    const outcome = evaluateLessonOutcome(makeResults(75, 100), "checkpoint");
     expect(outcome.passed).toBe(false);
   });
 
-  it("checkpoint at 70% passes", () => {
-    const outcome = evaluateLessonOutcome(makeResults(70, 100), "checkpoint");
+  it("checkpoint at 80% passes", () => {
+    const outcome = evaluateLessonOutcome(makeResults(80, 100), "checkpoint");
     expect(outcome.passed).toBe(true);
   });
 });
@@ -123,7 +123,7 @@ describe("threshold display in UI", () => {
   it("outcome.threshold can be rendered as percentage", () => {
     const r = evaluateLessonOutcome(makeResults(1, 10), "checkpoint");
     const displayPct = r.threshold != null ? Math.round(r.threshold * 100) : null;
-    expect(displayPct).toBe(70);
+    expect(displayPct).toBe(80);
   });
 
   it("review has null threshold so UI shows no requirement", () => {

@@ -8,8 +8,8 @@ const source = readFileSync(
 );
 
 describe("StatsRow typography polish (PROG-04)", () => {
-  it("uses typography.statNumber for stat values", () => {
-    expect(source).toMatch(/typography\.statNumber/);
+  it("uses headingMedium font for stat values", () => {
+    expect(source).toMatch(/fontFamilies\.headingMedium/);
   });
 
   it("imports typography from design tokens", () => {

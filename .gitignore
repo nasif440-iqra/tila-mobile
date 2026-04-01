@@ -39,6 +39,9 @@ yarn-error.*
 .env.production
 .env.*.local
 
+# test coverage
+coverage/
+
 # typescript
 *.tsbuildinfo
 
