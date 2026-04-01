@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [ ] 01-01-PLAN.md — DB init state machine + migration v2 fix (CRIT-01, CRIT-05, CRIT-06)
 - [ ] 01-02-PLAN.md — Quiz state reset + midnight reroute fix (CRIT-02, CRIT-04, CRIT-06)
-- [ ] 01-03-PLAN.md — Habit race condition fix (CRIT-03, CRIT-06)
+- [x] 01-03-PLAN.md — Habit race condition fix (CRIT-03, CRIT-06)
 
 ### Phase 2: Crash Containment
 **Goal**: Unknown runtime failures are caught and contained per-screen instead of taking down the entire app
@@ -98,7 +98,7 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Correctness Blockers | 0/3 | Not started | - |
+| 1. Correctness Blockers | 1/3 | In progress | - |
 | 2. Crash Containment | 0/0 | Not started | - |
 | 3. Monetization Hardening | 0/0 | Not started | - |
 | 4. Type & Test Cleanup | 0/0 | Not started | - |
