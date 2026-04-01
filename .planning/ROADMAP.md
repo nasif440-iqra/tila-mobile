@@ -69,7 +69,7 @@ Plans:
 **Requirements**: CONV-01, CONV-02, CONV-04
 **Plans:** 2 plans
 Plans:
-- [ ] 03-01-PLAN.md — Data layer + NameMotivation onboarding step (CONV-01)
+- [x] 03-01-PLAN.md — Data layer + NameMotivation onboarding step (CONV-01)
 - [ ] 03-02-PLAN.md — Personalized home greeting + wird tooltip (CONV-02, CONV-04)
 **Success Criteria** (what must be TRUE):
   1. Onboarding flow includes an optional name input step that stores the name in user profile

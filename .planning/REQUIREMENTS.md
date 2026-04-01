@@ -17,7 +17,7 @@
 
 ### Block 2: Make It Convert
 
-- [ ] **CONV-01**: Optional name input added to onboarding flow, stored in user profile
+- [x] **CONV-01**: Optional name input added to onboarding flow, stored in user profile
 - [ ] **CONV-02**: Wird concept explained on first encounter via one-time tooltip/explanation
 - [ ] **CONV-03**: Value communication woven into lessons 1–7 (mastery insights shown after lessons)
 - [ ] **CONV-04**: Home screen greeting personalized with user name and motivation
