@@ -44,7 +44,21 @@ export default function ReviewScreen() {
   const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
 
   useEffect(() => {
-    loadPremiumLessonGrants(db).then(setGrantedLessonIds);
+    let cancelled = false;
+
+    async function loadGrants() {
+      try {
+        const grants = await loadPremiumLessonGrants(db);
+        if (!cancelled) setGrantedLessonIds(grants);
+      } catch (e) {
+        console.warn("Failed to load premium grants:", e);
+        if (!cancelled) setGrantedLessonIds([]);
+      }
+    }
+
+    loadGrants();
+
+    return () => { cancelled = true; };
   }, [db]);
 
   const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);
