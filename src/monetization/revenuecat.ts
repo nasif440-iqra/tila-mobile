@@ -17,8 +17,12 @@ export function initRevenueCat(): void {
 
   if (__DEV__) {
     Purchases.setLogLevel(LOG_LEVEL.VERBOSE);
+    console.log("[RevenueCat] Initializing with key:", apiKey.slice(0, 10) + "...");
   }
 
   Purchases.configure({ apiKey });
   _initialized = true;
+  if (__DEV__) {
+    console.log("[RevenueCat] Configured successfully");
+  }
 }
