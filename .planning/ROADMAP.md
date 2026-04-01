@@ -45,10 +45,11 @@ Plans:
   1. Audio playback failure (e.g., missing file, interrupted session) does not crash the app or show an error to the user
   2. A thrown error in the lesson screen shows a recovery UI ("Go Home" button) instead of a white screen or app crash
   3. No unhandled promise rejections appear in Sentry from fire-and-forget async calls (RevenueCat init, audio play, analytics)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md — Audio try/catch wrappers + unhandled promise audit (CONT-01, CONT-02)
+- [ ] 02-02-PLAN.md — Screen-level error boundaries with ScreenErrorFallback (CONT-03)
 
 ### Phase 3: Monetization Hardening
 **Goal**: Subscription and purchase flows work correctly offline and surface restore/failure states clearly
@@ -99,7 +100,7 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Correctness Blockers | 1/3 | In progress | - |
-| 2. Crash Containment | 0/0 | Not started | - |
+| 2. Crash Containment | 0/2 | Not started | - |
 | 3. Monetization Hardening | 0/0 | Not started | - |
 | 4. Type & Test Cleanup | 0/0 | Not started | - |
 | 5. Launch Ops Checklist | 0/0 | Not started | - |
