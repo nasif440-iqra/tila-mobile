@@ -18,9 +18,9 @@
 ### Block 2: Make It Convert
 
 - [x] **CONV-01**: Optional name input added to onboarding flow, stored in user profile
-- [ ] **CONV-02**: Wird concept explained on first encounter via one-time tooltip/explanation
+- [x] **CONV-02**: Wird concept explained on first encounter via one-time tooltip/explanation
 - [ ] **CONV-03**: Value communication woven into lessons 1–7 (mastery insights shown after lessons)
-- [ ] **CONV-04**: Home screen greeting personalized with user name and motivation
+- [x] **CONV-04**: Home screen greeting personalized with user name and motivation
 - [ ] **CONV-05**: Mastery engine insights visible to users (confusion tracking, accuracy trends, review scheduling)
 - [ ] **CONV-06**: Upgrade/upsell cards redesigned to match design system (premium feel matching onboarding quality)
 - [ ] **CONV-07**: Complete paywall flow — lesson 7 trigger, annual-first pricing, scholarship program, post-expiry review access

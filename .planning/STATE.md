@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
-status: executing
-stopped_at: Completed 03-01-PLAN.md
-last_updated: "2026-04-01T23:46:35.142Z"
+status: verifying
+stopped_at: Completed 03-02-PLAN.md
+last_updated: "2026-04-01T23:54:03.130Z"
 last_activity: 2026-04-01
 progress:
   total_phases: 8
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 5
-  completed_plans: 4
+  completed_plans: 5
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 
 Phase: 03 (onboarding-personalization) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-01
 
 Progress: [..........] 0%
@@ -45,6 +45,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 02]: Used SVG mask for CrescentIcon cutout instead of transparent fill for correct visual rendering
 - [Phase 03]: Motivation stored as typed union not free text for analytics consistency
 - [Phase 03]: Name is optional with empty-to-null conversion, Continue button always enabled
+- [Phase 03]: Extracted greeting logic to src/utils/greetingHelpers.ts to avoid React Native mock complexity in tests
+- [Phase 03]: WirdTooltip uses absolute positioning without arrow pointer for simplicity
 
 ### Pending Todos
 
@@ -57,6 +59,6 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 
 ## Session Continuity
 
-Last session: 2026-04-01T23:46:35.138Z
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-04-01T23:54:03.126Z
+Stopped at: Completed 03-02-PLAN.md
 Resume file: None
