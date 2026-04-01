@@ -296,7 +296,7 @@ export default function HomeScreen() {
   const progress = useProgress();
   const { habit } = useHabit();
   const { isPremiumActive, stage, trialDaysRemaining, showPaywall } = useSubscription();
-  const today = getTodayDateString();
+  const [today] = useState(() => getTodayDateString());
 
   const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
 
