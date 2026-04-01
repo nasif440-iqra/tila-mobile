@@ -42,49 +42,55 @@ export function useProgress() {
       passed: boolean,
       questions: QuestionAttempt[],
       quizResultItems?: QuizResultItem[]
-    ) => {
-      const attemptId = await saveCompletedLesson(
-        db,
-        lessonId,
-        accuracy,
-        passed
-      );
-      if (questions.length > 0) {
-        await saveQuestionAttempts(db, attemptId, questions);
-      }
+    ): Promise<{ attemptId: number; updatedMastery: ProgressState['mastery'] }> => {
+      let attemptId = 0;
+      let updatedMastery = {
+        entities: {},
+        skills: {},
+        confusions: {},
+      } as ProgressState['mastery'];
 
-      // Wire mastery pipeline if quizResultItems provided
-      if (quizResultItems && quizResultItems.length > 0) {
-        const today = new Date().toISOString().slice(0, 10);
-        // Read fresh mastery directly from DB — avoids stale React state
-        // that would not yet reflect the saveCompletedLesson writes above.
-        const freshProgress = await loadProgress(db);
-        const currentMastery = freshProgress.mastery;
+      await db.withExclusiveTransactionAsync(async (txn) => {
+        // Write 1: lesson attempt — pass txn instead of db
+        attemptId = await saveCompletedLesson(txn, lessonId, accuracy, passed);
 
-        // Enrich results with targetKey
-        const enriched = quizResultItems.map((r) => ({
-          ...r,
-          targetKey: normalizeEntityKey(r.targetId, r),
-        }));
-
-        const updatedMastery = mergeQuizResultsIntoMastery(currentMastery, enriched, today);
-
-        // Persist updated entities
-        for (const [key, entity] of Object.entries(updatedMastery.entities)) {
-          await saveMasteryEntity(db, key, entity as EntityState);
+        // Write 2..N: question attempts — pass txn instead of db
+        if (questions.length > 0) {
+          await saveQuestionAttempts(txn, attemptId, questions);
         }
-        for (const [key, skill] of Object.entries(updatedMastery.skills)) {
-          await saveMasterySkill(db, key, skill as SkillState);
+
+        // Mastery pipeline
+        if (quizResultItems && quizResultItems.length > 0) {
+          const today = new Date().toISOString().slice(0, 10);
+          // Read fresh mastery through txn (sees uncommitted writes in this transaction)
+          const freshProgress = await loadProgress(txn);
+          const currentMastery = freshProgress.mastery;
+
+          // Enrich results with targetKey
+          const enriched = quizResultItems.map((r) => ({
+            ...r,
+            targetKey: normalizeEntityKey(r.targetId, r),
+          }));
+
+          updatedMastery = mergeQuizResultsIntoMastery(currentMastery, enriched, today) as ProgressState['mastery'];
+
+          // Persist updated entities through txn
+          for (const [key, entity] of Object.entries(updatedMastery.entities)) {
+            await saveMasteryEntity(txn, key, entity as EntityState);
+          }
+          for (const [key, skill] of Object.entries(updatedMastery.skills)) {
+            await saveMasterySkill(txn, key, skill as SkillState);
+          }
+          for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
+            await saveMasteryConfusion(txn, key, confusion as ConfusionState);
+          }
         }
-        for (const [key, confusion] of Object.entries(updatedMastery.confusions)) {
-          await saveMasteryConfusion(db, key, confusion as ConfusionState);
-        }
-      }
+      });
 
       // Single refresh at the end after all writes are complete
       await refresh();
 
-      return attemptId;
+      return { attemptId, updatedMastery };
     },
     [db, refresh]
   );

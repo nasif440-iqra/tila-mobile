@@ -12,8 +12,10 @@ describe('completeLesson atomicity - STAB-01 regression', () => {
   });
 
   it('reads and writes through txn parameter, not outer db', () => {
-    // Inside the transaction callback, DB ops must go through txn
-    expect(progressHookSrc).toMatch(/txn\.(runAsync|getAllAsync|getFirstAsync)/);
+    // Inside the transaction callback, all DB functions receive txn (not db)
+    // loadProgress(txn) for reads, save*(txn, ...) for writes
+    expect(progressHookSrc).toMatch(/loadProgress\(txn\)/);
+    expect(progressHookSrc).toMatch(/saveCompletedLesson\(txn/);
   });
 
   it('does not call save functions with db inside the transaction', () => {
