@@ -1,78 +1,71 @@
-# Tila — UI Overhaul
+# Tila — Stability & App Store Readiness
 
 ## What This Is
 
-Tila is a mobile app that teaches converts and new Muslims to read the Quran, starting from the Arabic alphabet. Built with Expo/React Native, it uses a mastery-based learning system with lessons, quizzes, and spaced repetition. The app works offline and targets iOS and Android.
-
-This milestone focuses on transforming Tila's visual experience from functional to beautiful — Duolingo-level engagement married with Quranic elegance and a genuine wow factor.
+Tila is a mobile app that teaches converts and new Muslims to read the Quran, starting from the Arabic alphabet. Built with Expo 55 / React Native 0.83, it uses mastery-based learning with spaced repetition, offline-first SQLite storage, and a freemium model (RevenueCat). The UI overhaul milestone is ~90% complete. This milestone hardens the codebase for App Store submission.
 
 ## Core Value
 
-The first impression must be stunning. When someone opens Tila for the first time, they should feel welcomed, inspired, and excited to learn — not intimidated by Arabic.
+The app must never crash, hang, or lose user progress. Every session — from first launch to lesson 50 — must feel solid and trustworthy.
 
 ## Requirements
 
 ### Validated
 
-- ✓ Arabic alphabet teaching (28 letters with audio) — existing
-- ✓ Lesson-based curriculum with phases and modules — existing
-- ✓ Mastery system (not_started → introduced → unstable → accurate → retained) — existing
-- ✓ Spaced repetition scheduling — existing
-- ✓ Multiple question types (recognition, sound, contrast, harakat, connected forms) — existing
-- ✓ Interactive exercises (guided reveal, tap-in-order, build-up reader, free reader) — existing
-- ✓ Onboarding flow (8-step guided entry) — existing
-- ✓ Progress tracking with letter mastery grid — existing
-- ✓ Habit tracking (Wird streaks) — existing
-- ✓ Audio playback for letter pronunciation — existing
-- ✓ Analytics (PostHog + Sentry) — existing
-- ✓ Design system with tokens, typography, and base components — existing
+- ✓ Mastery-based learning system with SRS — existing
+- ✓ 28 Arabic letter curriculum across 4 phases — existing
+- ✓ Offline-first SQLite storage — existing
+- ✓ UI overhaul (design system, transitions, celebrations) — existing
+- ✓ RevenueCat monetization (6 free lessons, trial, subscription) — existing
+- ✓ PostHog analytics + Sentry crash reporting — existing
+- ✓ Onboarding flow with wird streak tracking — existing
 
 ### Active
 
-- [ ] Full UI overhaul — elevate every screen from functional to premium
-- [ ] Onboarding wow factor — make the first open feel special and inspiring
-- [ ] Visual richness across all screens — not just functional, but beautiful
-- [ ] Celebration system — subtle warmth for small wins, excitement for big wins
-- [ ] Smooth, polished transitions and animations throughout
-- [ ] Consistent premium feel across onboarding, home, lessons, and progress
+- [ ] Database initialization never hangs — shows error screen on failure
+- [ ] Quiz hook correctly resets between lesson transitions
+- [ ] Streak counter is race-condition-proof under rapid taps
+- [ ] Home screen routing is stable across midnight boundary
+- [ ] RevenueCat fails gracefully when API keys are missing or SDK is unconfigured
+- [ ] Mastery engine has correct imports and handles edge cases
+- [ ] Database migrations distinguish real errors from "column already exists"
+- [ ] Audio playback errors are caught and handled (no unhandled rejections)
+- [ ] Type safety across hooks and engine — eliminate critical `any` types
+- [ ] Error boundaries catch component-level crashes with recovery UI
+- [ ] Subscription state handles offline gracefully
+- [ ] Test coverage for critical paths (mastery, progress, habit, quiz flow)
 
 ### Out of Scope
 
-- Dark mode — deferred to future milestone
-- Push notifications — separate milestone
-- Sound design overhaul — separate milestone
-- Monetization features — separate milestone
-- Cloud sync — separate milestone
-- New lesson content or curriculum changes — separate concern
+- Dark mode activation — tokens exist but not this milestone's concern
+- New features or curriculum content — stability only
+- Cloud sync / backend — future milestone
+- Push notifications — future milestone
+- UI redesign — already done in previous milestone
 
 ## Context
 
-- Recently migrated from React/Vite webapp to Expo-only mobile. The UI suffered during migration — functionally complete but visually generic.
-- The underlying system (engine, data, hooks, DB) is solid and well-architected. No need to touch business logic.
-- Design system foundation exists: dark green (#163323) + gold (#C4A464) on warm cream (#F8F6F0), Amiri/Inter/Lora fonts, 8px spacing rhythm. User loves these colors — keep them.
-- Some animations already exist (onboarding floating letters, quiz option feedback, staggered entrances) but need to be elevated and made consistent.
-- Target audience (converts/new Muslims) may feel intimidated by Arabic — the UI must be approachable, warm, and encouraging.
-- First Android build shipped. iOS pending Apple Developer enrollment.
-- Portrait-only, offline-first.
+- App has been through a UI overhaul milestone (~90% complete, 2 plans unexecuted)
+- First Android build shipped; iOS pending Apple Developer enrollment
+- Expert code review identified 8 areas of concern: fat screens, weak typing, duplicate state loading, half-built audio, prototype leakage, weak error handling, inconsistent theme, missing tooling
+- Deep codebase audit (2026-03-31) found 5 critical bugs and ~10 secondary issues
+- App Store review requires reliability — crashes or hangs during review = rejection
 
 ## Constraints
 
-- **Platform**: Expo SDK 55, React Native 0.83, New Architecture enabled — must work within this stack
-- **Orientation**: Portrait-only
-- **Offline**: No network dependencies for UI — all assets bundled
-- **Performance**: Animations must run at 60fps on mid-range Android devices
-- **Existing design tokens**: Keep current color palette (green + gold + cream), fonts (Amiri, Inter, Lora), and 8px spacing
-- **No business logic changes**: UI overhaul only — engine, data, hooks, DB stay untouched
+- **Stack**: Expo SDK 55, React Native 0.83, New Architecture — no framework changes
+- **No business logic changes**: Engine algorithms stay the same, we're fixing bugs not redesigning
+- **Offline-first**: All fixes must work without network connectivity
+- **Performance**: No regressions on mid-range Android (60fps animations must hold)
+- **Backwards compatible**: Existing user data (SQLite) must not be corrupted by fixes
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Keep existing color palette | User loves green + gold + cream for Quranic identity | — Pending |
-| Duolingo energy + Quranic elegance | Engaging and encouraging but beautifully done with wow factor | — Pending |
-| Full overhaul in phases | See progress fast while covering everything | — Pending |
-| Subtle small wins, exciting big wins | Mix of celebration styles matches the reverent-but-fun tone | — Pending |
-| Onboarding as #1 wow moment | First impression for new/convert users is critical | — Pending |
+| Full hardening scope (not just critical 5) | App Store review — need comprehensive reliability | — Pending |
+| Fix bugs in existing .js engine files, don't migrate to .ts | Minimize blast radius, stability milestone not refactor | — Pending |
+| Add error boundaries at screen level | Catch crashes per-screen, not whole app | — Pending |
 
 ## Evolution
 
@@ -92,4 +85,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-03-28 after initialization*
+*Last updated: 2026-03-31 after initialization*
