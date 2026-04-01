@@ -158,9 +158,13 @@ function getVoicePlayer(): AudioPlayer {
 
 async function playVoice(source: AudioSource): Promise<void> {
   if (_muted) return;
-  const player = getVoicePlayer();
-  player.replace(source);
-  player.play();
+  try {
+    const player = getVoicePlayer();
+    player.replace(source);
+    player.play();
+  } catch (e) {
+    console.warn("Voice playback failed:", e);
+  }
 }
 
 // ── SFX playback (priority-gated) ──
@@ -201,10 +205,14 @@ function playSFX(source: AudioSource, priority: number, guardMs: number): void {
   ) {
     return; // blocked — equal or lower importance during guard window
   }
-  const player = getSFXPlayer();
-  player.replace(source);
-  player.play();
-  _playing = { priority, startedAt: now, guardMs };
+  try {
+    const player = getSFXPlayer();
+    player.replace(source);
+    player.play();
+    _playing = { priority, startedAt: now, guardMs };
+  } catch (e) {
+    console.warn("SFX playback failed:", e);
+  }
 }
 
 // ── SFX helpers (audio-only — no haptics) ──
