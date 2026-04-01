@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Correctness Blockers** - Fix the 5 known bugs that crash or corrupt data, with regression tests
 - [ ] **Phase 2: Crash Containment** - Add defensive shell so unknown failures are caught, not fatal
-- [x] **Phase 3: Monetization Hardening** - Make subscription flow bulletproof for offline and edge cases (completed 2026-04-01)
+- [x] **Phase 3: Monetization Hardening** - Make subscription flow bulletproof for offline and edge cases (completed 2026-04-01)
 - [ ] **Phase 4: Type & Test Cleanup** - Remove critical `any` types, add regression tests, establish coverage baseline
 - [ ] **Phase 5: Launch Ops Checklist** - Privacy policy, App Store metadata, iPad QA, production build
 
@@ -72,10 +72,11 @@ Plans:
   1. `npm run typecheck` passes with no `any` types in the return interfaces of useLessonQuiz, useProgress, or useMastery hooks
   2. `npm test` runs a regression suite covering DB init, migration handling, streak logic, quiz transitions, and monetization edge cases — all green
   3. `npm test -- --coverage` produces a coverage report with a recorded baseline percentage
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md — Remove any types from useLessonQuiz + type JS generator boundary (QUAL-01)
+- [ ] 04-02-PLAN.md — Verify regression test suite + install coverage tooling with baseline (QUAL-02, QUAL-03)
 
 ### Phase 5: Launch Ops Checklist
 **Goal**: All non-code App Store submission requirements are met and a production build is verified on device
@@ -102,5 +103,5 @@ Phases 4 and 5 have no dependency on each other — both depend on Phase 3.
 | 1. Correctness Blockers | 1/3 | In progress | - |
 | 2. Crash Containment | 1/2 | In progress | - |
 | 3. Monetization Hardening | 1/1 | Complete   | 2026-04-01 |
-| 4. Type & Test Cleanup | 0/0 | Not started | - |
+| 4. Type & Test Cleanup | 0/2 | Not started | - |
 | 5. Launch Ops Checklist | 0/0 | Not started | - |
