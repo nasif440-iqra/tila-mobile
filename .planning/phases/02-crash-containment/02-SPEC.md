@@ -68,21 +68,51 @@ ThemeContext.Provider
 
 **Proposed fix — selective, not blanket:**
 
-Add `react-error-boundary` (already approved in project research) on screens with expensive async setup or high crash risk:
+**Step 1: Install `react-error-boundary`.**
+This package is NOT currently in the repo. It needs to be added:
+```bash
+npm install react-error-boundary
+```
+This is a real dependency change — not something already sitting in node_modules.
+
+**Step 2: Add screen-level boundaries to two screens:**
 - **Lesson screen** (`app/lesson/[id].tsx`) — complex quiz logic, audio, mastery updates
 - **Home screen** (`app/(tabs)/index.tsx`) — derived state, routing logic, monetization checks
 
 Do NOT add boundaries to every screen. Simple screens (onboarding, return-welcome, wird-intro) don't need them — the root Sentry boundary is sufficient there.
 
+**Step 3: Wire Sentry reporting explicitly in each screen-level boundary.**
+Once a child `ErrorBoundary` catches an error, the root `Sentry.ErrorBoundary` does NOT see it — the error is consumed by the child. So each screen-level boundary MUST explicitly report to Sentry via its `onError` callback:
+```typescript
+<ErrorBoundary
+  onError={(error, info) => {
+    Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+  }}
+  FallbackComponent={ScreenErrorFallback}
+>
+```
+Do not assume the root boundary will keep covering child-boundary crashes. It won't.
+
+**Step 4: Create a screen-scoped fallback component (or extend ErrorFallback).**
+The existing `ErrorFallback` component only supports `onRetry` — it renders a "Try Again" button that re-renders the broken component. For screen-level boundaries, the fallback needs to support "Go Home" navigation, which `ErrorFallback` does not currently do.
+
+Options:
+- Create a new `ScreenErrorFallback` component that renders both "Try Again" and "Go Home" buttons
+- Or extend `ErrorFallback` to accept an optional `onGoHome` prop alongside `onRetry`
+
+Either way, the "Go Home" action should call `router.replace('/')` to navigate the user back to the home tab.
+
 **Each screen-level boundary should:**
 - Catch render errors within that screen
-- Show a recovery UI with "Go Home" button (using the existing `ErrorFallback` component or a variant with navigation)
-- Report the error to Sentry (already happens via root boundary, but screen-level reporting adds context)
+- Explicitly report caught error to Sentry via `onError` (the root boundary will NOT do this)
+- Show a recovery UI with both "Try Again" and "Go Home" buttons
+- "Go Home" navigates via `router.replace('/')` so the user can continue using the app
 
 **What "fixed" looks like:**
-- A thrown error in the lesson screen shows "Go Home" button instead of white screen
+- A thrown error in the lesson screen shows "Try Again" + "Go Home" buttons instead of white screen
+- The error is reported to Sentry with component stack context
 - User can navigate home and continue using the app after a screen-level crash
-- Root Sentry boundary remains as the last-resort catch-all
+- Root Sentry boundary remains as the last-resort catch-all for screens without their own boundary
 
 ---
 
@@ -104,16 +134,59 @@ Do NOT add boundaries to every screen. Simple screens (onboarding, return-welcom
 
 **Why it matters:** Unhandled promise rejections in production React Native apps can cause silent crashes, Sentry noise, and erratic behavior. Apple reviewers may trigger these by testing on slow/restricted devices.
 
-**Proposed fix:**
-- Add `.catch()` to every `.then()` call that currently lacks one
-- Catch handler should: log the error (console.warn), and either set a safe fallback state or silently ignore (depending on criticality)
-- For `loadPremiumLessonGrants`: catch sets `grantedLessonIds` to `[]` (empty array — safe default, user just doesn't see grants)
-- Do a grep for any other fire-and-forget patterns: `someAsyncFn()` without `await` or `.catch()` in non-async contexts
+**Proposed fix — guarded async loaders, not just .catch():**
+
+Simply adding `.catch()` handles the rejection, but the two `loadPremiumLessonGrants` effects also have a stale async update pattern: `.then(setGrantedLessonIds)` can fire after the component unmounts or navigates away, causing a React state update on an unmounted component.
+
+**For `app/(tabs)/index.tsx` and `app/lesson/review.tsx`:**
+Convert the bare `.then()` to a guarded async loader inside useEffect:
+
+```typescript
+useEffect(() => {
+  let cancelled = false;
+
+  async function loadGrants() {
+    try {
+      const grants = await loadPremiumLessonGrants(db);
+      if (!cancelled) setGrantedLessonIds(grants);
+    } catch (e) {
+      console.warn('Failed to load premium grants:', e);
+      if (!cancelled) setGrantedLessonIds([]);
+    }
+  }
+
+  if (!progress.loading) loadGrants();
+
+  return () => { cancelled = true; };
+}, [db, progress.loading]);
+```
+
+This handles three problems in one:
+1. Rejected promise → caught, falls back to `[]`
+2. Unmount during async → cancelled flag prevents stale setState
+3. Navigation away → cleanup runs, no state leak
+
+**For `src/monetization/provider.tsx`:** Already has `.catch()`. Verify the catch covers all paths (it does — sets `loading: false` on catch). No change needed.
+
+**Additional audit:** Grep for any other fire-and-forget `.then()` or bare async calls without `.catch()` in non-async contexts. Fix any found using the same guarded async pattern.
 
 **What "fixed" looks like:**
 - No unhandled promise rejections appear in Sentry from app code
-- Each async call either has a `.catch()` or is properly `await`ed inside a try/catch
+- Grant-loading effects use guarded async loaders with cancellation flags
 - Failed premium grant loading falls back gracefully to empty array
+- No stale state updates on unmounted components
+
+---
+
+## Regression Tests
+
+Each fix needs at least one regression test proving the bad path is prevented.
+
+| Fix | Test description |
+|-----|-----------------|
+| Fix 1 | Audio: Mock `player.play()` to throw → verify `playVoice`/`playSFX` do not propagate the error. Source analysis: verify try/catch wraps both functions. |
+| Fix 2 | Boundary: Verify `app/lesson/[id].tsx` contains an `ErrorBoundary` wrapper. Verify the fallback component supports both retry and navigation actions. Verify `Sentry.captureException` is called in `onError`. |
+| Fix 3 | Grants: Verify `loadPremiumLessonGrants` effects use guarded async pattern (cancelled flag + try/catch). Source analysis: no bare `.then(setGrantedLessonIds)` without catch in home or review screens. |
 
 ---
 
@@ -132,4 +205,4 @@ Do NOT add boundaries to every screen. Simple screens (onboarding, return-welcom
 ---
 
 *Spec created: 2026-04-01*
-*For expert review before implementation*
+*Revised: 2026-04-01 after expert review — fixed Sentry coverage assumption (child boundaries must report explicitly), clarified react-error-boundary is not installed yet, expanded Fix 3 to guarded async loaders with cancellation, added fallback component design requirement, added regression test expectations*

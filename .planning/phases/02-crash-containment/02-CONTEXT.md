@@ -19,17 +19,19 @@ Add defensive wrappers for unknown runtime failures: audio try/catch, selective 
 - **D-03:** No user-facing error UI for audio — silent failure is correct behavior
 
 ### Fix 2: Screen-level error boundaries
-- **D-04:** Install `react-error-boundary` (^6.1.1) — approved in project research
+- **D-04:** Install `react-error-boundary` (^6.1.1) — NOT yet in repo, must `npm install`
 - **D-05:** Add boundaries to lesson screen and home screen only (selective, not blanket)
-- **D-06:** Recovery UI shows "Go Home" button — user can navigate away from broken screen
+- **D-06:** Each screen boundary MUST explicitly report to Sentry via `onError` — the root Sentry.ErrorBoundary does NOT see errors caught by child boundaries
 - **D-07:** Root Sentry.ErrorBoundary stays as last-resort catch-all — do not remove it
-- **D-08:** Reuse existing ErrorFallback component (or variant with navigation prop)
+- **D-08:** Create a `ScreenErrorFallback` component (or extend `ErrorFallback` with `onGoHome` prop) — existing ErrorFallback only supports retry, not navigation
+- **D-09:** "Go Home" action calls `router.replace('/')` to navigate back to home tab
 
 ### Fix 3: Unhandled promise audit
-- **D-09:** Add `.catch()` to all identified `.then()` calls without catch handlers
-- **D-10:** `loadPremiumLessonGrants` catch → set `grantedLessonIds` to `[]` (safe default)
-- **D-11:** Grep for any other fire-and-forget patterns and fix them
-- **D-12:** Catch handlers should console.warn, not throw
+- **D-10:** Convert `loadPremiumLessonGrants` effects (home + review) to guarded async loaders with cancellation flag + try/catch — not just adding `.catch()`
+- **D-11:** Catch sets `grantedLessonIds` to `[]` (safe default), cancelled flag prevents stale setState on unmount
+- **D-12:** `src/monetization/provider.tsx` already has `.catch()` — verify coverage, no change needed
+- **D-13:** Grep for any other fire-and-forget patterns and fix them with same guarded async pattern
+- **D-14:** Catch handlers should console.warn, not throw
 
 ### Claude's Discretion
 - Exact ErrorBoundary component wiring (whether to use `useErrorBoundary` hook or `ErrorBoundary` component wrapper)
