@@ -29,8 +29,8 @@
 ### Type & Test Cleanup
 
 - [ ] **QUAL-01**: Critical `any` types removed from lesson/progress/mastery-adjacent hook interfaces (useLessonQuiz, useProgress, useMastery)
-- [ ] **QUAL-02**: Regression tests for fixed flows: DB init, migration handling, streak logic, quiz transitions, monetization edge cases
-- [ ] **QUAL-03**: Coverage measurement enabled (@vitest/coverage-v8) with baseline established
+- [x] **QUAL-02**: Regression tests for fixed flows: DB init, migration handling, streak logic, quiz transitions, monetization edge cases
+- [x] **QUAL-03**: Coverage measurement enabled (@vitest/coverage-v8) with baseline established
 
 ### Launch Ops Checklist
 
@@ -78,8 +78,8 @@
 | MON-02 | Phase 3 | Complete |
 | MON-03 | Phase 3 | Complete |
 | QUAL-01 | Phase 4 | Pending |
-| QUAL-02 | Phase 4 | Pending |
-| QUAL-03 | Phase 4 | Pending |
+| QUAL-02 | Phase 4 | Complete |
+| QUAL-03 | Phase 4 | Complete |
 | LAUNCH-01 | Phase 5 | Pending |
 | LAUNCH-02 | Phase 5 | Pending |
 | LAUNCH-03 | Phase 5 | Pending |
