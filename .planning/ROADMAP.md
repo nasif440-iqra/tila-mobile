@@ -53,6 +53,10 @@ Plans:
 **Goal**: Remove all scaffold leftovers, guard remaining unsafe calls, achieve design consistency
 **Depends on**: Nothing (independent of Phase 1)
 **Requirements**: STAB-03, STAB-04, STAB-05, STAB-06
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Scaffold cleanup + RevenueCat init guard (STAB-03, STAB-04 pre-satisfied, STAB-05)
+- [ ] 02-02-PLAN.md — CrescentIcon SVG component + emoji replacement (STAB-06)
 **Success Criteria** (what must be TRUE):
   1. SpaceMono-Regular.ttf, EditScreenInfo.tsx, useClientOnlyValue.ts, and constants/Colors.ts are deleted with no broken imports
   2. RevenueCat `Purchases.configure()` is wrapped in try/catch with free-tier fallback and Sentry logging
@@ -146,7 +150,7 @@ Phase 2 (cleanup) ───────┘                                      
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Lesson Flow Hardening | 0/1 | Not started | - |
-| 2. Repo Cleanup & Design Consistency | 0/TBD | Not started | - |
+| 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
 | 3. Onboarding & Personalization | 0/TBD | Not started | - |
 | 4. Value Communication | 0/TBD | Not started | - |
 | 5. Conversion Surfaces | 0/TBD | Not started | - |
