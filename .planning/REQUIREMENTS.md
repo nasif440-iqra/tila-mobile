@@ -7,11 +7,11 @@
 
 ### Correctness Blockers
 
-- [ ] **CRIT-01**: DB initialization has timeout + recovery UI instead of hanging forever when SQLite fails
-- [x] **CRIT-02**: Quiz hook (useLessonQuiz) correctly resets question generation ref when lesson changes
+- [x] **CRIT-01**: DB initialization has timeout + recovery UI instead of hanging forever when SQLite fails
+- [ ] **CRIT-02**: Quiz hook (useLessonQuiz) correctly resets question generation ref when lesson changes
 - [ ] **CRIT-03**: Streak updates (useHabit) are race-condition-proof under rapid repeated recordPractice calls
-- [x] **CRIT-04**: Home screen routing handles midnight date boundary without looping between routes
-- [ ] **CRIT-05**: Migration error handling distinguishes "column already exists" from real failures (align with later migration patterns)
+- [ ] **CRIT-04**: Home screen routing handles midnight date boundary without looping between routes
+- [x] **CRIT-05**: Migration error handling distinguishes "column already exists" from real failures (align with later migration patterns)
 - [x] **CRIT-06**: Regression tests added for each correctness fix before moving on
 
 ### Crash Containment
@@ -65,11 +65,11 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CRIT-01 | Phase 1 | Pending |
-| CRIT-02 | Phase 1 | Complete |
+| CRIT-01 | Phase 1 | Complete |
+| CRIT-02 | Phase 1 | Pending |
 | CRIT-03 | Phase 1 | Pending |
-| CRIT-04 | Phase 1 | Complete |
-| CRIT-05 | Phase 1 | Pending |
+| CRIT-04 | Phase 1 | Pending |
+| CRIT-05 | Phase 1 | Complete |
 | CRIT-06 | Phase 1 | Complete |
 | CONT-01 | Phase 2 | Pending |
 | CONT-02 | Phase 2 | Pending |
