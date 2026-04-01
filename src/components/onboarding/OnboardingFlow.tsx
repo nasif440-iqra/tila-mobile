@@ -31,18 +31,19 @@ import { LetterReveal } from "./steps/LetterReveal";
 import { LetterAudio } from "./steps/LetterAudio";
 import { LetterQuiz } from "./steps/LetterQuiz";
 import { Finish } from "./steps/Finish";
+import { NameMotivation } from "./steps/NameMotivation";
 
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 10;
 
 const STEP = {
   WELCOME: 0, TILAWAT: 1, HADITH: 2, STARTING_POINT: 3,
   BISMILLAH: 4, LETTER_REVEAL: 5, LETTER_AUDIO: 6,
-  LETTER_QUIZ: 7, FINISH: 8,
+  LETTER_QUIZ: 7, NAME_MOTIVATION: 8, FINISH: 9,
 } as const;
 
 const STEP_NAMES = [
   'welcome', 'tilawat', 'hadith', 'starting_point', 'bismillah',
-  'letter_reveal', 'letter_audio', 'letter_quiz', 'finish',
+  'letter_reveal', 'letter_audio', 'letter_quiz', 'name_motivation', 'finish',
 ] as const;
 
 export function OnboardingFlow() {
@@ -53,7 +54,7 @@ export function OnboardingFlow() {
   const [step, setStep] = useState(0);
   const [finishing, setFinishing] = useState(false);
   const [finishError, setFinishError] = useState(false);
-  const [draft, setDraft] = useState<OnboardingDraft>({ startingPoint: null });
+  const [draft, setDraft] = useState<OnboardingDraft>({ startingPoint: null, userName: '', motivation: null });
   const [hasPlayedAudio, setHasPlayedAudio] = useState(false);
   const letterRevealTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const onboardingStartRef = useRef(Date.now());
@@ -103,9 +104,13 @@ export function OnboardingFlow() {
         onboardingVersion: 2,
         startingPoint: draft.startingPoint,
         commitmentComplete: true,
+        name: draft.userName.trim() || null,
+        motivation: draft.motivation,
       });
       track('onboarding_completed', {
         starting_point: draft.startingPoint ?? 'unknown',
+        motivation: draft.motivation ?? 'skipped',
+        has_name: !!draft.userName.trim(),
         duration_seconds: Math.round((Date.now() - onboardingStartRef.current) / 1000),
       });
       playOnboardingComplete();
@@ -148,6 +153,7 @@ export function OnboardingFlow() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         bounces={false}
+        keyboardShouldPersistTaps="handled"
       >
         <Animated.View
           key={step}
@@ -177,6 +183,15 @@ export function OnboardingFlow() {
             />
           )}
           {step === STEP.LETTER_QUIZ && <LetterQuiz onNext={goNext} />}
+          {step === STEP.NAME_MOTIVATION && (
+            <NameMotivation
+              userName={draft.userName}
+              motivation={draft.motivation}
+              onChangeName={(value) => setDraft((d) => ({ ...d, userName: value }))}
+              onSelectMotivation={(value) => setDraft((d) => ({ ...d, motivation: value as OnboardingDraft["motivation"] }))}
+              onNext={goNext}
+            />
+          )}
           {step === STEP.FINISH && (
             <Finish
               onFinish={handleFinish}

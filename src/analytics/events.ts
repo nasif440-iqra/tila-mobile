@@ -7,11 +7,13 @@ export interface AppOpenedProps {
 
 export interface OnboardingStepViewedProps {
   step_index: number;
-  step_name: 'welcome' | 'tilawat' | 'hadith' | 'starting_point' | 'bismillah' | 'letter_reveal' | 'letter_audio' | 'letter_quiz' | 'finish';
+  step_name: 'welcome' | 'tilawat' | 'hadith' | 'starting_point' | 'bismillah' | 'letter_reveal' | 'letter_audio' | 'letter_quiz' | 'name_motivation' | 'finish';
 }
 
 export interface OnboardingCompletedProps {
   starting_point: string;
+  motivation: string;
+  has_name: boolean;
   duration_seconds: number;
 }
 
