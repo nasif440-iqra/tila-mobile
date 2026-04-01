@@ -22,33 +22,39 @@ The app must never crash, hang, or lose user progress. Every session — from fi
 
 ### Active
 
-- [ ] Database initialization never hangs — shows error screen on failure
-- [ ] Quiz hook correctly resets between lesson transitions
-- [ ] Streak counter is race-condition-proof under rapid taps
-- [ ] Home screen routing is stable across midnight boundary
-- [ ] RevenueCat fails gracefully when API keys are missing or SDK is unconfigured
-- [ ] Mastery engine has correct imports and handles edge cases
-- [ ] Database migrations distinguish real errors from "column already exists"
-- [ ] Audio playback errors are caught and handled (no unhandled rejections)
-- [ ] Type safety across hooks and engine — eliminate critical `any` types
-- [ ] Error boundaries catch component-level crashes with recovery UI
-- [ ] Subscription state handles offline gracefully
-- [ ] Test coverage for critical paths (mastery, progress, habit, quiz flow)
+- [ ] DB init timeout + recovery UI (not hanging forever)
+- [ ] Quiz hook ref reset on lesson transition
+- [ ] Streak race condition fix under rapid taps
+- [ ] Home screen midnight routing guard
+- [ ] Migration error discrimination (align with later migration patterns)
+- [ ] Audio playback try/catch on play() calls
+- [ ] Unhandled promise rejection audit
+- [ ] Selective screen-level error boundaries (not blanket-wrapping)
+- [ ] Offline entitlement behavior + restore purchases surface
+- [ ] Critical `any` type removal in hook interfaces
+- [ ] Regression tests for fixed flows
+- [ ] Launch ops: privacy policy, App Store metadata, iPad QA, production build
 
 ### Out of Scope
 
-- Dark mode activation — tokens exist but not this milestone's concern
+- Dark mode activation — tokens exist but cosmetic, not stability
 - New features or curriculum content — stability only
 - Cloud sync / backend — future milestone
 - Push notifications — future milestone
-- UI redesign — already done in previous milestone
+- UI redesign — completed in previous milestone
+- Full .js → .ts engine migration — minimize blast radius
+- ATT prompt — PostHog does first-party analytics, declare "No tracking"
+- RevenueCat init rewrite — already degrades gracefully when unconfigured
+- Mastery engine getLetter import — already imports correctly (stale finding)
 
 ## Context
 
-- App has been through a UI overhaul milestone (~90% complete, 2 plans unexecuted)
-- First Android build shipped; iOS pending Apple Developer enrollment
-- Expert code review identified 8 areas of concern: fat screens, weak typing, duplicate state loading, half-built audio, prototype leakage, weak error handling, inconsistent theme, missing tooling
-- Deep codebase audit (2026-03-31) found 5 critical bugs and ~10 secondary issues
+- App is a layered Expo app with file-based routing, custom hooks, and local SQLite — not a messy prototype
+- RevenueCat already degrades when unconfigured (skips setup). Real gap is edge-case UX, not total absence
+- Sentry error boundary already wraps root. Question is targeted screen-level isolation
+- Vitest suite exists with tests for mastery, quiz, schema, home streak, error boundaries. Gap is specific untested risky flows
+- Subscription/offline handling partly implemented (loading, unknown, refresh catch). Gap is entitlement edge cases
+- Home screen is a large file with route decisions tied to date state — likely hotspot
 - App Store review requires reliability — crashes or hangs during review = rejection
 
 ## Constraints
@@ -63,9 +69,11 @@ The app must never crash, hang, or lose user progress. Every session — from fi
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Full hardening scope (not just critical 5) | App Store review — need comprehensive reliability | — Pending |
+| Narrow scope to repo-backed items only | Proposal review scored 6/10 — dropped stale/overstated items | ✓ Good |
 | Fix bugs in existing .js engine files, don't migrate to .ts | Minimize blast radius, stability milestone not refactor | — Pending |
-| Add error boundaries at screen level | Catch crashes per-screen, not whole app | — Pending |
+| Selective screen boundaries, not blanket wrapping | Root Sentry boundary already exists — add only where expensive async/monetization lives | — Pending |
+| App Store compliance as separate launch checklist | Operational tasks, not engineering project — don't mix with code hardening | — Pending |
+| Build on existing RevenueCat handling | Init already degrades gracefully — focus on edge-case UX, not rewrite | — Pending |
 
 ## Evolution
 
