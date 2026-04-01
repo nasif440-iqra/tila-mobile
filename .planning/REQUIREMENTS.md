@@ -22,9 +22,9 @@
 
 ### Monetization Hardening
 
-- [ ] **MON-01**: Offline entitlement behavior defined — app handles subscription state when network is unavailable
+- [x] **MON-01**: Offline entitlement behavior defined — app handles subscription state when network is unavailable
 - [x] **MON-02**: Restore purchases surface clearly reachable outside the paywall flow
-- [ ] **MON-03**: Restore/purchase failure states instrumented with analytics events
+- [x] **MON-03**: Restore/purchase failure states instrumented with analytics events
 
 ### Type & Test Cleanup
 
@@ -74,9 +74,9 @@
 | CONT-01 | Phase 2 | Complete |
 | CONT-02 | Phase 2 | Complete |
 | CONT-03 | Phase 2 | Complete |
-| MON-01 | Phase 3 | Pending |
+| MON-01 | Phase 3 | Complete |
 | MON-02 | Phase 3 | Complete |
-| MON-03 | Phase 3 | Pending |
+| MON-03 | Phase 3 | Complete |
 | QUAL-01 | Phase 4 | Pending |
 | QUAL-02 | Phase 4 | Pending |
 | QUAL-03 | Phase 4 | Pending |

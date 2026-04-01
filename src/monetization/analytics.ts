@@ -5,6 +5,7 @@ import type {
   PurchaseCompletedProps,
   PurchaseFailedProps,
   RestoreCompletedProps,
+  RestoreFailedProps,
   EntitlementChangedProps,
 } from "../analytics/events";
 
@@ -26,6 +27,10 @@ export function trackPurchaseFailed(props: PurchaseFailedProps): void {
 
 export function trackRestoreCompleted(props: RestoreCompletedProps): void {
   track("restore_completed", props);
+}
+
+export function trackRestoreFailed(props: RestoreFailedProps): void {
+  track("restore_failed", props);
 }
 
 export function trackEntitlementChanged(props: EntitlementChangedProps): void {

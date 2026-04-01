@@ -71,7 +71,7 @@ export interface PaywallShownProps {
 
 export interface PaywallResultProps {
   trigger: "lesson_7_summary" | "lesson_locked" | "expired_card" | "home_upsell";
-  result: "purchased" | "restored" | "cancelled" | "error";
+  result: "purchased" | "restored" | "cancelled" | "error" | "not_presented";
 }
 
 export interface PurchaseCompletedProps {
@@ -91,6 +91,11 @@ export interface PurchaseFailedProps {
 export interface RestoreCompletedProps {
   success: boolean;
   entitlements_restored: number;
+}
+
+export interface RestoreFailedProps {
+  error_code?: string;
+  error_message?: string;
 }
 
 export interface TrialExpiredProps {
@@ -123,6 +128,7 @@ export interface EventMap {
   purchase_completed: PurchaseCompletedProps;
   purchase_failed: PurchaseFailedProps;
   restore_completed: RestoreCompletedProps;
+  restore_failed: RestoreFailedProps;
   trial_expired: TrialExpiredProps;
   entitlement_changed: EntitlementChangedProps;
   scholarship_link_tapped: ScholarshipLinkTappedProps;
