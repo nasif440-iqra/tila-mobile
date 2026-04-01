@@ -76,7 +76,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Remove any types from useLessonQuiz + type JS generator boundary (QUAL-01)
-- [ ] 04-02-PLAN.md — Verify regression test suite + install coverage tooling with baseline (QUAL-02, QUAL-03)
+- [x] 04-02-PLAN.md — Verify regression test suite + install coverage tooling with baseline (QUAL-02, QUAL-03)
 
 ### Phase 5: Launch Ops Checklist
 **Goal**: All non-code App Store submission requirements are met and a production build is verified on device
