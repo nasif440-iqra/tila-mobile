@@ -6,42 +6,46 @@
 
 ---
 
-## Fix 1: Offline entitlement behavior (MON-01)
+## Fix 1: Offline entitlement — verification + loading-state UX (MON-01)
 
 **File:** `src/monetization/provider.tsx`, `src/monetization/hooks.ts`
 
-**What happens now:** When the app launches offline, `Purchases.getCustomerInfo()` rejects, the `.catch()` sets `loading: false`, and `customerInfo` stays `null`. With null info, `deriveStage()` returns `"unknown"`, and `isPremiumActive` is `false`. So a paying subscriber who opens the app offline cannot access premium lessons — they're treated as free-tier.
+**What happens now:** When the app launches offline, `Purchases.getCustomerInfo()` is called on mount. If it rejects, the `.catch()` sets `loading: false` and `customerInfo` stays `null`. With null info, `deriveStage()` returns `"unknown"` and `isPremiumActive` is `false`. So a rejected init can lock premium lessons for paying subscribers.
 
-**Current behavior chain:**
+**Current behavior chain (if getCustomerInfo rejects):**
 ```
 Offline launch → getCustomerInfo() rejects → customerInfo = null → stage = "unknown" → isPremiumActive = false → premium lessons locked
 ```
 
-**Why it matters:** A subscriber who paid $8.99/mo opens the app on a plane and can't access their lessons. That's a 1-star review and a refund request.
+**However — this scenario may be overstated.** RevenueCat's SDK caches `CustomerInfo` between app launches. Their docs say `getCustomerInfo()` returns cached data when offline on a configured SDK — it does NOT reject in ordinary offline situations. It only rejects when the SDK was never configured (missing API key) or on truly exceptional errors. So the most common offline case (subscriber opens app on a plane) should already work via SDK cache.
 
-**What RevenueCat actually does:** The SDK caches the last known `CustomerInfo` on-device. When offline, `getCustomerInfo()` returns the cached data — it does NOT reject. It only rejects when the SDK was never configured (missing API key) or on truly exceptional errors. So the most likely offline scenario is already handled by the SDK cache.
+**The more likely real UX issue:** `useCanAccessLesson()` returns `false` for premium lessons while `loading` is `true` (before `getCustomerInfo()` resolves). This means a subscriber sees a brief flash where premium lessons appear locked during the loading state, then unlock once the cached info resolves. This is a more probable user-facing issue than a true offline rejection.
 
-**The real gap:** The code handles the rejection path (`catch → loading: false`) but does NOT set `customerInfo` from cache. If `getCustomerInfo()` does reject on a configured SDK, the user loses access. The fix should be minimal:
+**Proposed fix — verify first, patch only if proven:**
 
-**Proposed fix:**
-- In the `.catch()` handler, attempt to read from SDK cache before falling back to null
-- RevenueCat's `Purchases.getCustomerInfo()` already returns cached data when offline on a configured SDK — verify this works correctly in Expo by testing with airplane mode
-- If the SDK throws despite being configured (corrupted cache, first-ever launch with no network), fall back to `stage: "unknown"` with `loading: false` — this is the current behavior and is acceptable for edge cases
-- **Do NOT build a custom caching layer** — RevenueCat already caches. Don't duplicate what the SDK does.
-- Add a brief note in the SUMMARY about what was verified vs what was changed
+1. **Verification task (primary):** Test airplane-mode behavior in an actual Expo build on a physical device. Launch the app offline after a previous successful online session. Document whether `getCustomerInfo()` resolves with cached data or rejects.
+
+2. **If cache works correctly (expected):** No code change needed for the rejection path. The existing `.catch()` is sufficient as a safety net for truly exceptional failures (corrupted cache, first-ever launch offline).
+
+3. **Loading-state UX fix (do regardless):** In `useCanAccessLesson()`, while `loading` is `true`, return `true` for premium lessons instead of `false`. This prevents the false-lock flash where paid content appears locked during init. A brief "assume premium during loading" is better UX than a brief "lock everything during loading."
+
+4. **Do NOT build a custom caching layer.** RevenueCat already caches. Don't duplicate what the SDK does.
+
+5. **Document results:** SUMMARY must state what was verified (airplane-mode test result) vs what was changed (loading-state UX fix).
 
 **What "fixed" looks like:**
-- User in airplane mode with a previously-synced subscription can still access premium lessons
-- App shows cached subscription state, not "unknown"
-- No custom caching layer added — relies on RevenueCat's built-in cache
+- User in airplane mode with a previously-synced subscription can access premium lessons (verified via device test)
+- No brief false-lock flash during subscription loading state
+- No custom caching layer added
+- SUMMARY documents verification results
 
 ---
 
 ## Fix 2: Standalone restore purchases surface (MON-02)
 
-**File:** New — needs a UI surface accessible outside the paywall
+**File:** `app/(tabs)/progress.tsx` (add restore button to existing Progress tab)
 
-**What happens now:** Restore purchases is available inside the RevenueCat paywall sheet (via `PAYWALL_RESULT.RESTORED`). But there is no standalone "Restore Purchases" button that a user can find without hitting the paywall first. Apple requires this — if a user re-installs the app or switches devices, they need a way to restore without re-subscribing.
+**What happens now:** Restore purchases is available inside the RevenueCat paywall sheet (via `PAYWALL_RESULT.RESTORED`). But there is no standalone "Restore Purchases" button that a user can find without hitting the paywall first. There is no settings screen, no profile screen, no account screen — just Home and Progress tabs.
 
 **Current app structure:**
 ```
@@ -49,57 +53,63 @@ Tab navigator:
   - Home (index.tsx) — lesson grid
   - Progress (progress.tsx) — mastery stats
 ```
-There is no settings screen, no profile screen, no account screen.
 
-**Why it matters:** Apple App Store Review Guideline 3.1.2 requires apps with auto-renewable subscriptions to include a mechanism to restore purchases. Having it only inside the paywall is borderline — Apple reviewers sometimes accept it, sometimes reject it. A standalone button eliminates this risk entirely.
+**Why it matters:** Apple's guidelines and RevenueCat's own docs recommend that all apps with auto-renewable subscriptions include a mechanism to restore purchases. Having it only inside the paywall is borderline — a standalone button is a conservative hardening choice that eliminates ambiguity during review.
 
-**Proposed fix — options (product decision for founder):**
+**Note on policy framing:** This is a good conservative hardening choice, not a directly proven Apple rejection rule. But the risk/effort ratio favors doing it — it's a small change with clear upside.
 
-- **Option A: Add to Progress tab.** The Progress screen already shows user stats. Add a "Restore Purchases" button at the bottom, below the mastery content. Simple, no new screens needed.
-
-- **Option B: Add a minimal settings/account section.** Create a small settings area (accessible from home or progress screen via a gear icon) with: Restore Purchases, Manage Subscription (opens managementURL), Privacy Policy link (needed for Phase 5). More work, but creates a home for future settings.
-
-- **Option C: Add to the paywall trigger screen (lesson locked screen).** When a locked lesson shows the subscribe CTA, also show a "Already subscribed? Restore" link. Discoverable, but still paywall-adjacent.
+**Decision: Option A — Progress tab.**
+The Progress screen already exists and shows user stats. Add a "Restore Purchases" button at the bottom, below the mastery content. This is the smallest change, needs no new screens, and is clearly outside the paywall flow. Option B (settings area) is overkill for this phase. Option C (lesson locked screen) keeps restore paywall-adjacent and doesn't fully solve discoverability.
 
 **Implementation:**
-- Call `Purchases.restorePurchases()` — this is the RevenueCat SDK method
-- On success: call `trackRestoreCompleted()` (analytics already exists), refresh subscription state
-- On failure: show user-facing error message (Alert), call `trackPurchaseFailed()` or a new `trackRestoreFailed()` event
-- Show loading indicator during restore (it's a network call)
+- Add a "Restore Purchases" button at the bottom of `app/(tabs)/progress.tsx`
+- Call `Purchases.restorePurchases()` — this is the correct RevenueCat SDK method
+- On success: call `trackRestoreCompleted()` (analytics function already exists), call `refresh()` from `useSubscription()` to update state
+- On failure: show Alert with clear error message, call `trackRestoreFailed()` (new event — see Fix 3)
+- Show loading indicator during restore (it's a network call — disable button + ActivityIndicator)
+- Only show the button when subscription state is not actively premium (no need to restore if already subscribed)
 
 **What "fixed" looks like:**
-- User can find and tap "Restore Purchases" without needing to hit the paywall first
+- User can find and tap "Restore Purchases" on the Progress tab without needing the paywall
 - Restore calls the correct RevenueCat method
 - Success refreshes subscription state and tracks analytics
 - Failure shows clear error message and tracks analytics
 
 ---
 
-## Fix 3: Purchase/restore failure analytics and error messages (MON-03)
+## Fix 3: Failure analytics completeness and error messages (MON-03)
 
 **File:** `src/monetization/paywall.ts`, `src/monetization/analytics.ts`, `src/analytics/events.ts`
 
-**What happens now:** The paywall function `presentPaywall()` already handles the error case:
-- `PAYWALL_RESULT.ERROR` → tracks `paywall_result` with `result: "error"` + returns `{ result: "error", accessGranted: false }`
-- Outer catch → shows `Alert.alert("Couldn't verify your subscription", ...)` + tracks `paywall_result` error
+**What already works (don't break these):**
+- `PAYWALL_RESULT.PURCHASED` → tracks `purchase_completed` with product details ✓
+- `PAYWALL_RESULT.RESTORED` → tracks `restore_completed` with entitlement count ✓
+- `PAYWALL_RESULT.CANCELLED` → tracks `paywall_result` with `result: "cancelled"` ✓
+- Outer catch (SDK/network exception) → shows `Alert.alert(...)` + tracks `paywall_result: error` ✓
 
-But there are gaps:
-1. **No `restore_failed` event.** `trackRestoreCompleted` exists but there's no `trackRestoreFailed` for when restore fails.
-2. **No `purchase_failed` tracking from the paywall result.** `trackPurchaseFailed` function exists in analytics.ts but is never called — the ERROR case only tracks `paywall_result`, not `purchase_failed`.
-3. **The standalone restore (Fix 2) needs its own failure path** — the paywall's error handling doesn't cover standalone restore.
+**The gaps — narrower than the original spec implied:**
+
+1. **`PAYWALL_RESULT.ERROR` does not call `trackPurchaseFailed`.** The `trackPurchaseFailed` function exists in `analytics.ts` but is never called. The ERROR case only tracks `paywall_result` with `result: "error"` and returns silently — no Alert, no `purchase_failed` event.
+
+2. **No `restore_failed` event type.** `events.ts` has `RestoreCompletedProps` and `trackRestoreCompleted`, but no `restore_failed` equivalent. The standalone restore handler (Fix 2) needs a failure analytics path.
+
+3. **`PAYWALL_RESULT.NOT_PRESENTED` is a blind spot.** Currently returns `{ result: "not_presented", accessGranted: false }` with no analytics event and no user-facing message. This can happen due to RevenueCat dashboard configuration issues or SDK problems. It should be instrumented so it shows up in PostHog.
+
+4. **The direct `PAYWALL_RESULT.ERROR` case has no user-facing message.** The outer catch block shows an Alert, but the in-switch ERROR case does not. So a paywall-returned error is silent to the user, while a thrown exception shows a message. Both should show something.
 
 **Proposed fix:**
-- Add a `restore_failed` event type to `src/analytics/events.ts`
-- Add `trackRestoreFailed` to `src/monetization/analytics.ts`
-- In the standalone restore handler (Fix 2): on failure, call `trackRestoreFailed()` + show Alert
-- In `presentPaywall()` ERROR case: also call `trackPurchaseFailed()` so both event types fire (paywall_result for the funnel, purchase_failed for the specific error)
-- Ensure every failure path has both: (a) a user-facing message and (b) an analytics event
+- Add `restore_failed` event type to `src/analytics/events.ts` + `trackRestoreFailed` to `src/monetization/analytics.ts`
+- In `PAYWALL_RESULT.ERROR` case: add `trackPurchaseFailed()` call AND an `Alert.alert()` for user visibility
+- In `PAYWALL_RESULT.NOT_PRESENTED` case: add a `trackPaywallResult({ trigger, result: "not_presented" })` call so dashboard/config issues are visible in analytics
+- In standalone restore handler (Fix 2): on failure, call `trackRestoreFailed()` + show Alert
+- **Principle:** Every failure-ish outcome must have both (a) an analytics event and (b) a user-facing message if the user initiated the action
 
 **What "fixed" looks like:**
-- Failed purchase fires both `paywall_result: error` and `purchase_failed` events
-- Failed restore fires `restore_failed` event (new) with error details
-- Every failure shows user a clear message (not silent)
-- PostHog dashboard can track purchase and restore failure rates
+- `PAYWALL_RESULT.ERROR` fires both `paywall_result: error` and `purchase_failed`, shows Alert
+- `PAYWALL_RESULT.NOT_PRESENTED` fires `paywall_result: not_presented` (visible in dashboard)
+- Standalone restore failure fires `restore_failed` event, shows Alert
+- PostHog dashboard can track all failure and non-presentation rates
+- No silent failure paths remain for user-initiated purchase/restore actions
 
 ---
 
@@ -107,9 +117,9 @@ But there are gaps:
 
 | Fix | Test description |
 |-----|-----------------|
-| Fix 1 | Verify offline behavior: when `getCustomerInfo` is configured, cached data is honored. Source analysis: no custom caching layer added. |
-| Fix 2 | Verify restore button exists outside paywall. Verify it calls `Purchases.restorePurchases()`. Verify success/failure paths track analytics. |
-| Fix 3 | Verify `restore_failed` event type exists. Verify `trackPurchaseFailed` is called in paywall ERROR case. Source analysis for complete failure coverage. |
+| Fix 1 | Source analysis: `useCanAccessLesson` returns `true` during loading for premium lessons. No custom caching layer added. Document airplane-mode verification result in SUMMARY. |
+| Fix 2 | Verify restore button exists in Progress tab. Verify it calls `Purchases.restorePurchases()`. Verify success calls `trackRestoreCompleted` + `refresh`. Verify failure calls `trackRestoreFailed` + shows Alert. |
+| Fix 3 | Verify `restore_failed` event type exists in events.ts. Verify `trackPurchaseFailed` is called in `PAYWALL_RESULT.ERROR` case. Verify `PAYWALL_RESULT.NOT_PRESENTED` fires analytics event. Verify ERROR case shows Alert. Source analysis for complete failure coverage — no silent user-initiated failure paths. |
 
 ---
 
@@ -117,15 +127,15 @@ But there are gaps:
 
 | # | Fix | Severity | Files | Risk if unfixed |
 |---|-----|----------|-------|-----------------|
-| 1 | Offline entitlement | HIGH | src/monetization/provider.tsx | Paying users locked out offline |
-| 2 | Restore purchases surface | HIGH | New UI + src/monetization/ | App Store rejection risk |
-| 3 | Failure analytics + messages | MEDIUM | src/monetization/paywall.ts, analytics | Invisible failure rates |
+| 1 | Offline verification + loading-state UX | MEDIUM | src/monetization/hooks.ts | Brief false-lock flash during loading |
+| 2 | Restore purchases on Progress tab | HIGH | app/(tabs)/progress.tsx | App Store review risk |
+| 3 | Failure analytics completeness | MEDIUM | src/monetization/paywall.ts, analytics, events | Silent failures + invisible NOT_PRESENTED |
 
-**Dependencies:** Fix 2 depends on deciding WHERE the restore button goes (product decision). Fix 3 depends partly on Fix 2 (standalone restore failure path). Fix 1 is independent.
+**Dependencies:** Fix 3 depends partly on Fix 2 (standalone restore failure path). Fix 1 is independent.
 
-**Open product decision:** Where does "Restore Purchases" live? Options A (Progress tab), B (new settings area), or C (lesson locked screen). This needs founder input before planning.
+**Product decision resolved:** Restore button goes on Progress tab (Option A). Simplest change, clearly outside paywall, no new screens.
 
 ---
 
 *Spec created: 2026-04-01*
-*For expert review before implementation*
+*Revised: 2026-04-01 after expert review — MON-01 reframed as verification + loading UX (not cache implementation), MON-02 locked to Progress tab, MON-03 expanded to cover NOT_PRESENTED blind spot and clarified what already works vs what's missing*

@@ -1,7 +1,7 @@
 # Phase 3: Monetization Hardening - Context
 
 **Gathered:** 2026-04-01
-**Status:** Ready for planning (pending expert review + restore button product decision)
+**Status:** Ready for planning
 
 <domain>
 ## Phase Boundary
@@ -13,23 +13,27 @@ Harden subscription flows for offline use, add a standalone restore purchases su
 <decisions>
 ## Implementation Decisions
 
-### Fix 1: Offline entitlement
+### Fix 1: Offline verification + loading-state UX
 - **D-01:** Do NOT build a custom caching layer — RevenueCat SDK already caches CustomerInfo on-device
-- **D-02:** Verify the SDK returns cached data when offline (it should — this is the primary scenario)
-- **D-03:** If SDK throws despite being configured (edge case), fall back to `stage: "unknown"` — acceptable
-- **D-04:** Document what was verified vs what was changed in SUMMARY
+- **D-02:** Primary task is VERIFICATION: test airplane-mode in actual Expo build, document result
+- **D-03:** Code change: in `useCanAccessLesson()`, return `true` during loading for premium lessons (prevents false-lock flash)
+- **D-04:** If SDK throws despite being configured (edge case), fall back to `stage: "unknown"` — acceptable
+- **D-05:** SUMMARY must document what was verified vs what was changed
 
-### Fix 2: Restore purchases surface
-- **D-05:** PENDING — where does restore button go? (Option A: Progress tab, Option B: new settings area, Option C: lesson locked screen)
-- **D-06:** Call `Purchases.restorePurchases()` — this is the correct RevenueCat method
-- **D-07:** Show loading indicator during restore (network call)
-- **D-08:** Success: call `trackRestoreCompleted()` + refresh subscription state
-- **D-09:** Failure: show Alert with clear message + call `trackRestoreFailed()` (new event)
+### Fix 2: Restore purchases surface — Progress tab (Option A, locked)
+- **D-06:** Add "Restore Purchases" button to `app/(tabs)/progress.tsx` — bottom of screen, below mastery content
+- **D-07:** Call `Purchases.restorePurchases()` — this is the correct RevenueCat method
+- **D-08:** Show loading indicator during restore (disable button + ActivityIndicator)
+- **D-09:** Success: call `trackRestoreCompleted()` + `refresh()` from useSubscription
+- **D-10:** Failure: show Alert with clear message + call `trackRestoreFailed()` (new event)
+- **D-11:** Only show button when subscription state is not actively premium
 
-### Fix 3: Failure analytics
-- **D-10:** Add `restore_failed` event type to events.ts + `trackRestoreFailed` to analytics.ts
-- **D-11:** In paywall ERROR case, also call `trackPurchaseFailed()` (currently only fires `paywall_result`)
-- **D-12:** Every failure path must have both user-facing message AND analytics event
+### Fix 3: Failure analytics completeness
+- **D-12:** Add `restore_failed` event type to events.ts + `trackRestoreFailed` to analytics.ts
+- **D-13:** In `PAYWALL_RESULT.ERROR`: add `trackPurchaseFailed()` call AND Alert.alert() (currently silent to user)
+- **D-14:** In `PAYWALL_RESULT.NOT_PRESENTED`: add `trackPaywallResult({ trigger, result: "not_presented" })` (currently no event)
+- **D-15:** Every user-initiated failure path must have both user-facing message AND analytics event
+- **D-16:** Purchase/restore SUCCESS analytics already work — do not break them
 
 ### Claude's Discretion
 - Exact Alert.alert message wording for restore failures
@@ -83,7 +87,7 @@ Harden subscription flows for offline use, add a standalone restore purchases su
 <specifics>
 ## Specific Ideas
 
-No specific preferences beyond what's in the spec. Expert review + product decision on restore button location pending.
+No specific preferences beyond what's in the spec. Restore button location decided: Progress tab (Option A).
 
 </specifics>
 
