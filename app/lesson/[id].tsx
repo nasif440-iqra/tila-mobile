@@ -104,82 +104,88 @@ export default function LessonScreen() {
         preMasteryStates.set(key, deriveMasteryState(entity, today));
       }
 
-      // Save to database with quizResultItems for mastery pipeline
-      const attempts = mapQuizResultsToAttempts(results.questions);
-      await progress.completeLesson(
-        lesson!.id,
-        accuracy,
-        passed,
-        attempts,
-        results.questions  // QuizResultItem[] -- feeds mastery pipeline
-      );
+      try {
+        // Save to database with quizResultItems for mastery pipeline
+        const attempts = mapQuizResultsToAttempts(results.questions);
+        const { updatedMastery } = await progress.completeLesson(
+          lesson!.id,
+          accuracy,
+          passed,
+          attempts,
+          results.questions  // QuizResultItem[] -- feeds mastery pipeline
+        );
 
-      // Record premium lesson grant if applicable
-      if (passed && lesson!.id > FREE_LESSON_CUTOFF && isPremiumActive) {
-        await savePremiumLessonGrant(db, lesson!.id);
-      }
-
-      // Record practice for habit/wird on pass
-      if (passed) {
-        await recordPractice();
-
-        // Check if daily goal was just hit
-        const dailyGoalMinutes = progress.onboardingDailyGoal ?? null;
-        const goalLessons = dailyGoalMinutes ? (dailyGoalMinutes <= 3 ? 1 : dailyGoalMinutes <= 5 ? 2 : 3) : 1;
-        const todayCount = (progress.habit?.todayLessonCount ?? 0) + 1; // +1 for the lesson just completed
-        if (todayCount >= goalLessons && todayCount - 1 < goalLessons) {
-          setGoalCompleted(true);
+        // Record premium lesson grant if applicable
+        if (passed && lesson!.id > FREE_LESSON_CUTOFF && isPremiumActive) {
+          await savePremiumLessonGrant(db, lesson!.id);
         }
-      }
 
-      const durationSeconds = lessonStartedRef.current
-        ? Math.round((Date.now() - lessonStartedRef.current) / 1000)
-        : 0;
+        // Record practice for habit/wird on pass
+        if (passed) {
+          await recordPractice();
 
-      if (passed) {
-        track('lesson_completed', {
-          lesson_id: lesson!.id,
-          phase: lesson!.phase,
-          accuracy,
-          duration_seconds: durationSeconds,
-          total_questions: results.total,
-          streak_peak: 0,
-        });
-      } else {
-        track('lesson_failed', {
-          lesson_id: lesson!.id,
-          phase: lesson!.phase,
-          accuracy,
-          duration_seconds: durationSeconds,
-          total_questions: results.total,
-        });
-      }
+          // Check if daily goal was just hit
+          const dailyGoalMinutes = progress.onboardingDailyGoal ?? null;
+          const goalLessons = dailyGoalMinutes ? (dailyGoalMinutes <= 3 ? 1 : dailyGoalMinutes <= 5 ? 2 : 3) : 1;
+          const todayCount = (progress.habit?.todayLessonCount ?? 0) + 1; // +1 for the lesson just completed
+          if (todayCount >= goalLessons && todayCount - 1 < goalLessons) {
+            setGoalCompleted(true);
+          }
+        }
 
-      // Detect newly mastered letters by comparing pre/post mastery states
-      const postMastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
-      const newlyMastered: Array<{ letter: string; name: string }> = [];
+        const durationSeconds = lessonStartedRef.current
+          ? Math.round((Date.now() - lessonStartedRef.current) / 1000)
+          : 0;
 
-      for (const [key, entity] of Object.entries(postMastery.entities)) {
-        const oldState = preMasteryStates.get(key) ?? "introduced";
-        const newState = deriveMasteryState(entity as any, today);
-        if (newState === "retained" && oldState !== "retained") {
-          const parsed = parseEntityKey(key);
-          if (parsed.type === "letter" && typeof parsed.rawId === "number") {
-            const letterData = getLetter(parsed.rawId);
-            if (letterData) {
-              newlyMastered.push({ letter: letterData.letter, name: letterData.name });
+        if (passed) {
+          track('lesson_completed', {
+            lesson_id: lesson!.id,
+            phase: lesson!.phase,
+            accuracy,
+            duration_seconds: durationSeconds,
+            total_questions: results.total,
+            streak_peak: 0,
+          });
+        } else {
+          track('lesson_failed', {
+            lesson_id: lesson!.id,
+            phase: lesson!.phase,
+            accuracy,
+            duration_seconds: durationSeconds,
+            total_questions: results.total,
+          });
+        }
+
+        // Detect newly mastered letters using fresh transaction output (per STAB-02)
+        const newlyMastered: Array<{ letter: string; name: string }> = [];
+
+        for (const [key, entity] of Object.entries(updatedMastery.entities)) {
+          const oldState = preMasteryStates.get(key) ?? "introduced";
+          const newState = deriveMasteryState(entity as any, today);
+          if (newState === "retained" && oldState !== "retained") {
+            const parsed = parseEntityKey(key);
+            if (parsed.type === "letter" && typeof parsed.rawId === "number") {
+              const letterData = getLetter(parsed.rawId);
+              if (letterData) {
+                newlyMastered.push({ letter: letterData.letter, name: letterData.name });
+              }
             }
           }
         }
+
+        if (newlyMastered.length > 0) {
+          setMasteredLetters(newlyMastered);
+          setQuizResults({ ...results, accuracy, passed });
+          setStage("mastery-celebration");
+          return;
+        }
+      } catch (err) {
+        Sentry.captureException(err, { extra: { lessonId: lesson!.id, accuracy, passed } });
       }
 
+      // Always transition to results — even if DB save failed, show the user their results
       setQuizResults({ ...results, accuracy, passed });
-      if (newlyMastered.length > 0) {
-        setMasteredLetters(newlyMastered);
-        setStage("mastery-celebration");
-      } else {
-        setStage("summary");
-      }
+      setStage("summary");
     },
     [lesson, progress, recordPractice, isPremiumActive, db]
   );
