@@ -11,7 +11,10 @@ export function useSubscription(): SubscriptionState {
 export function useCanAccessLesson(lessonId: number): boolean {
   const { isPremiumActive, loading } = useSubscription();
   if (lessonId <= FREE_LESSON_CUTOFF) return true;
-  if (loading) return false;
+  // While subscription state is loading, assume premium access to prevent
+  // a brief false-lock flash where paid content appears locked during init.
+  // RevenueCat SDK caches CustomerInfo — loading resolves quickly from cache.
+  if (loading) return true;
   return isPremiumActive;
 }
 
