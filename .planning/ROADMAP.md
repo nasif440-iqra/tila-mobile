@@ -41,6 +41,9 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 **Goal**: Lesson completion is atomic and mastery celebrations always display correctly
 **Depends on**: Nothing (first phase)
 **Requirements**: STAB-01, STAB-02
+**Plans:** 1 plan
+Plans:
+- [ ] 01-01-PLAN.md — Atomic completion transaction + fresh mastery celebration detection
 **Success Criteria** (what must be TRUE):
   1. `completeLesson` wraps all DB writes in a single `withExclusiveTransactionAsync` call
   2. The completion transaction returns fresh mastery state that the UI uses directly for celebration display
@@ -142,7 +145,7 @@ Phase 2 (cleanup) ───────┘                                      
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Lesson Flow Hardening | 0/TBD | Not started | - |
+| 1. Lesson Flow Hardening | 0/1 | Not started | - |
 | 2. Repo Cleanup & Design Consistency | 0/TBD | Not started | - |
 | 3. Onboarding & Personalization | 0/TBD | Not started | - |
 | 4. Value Communication | 0/TBD | Not started | - |
