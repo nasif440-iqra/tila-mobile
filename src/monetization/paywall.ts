@@ -1,7 +1,7 @@
 import RevenueCatUI, { PAYWALL_RESULT } from "react-native-purchases-ui";
 import Purchases from "react-native-purchases";
 import { Alert } from "react-native";
-import { trackPaywallShown, trackPaywallResult, trackPurchaseCompleted, trackRestoreCompleted } from "./analytics";
+import { trackPaywallShown, trackPaywallResult, trackPurchaseCompleted, trackPurchaseFailed, trackRestoreCompleted } from "./analytics";
 
 export type PaywallTrigger = "lesson_7_summary" | "lesson_locked" | "expired_card" | "home_upsell";
 
@@ -53,11 +53,18 @@ export async function presentPaywall(trigger: PaywallTrigger): Promise<PaywallOu
         return { result: "cancelled", accessGranted: false };
 
       case PAYWALL_RESULT.NOT_PRESENTED:
+        trackPaywallResult({ trigger, result: "not_presented" });
         return { result: "not_presented", accessGranted: false };
 
       case PAYWALL_RESULT.ERROR:
       default:
         trackPaywallResult({ trigger, result: "error" });
+        trackPurchaseFailed({ product_id: "unknown", error_code: "PAYWALL_ERROR", error_message: "Paywall returned error result" });
+        Alert.alert(
+          "Purchase couldn't be completed",
+          "Something went wrong. Please try again or contact support if the issue persists.",
+          [{ text: "OK" }]
+        );
         return { result: "error", accessGranted: false };
     }
   } catch (e) {
