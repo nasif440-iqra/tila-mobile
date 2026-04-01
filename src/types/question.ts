@@ -17,6 +17,7 @@ export interface Question {
   optionMode?: string;       // "sound" for letter_to_sound
   isHarakat?: boolean;       // harakat-specific flag
   isConfusionQ?: boolean;    // confusion-based question (sound.js)
+  explanation?: string;      // pre-computed wrong-answer explanation
   // Internal recycling fields (added by useLessonQuiz, not generators)
   _recycled?: boolean;
   _recycleCount?: number;

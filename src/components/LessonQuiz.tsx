@@ -115,9 +115,9 @@ export function LessonQuiz({
       context: 'quiz' as const,
     });
     if (isSoundQuestion) {
-      playLetterSound(currentQuestion.targetId);
+      playLetterSound(currentQuestion.targetId as number);
     } else {
-      playLetterName(currentQuestion.targetId);
+      playLetterName(currentQuestion.targetId as number);
     }
   }, [currentQuestion?.hasAudio, currentQuestion?.targetId, isSoundQuestion]);
 
@@ -183,8 +183,8 @@ export function LessonQuiz({
 
   const handleContinueAfterWrong = useCallback(() => {
     if (!currentQuestion) return;
-    const opt = currentQuestion.options.find((o: any) => o.id === selectedId);
-    handleAnswer(opt, false);
+    const opt = currentQuestion.options.find((o) => o.id === selectedId);
+    if (opt) handleAnswer(opt, false);
   }, [currentQuestion, selectedId, handleAnswer]);
 
   const wrongFlashStyle = useAnimatedStyle(() => ({
