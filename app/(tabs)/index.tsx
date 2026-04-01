@@ -301,9 +301,21 @@ export default function HomeScreen() {
   const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
 
   useEffect(() => {
-    if (!progress.loading) {
-      loadPremiumLessonGrants(db).then(setGrantedLessonIds);
+    let cancelled = false;
+
+    async function loadGrants() {
+      try {
+        const grants = await loadPremiumLessonGrants(db);
+        if (!cancelled) setGrantedLessonIds(grants);
+      } catch (e) {
+        console.warn("Failed to load premium grants:", e);
+        if (!cancelled) setGrantedLessonIds([]);
+      }
     }
+
+    if (!progress.loading) loadGrants();
+
+    return () => { cancelled = true; };
   }, [db, progress.loading]);
 
   const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);

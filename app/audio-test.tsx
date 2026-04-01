@@ -9,7 +9,9 @@ export default function AudioTestScreen() {
   const colors = useColors();
 
   useEffect(() => {
-    configureAudioSession();
+    configureAudioSession().catch((e) => {
+      console.warn("Audio session configuration failed:", e);
+    });
   }, []);
 
   const baNamePlayer = useAudioPlayer(getLetterAsset(2, "name")!);
