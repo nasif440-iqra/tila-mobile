@@ -30,8 +30,8 @@ A personal, trustworthy Quran reading teacher that remembers what you forget and
 ### Active
 
 See MASTER-PLAN.md for full scope. Next milestone covers:
-- [ ] Lesson completion atomicity (transaction-wrapped writes)
-- [ ] Mastery celebration stale state fix
+- [x] Lesson completion atomicity (transaction-wrapped writes) — Phase 1
+- [x] Mastery celebration stale state fix — Phase 1
 - [ ] Scaffold cleanup and design consistency
 - [ ] Paywall UX, conversion surfaces, personalization
 - [ ] App Store submission (screenshots, metadata, privacy manifest)
@@ -86,4 +86,4 @@ Shipped v1.0 Stability & App Store Readiness (5 phases, 12 plans, 19 requirement
 This document evolves at phase transitions and milestone boundaries.
 
 ---
-*Last updated: 2026-04-01 after v1.0 milestone completion*
+*Last updated: 2026-04-01 after Phase 1 (Lesson Flow Hardening) completion*
