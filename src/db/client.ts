@@ -36,15 +36,20 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   const currentVersion = versionRow?.version ?? 0;
 
   if (currentVersion < 2) {
-    // Add transient screen tracking columns (safe — ALTER TABLE ADD COLUMN is idempotent-ish)
-    try {
-      await db.execAsync(`
-        ALTER TABLE user_profile ADD COLUMN wird_intro_seen INTEGER NOT NULL DEFAULT 0;
-        ALTER TABLE user_profile ADD COLUMN post_lesson_onboard_seen INTEGER NOT NULL DEFAULT 0;
-        ALTER TABLE user_profile ADD COLUMN return_hadith_last_shown TEXT;
-      `);
-    } catch {
-      // Columns may already exist if DB was created fresh with v2 schema
+    const profileInfo = await db.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(user_profile)"
+    );
+    const hasWirdIntro = profileInfo.some((col) => col.name === "wird_intro_seen");
+    if (!hasWirdIntro) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN wird_intro_seen INTEGER NOT NULL DEFAULT 0;");
+    }
+    const hasPostLesson = profileInfo.some((col) => col.name === "post_lesson_onboard_seen");
+    if (!hasPostLesson) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN post_lesson_onboard_seen INTEGER NOT NULL DEFAULT 0;");
+    }
+    const hasReturnHadith = profileInfo.some((col) => col.name === "return_hadith_last_shown");
+    if (!hasReturnHadith) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN return_hadith_last_shown TEXT;");
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (2)");
   }
