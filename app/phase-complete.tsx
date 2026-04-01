@@ -18,6 +18,7 @@ import { springs } from "../src/design/animations";
 import { useHabit } from "../src/hooks/useHabit";
 import { track } from "../src/analytics";
 import { LESSONS } from "../src/data/lessons";
+import { CrescentIcon } from "../src/design/CrescentIcon";
 
 // ── Phase metadata ──
 
@@ -124,7 +125,7 @@ export default function PhaseCompleteScreen() {
             entering={FadeInDown.delay(900).duration(500)}
             style={[styles.wirdBadge, { borderColor: "rgba(255,255,255,0.12)" }]}
           >
-            <Text style={{ fontSize: 13, color: colors.accent }}>{"☽"}</Text>
+            <CrescentIcon size={13} color={colors.accent} />
             <Text style={[styles.wirdCount, { color: "rgba(255,255,255,0.85)" }]}>
               {currentWird} {currentWird === 1 ? "day" : "days"}
             </Text>

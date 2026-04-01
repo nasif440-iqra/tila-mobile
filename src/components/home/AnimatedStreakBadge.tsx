@@ -11,6 +11,7 @@ import { WarmGlow } from "../onboarding/WarmGlow";
 import { useColors } from "../../design/theme";
 import { springs, durations, easings } from "../../design/animations";
 import { spacing, fontFamilies } from "../../design/tokens";
+import { CrescentIcon } from "../../design/CrescentIcon";
 
 // ── Props ──
 
@@ -64,7 +65,7 @@ export function AnimatedStreakBadge({ count, enterDelay = 0 }: AnimatedStreakBad
 
       {/* Pill badge */}
       <View style={[styles.pill, { borderColor: colors.border }]}>
-        <Text style={[styles.crescent, { color: colors.accent }]}>{"☽"}</Text>
+        <CrescentIcon size={14} color={colors.accent} />
         <Text style={[styles.count, { color: colors.text }]}>{count}</Text>
         <Text style={[styles.label, { color: colors.textMuted }]}>Wird</Text>
       </View>
@@ -87,10 +88,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     borderRadius: 9999,
     borderWidth: 1,
-  },
-  crescent: {
-    fontSize: 14,
-    lineHeight: 16,
   },
   count: {
     fontSize: 13,
