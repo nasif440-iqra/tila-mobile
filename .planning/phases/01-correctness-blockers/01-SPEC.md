@@ -42,7 +42,7 @@ useEffect(() => {
 
 ## Bug 2: Quiz state can persist incorrectly across lesson identity changes
 
-**File:** `src/hooks/useLessonQuiz.ts` (lines 47-65), `src/components/LessonQuiz.tsx`
+**File:** `src/hooks/useLessonQuiz.ts` (lines 47-65), `app/lesson/[id].tsx` (missing `key` on `<LessonQuiz>`)
 
 **What happens:** When a user finishes lesson 1 and opens lesson 2, quiz state may not fully reset. The `generatedRef` is set to `true` on first use and never reset. Additionally, `LessonScreen` renders `<LessonQuiz lesson={lesson} ... />` without a `key` prop, so if the component instance is reused across lesson changes, all hook state (questions, qIndex, results, streak) persists from the previous lesson.
 
@@ -170,7 +170,7 @@ useEffect(() => {
 
 - **Option A: Pin session date on mount.** Use `useState(() => getTodayDateString())` or `useRef(getTodayDateString())` so `today` is frozen for the lifetime of the component. The redirect logic only evaluates with the date the session started on.
 
-- **Option B: Track "return-welcome already evaluated this session."** Add a ref (`hasEvaluatedRedirect`) that is set to `true` after the first evaluation. Subsequent effect runs (from date changes or other deps) skip the redirect logic entirely.
+- **Option B: Track "return-welcome already evaluated this session."** Add a ref (`hasEvaluatedRedirect`) that is set to `true` after the first eligible redirect evaluation once `progress.loading` has resolved. This ensures the ref is only set after a real evaluation — not before loading completes, which would accidentally suppress a legitimate first-run redirect. Subsequent effect runs (from date changes or other deps) skip the redirect logic entirely.
 
 Both options ensure the return-welcome redirect only triggers on fresh app opens, not mid-session date rollovers.
 
