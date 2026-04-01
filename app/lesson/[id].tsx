@@ -3,7 +3,10 @@ import { View, Text, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ErrorBoundary } from "react-error-boundary";
+import * as Sentry from "@sentry/react-native";
 import { useColors } from "../../src/design/theme";
+import { ScreenErrorFallback } from "../../src/components/feedback/ScreenErrorFallback";
 import { typography, spacing } from "../../src/design/tokens";
 import { Button } from "../../src/design/components";
 import { LESSONS } from "../../src/data/lessons";
@@ -345,14 +348,23 @@ export default function LessonScreen() {
   }
 
   return (
-    <Animated.View
-      key={effectiveStage}
-      entering={FadeIn.duration(durations.normal)}
-      exiting={FadeOut.duration(durations.micro)}
-      style={{ flex: 1 }}
+    <ErrorBoundary
+      onError={(error, info) => {
+        Sentry.captureException(error, {
+          extra: { componentStack: info.componentStack },
+        });
+      }}
+      FallbackComponent={ScreenErrorFallback}
     >
-      {renderStage()}
-    </Animated.View>
+      <Animated.View
+        key={effectiveStage}
+        entering={FadeIn.duration(durations.normal)}
+        exiting={FadeOut.duration(durations.micro)}
+        style={{ flex: 1 }}
+      >
+        {renderStage()}
+      </Animated.View>
+    </ErrorBoundary>
   );
 }
 
