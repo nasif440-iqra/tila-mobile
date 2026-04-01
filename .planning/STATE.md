@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-current_plan: Not started
 status: executing
-stopped_at: Both plans (04-01, 04-02) complete — awaiting verification
-last_updated: "2026-04-01T17:00:15.476Z"
-last_activity: 2026-04-01
+stopped_at: Phase 4 spec written, awaiting expert review
+last_updated: "2026-04-01T16:44:36.890Z"
+last_activity: 2026-04-01 -- Phase 04 execution started
 progress:
   total_phases: 5
-  completed_phases: 4
+  completed_phases: 3
   total_plans: 9
-  completed_plans: 9
+  completed_plans: 7
   percent: 33
 ---
 
@@ -22,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-31)
 
 **Core value:** The app must never crash, hang, or lose user progress
-**Current focus:** Phase 02 — crash-containment
+**Current focus:** Phase 04 — type-test-cleanup
 
 ## Current Position
 
-Phase: 5
-Current Plan: Not started
-Status: Executing — plan 1 complete
-Last activity: 2026-04-01
+Phase: 04 (type-test-cleanup) — EXECUTING
+Plan: 1 of 2
+Status: Executing Phase 04
+Last activity: 2026-04-01 -- Phase 04 execution started
 
 Progress: [###.......] 33%
 
@@ -56,8 +55,6 @@ Progress: [###.......] 33%
 | Phase 02 P01 | 3m | 2 tasks | 6 files |
 | Phase 02 P02 | 2m30s | 2 tasks | 6 files |
 | Phase 03 P01 | 5m | 3 tasks | 5 files |
-| Phase 04 P01 | 3m | 2 tasks | 3 files |
-| Phase 04 P02 | 5m | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -77,10 +74,6 @@ Recent decisions affecting current work:
 - [Phase 03]: Return true during loading in useCanAccessLesson -- assume-premium is better UX than false-lock
 - [Phase 03]: No custom caching layer -- RevenueCat SDK already caches CustomerInfo on-device
 - [Phase 03]: Restore button on Progress tab, hidden when actively premium
-- [Phase 04-01]: Used .d.ts declaration file for JS question generator boundary instead of .js migration
-- [Phase 04-01]: Used Partial<> for generateHybridExercises progress param (connected-forms/reading don't use progress)
-- [Phase 04-02]: Coverage globs include .js files since src/engine/ is entirely JavaScript
-- [Phase 04-02]: No coverage thresholds -- baseline measurement only (29.66% stmts)
 
 ### Pending Todos
 
@@ -94,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-01T16:51:36.812Z
-Stopped at: Both plans (04-01, 04-02) complete — awaiting verification
-Resume file: None
+Last session: 2026-04-01T16:10:29.812Z
+Stopped at: Phase 4 spec written, awaiting expert review
+Resume file: .planning/phases/04-type-test-cleanup/04-CONTEXT.md
