@@ -8,8 +8,8 @@
 
 ### Block 1: Make It Not Crash
 
-- [ ] **STAB-01**: Lesson completion writes are atomic — wrapped in a single DB transaction that returns fresh post-write state
-- [ ] **STAB-02**: Mastery celebration uses fresh data from the completion transaction, not a stale hook closure
+- [x] **STAB-01**: Lesson completion writes are atomic — wrapped in a single DB transaction that returns fresh post-write state
+- [x] **STAB-02**: Mastery celebration uses fresh data from the completion transaction, not a stale hook closure
 - [ ] **STAB-03**: RevenueCat initialization wrapped in try/catch — defaults to free tier on failure, logs to Sentry
 - [ ] **STAB-04**: All audio calls (playSFX, playVoice) wrapped in try/catch — failures reported to Sentry, never crash the app
 - [ ] **STAB-05**: Expo scaffold leftovers removed (SpaceMono-Regular.ttf, EditScreenInfo.tsx, useClientOnlyValue.ts, constants/Colors.ts)

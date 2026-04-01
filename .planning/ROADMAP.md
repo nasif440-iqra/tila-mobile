@@ -43,7 +43,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 **Requirements**: STAB-01, STAB-02
 **Plans:** 1 plan
 Plans:
-- [ ] 01-01-PLAN.md — Atomic completion transaction + fresh mastery celebration detection
+- [x] 01-01-PLAN.md — Atomic completion transaction + fresh mastery celebration detection
 **Success Criteria** (what must be TRUE):
   1. `completeLesson` wraps all DB writes in a single `withExclusiveTransactionAsync` call
   2. The completion transaction returns fresh mastery state that the UI uses directly for celebration display
