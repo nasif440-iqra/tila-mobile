@@ -40,6 +40,7 @@ function playSFX(source: AudioSource, priority: number, guardMs: number): void {
 - Wrap the `replace()` + `play()` calls in `playVoice` and `playSFX` with try/catch
 - On catch: `console.warn` the error (for debugging) but do NOT propagate — audio failures are non-fatal
 - Do NOT add user-facing error UI for audio — silent failure is correct behavior here
+- **Important for `playSFX`:** The `_playing = { priority, startedAt: now, guardMs }` assignment must stay INSIDE the try block, after the successful `play()` call. If `replace()` or `play()` throws, `_playing` should NOT be updated — otherwise a failed sound is marked as "playing" and blocks subsequent legitimate SFX requests for the guard window duration
 
 **What "fixed" looks like:**
 - Audio playback failure (missing file, interrupted session) does not crash the app
@@ -168,7 +169,7 @@ This handles three problems in one:
 
 **For `src/monetization/provider.tsx`:** Already has `.catch()`. Verify the catch covers all paths (it does — sets `loading: false` on catch). No change needed.
 
-**Additional audit:** Grep for any other fire-and-forget `.then()` or bare async calls without `.catch()` in non-async contexts. Fix any found using the same guarded async pattern.
+**Mandatory repo-wide audit (hard requirement, not optional):** After fixing the two known `loadPremiumLessonGrants` effects, grep the entire `src/` and `app/` directories for every `.then(` and every fire-and-forget async call in non-async contexts. Do not stop after the two known cases — this codebase has grown and there may be others. Fix any found using the same guarded async pattern. Phase 2 is not complete until this audit is done and results are documented in the SUMMARY.
 
 **What "fixed" looks like:**
 - No unhandled promise rejections appear in Sentry from app code
@@ -185,7 +186,7 @@ Each fix needs at least one regression test proving the bad path is prevented.
 | Fix | Test description |
 |-----|-----------------|
 | Fix 1 | Audio: Mock `player.play()` to throw → verify `playVoice`/`playSFX` do not propagate the error. Source analysis: verify try/catch wraps both functions. |
-| Fix 2 | Boundary: Verify `app/lesson/[id].tsx` contains an `ErrorBoundary` wrapper. Verify the fallback component supports both retry and navigation actions. Verify `Sentry.captureException` is called in `onError`. |
+| Fix 2 | Boundary: (a) Source analysis: verify `app/lesson/[id].tsx` contains an `ErrorBoundary` wrapper with `onError` calling `Sentry.captureException`. (b) **Behavioral test (required):** render a component that throws inside the boundary, verify the local `ScreenErrorFallback` renders (not the root fallback or white screen). This is more meaningful than just proving the wrapper exists — source greps can pass while the actual UX is broken. |
 | Fix 3 | Grants: Verify `loadPremiumLessonGrants` effects use guarded async pattern (cancelled flag + try/catch). Source analysis: no bare `.then(setGrantedLessonIds)` without catch in home or review screens. |
 
 ---
