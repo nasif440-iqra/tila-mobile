@@ -3,6 +3,9 @@ import {
   generateLessonQuestions,
   shuffle,
 } from "../engine/questions/index.js";
+import type { Lesson } from '../types/lesson';
+import type { ProgressState } from '../engine/progress';
+import type { Question, QuestionOption } from '../types/question';
 import type { QuizResultItem } from '../types/quiz';
 
 /**
@@ -19,22 +22,22 @@ export function computeQuizProgress(
 }
 
 export default function useLessonQuiz(
-  lesson: any,
+  lesson: Lesson,
   completedLessonIds: number[],
-  mastery: any
+  mastery: ProgressState["mastery"]
 ): {
-  currentQuestion: any;
+  currentQuestion: Question | null;
   questionIndex: number;
   totalQuestions: number;
   streak: number;
   showMidCelebrate: boolean;
   dismissMidCelebrate: () => void;
-  handleAnswer: (selectedOption: any, correct: boolean) => void;
+  handleAnswer: (selectedOption: QuestionOption, correct: boolean) => void;
   isComplete: boolean;
   error: string | null;
   results: { correct: number; total: number; questions: QuizResultItem[] };
 } {
-  const [questions, setQuestions] = useState<any[]>([]);
+  const [questions, setQuestions] = useState<Question[]>([]);
   const [qIndex, setQIndex] = useState(0);
   const [quizResults, setQuizResults] = useState<QuizResultItem[]>([]);
   const [streak, setStreak] = useState(0);
@@ -70,12 +73,12 @@ export default function useLessonQuiz(
   }, []);
 
   const handleAnswer = useCallback(
-    (selectedOption: any, correct: boolean) => {
+    (selectedOption: QuestionOption, correct: boolean) => {
       const currentQ = questions[qIndex];
       if (!currentQ) return;
 
       // Record result
-      const correctOption = currentQ.options?.find((o: any) => o.isCorrect);
+      const correctOption = currentQ.options?.find((o: QuestionOption) => o.isCorrect);
       const elapsed = Date.now() - questionStartRef.current;
       questionStartRef.current = Date.now();
 
