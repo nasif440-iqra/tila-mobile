@@ -48,4 +48,31 @@ vi.mock("react-native-purchases-ui", () => ({
 vi.mock("react-native", () => ({
   Platform: { OS: "ios" },
   Alert: { alert: vi.fn() },
+  StyleSheet: { create: (s: Record<string, unknown>) => s },
+  View: "View",
+  Text: "Text",
+  Pressable: "Pressable",
+}));
+
+vi.mock("react-native-svg", () => ({
+  default: "Svg",
+  Svg: "Svg",
+  Rect: "Rect",
+  Path: "Path",
+  Circle: "Circle",
+  Defs: "Defs",
+  Mask: "Mask",
+}));
+
+vi.mock("react-native-reanimated", () => ({
+  default: {
+    View: "Animated.View",
+    createAnimatedComponent: (c: unknown) => c,
+  },
+  useSharedValue: vi.fn((v: unknown) => ({ value: v })),
+  useAnimatedStyle: vi.fn((fn: () => unknown) => fn()),
+  withTiming: vi.fn((v: unknown) => v),
+  withDelay: vi.fn((_d: unknown, v: unknown) => v),
+  withSpring: vi.fn((v: unknown) => v),
+  FadeIn: { delay: vi.fn().mockReturnValue({}) },
 }));
