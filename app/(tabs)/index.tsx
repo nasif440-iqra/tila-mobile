@@ -296,7 +296,7 @@ export default function HomeScreen() {
   const progress = useProgress();
   const { updateProfile } = progress;
   const { habit } = useHabit();
-  const { isPremiumActive, stage, trialDaysRemaining, showPaywall } = useSubscription();
+  const { isPremiumActive, stage, trialDaysRemaining, showPaywall, loading: subLoading } = useSubscription();
   const [today] = useState(() => getTodayDateString());
 
   const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
@@ -607,6 +607,7 @@ export default function HomeScreen() {
           onStartLesson={handleStartLesson}
           enterDelay={160}
           isPremiumActive={isPremiumActive}
+          subscriptionLoading={subLoading}
           onLockedLessonPress={async (lessonId: number) => {
             const outcome = await showPaywall("lesson_locked");
             if (outcome.accessGranted) {

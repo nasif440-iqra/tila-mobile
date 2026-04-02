@@ -14,6 +14,13 @@ export function createMockSupabase(initialData: Record<string, MockRow[]> = {}) 
     data[key] = rows.map((r) => ({ ...r }));
   }
 
+  // Track last upsert call for test assertions
+  const lastUpsertCall: { table: string; rows: MockRow[]; options?: { onConflict: string } } = {
+    table: '',
+    rows: [],
+    options: undefined,
+  };
+
   const from = (table: string) => {
     const tableData = () => data[table] ?? [];
 
@@ -32,6 +39,11 @@ export function createMockSupabase(initialData: Record<string, MockRow[]> = {}) 
         if (!data[table]) data[table] = [];
         const rowArray = Array.isArray(rows) ? rows : [rows];
         const conflictKey = options?.onConflict?.split(',').pop()?.trim() ?? 'id';
+
+        // Record last upsert call for assertions
+        lastUpsertCall.table = table;
+        lastUpsertCall.rows = rowArray.map((r) => ({ ...r }));
+        lastUpsertCall.options = options;
 
         for (const row of rowArray) {
           const existingIdx = data[table].findIndex(
@@ -88,7 +100,7 @@ export function createMockSupabase(initialData: Record<string, MockRow[]> = {}) 
     }),
   };
 
-  return { from, auth, _data: data };
+  return { from, auth, _data: data, _lastUpsertCall: lastUpsertCall };
 }
 
 export type MockSupabaseClient = ReturnType<typeof createMockSupabase>;

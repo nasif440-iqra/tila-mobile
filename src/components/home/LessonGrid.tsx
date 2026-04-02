@@ -122,6 +122,7 @@ export interface LessonGridProps {
   onStartLesson: (lessonId: number) => void;
   enterDelay?: number;
   isPremiumActive?: boolean;
+  subscriptionLoading?: boolean;
   onLockedLessonPress?: (lessonId: number) => void;
 }
 
@@ -133,6 +134,7 @@ export default function LessonGrid({
   onStartLesson,
   enterDelay = 0,
   isPremiumActive,
+  subscriptionLoading,
   onLockedLessonPress,
 }: LessonGridProps) {
   const colors = useColors();
@@ -203,7 +205,7 @@ export default function LessonGrid({
           const isProgressionLocked = !complete && !isCurrent;
 
           // Premium-locked: pedagogically unlocked (current or future) BUT beyond free cutoff and no subscription
-          const isPremiumLocked = !isProgressionLocked && !complete && lesson.id > FREE_LESSON_CUTOFF && !isPremiumActive;
+          const isPremiumLocked = !isProgressionLocked && !complete && lesson.id > FREE_LESSON_CUTOFF && !isPremiumActive && !subscriptionLoading;
 
           const state = complete ? "complete" : (isCurrent && !isPremiumLocked) ? "current" : "locked";
           const offset = OFFSETS[i % OFFSETS.length];

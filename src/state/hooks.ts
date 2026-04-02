@@ -2,6 +2,11 @@ import { useContext } from 'react';
 import { AppStateContext } from './provider';
 import type { AppStateContextValue } from './types';
 
+/**
+ * Read-only aggregate of progress + habit state. For screens that need
+ * mutation methods (completeLesson, updateProfile, recordPractice),
+ * use useProgress() and useHabit() directly.
+ */
 export function useAppState(): AppStateContextValue {
   const context = useContext(AppStateContext);
   if (!context) {

@@ -22,9 +22,11 @@ export const SYNC_TABLE_CONFIGS: TableSyncConfig[] = [
       'post_lesson_onboard_seen',
       'return_hadith_last_shown',
       'analytics_consent',
+      'account_prompt_declined_at',
     ],
     timestampColumn: 'updated_at',
     hasAutoIncrement: false,
+    onConflictColumns: ['user_id'],
   },
   {
     localTable: 'mastery_entities',
@@ -81,6 +83,8 @@ export const SYNC_TABLE_CONFIGS: TableSyncConfig[] = [
     ],
     timestampColumn: 'attempted_at',
     hasAutoIncrement: true,
+    remoteKeyColumn: 'local_id',
+    onConflictColumns: ['user_id', 'local_id'],
   },
   {
     localTable: 'question_attempts',
@@ -99,6 +103,8 @@ export const SYNC_TABLE_CONFIGS: TableSyncConfig[] = [
     ],
     timestampColumn: 'attempted_at',
     hasAutoIncrement: true,
+    remoteKeyColumn: 'local_id',
+    onConflictColumns: ['user_id', 'local_id'],
   },
   {
     localTable: 'habit',
@@ -112,6 +118,7 @@ export const SYNC_TABLE_CONFIGS: TableSyncConfig[] = [
     ],
     timestampColumn: 'updated_at',
     hasAutoIncrement: false,
+    onConflictColumns: ['user_id'],
   },
   {
     localTable: 'premium_lesson_grants',

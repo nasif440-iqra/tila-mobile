@@ -25,7 +25,7 @@ import Purchases from "react-native-purchases";
 import { useProgress } from "../../src/hooks/useProgress";
 import { useDatabase } from "../../src/db/provider";
 import { useSubscription } from "../../src/monetization/hooks";
-import { trackRestoreCompleted } from "../../src/monetization/analytics";
+import { trackRestoreCompleted, trackRestoreFailed } from "../../src/monetization/analytics";
 import { resetProgress } from "../../src/engine/progress";
 import { LESSONS } from "../../src/data/lessons";
 import {
@@ -102,7 +102,7 @@ export default function ProgressScreen() {
         [{ text: "OK" }]
       );
     } catch {
-      trackRestoreCompleted({ success: false, entitlements_restored: 0 });
+      trackRestoreFailed({});
       Alert.alert(
         "Restore Failed",
         "Please check your internet connection and try again.",

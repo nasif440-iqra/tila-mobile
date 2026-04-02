@@ -20,6 +20,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const { user, isAnonymous } = useAuth();
   const db = useDatabase();
   const syncingRef = useRef(false);
+  const lastSyncedAtRef = useRef<Date | null>(null);
 
   const triggerSync = useCallback(async (): Promise<void> => {
     // Skip sync for anonymous users — no cloud account to sync to
@@ -37,18 +38,22 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       const duration = Date.now() - startTime;
 
       if (result.errors.length > 0) {
+        const now = new Date();
+        lastSyncedAtRef.current = now;
         setSyncState({
           status: 'error',
-          lastSyncedAt: new Date(),
+          lastSyncedAt: now,
           error: result.errors.join('; '),
         });
         track('sync_failed', {
           error_message: result.errors[0],
         });
       } else {
+        const now = new Date();
+        lastSyncedAtRef.current = now;
         setSyncState({
           status: 'idle',
-          lastSyncedAt: new Date(),
+          lastSyncedAt: now,
           error: null,
         });
         track('sync_completed', {
@@ -61,7 +66,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     } catch (err) {
       setSyncState({
         status: 'error',
-        lastSyncedAt: syncState.lastSyncedAt,
+        lastSyncedAt: lastSyncedAtRef.current,
         error: err instanceof Error ? err.message : String(err),
       });
       track('sync_failed', {
@@ -70,7 +75,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     } finally {
       syncingRef.current = false;
     }
-  }, [db, user, isAnonymous, syncState.lastSyncedAt]);
+  }, [db, user, isAnonymous]);
 
   // Trigger sync on mount (if authenticated) and on app foreground
   useEffect(() => {
