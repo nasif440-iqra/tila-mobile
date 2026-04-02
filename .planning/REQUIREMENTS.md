@@ -36,9 +36,9 @@
 - [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
 - [x] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
 - [x] **RET-07**: Privacy manifest updated for auth + cloud sync data collection
-- [ ] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
+- [x] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
 - [ ] **RET-09**: High-value integration tests for critical flows (onboarding, lesson completion, premium locking, restore purchases)
-- [ ] **RET-10**: Dark mode activated using existing tokens, system preference detection
+- [x] **RET-10**: Dark mode activated using existing tokens, system preference detection
 
 ## Deferred
 
