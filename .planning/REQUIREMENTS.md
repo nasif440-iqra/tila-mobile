@@ -30,7 +30,7 @@
 ### Block 3: Make It Retain
 
 - [ ] **RET-01**: All 18 engine .js files migrated to TypeScript with proper type annotations
-- [ ] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
+- [x] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
 - [x] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
 - [x] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
 - [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
