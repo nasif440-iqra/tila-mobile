@@ -28,6 +28,9 @@ import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme
 import { DatabaseProvider } from "../src/db/provider";
 import { initRevenueCat } from "../src/monetization/revenuecat";
 import { SubscriptionProvider } from "../src/monetization/provider";
+import { AuthProvider } from "../src/auth/provider";
+import { SyncProvider } from "../src/sync/provider";
+import { AppStateProvider } from "../src/state/provider";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
@@ -73,33 +76,39 @@ export default function RootLayout() {
         <ErrorFallback onRetry={resetError} />
       )}>
         <DatabaseProvider fallback={<AppLoadingScreen />}>
-          <SubscriptionProvider>
-          <AnalyticsGate>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.bg },
-              animation: "fade",
-              animationDuration: 300,
-            }}
-          >
-            <Stack.Screen
-              name="lesson/[id]"
-              options={{
-                animation: "slide_from_bottom",
-                animationDuration: 400,
-              }}
-            />
-            <Stack.Screen
-              name="lesson/review"
-              options={{
-                animation: "slide_from_bottom",
-                animationDuration: 400,
-              }}
-            />
-          </Stack>
-          </AnalyticsGate>
-          </SubscriptionProvider>
+          <AuthProvider>
+            <SyncProvider>
+              <SubscriptionProvider>
+                <AppStateProvider>
+                  <AnalyticsGate>
+                    <Stack
+                      screenOptions={{
+                        headerShown: false,
+                        contentStyle: { backgroundColor: colors.bg },
+                        animation: "fade",
+                        animationDuration: 300,
+                      }}
+                    >
+                      <Stack.Screen
+                        name="lesson/[id]"
+                        options={{
+                          animation: "slide_from_bottom",
+                          animationDuration: 400,
+                        }}
+                      />
+                      <Stack.Screen
+                        name="lesson/review"
+                        options={{
+                          animation: "slide_from_bottom",
+                          animationDuration: 400,
+                        }}
+                      />
+                    </Stack>
+                  </AnalyticsGate>
+                </AppStateProvider>
+              </SubscriptionProvider>
+            </SyncProvider>
+          </AuthProvider>
         </DatabaseProvider>
       </Sentry.ErrorBoundary>
     </ThemeContext.Provider>
