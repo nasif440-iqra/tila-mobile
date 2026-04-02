@@ -93,6 +93,10 @@ Plans:
 **Goal**: Upgrade cards and paywall flow match the app's premium design quality and drive conversion
 **Depends on**: Phase 4 (value communication must exist before paywall is polished)
 **Requirements**: CONV-06, CONV-07
+**Plans:** 2 plans
+Plans:
+- [ ] 05-01-PLAN.md — Monetization component library: LockIcon, UpgradeCard, TrialCountdownBadge (CONV-06, CONV-07)
+- [ ] 05-02-PLAN.md — Wire components into screens: celebration flow, locked gate, JourneyNode, trial badge (CONV-06, CONV-07)
 **Success Criteria** (what must be TRUE):
   1. Upgrade card, trial badge, and expired card use the design system (tokens, fonts, colors, shadows) — visually match onboarding quality
   2. Paywall triggers after completing lesson 7 and when free user taps lesson 8+
@@ -161,7 +165,7 @@ Phase 2 (cleanup) ───────┘                                      
 | 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
 | 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
 | 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
-| 5. Conversion Surfaces | 0/TBD | Not started | - |
+| 5. Conversion Surfaces | 0/2 | Planned | - |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
 | 8. Cloud Sync & Social | 0/TBD | Not started | - |
