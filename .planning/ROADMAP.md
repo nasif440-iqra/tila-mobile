@@ -168,4 +168,4 @@ Phase 2 (cleanup) ───────┘                                      
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
-| 8. Cloud Sync & Social | 0/TBD | Not started | - |
+| 8. Cloud Sync & Social | 2/7 | In Progress|  |
