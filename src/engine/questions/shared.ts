@@ -1,7 +1,10 @@
 import { ARABIC_LETTERS, getLetter } from "../../data/letters.js";
 import { LESSONS } from "../../data/lessons.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question, QuestionOption } from "../../types/question";
+import type { ArabicLetter } from "../../types/engine";
 
-export function shuffle(a) {
+export function shuffle<T>(a: T[]): T[] {
   const r = [...a];
   for (let i = r.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -10,13 +13,13 @@ export function shuffle(a) {
   return r;
 }
 
-export function pickRandom(a) {
+export function pickRandom<T>(a: T[]): T | undefined {
   if (!a || a.length === 0) return undefined;
   return a[Math.floor(Math.random() * a.length)];
 }
 
 // Maps letter IDs to IDs they're commonly confused with
-export const SOUND_CONFUSION_MAP = {
+export const SOUND_CONFUSION_MAP: Record<number, number[]> = {
   2: [3, 4], 3: [2, 4], 4: [2, 3],
   5: [6, 7], 6: [5, 7], 7: [5, 6],
   8: [9], 9: [8],
@@ -33,7 +36,7 @@ export const SOUND_CONFUSION_MAP = {
 
 // ── Prompt pools (separated by actual question modality) ──
 
-export const SOUND_PROMPTS = {
+export const SOUND_PROMPTS: Record<string, string[]> = {
   // User HEARS audio, picks a letter
   audio_to_letter: [
     "Listen carefully \u2014 which letter matches this sound?",
@@ -83,8 +86,8 @@ export const SOUND_PROMPTS = {
  * Get IDs of all letters taught in lessons BEFORE the given lesson.
  * Uses array position in LESSONS (not ID comparison) since IDs are non-sequential.
  */
-export function getKnownIds(lessonId) {
-  const ids = [];
+export function getKnownIds(lessonId: number): number[] {
+  const ids: number[] = [];
   for (const l of LESSONS) {
     if (l.id === lessonId) break;
     ids.push(...(l.teachIds || []));
@@ -97,7 +100,7 @@ export function getKnownIds(lessonId) {
  * For "no dots" questions: distractors MUST have dots.
  * For "N dots above" questions: distractors must NOT share the same visual rule.
  */
-export function getRuleDistractors(target, pool, cnt) {
+export function getRuleDistractors(target: ArabicLetter, pool: number[], cnt: number): (ArabicLetter | undefined)[] {
   const hasDots = target.dots > 0;
 
   // Filter pool to letters that contradict the target's rule
@@ -114,7 +117,7 @@ export function getRuleDistractors(target, pool, cnt) {
 
   // Not enough in pool — pull from all letters
   const usedIds = new Set([target.id, ...validFromPool]);
-  const extra = ARABIC_LETTERS.filter(l => {
+  const extra = ARABIC_LETTERS.filter((l: ArabicLetter) => {
     if (usedIds.has(l.id)) return false;
     return hasDots ? l.visualRule !== target.visualRule : l.dots > 0;
   });
@@ -122,18 +125,18 @@ export function getRuleDistractors(target, pool, cnt) {
   return shuffle([...validFromPool.map(id => getLetter(id)), ...extra]).slice(0, cnt);
 }
 
-export function getDistractors(tid, pool, cnt) {
+export function getDistractors(tid: number, pool: number[], cnt: number): ArabicLetter[] {
   const av = pool.filter(id => id !== tid);
-  if (av.length >= cnt) return shuffle(av).slice(0, cnt).map(id => getLetter(id)).filter(Boolean);
+  if (av.length >= cnt) return shuffle(av).slice(0, cnt).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
   const needed = cnt - av.length;
-  const ex = ARABIC_LETTERS.filter(l => !pool.includes(l.id) && l.id !== tid).slice(0, needed);
-  return shuffle([...av.map(id => getLetter(id)), ...ex]).filter(Boolean).slice(0, cnt);
+  const ex = ARABIC_LETTERS.filter((l: ArabicLetter) => !pool.includes(l.id) && l.id !== tid).slice(0, needed);
+  return shuffle([...av.map(id => getLetter(id)), ...ex]).filter(Boolean).slice(0, cnt) as ArabicLetter[];
 }
 
-export function getConfusionDistractors(tid, pool, cnt) {
+export function getConfusionDistractors(tid: number, pool: number[], cnt: number): ArabicLetter[] {
   const confusionIds = (SOUND_CONFUSION_MAP[tid] || []).filter(id => pool.includes(id));
   const otherPool = pool.filter(id => id !== tid && !confusionIds.includes(id));
-  const picked = [];
+  const picked: ArabicLetter[] = [];
   for (const cid of shuffle(confusionIds)) {
     if (picked.length >= cnt) break;
     const l = getLetter(cid);
@@ -145,7 +148,7 @@ export function getConfusionDistractors(tid, pool, cnt) {
     if (l) picked.push(l);
   }
   if (picked.length < cnt) {
-    const extra = ARABIC_LETTERS.filter(l => l.id !== tid && !picked.some(p => p.id === l.id));
+    const extra = ARABIC_LETTERS.filter((l: ArabicLetter) => l.id !== tid && !picked.some(p => p.id === l.id));
     for (const l of shuffle(extra)) {
       if (picked.length >= cnt) break;
       picked.push(l);
@@ -154,47 +157,47 @@ export function getConfusionDistractors(tid, pool, cnt) {
   return picked.slice(0, cnt);
 }
 
-export function makeOpts(letters, cid) {
-  const seen = new Set();
-  const u = letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; });
+export function makeOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
+  const seen = new Set<number>();
+  const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
   if (u.length < 2) {
     const target = u.find(l => l.id === cid) || u[0];
     if (target) {
-      const extra = shuffle(ARABIC_LETTERS.filter(l => !seen.has(l.id))).slice(0, 2 - u.length);
+      const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
       u.push(...extra);
     }
   }
   return shuffle(u.map(l => ({ id: l.id, label: l.letter, isCorrect: l.id === cid })));
 }
 
-export function makeNameOpts(letters, cid) {
-  const seen = new Set();
-  const u = letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; });
+export function makeNameOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
+  const seen = new Set<number>();
+  const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
   if (u.length < 2) {
-    const extra = shuffle(ARABIC_LETTERS.filter(l => !seen.has(l.id))).slice(0, 2 - u.length);
+    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
     u.push(...extra);
   }
   return shuffle(u.map(l => ({ id: l.id, label: l.name, isCorrect: l.id === cid })));
 }
 
-export function makeSoundOpts(letters, cid) {
-  const seen = new Set();
-  const u = letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; });
+export function makeSoundOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
+  const seen = new Set<number>();
+  const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
   if (u.length < 2) {
-    const extra = shuffle(ARABIC_LETTERS.filter(l => !seen.has(l.id))).slice(0, 2 - u.length);
+    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
     u.push(...extra);
   }
   return shuffle(u.map(l => ({ id: l.id, label: `"${l.transliteration}"`, sublabel: l.soundHint, isCorrect: l.id === cid })));
 }
 
-export function getSoundPrompt(type, hasConfusion) {
+export function getSoundPrompt(type: string, hasConfusion: boolean): string | undefined {
   if (hasConfusion && SOUND_PROMPTS.confused_contrast) {
     return pickRandom(SOUND_PROMPTS.confused_contrast);
   }
   return pickRandom(SOUND_PROMPTS[type] || SOUND_PROMPTS.audio_to_letter);
 }
 
-export function getLetterSoundPrompt(letter) {
+export function getLetterSoundPrompt(letter: ArabicLetter): string | undefined {
   return pickRandom([
     `What sound does ${letter.name} make?`,
     `This is ${letter.name} \u2014 which sound matches it?`,
@@ -205,11 +208,16 @@ export function getLetterSoundPrompt(letter) {
 
 // ── Question validation safeguard ──
 
+interface ValidationResult {
+  valid: boolean;
+  reason: string | null;
+}
+
 /**
  * Structured validation: returns { valid: true } or { valid: false, reason: string }.
  * Checks structural integrity, option validity, and mode-specific flags.
  */
-export function validateQuestion(q) {
+export function validateQuestion(q: Question | null | undefined): ValidationResult {
   if (!q) return { valid: false, reason: "null_question" };
   if (!q.prompt && !q.hasAudio) return { valid: false, reason: "empty_prompt" };
   if (!q.options || !Array.isArray(q.options)) return { valid: false, reason: "missing_options" };
@@ -245,7 +253,7 @@ export function validateQuestion(q) {
  * Build a safe fallback question when a generated question fails validation.
  * Uses the simplest reliable question types: tap or name_to_letter.
  */
-export function buildFallbackQuestion(targetId, pool) {
+export function buildFallbackQuestion(targetId: number, pool: number[]): Question | null {
   const t = getLetter(targetId);
   if (!t) return null;
   const dists = getDistractors(t.id, pool.length > 0 ? pool : [t.id], 2);
@@ -261,7 +269,7 @@ export function buildFallbackQuestion(targetId, pool) {
  * Filter questions, replacing invalid ones with fallback questions when possible.
  * Logs structured diagnostics in development for every rejection.
  */
-export function filterValidQuestions(qs, lesson) {
+export function filterValidQuestions(qs: Question[], lesson: Lesson): Question[] {
   const isDev = typeof process !== "undefined" && process.env?.NODE_ENV !== "production";
   const pool = lesson?.teachIds || [];
 
@@ -285,7 +293,7 @@ export function filterValidQuestions(qs, lesson) {
 
     // Attempt fallback
     if (q?.targetId != null) {
-      const fb = buildFallbackQuestion(q.targetId, pool);
+      const fb = buildFallbackQuestion(q.targetId as number, pool);
       if (fb && validateQuestion(fb).valid) {
         if (isDev) console.info(`[Quiz] Replaced with fallback: ${fb.type} for target ${fb.targetId}`);
         return fb;
@@ -293,5 +301,5 @@ export function filterValidQuestions(qs, lesson) {
     }
 
     return null;
-  }).filter(Boolean);
+  }).filter(Boolean) as Question[];
 }
