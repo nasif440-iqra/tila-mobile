@@ -34,6 +34,9 @@ import { getTodayDateString } from "../../src/engine/dateUtils";
 import { LetterMasteryCelebration } from "../../src/components/celebrations/LetterMasteryCelebration";
 import { generatePostLessonInsights } from "../../src/engine/insights";
 import type { LessonInsight } from "../../src/engine/insights";
+import { useAuth } from '../../src/auth/hooks';
+import { ACCOUNT_PROMPT_LESSONS } from '../../src/auth/types';
+import { AccountPrompt } from '../../src/components/auth/AccountPrompt';
 
 // ── Types ──
 
@@ -61,12 +64,15 @@ export default function LessonScreen() {
   const { isPremiumActive, stage: subStage, showPaywall } = useSubscription();
   const canAccess = useCanAccessLesson(lessonId);
 
+  const { isAnonymous } = useAuth();
+
   const [stage, setStage] = useState<Stage>("intro");
   const [quizResults, setQuizResults] = useState<QuizResults | null>(null);
   const [skipIntro, setSkipIntro] = useState(false);
   const [masteredLetters, setMasteredLetters] = useState<Array<{ letter: string; name: string }>>([]);
   const [goalCompleted, setGoalCompleted] = useState(false);
   const [lessonInsights, setLessonInsights] = useState<LessonInsight[]>([]);
+  const [showAccountPrompt, setShowAccountPrompt] = useState(false);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -89,6 +95,36 @@ export default function LessonScreen() {
       });
     }
   }, [stage, lesson, skipIntro]);
+
+  // ── Account prompt for anonymous users ──
+
+  useEffect(() => {
+    if (
+      stage === 'summary' &&
+      quizResults?.passed &&
+      isAnonymous &&
+      lesson &&
+      (ACCOUNT_PROMPT_LESSONS as readonly number[]).includes(lesson.id)
+    ) {
+      setShowAccountPrompt(true);
+    }
+  }, [stage, quizResults?.passed, isAnonymous, lesson]);
+
+  const handleAccountPromptDismiss = useCallback(async () => {
+    setShowAccountPrompt(false);
+    try {
+      await db.runAsync(
+        `UPDATE user_profile SET account_prompt_declined_at = datetime('now') WHERE id = 1`
+      );
+    } catch {
+      // Non-critical — prompt will re-show on next qualifying lesson
+    }
+  }, [db]);
+
+  const handleAccountPromptSignIn = useCallback(() => {
+    setShowAccountPrompt(false);
+    router.push('/auth');
+  }, []);
 
   // ── Handlers ──
 
@@ -355,23 +391,30 @@ export default function LessonScreen() {
       const reviewItemCount = reviewPlan?.hasReviewWork ? (reviewPlan.totalItems ?? 0) : 0;
 
       return (
-        <LessonSummary
-          lesson={lesson}
-          results={quizResults}
-          passed={quizResults.passed}
-          accuracy={quizResults.accuracy}
-          threshold={getPassThreshold(lesson.lessonMode)}
-          goalCompleted={goalCompleted}
-          reviewItemCount={reviewItemCount}
-          onContinue={handleContinue}
-          onRetry={handleRetry}
-          onBack={() => router.replace("/(tabs)")}
-          onReview={() => router.replace("/lesson/review")}
-          showTrialCTA={lesson.id === FREE_LESSON_CUTOFF && !isPremiumActive && subStage !== "unknown"}
-          onStartTrial={() => showPaywall("lesson_7_summary")}
-          onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
-          insights={lessonInsights}
-        />
+        <>
+          <LessonSummary
+            lesson={lesson}
+            results={quizResults}
+            passed={quizResults.passed}
+            accuracy={quizResults.accuracy}
+            threshold={getPassThreshold(lesson.lessonMode)}
+            goalCompleted={goalCompleted}
+            reviewItemCount={reviewItemCount}
+            onContinue={handleContinue}
+            onRetry={handleRetry}
+            onBack={() => router.replace("/(tabs)")}
+            onReview={() => router.replace("/lesson/review")}
+            showTrialCTA={lesson.id === FREE_LESSON_CUTOFF && !isPremiumActive && subStage !== "unknown"}
+            onStartTrial={() => showPaywall("lesson_7_summary")}
+            onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
+            insights={lessonInsights}
+          />
+          <AccountPrompt
+            visible={showAccountPrompt}
+            onDismiss={handleAccountPromptDismiss}
+            onSignIn={handleAccountPromptSignIn}
+          />
+        </>
       );
     }
 
