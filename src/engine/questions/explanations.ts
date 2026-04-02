@@ -1,10 +1,12 @@
 import { getLetter } from "../../data/letters.js";
+import type { ArabicLetter } from "../../types/engine";
+import type { QuestionOption } from "../../types/question";
 
-export function getWrongExplanation(chosenId, correctId, mode) {
-  const c = getLetter(chosenId), t = getLetter(correctId);
+export function getWrongExplanation(chosenId: number | string, correctId: number | string, mode: string): string {
+  const c = getLetter(chosenId as number), t = getLetter(correctId as number);
   if (!c || !t) return "Listen carefully and try again.";
   if (mode === "sound") {
-    const parts = [];
+    const parts: string[] = [];
     parts.push(`You picked ${c.name} (${c.letter}) \u2014 ${c.soundHint}.`);
     parts.push(`The answer is ${t.name} (${t.letter}) \u2014 ${t.soundHint}.`);
     if (c.family === t.family) {
@@ -43,10 +45,10 @@ export function getWrongExplanation(chosenId, correctId, mode) {
   return `That's ${c.name}, not ${t.name}. They have different shapes \u2014 look at the overall form.`;
 }
 
-export function getContrastExplanation(chosenId, correctId) {
-  const c = getLetter(chosenId), t = getLetter(correctId);
+export function getContrastExplanation(chosenId: number | string, correctId: number | string): string {
+  const c = getLetter(chosenId as number), t = getLetter(correctId as number);
   if (!c || !t) return "Listen carefully and try again.";
-  const parts = [];
+  const parts: string[] = [];
   parts.push(`You picked ${c.name} (${c.letter}) \u2014 ${c.soundHint}.`);
   parts.push(`The correct answer is ${t.name} (${t.letter}) \u2014 ${t.soundHint}.`);
   if (c.family === t.family) {
@@ -69,7 +71,11 @@ export function getContrastExplanation(chosenId, correctId) {
   return parts.join(" ");
 }
 
-export function getHarakatWrongExplanation(question, chosenId) {
+interface HarakatQuestion {
+  options: Array<{ id: string | number; label: string; isCorrect: boolean }>;
+}
+
+export function getHarakatWrongExplanation(question: HarakatQuestion, chosenId: string | number): string {
   const chosen = question.options.find(o => o.id === chosenId);
   const correct = question.options.find(o => o.isCorrect);
   if (!chosen || !correct) return "Look carefully and try again.";
