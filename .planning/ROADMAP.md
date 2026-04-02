@@ -33,7 +33,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
 - [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
 - [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
-- [ ] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests
+- [ ] **Phase 8: Cloud Sync & Social** (1/7 plans) — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests
 
 ## Phase Details
 
