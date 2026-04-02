@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
-status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-04-02T01:32:11.484Z"
+status: verifying
+stopped_at: Completed 05-02-PLAN.md
+last_updated: "2026-04-02T01:39:17.200Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-01)
 
 Phase: 05 (conversion-surfaces) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
 Progress: [..........] 0%
@@ -52,6 +52,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 04]: Used targetId from QuizResultItem for session result mapping (plan referenced non-existent targetEntity)
 - [Phase 04]: Insight sections positioned between StatsRow and Phase Progress on progress tab for maximum visibility
 - [Phase 05]: Extended vitest setup.ts with react-native-svg, reanimated Easing, and expo-haptics mocks for component-level testing
+- [Phase 05]: Used FadeInDown.springify() for UpgradeCard entrance animation for natural feel
+- [Phase 05]: Celebration-then-offer pattern: celebrate achievement first, delay monetization surface by 1.5s
 
 ### Pending Todos
 
@@ -64,6 +66,6 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 
 ## Session Continuity
 
-Last session: 2026-04-02T01:32:11.480Z
-Stopped at: Completed 05-01-PLAN.md
+Last session: 2026-04-02T01:39:17.196Z
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None

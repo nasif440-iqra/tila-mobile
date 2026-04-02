@@ -96,7 +96,7 @@ Plans:
 **Plans:** 1/2 plans executed
 Plans:
 - [x] 05-01-PLAN.md — Monetization component library: LockIcon, UpgradeCard, TrialCountdownBadge (CONV-06, CONV-07)
-- [ ] 05-02-PLAN.md — Wire components into screens: celebration flow, locked gate, JourneyNode, trial badge (CONV-06, CONV-07)
+- [x] 05-02-PLAN.md — Wire components into screens: celebration flow, locked gate, JourneyNode, trial badge (CONV-06, CONV-07)
 **Success Criteria** (what must be TRUE):
   1. Upgrade card, trial badge, and expired card use the design system (tokens, fonts, colors, shadows) — visually match onboarding quality
   2. Paywall triggers after completing lesson 7 and when free user taps lesson 8+
