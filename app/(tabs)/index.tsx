@@ -37,6 +37,7 @@ import {
 } from "../../src/engine/selectors";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
+import { TrialCountdownBadge } from "../../src/components/monetization/TrialCountdownBadge";
 import { WirdTooltip } from "../../src/components/home/WirdTooltip";
 import HeroCard from "../../src/components/home/HeroCard";
 import LessonGrid from "../../src/components/home/LessonGrid";
@@ -482,6 +483,9 @@ export default function HomeScreen() {
           <Animated.View style={[styles.headerRight, headerEntranceStyle]}>
             {dailyGoal > 0 && (
               <DailyGoalPill todayCount={todayLessonCount} goal={dailyGoal} colors={colors} />
+            )}
+            {stage === "trial" && trialDaysRemaining !== null && (
+              <TrialCountdownBadge daysLeft={trialDaysRemaining} />
             )}
             {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
             <WirdTooltip visible={showWirdTooltip} onDismiss={handleWirdTooltipDismiss} />
