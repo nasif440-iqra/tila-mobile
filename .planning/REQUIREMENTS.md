@@ -33,7 +33,7 @@
 - [x] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
 - [x] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
 - [x] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
-- [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
+- [x] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
 - [x] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
 - [x] **RET-07**: Privacy manifest updated for auth + cloud sync data collection
 - [ ] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
