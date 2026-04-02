@@ -31,7 +31,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [x] **Phase 3: Onboarding & Personalization** — Name input, wird explanation, personalized home screen (completed 2026-04-01)
 - [x] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7 (completed 2026-04-02)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
-- [x] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission (completed 2026-04-02)
+- [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
 - [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
 - [ ] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests
 
@@ -166,6 +166,6 @@ Phase 2 (cleanup) ───────┘                                      
 | 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
 | 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
-| 6. App Store Submission | 1/1 | Complete   | 2026-04-02 |
-| 7. Engine TypeScript Migration | 0/TBD | Not started | - |
+| 6. App Store Submission | 0/TBD | Not started | - |
+| 7. Engine TypeScript Migration | 1/4 | In Progress | - |
 | 8. Cloud Sync & Social | 0/TBD | Not started | - |
