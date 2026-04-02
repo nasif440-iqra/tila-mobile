@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
 status: verifying
-stopped_at: Completed 08-07-PLAN.md
-last_updated: "2026-04-02T20:44:27.444Z"
+stopped_at: Completed 08-08-PLAN.md
+last_updated: "2026-04-02T21:02:24.776Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
   completed_phases: 6
-  total_plans: 10
-  completed_plans: 10
+  total_plans: 23
+  completed_plans: 22
   percent: 0
 ---
 
@@ -55,6 +55,7 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 05]: Used FadeInDown.springify() for UpgradeCard entrance animation for natural feel
 - [Phase 05]: Celebration-then-offer pattern: celebrate achievement first, delay monetization surface by 1.5s
 - [Phase 08]: Inlined sync/auth logic in test files since cloud deps not installed in worktree
+- [Phase 08]: AccountPrompt rendered as Fragment sibling to LessonSummary (modal overlay, not replacement)
 
 ### Pending Todos
 
@@ -67,6 +68,6 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 
 ## Session Continuity
 
-Last session: 2026-04-02T20:44:27.439Z
-Stopped at: Completed 08-07-PLAN.md
+Last session: 2026-04-02T21:02:24.772Z
+Stopped at: Completed 08-08-PLAN.md
 Resume file: None

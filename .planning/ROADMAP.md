@@ -139,7 +139,7 @@ Plans:
 - [x] 08-05-PLAN.md — Social layer (friends, invites, FriendsList, InviteCard)
 - [x] 08-06-PLAN.md — Theme preference hook, adaptive return welcome, dark mode activation
 - [x] 08-07-PLAN.md — Integration tests (onboarding, lesson completion, premium locking, restore purchases)
-- [ ] 08-08-PLAN.md — Gap closure: Wire AccountPrompt into lesson completion flow (RET-03)
+- [x] 08-08-PLAN.md — Gap closure: Wire AccountPrompt into lesson completion flow (RET-03)
 - [ ] 08-09-PLAN.md — Gap closure: Rewrite sync/auth tests to import real source (RET-09)
 **Success Criteria** (what must be TRUE):
   1. Shared state provider exists — screens subscribe to canonical progress/habit/subscription state

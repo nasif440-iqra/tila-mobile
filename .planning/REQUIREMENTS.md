@@ -31,7 +31,7 @@
 
 - [ ] **RET-01**: All 18 engine .js files migrated to TypeScript with proper type annotations
 - [ ] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
-- [ ] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
+- [x] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
 - [ ] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
 - [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
 - [ ] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
