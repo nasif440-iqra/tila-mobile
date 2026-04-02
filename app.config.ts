@@ -31,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       UIBackgroundModes: [],
       ITSAppUsesNonExemptEncryption: false,
     },
+    usesAppleSignIn: true,
   },
   android: {
     adaptiveIcon: {
@@ -47,6 +48,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-audio",
     "expo-secure-store",
     "expo-asset",
+    "expo-apple-authentication",
+    "expo-crypto",
+    "@react-native-google-signin/google-signin",
     [
       "@sentry/react-native/expo",
       {
