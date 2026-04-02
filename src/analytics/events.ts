@@ -64,6 +64,7 @@ export interface ReturnWelcomeShownProps {
   current_wird: number;
   streak_broke: boolean;
   longest_wird: number;
+  absence_tier: "short" | "medium" | "long";
 }
 
 export interface PaywallShownProps {
