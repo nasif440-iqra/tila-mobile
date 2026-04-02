@@ -42,6 +42,9 @@ import { EmptyState } from "../../src/components/feedback/EmptyState";
 import { groupReviewsByDay, parseConfusionPairs } from "../../src/engine/insights";
 import { ConfusionPairsSection } from "../../src/components/insights/ConfusionPairsSection";
 import { ReviewScheduleSection } from "../../src/components/insights/ReviewScheduleSection";
+import { FriendsList } from "../../src/components/social/FriendsList";
+import { InviteCard } from "../../src/components/social/InviteCard";
+import { useAuth } from "../../src/auth/hooks";
 
 // ── Privacy policy URL ──
 // Replace this with the hosted URL before App Store submission
@@ -61,6 +64,7 @@ export default function ProgressScreen() {
   const router = useRouter();
   const db = useDatabase();
   const progress = useProgress();
+  const { isAnonymous } = useAuth();
 
   const handleResetProgress = useCallback(() => {
     Alert.alert(
@@ -345,6 +349,22 @@ export default function ProgressScreen() {
             today={today}
           />
         </Animated.View>
+
+        {/* ── Friends Section (authenticated users only) ── */}
+        {!isAnonymous && (
+          <View style={{ marginTop: spacing.xxxxl }}>
+            <Text
+              style={[
+                typography.sectionHeader,
+                { color: colors.brownLight, marginBottom: spacing.sm },
+              ]}
+            >
+              Friends
+            </Text>
+            <InviteCard />
+            <FriendsList />
+          </View>
+        )}
 
         {/* Restore purchases — shown for non-premium users */}
         {stage !== "trial" && stage !== "paid" && (

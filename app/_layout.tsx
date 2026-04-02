@@ -31,6 +31,7 @@ import { SubscriptionProvider } from "../src/monetization/provider";
 import { AuthProvider } from "../src/auth/provider";
 import { SyncProvider } from "../src/sync/provider";
 import { AppStateProvider } from "../src/state/provider";
+import { SocialProvider } from "../src/social/provider";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
@@ -80,6 +81,7 @@ export default function RootLayout() {
             <SyncProvider>
               <SubscriptionProvider>
                 <AppStateProvider>
+                  <SocialProvider>
                   <AnalyticsGate>
                     <Stack
                       screenOptions={{
@@ -105,6 +107,7 @@ export default function RootLayout() {
                       />
                     </Stack>
                   </AnalyticsGate>
+                  </SocialProvider>
                 </AppStateProvider>
               </SubscriptionProvider>
             </SyncProvider>

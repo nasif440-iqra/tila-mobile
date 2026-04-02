@@ -3,14 +3,7 @@ import { supabase } from '../auth/supabase';
 import { useAuth } from '../auth/hooks';
 import { getFriendStreaks, getPendingRequestCount, sendFriendRequest, removeFriend as removeFriendApi } from './friends';
 import { generateInviteCode as generateInviteCodeApi, resolveInviteCode, shareInviteLink } from './invite';
-import type { SocialContextValue, SocialState, FriendStreak, InviteCode } from './types';
-
-const defaultState: SocialState = {
-  friends: [],
-  pendingRequests: 0,
-  loading: true,
-  inviteCode: null,
-};
+import type { SocialContextValue, FriendStreak, InviteCode } from './types';
 
 export const SocialContext = createContext<SocialContextValue | null>(null);
 
