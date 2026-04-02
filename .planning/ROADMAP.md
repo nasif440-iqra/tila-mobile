@@ -33,7 +33,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
 - [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
 - [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
-- [x] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests (completed 2026-04-02)
+- [x] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests (completed 2026-04-02)
 
 ## Phase Details
 
@@ -130,6 +130,17 @@ Plans:
 **Goal**: Users have accounts, progress syncs to cloud, friends can see each other's progress, dark mode works
 **Depends on**: Phase 7 (typed engine) + Phase 6 (app in store)
 **Requirements**: RET-02, RET-03, RET-04, RET-05, RET-06, RET-07, RET-08, RET-09, RET-10
+**Plans:** 9 plans
+Plans:
+- [x] 08-01-PLAN.md — Auth + sync types, Supabase client, state types
+- [x] 08-02-PLAN.md — Auth provider, sync service, sync provider, DB migration v7
+- [x] 08-03-PLAN.md — AppStateProvider, AccountPrompt component, AuthScreen, auth route
+- [x] 08-04-PLAN.md — Supabase SQL migration, anonymous-to-auth migration
+- [x] 08-05-PLAN.md — Social layer (friends, invites, FriendsList, InviteCard)
+- [x] 08-06-PLAN.md — Theme preference hook, adaptive return welcome, dark mode activation
+- [x] 08-07-PLAN.md — Integration tests (onboarding, lesson completion, premium locking, restore purchases)
+- [ ] 08-08-PLAN.md — Gap closure: Wire AccountPrompt into lesson completion flow (RET-03)
+- [ ] 08-09-PLAN.md — Gap closure: Rewrite sync/auth tests to import real source (RET-09)
 **Success Criteria** (what must be TRUE):
   1. Shared state provider exists — screens subscribe to canonical progress/habit/subscription state
   2. User can create account (email or social auth) and sign in across devices
@@ -168,4 +179,4 @@ Phase 2 (cleanup) ───────┘                                      
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
-| 8. Cloud Sync & Social | 1/1 | Complete   | 2026-04-02 |
+| 8. Cloud Sync & Social | 7/9 | Gap closure | 2026-04-02 |
