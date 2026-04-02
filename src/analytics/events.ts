@@ -114,6 +114,26 @@ export interface ScholarshipLinkTappedProps {
   trigger: string;
 }
 
+export interface AuthSignInProps {
+  method: 'email' | 'apple' | 'google';
+}
+
+export interface AuthSignOutProps {
+  had_synced_data: boolean;
+}
+
+export interface SyncCompletedProps {
+  pushed: number;
+  pulled: number;
+  errors: number;
+  duration_ms: number;
+}
+
+export interface SyncFailedProps {
+  error_message: string;
+  table?: string;
+}
+
 export interface EventMap {
   app_opened: AppOpenedProps;
   onboarding_step_viewed: OnboardingStepViewedProps;
@@ -134,6 +154,10 @@ export interface EventMap {
   trial_expired: TrialExpiredProps;
   entitlement_changed: EntitlementChangedProps;
   scholarship_link_tapped: ScholarshipLinkTappedProps;
+  auth_sign_in: AuthSignInProps;
+  auth_sign_out: AuthSignOutProps;
+  sync_completed: SyncCompletedProps;
+  sync_failed: SyncFailedProps;
 }
 
 export type EventName = keyof EventMap;
