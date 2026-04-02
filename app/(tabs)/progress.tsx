@@ -39,6 +39,9 @@ import PhasePanel from "../../src/components/progress/PhasePanel";
 import LetterMasteryGrid from "../../src/components/progress/LetterMasteryGrid";
 import { PhaseDetailSheet } from "../../src/components/progress/PhaseDetailSheet";
 import { EmptyState } from "../../src/components/feedback/EmptyState";
+import { groupReviewsByDay, parseConfusionPairs } from "../../src/engine/insights";
+import { ConfusionPairsSection } from "../../src/components/insights/ConfusionPairsSection";
+import { ReviewScheduleSection } from "../../src/components/insights/ReviewScheduleSection";
 
 // ── Privacy policy URL ──
 // Replace this with the hosted URL before App Store submission
@@ -162,9 +165,22 @@ export default function ProgressScreen() {
     return { totalCorrect, totalAttempts, accuracy };
   }, [mastery.entities]);
 
+  // ── Insight data ──
+  const confusionPairs = useMemo(
+    () => parseConfusionPairs(mastery.confusions ?? {}, 5),
+    [mastery.confusions]
+  );
+
+  const reviewGroups = useMemo(
+    () => groupReviewsByDay(mastery.entities ?? {}, today),
+    [mastery.entities, today]
+  );
+
   // ── Staggered entrance animations ──
   const statsOpacity = useSharedValue(0);
   const statsTranslateY = useSharedValue(12);
+  const insightsOpacity = useSharedValue(0);
+  const insightsTranslateY = useSharedValue(12);
   const phasesOpacity = useSharedValue(0);
   const phasesTranslateY = useSharedValue(12);
   const masteryOpacity = useSharedValue(0);
@@ -177,18 +193,27 @@ export default function ProgressScreen() {
     statsOpacity.value = withTiming(1, timingConfig);
     statsTranslateY.value = withTiming(0, timingConfig);
 
-    // Phases section (staggered)
-    phasesOpacity.value = withDelay(staggers.normal.delay, withTiming(1, timingConfig));
-    phasesTranslateY.value = withDelay(staggers.normal.delay, withTiming(0, timingConfig));
+    // Insights section (staggered after stats)
+    insightsOpacity.value = withDelay(staggers.normal.delay, withTiming(1, timingConfig));
+    insightsTranslateY.value = withDelay(staggers.normal.delay, withTiming(0, timingConfig));
+
+    // Phases section (staggered after insights)
+    phasesOpacity.value = withDelay(staggers.normal.delay * 2, withTiming(1, timingConfig));
+    phasesTranslateY.value = withDelay(staggers.normal.delay * 2, withTiming(0, timingConfig));
 
     // Mastery section (more stagger)
-    masteryOpacity.value = withDelay(staggers.normal.delay * 2, withTiming(1, timingConfig));
-    masteryTranslateY.value = withDelay(staggers.normal.delay * 2, withTiming(0, timingConfig));
+    masteryOpacity.value = withDelay(staggers.normal.delay * 3, withTiming(1, timingConfig));
+    masteryTranslateY.value = withDelay(staggers.normal.delay * 3, withTiming(0, timingConfig));
   }, []);
 
   const statsAnimStyle = useAnimatedStyle(() => ({
     opacity: statsOpacity.value,
     transform: [{ translateY: statsTranslateY.value }],
+  }));
+
+  const insightsAnimStyle = useAnimatedStyle(() => ({
+    opacity: insightsOpacity.value,
+    transform: [{ translateY: insightsTranslateY.value }],
   }));
 
   const phasesAnimStyle = useAnimatedStyle(() => ({
@@ -266,6 +291,14 @@ export default function ProgressScreen() {
             hasAttempts={stats.totalAttempts > 0}
             currentPhase={currentLesson.phase}
           />
+        </Animated.View>
+
+        {/* ── Insight Sections (value communication) ── */}
+        <Animated.View style={insightsAnimStyle}>
+          <View style={{ marginTop: spacing.xl }}>
+            <ConfusionPairsSection confusionPairs={confusionPairs} />
+            <ReviewScheduleSection reviewGroups={reviewGroups} />
+          </View>
         </Animated.View>
 
         {/* ── Phase Progress ── */}
