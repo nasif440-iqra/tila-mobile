@@ -1,13 +1,16 @@
 import { getLetter } from "../../data/letters.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+import type { ArabicLetter } from "../../types/engine";
 import { shuffle, pickRandom, getKnownIds, getConfusionDistractors, makeOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP, SOUND_PROMPTS } from "./shared.js";
 
-export function generateSoundQs(lesson) {
+export function generateSoundQs(lesson: Lesson): Question[] {
   const known = getKnownIds(lesson.id);
   const allPool = [...new Set([...known, ...(lesson.teachIds || []), ...(lesson.reviewIds || [])])];
-  const teach = (lesson.teachIds || []).map(id => getLetter(id));
+  const teach = (lesson.teachIds || []).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
   const isLater = lesson.id >= 50;
   const dCount = isLater ? 2 : 1;
-  const qs = [];
+  const qs: Question[] = [];
 
   for (const t of teach) {
     const d = getConfusionDistractors(t.id, allPool, dCount);
@@ -37,7 +40,7 @@ export function generateSoundQs(lesson) {
     const candidates = teach.filter(t => (SOUND_CONFUSION_MAP[t.id] || []).some(id => allPool.includes(id)));
     for (const t of shuffle(candidates).slice(0, 1)) {
       const confusionIds = (SOUND_CONFUSION_MAP[t.id] || []).filter(id => allPool.includes(id));
-      const confusors = confusionIds.slice(0, 2).map(id => getLetter(id)).filter(Boolean);
+      const confusors = confusionIds.slice(0, 2).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
       if (confusors.length > 0) {
         qs.push({ type: "audio_to_letter", prompt: pickRandom(SOUND_PROMPTS.confused_contrast), targetId: t.id, hasAudio: true, isConfusionQ: true, options: makeOpts([t, ...confusors], t.id) });
       }

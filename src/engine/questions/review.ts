@@ -1,7 +1,19 @@
 import { getLetter } from "../../data/letters.js";
 import { getCombo, generateHarakatCombos } from "../../data/harakat.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+import type { ArabicLetter, HarakatCombo } from "../../types/engine";
 import { shuffle, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
 import { parseEntityKey } from "../mastery.js";
+
+interface ReviewProgress {
+  [key: number]: { sessionStreak?: number } | undefined;
+}
+
+/** Extended lesson for review-specific fields */
+interface ReviewLesson extends Lesson {
+  teachCombos?: string[];
+}
 
 /**
  * Generate questions for review sessions (spaced repetition).
@@ -17,12 +29,12 @@ import { parseEntityKey } from "../mastery.js";
  * Weight toward entities with lower SRS sessionStreak.
  * Generate min(dueCount * 3, 5) questions — micro-review by default.
  */
-export function generateReviewQs(lesson, progress) {
+export function generateReviewQs(lesson: ReviewLesson, progress: ReviewProgress | null | undefined): Question[] {
   const rawIds = lesson.teachIds || [];
 
   // Normalize: accept both entity keys and legacy numeric IDs
-  const letterIds = [];
-  const comboIds = [];
+  const letterIds: number[] = [];
+  const comboIds: string[] = [];
 
   for (const id of rawIds) {
     if (typeof id === "number") {
@@ -32,13 +44,13 @@ export function generateReviewQs(lesson, progress) {
       if (parsed.type === "letter" && typeof parsed.rawId === "number") {
         letterIds.push(parsed.rawId);
       } else if (parsed.type === "combo") {
-        comboIds.push(parsed.rawId);
+        comboIds.push(parsed.rawId as string);
       }
     }
   }
 
   // Also accept explicit teachCombos from the review payload
-  if (lesson.teachCombos?.length > 0) {
+  if (lesson.teachCombos?.length) {
     for (const cid of lesson.teachCombos) {
       if (!comboIds.includes(cid)) comboIds.push(cid);
     }
@@ -50,15 +62,15 @@ export function generateReviewQs(lesson, progress) {
 
   if (totalDue === 0) return [];
 
-  const qs = [];
+  const qs: Question[] = [];
 
-  // ── Letter review questions ──
+  // -- Letter review questions --
   if (dueLetterIds.length > 0) {
     const totalLetterQs = Math.min(dueLetterIds.length * 3, 5);
     const allPool = [...dueLetterIds];
 
     // Weight toward letters with lower sessionStreak
-    const weighted = [];
+    const weighted: number[] = [];
     for (const id of dueLetterIds) {
       const entry = progress?.[id];
       const streak = entry?.sessionStreak ?? 0;
@@ -69,7 +81,7 @@ export function generateReviewQs(lesson, progress) {
     // Build question targets: ensure each due letter appears at least once
     const guaranteed = shuffle([...dueLetterIds]).slice(0, Math.min(dueLetterIds.length, totalLetterQs));
     const remaining = totalLetterQs - guaranteed.length;
-    const extra = [];
+    const extra: number[] = [];
     for (let i = 0; i < remaining; i++) {
       const pool = weighted.length > 0 ? weighted : dueLetterIds;
       extra.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -101,7 +113,7 @@ export function generateReviewQs(lesson, progress) {
     }
   }
 
-  // ── Combo review questions (harakat) ──
+  // -- Combo review questions (harakat) --
   if (dueComboIds.length > 0) {
     const maxComboQs = Math.min(dueComboIds.length * 2, 5);
     let comboQCount = 0;
@@ -109,11 +121,11 @@ export function generateReviewQs(lesson, progress) {
     for (const cid of shuffle([...dueComboIds])) {
       if (comboQCount >= maxComboQs) break;
 
-      const combo = getCombo(cid);
+      const combo = getCombo(cid) as HarakatCombo | null;
       if (!combo) continue;
 
       // Get all combos for the same letter as distractors
-      const sameLetter = generateHarakatCombos([combo.letterId]);
+      const sameLetter = generateHarakatCombos([combo.letterId]) as HarakatCombo[];
       if (sameLetter.length < 2) continue;
 
       // Q1: "Which one says X?" — identify correct combo among same-letter options
@@ -123,7 +135,6 @@ export function generateReviewQs(lesson, progress) {
         targetId: combo.id,
         isHarakat: true,
         hasAudio: true,
-        ttsText: combo.audioText,
         options: shuffle(sameLetter.map(c => ({
           id: c.id, label: c.display, isCorrect: c.id === combo.id,
         }))),
@@ -139,7 +150,6 @@ export function generateReviewQs(lesson, progress) {
         promptSubtext: "What sound does this make?",
         targetId: combo.id,
         isHarakat: true,
-        ttsText: combo.audioText,
         options: shuffle(sameLetter.map(c => ({
           id: c.id, label: `\u201C${c.sound}\u201D`, isCorrect: c.id === combo.id,
         }))),

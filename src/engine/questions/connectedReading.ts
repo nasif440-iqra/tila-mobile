@@ -1,31 +1,69 @@
 import { getLetter } from "../../data/letters.js";
+import type { Lesson } from "../../types/lesson";
+import type { ArabicLetter } from "../../types/engine";
+import type { QuestionOption } from "../../types/question";
 import { shuffle, pickRandom } from "./shared.js";
 
-const VOWEL_MARKS = {
+const VOWEL_MARKS: Record<string, string> = {
   fatha: "\u064E",
   kasra: "\u0650",
   damma: "\u064F",
 };
 
-const VOWEL_SOUNDS = {
+const VOWEL_SOUNDS: Record<string, string> = {
   fatha: "a",
   kasra: "i",
   damma: "u",
 };
 
-const VOWEL_NAMES = {
+const VOWEL_NAMES: Record<string, string> = {
   fatha: "Fatha",
   kasra: "Kasra",
   damma: "Damma",
 };
 
-function getTranslitBase(letter) {
+interface BuildupSegment {
+  arabic: string;
+  sound: string;
+  letterId: number;
+}
+
+interface BuildupExercise {
+  type: string;
+  segments: BuildupSegment[];
+  fullWord: {
+    arabic: string;
+    transliteration: string;
+    ttsText: string;
+  };
+  explanation: string;
+}
+
+interface ConnectedReadingExercise {
+  type: string;
+  prompt?: string;
+  displayArabic?: string;
+  targetId?: string | number;
+  options?: QuestionOption[];
+  segments?: BuildupSegment[];
+  fullWord?: {
+    arabic: string;
+    transliteration: string;
+    ttsText: string;
+  };
+  explanation?: string;
+  arabic?: string;
+  transliteration?: string;
+  ttsText?: string;
+}
+
+function getTranslitBase(letter: ArabicLetter): string {
   let base = letter.transliteration;
   if (base === "'a") return "'";
   return base;
 }
 
-function buildBuildupPair(letterId1, letterId2, vowelId) {
+function buildBuildupPair(letterId1: number, letterId2: number, vowelId: string): BuildupExercise | null {
   const l1 = getLetter(letterId1);
   const l2 = getLetter(letterId2);
   if (!l1 || !l2) return null;
@@ -57,7 +95,7 @@ function buildBuildupPair(letterId1, letterId2, vowelId) {
   };
 }
 
-function buildFreeRead(buildupExercise) {
+function buildFreeRead(buildupExercise: BuildupExercise): ConnectedReadingExercise {
   return {
     type: "free_read",
     arabic: buildupExercise.fullWord.arabic,
@@ -67,7 +105,7 @@ function buildFreeRead(buildupExercise) {
   };
 }
 
-function buildComprehension(buildupExercise, allBuildup) {
+function buildComprehension(buildupExercise: BuildupExercise, allBuildup: BuildupExercise[]): ConnectedReadingExercise {
   const correct = buildupExercise.fullWord.transliteration;
   const distractors = allBuildup
     .filter(e => e.fullWord.transliteration !== correct)
@@ -100,15 +138,13 @@ function buildComprehension(buildupExercise, allBuildup) {
 
 /**
  * Generate exercises for Phase 5 connected reading lessons.
- * @param {{ id: number, phase: number, lessonMode: string, lessonType: string, module: string, teachIds: number[], reviewIds: number[] }} lesson
- * @returns {Array}
  */
-export function generateConnectedReadingExercises(lesson) {
+export function generateConnectedReadingExercises(lesson: Lesson): ConnectedReadingExercise[] {
   if (!lesson) return [];
   const teachIds = lesson.teachIds || [];
   if (teachIds.length < 2) return [];
 
-  const allBuildup = [];
+  const allBuildup: BuildupExercise[] = [];
 
   // Generate buildup pairs for each adjacent pair and each vowel
   for (let i = 0; i < teachIds.length - 1; i++) {
@@ -126,7 +162,7 @@ export function generateConnectedReadingExercises(lesson) {
   const freeReads = freeReadSource.map(buildFreeRead);
 
   // Generate 1 comprehension exercise from any buildup word
-  const compSource = pickRandom(selectedBuildup);
+  const compSource = pickRandom(selectedBuildup)!;
   const comprehension = buildComprehension(compSource, allBuildup);
 
   return [...selectedBuildup, ...freeReads, comprehension];

@@ -53,6 +53,9 @@ describe("classifyLetters — entity-keyed mastery format", () => {
       id: 9999,
       phase: 1,
       lessonMode: "checkpoint",
+      module: "test",
+      title: "Test Checkpoint",
+      description: "Test checkpoint lesson",
       teachIds: [1, 2, 3], // 3 letters → remaining = 15 - 3 = 12 extra slots
       reviewIds: [],
     };

@@ -1,5 +1,27 @@
 import { ARABIC_LETTERS, getLetter } from "../../data/letters.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+import type { ArabicLetter } from "../../types/engine";
 import { shuffle, getDistractors, getConfusionDistractors, getRuleDistractors, makeOpts, makeNameOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP } from "./shared.js";
+
+interface LetterEntry {
+  attempts?: number;
+  correct?: number;
+  sessionStreak?: number;
+}
+
+interface CheckpointProgress {
+  mastery?: {
+    entities?: Record<string, LetterEntry>;
+  };
+  [key: number]: LetterEntry | undefined;
+}
+
+interface ClassifiedLetters {
+  struggled: number[];
+  unseen: number[];
+  strong: number[];
+}
 
 /**
  * Generate questions for checkpoint lessons.
@@ -7,7 +29,7 @@ import { shuffle, getDistractors, getConfusionDistractors, getRuleDistractors, m
  * Phase 1 checkpoint: visual recognition questions (tap, rule, name/letter matching)
  * Phase 2 checkpoint: sound mastery questions (audio-to-letter, letter-to-sound, contrast)
  */
-export function generateCheckpointQs(lesson, progress) {
+export function generateCheckpointQs(lesson: Lesson, progress: CheckpointProgress | null | undefined): Question[] {
   if (lesson.phase === 2) {
     return generateSoundCheckpointQs(lesson, progress);
   }
@@ -17,10 +39,10 @@ export function generateCheckpointQs(lesson, progress) {
 /**
  * Phase 1 checkpoint: visual recognition.
  */
-function generateRecognitionCheckpointQs(lesson, progress) {
+function generateRecognitionCheckpointQs(lesson: Lesson, progress: CheckpointProgress | null | undefined): Question[] {
   const allIds = lesson.teachIds || [];
   const allPool = [...allIds];
-  const qs = [];
+  const qs: Question[] = [];
 
   const { struggled, unseen, strong } = classifyLetters(allIds, progress);
 
@@ -33,7 +55,7 @@ function generateRecognitionCheckpointQs(lesson, progress) {
   const guaranteed = shuffle([...allIds]).slice(0, Math.min(allIds.length, 15));
   const remaining = 15 - guaranteed.length;
 
-  const extra = [];
+  const extra: number[] = [];
   for (let i = 0; i < remaining; i++) {
     const pool = weightedPool.length > 0 ? weightedPool : allIds;
     extra.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -69,18 +91,11 @@ function generateRecognitionCheckpointQs(lesson, progress) {
 
 /**
  * Phase 2 checkpoint: sound mastery.
- *
- * Question types:
- * - audio_to_letter: play a sound, pick the correct letter (tests listening)
- * - letter_to_sound: show a letter, pick the correct sound description (tests recall)
- * - contrast_audio: play a sound from a confusable pair, pick correctly (tests discrimination)
- *
- * Weights toward letters the user has struggled with in sound skills.
  */
-function generateSoundCheckpointQs(lesson, progress) {
+function generateSoundCheckpointQs(lesson: Lesson, progress: CheckpointProgress | null | undefined): Question[] {
   const allIds = lesson.teachIds || [];
   const allPool = [...allIds];
-  const qs = [];
+  const qs: Question[] = [];
 
   const { struggled, unseen, strong } = classifyLetters(allIds, progress);
 
@@ -93,7 +108,7 @@ function generateSoundCheckpointQs(lesson, progress) {
   const guaranteed = shuffle([...allIds]).slice(0, Math.min(allIds.length, 15));
   const remaining = 15 - guaranteed.length;
 
-  const extra = [];
+  const extra: number[] = [];
   for (let i = 0; i < remaining; i++) {
     const pool = weightedPool.length > 0 ? weightedPool : allIds;
     extra.push(pool[Math.floor(Math.random() * pool.length)]);
@@ -112,7 +127,6 @@ function generateSoundCheckpointQs(lesson, progress) {
     const type = qTypes[i % qTypes.length];
 
     if (type === "audio_to_letter") {
-      // Play the letter's sound, user picks the correct letter
       const d = getConfusionDistractors(t.id, allPool, 2);
       const hasConfusion = d.some(l => (SOUND_CONFUSION_MAP[t.id] || []).includes(l.id));
       qs.push({
@@ -123,7 +137,6 @@ function generateSoundCheckpointQs(lesson, progress) {
         options: makeOpts([t, ...d], t.id),
       });
     } else if (type === "letter_to_sound") {
-      // Show the letter, user picks the correct sound description
       const d = getConfusionDistractors(t.id, allPool, 2);
       qs.push({
         type: "letter_to_sound",
@@ -134,7 +147,6 @@ function generateSoundCheckpointQs(lesson, progress) {
         options: makeSoundOpts([t, ...d], t.id),
       });
     } else if (type === "contrast_audio") {
-      // Play a sound from a confusable pair
       const confusionIds = (SOUND_CONFUSION_MAP[t.id] || []).filter(id => allPool.includes(id));
       if (confusionIds.length > 0) {
         const confusor = getLetter(confusionIds[0]);
@@ -148,7 +160,6 @@ function generateSoundCheckpointQs(lesson, progress) {
           });
         }
       } else {
-        // No confusable pair — fall back to audio_to_letter
         const d = getConfusionDistractors(t.id, allPool, 2);
         qs.push({
           type: "audio_to_letter",
@@ -165,15 +176,15 @@ function generateSoundCheckpointQs(lesson, progress) {
 }
 
 /** Classify letters by user performance. */
-function classifyLetters(allIds, progress) {
-  const struggled = [];
-  const unseen = [];
-  const strong = [];
+function classifyLetters(allIds: number[], progress: CheckpointProgress | null | undefined): ClassifiedLetters {
+  const struggled: number[] = [];
+  const unseen: number[] = [];
+  const strong: number[] = [];
 
   for (const id of allIds) {
     // Try entity-keyed format first (e.g. progress.mastery.entities["letter:5"]),
     // then fall back to legacy numeric-keyed format (progress[5]).
-    const entry =
+    const entry: LetterEntry | undefined =
       progress?.mastery?.entities?.[`letter:${id}`] ?? progress?.[id];
     if (!entry || (entry.attempts ?? 0) === 0) {
       unseen.push(id);

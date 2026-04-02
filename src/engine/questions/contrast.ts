@@ -1,9 +1,12 @@
 import { getLetter } from "../../data/letters.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+import type { ArabicLetter } from "../../types/engine";
 import { shuffle, pickRandom, makeOpts, makeSoundOpts, SOUND_PROMPTS } from "./shared.js";
 
-export function generateContrastQs(lesson) {
-  const teach = (lesson.teachIds || []).map(id => getLetter(id));
-  const qs = [];
+export function generateContrastQs(lesson: Lesson): Question[] {
+  const teach = (lesson.teachIds || []).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
+  const qs: Question[] = [];
 
   // Round 1: hear sound, pick letter
   for (const t of teach) {

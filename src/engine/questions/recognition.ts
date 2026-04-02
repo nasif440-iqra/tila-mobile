@@ -1,11 +1,14 @@
 import { ARABIC_LETTERS, getLetter } from "../../data/letters.js";
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+import type { ArabicLetter } from "../../types/engine";
 import { shuffle, getKnownIds, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
 
-export function generateRecognitionQs(lesson) {
+export function generateRecognitionQs(lesson: Lesson): Question[] {
   const known = getKnownIds(lesson.id);
   const allPool = [...new Set([...known, ...(lesson.teachIds || []), ...(lesson.reviewIds || [])])];
-  const teach = (lesson.teachIds || []).map(id => getLetter(id));
-  const qs = [];
+  const teach = (lesson.teachIds || []).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
+  const qs: Question[] = [];
   const isLater = lesson.id >= 8;
 
   if (teach.length === 1) {
@@ -28,7 +31,7 @@ export function generateRecognitionQs(lesson) {
     }
     const nameLetters = shuffle([...teach]).slice(0, 2);
     for (const t of nameLetters) {
-      const familyDistractors = isLater ? ARABIC_LETTERS.filter(l => l.family === t.family && l.id !== t.id) : [];
+      const familyDistractors = isLater ? ARABIC_LETTERS.filter((l: ArabicLetter) => l.family === t.family && l.id !== t.id) : [];
       const optLetters = familyDistractors.length > 0
         ? [t, ...shuffle(familyDistractors).slice(0, 2)]
         : teach.length === 3 ? teach : [...teach, ...getDistractors(t.id, allPool, 1)];

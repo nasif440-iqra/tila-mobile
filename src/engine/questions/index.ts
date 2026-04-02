@@ -1,3 +1,6 @@
+import type { Lesson } from "../../types/lesson";
+import type { Question } from "../../types/question";
+
 export { shuffle, pickRandom } from "./shared.js";
 export { generateRecognitionQs } from "./recognition.js";
 export { generateSoundQs } from "./sound.js";
@@ -15,8 +18,16 @@ import { filterValidQuestions } from "./shared.js";
 import { generateConnectedFormExercises } from "./connectedForms.js";
 import { generateConnectedReadingExercises } from "./connectedReading.js";
 
-export function generateLessonQuestions(lesson, progress) {
-  let qs;
+/** Progress data passed through to individual generators (checkpoint, review). */
+interface LessonProgress {
+  mastery?: {
+    entities?: Record<string, { correct?: number; attempts?: number; sessionStreak?: number }>;
+  };
+  [key: number]: { correct?: number; attempts?: number; sessionStreak?: number } | undefined;
+}
+
+export function generateLessonQuestions(lesson: Lesson, progress?: LessonProgress | null): Question[] {
+  let qs: Question[];
   if (lesson.lessonMode === "checkpoint") qs = generateCheckpointQs(lesson, progress);
   else if (lesson.lessonMode === "review") qs = generateReviewQs(lesson, progress);
   else if (lesson.lessonMode === "contrast") qs = generateContrastQs(lesson);
@@ -33,8 +44,8 @@ export function generateLessonQuestions(lesson, progress) {
  * These return exercise objects (not quiz questions) for the hybrid lesson framework.
  * Falls back to standard question generation for non-hybrid modes.
  */
-export function generateHybridExercises(lesson, progress) {
-  if (lesson.lessonMode === "connected-forms") return generateConnectedFormExercises(lesson);
-  if (lesson.lessonMode === "connected-reading") return generateConnectedReadingExercises(lesson);
+export function generateHybridExercises(lesson: Lesson, progress?: LessonProgress | null): Question[] {
+  if (lesson.lessonMode === "connected-forms") return generateConnectedFormExercises(lesson) as unknown as Question[];
+  if (lesson.lessonMode === "connected-reading") return generateConnectedReadingExercises(lesson) as unknown as Question[];
   return generateLessonQuestions(lesson, progress);
 }
