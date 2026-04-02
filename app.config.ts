@@ -75,7 +75,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-asset",
     "expo-apple-authentication",
-    "expo-crypto",
+    "expo-web-browser",
     "@react-native-google-signin/google-signin",
     [
       "@sentry/react-native/expo",
