@@ -19,6 +19,7 @@ import {
   shadows,
   fontFamilies,
 } from "../../design/tokens";
+import { LockIcon } from "../monetization/LockIcon";
 import { springs, staggers, easings, pressScale } from "../../design/animations";
 import { hapticTap } from "../../design/haptics";
 import { getLetter } from "../../data/letters.js";
@@ -268,9 +269,12 @@ export function JourneyNode({
         <Text style={[styles.nodeTitle, { color: colors.textMuted }]}>
           {lesson.title}
         </Text>
-        <Text style={[styles.nodeSubtitle, { color: premiumLocked ? colors.accent : colors.textMuted }]}>
-          {premiumLocked ? "\uD83D\uDD12 Premium" : "Locked"}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.xs }}>
+          {premiumLocked && <LockIcon size={12} color={colors.accent} />}
+          <Text style={[styles.nodeSubtitle, { color: premiumLocked ? colors.accent : colors.textMuted }]}>
+            {premiumLocked ? "Unlock with Tila Premium" : "Locked"}
+          </Text>
+        </View>
       </View>
     );
   }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Linking } from "react-native";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +19,8 @@ import { useHabit } from "../../src/hooks/useHabit";
 import { useSubscription, useCanAccessLesson, FREE_LESSON_CUTOFF } from "../../src/monetization/hooks";
 import { savePremiumLessonGrant } from "../../src/engine/progress";
 import { useDatabase } from "../../src/db/provider";
-import { Linking } from "react-native";
+import { LockIcon } from "../../src/components/monetization/LockIcon";
+import { UpgradeCard } from "../../src/components/monetization/UpgradeCard";
 import { getPassThreshold } from "../../src/engine/outcome";
 import { mapQuizResultsToAttempts } from '../../src/types/quiz';
 import type { QuizResultItem } from '../../src/types/quiz';
@@ -276,29 +277,33 @@ export default function LessonScreen() {
   if (lesson && !canAccess) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
-        <View style={styles.errorContent}>
-          <Text style={[typography.heading2, { color: colors.text, textAlign: "center" }]}>
-            Premium Lesson
+        <ScrollView contentContainerStyle={styles.lockedGateContent}>
+          <LockIcon size={48} color={colors.accent} />
+          <Text style={[
+            typography.heading2,
+            { color: colors.text, textAlign: "center", marginTop: spacing.lg }
+          ]}>
+            Unlock with Tila Premium
           </Text>
-          <Text
-            style={[
-              typography.body,
-              { color: colors.textMuted, textAlign: "center", marginTop: spacing.md },
-            ]}
-          >
+          <Text style={[
+            typography.body,
+            { color: colors.textMuted, textAlign: "center", marginTop: spacing.sm, marginBottom: spacing.xl }
+          ]}>
             {subStage === "unknown"
-              ? "Couldn't verify your subscription. Connect to the internet to continue."
-              : "This lesson requires Tila Premium."}
+              ? "Couldn\u2019t verify your subscription. Connect to the internet to continue."
+              : `Lesson ${lesson.id}: ${lesson.title} requires Tila Premium.`}
           </Text>
-          <View style={{ marginTop: spacing.xl, gap: spacing.md }}>
-            {subStage !== "unknown" && (
-              <Button title="Start Free Trial" onPress={async () => {
-                const outcome = await showPaywall("lesson_locked");
-              }} />
-            )}
+          {subStage !== "unknown" && (
+            <UpgradeCard
+              variant="locked-gate"
+              onStartTrial={async () => { await showPaywall("lesson_locked"); }}
+              onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
+            />
+          )}
+          <View style={{ marginTop: spacing.xl }}>
             <Button title="Go Home" variant="ghost" onPress={() => router.replace("/(tabs)")} />
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     );
   }
@@ -405,5 +410,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: spacing.xl,
+  },
+  lockedGateContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.xxxl,
   },
 });
