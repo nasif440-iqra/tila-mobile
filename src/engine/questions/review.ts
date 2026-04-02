@@ -4,7 +4,7 @@ import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { ArabicLetter, HarakatCombo } from "../../types/engine";
 import { shuffle, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
-import { parseEntityKey } from "../mastery.js";
+import { parseEntityKey } from "../mastery";
 
 interface ReviewProgress {
   [key: number]: { sessionStreak?: number } | undefined;

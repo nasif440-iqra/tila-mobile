@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
 status: verifying
-stopped_at: Completed 07-02-PLAN.md
+stopped_at: Completed 05-02-PLAN.md
 last_updated: "2026-04-02T01:44:52.688Z"
 last_activity: 2026-04-02
 progress:
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-01)
 
 **Core value:** A personal, trustworthy Quran reading teacher that remembers what you forget and never loses your progress
-**Current focus:** Phase 07 — engine-typescript-migration
+**Current focus:** Phase 05 — conversion-surfaces
 
 ## Current Position
 
-Phase: 7
-Plan: 2 of 4
-Status: Executing plan 07-02
+Phase: 6
+Plan: Not started
+Status: Phase complete — ready for verification
 Last activity: 2026-04-02
 
 Progress: [..........] 0%
@@ -54,9 +54,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 05]: Extended vitest setup.ts with react-native-svg, reanimated Easing, and expo-haptics mocks for component-level testing
 - [Phase 05]: Used FadeInDown.springify() for UpgradeCard entrance animation for natural feel
 - [Phase 05]: Celebration-then-offer pattern: celebrate achievement first, delay monetization surface by 1.5s
-- [Phase 07]: HarakatLesson extended interface for harakat-specific lesson fields not on base Lesson
-- [Phase 07]: LessonProgress unified interface in index.ts for progress pass-through to checkpoint/review generators
-- [Phase 07]: ConnectedFormExercise local interface for Phase 4 exercise types (different shape from Question)
+- [Phase 07]: Imported EntityState/SkillState/ConfusionState from progress.ts for mastery type sharing (avoids duplication)
+- [Phase 07]: Used readonly arrays for engagement microcopy constants to prevent mutation
 
 ### Pending Todos
 
@@ -70,5 +69,5 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 ## Session Continuity
 
 Last session: 2026-04-02T01:39:17.196Z
-Stopped at: Completed 07-02-PLAN.md
+Stopped at: Completed 07-04-PLAN.md (engine TypeScript migration — final 4 files)
 Resume file: None

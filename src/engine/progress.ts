@@ -6,7 +6,7 @@
 
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { SEED_DEFAULTS } from '../db/schema';
-import { normalizeEntityKey, mergeQuizResultsIntoMastery } from './mastery.js';
+import { normalizeEntityKey, mergeQuizResultsIntoMastery } from './mastery';
 import type { QuizResultItem } from '../types/quiz';
 
 // ── State Shape Types ──────────────────────────────────────────────

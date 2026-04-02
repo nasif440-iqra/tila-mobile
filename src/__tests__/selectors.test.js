@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { LESSONS } from "../data/lessons.js";
-import { getCurrentLesson, getCurrentUnlockedLesson, getLearnedLetterIds, getPhaseCounts, getDailyGoal, getDueLetters, getLessonsCompletedCount, getLastCompletedLesson, planReviewSession } from "../engine/selectors.js";
-import { isPhase4Unlocked } from "../engine/unlock.js";
+import { getCurrentLesson, getCurrentUnlockedLesson, getLearnedLetterIds, getPhaseCounts, getDailyGoal, getDueLetters, getLessonsCompletedCount, getLastCompletedLesson, planReviewSession } from "../engine/selectors";
+import { isPhase4Unlocked } from "../engine/unlock";
 
 const ALL_IDS = LESSONS.map(l => l.id);
 const LAST_LESSON_ID = LESSONS[LESSONS.length - 1].id;
@@ -173,7 +173,7 @@ describe("getLastCompletedLesson", () => {
 
 // ── Fix 4: Combo review support ──
 
-import { extractReviewItems, buildReviewLessonPayload } from "../engine/selectors.js";
+import { extractReviewItems, buildReviewLessonPayload } from "../engine/selectors";
 
 describe("extractReviewItems", () => {
   it("separates letter and combo entity keys", () => {

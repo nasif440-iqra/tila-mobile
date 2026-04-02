@@ -19,7 +19,7 @@ import {
   emptyMastery,
   migrateFlatProgressToEntities,
   buildLegacyProgressView,
-} from "../engine/mastery.js";
+} from "../engine/mastery";
 import {
   getDueEntityKeys,
   getWeakEntityKeys,
@@ -29,7 +29,7 @@ import {
   getMasteryStateCounts,
   getEntitiesByMasteryState,
   getErrorCategorySummary,
-} from "../engine/selectors.js";
+} from "../engine/selectors";
 import { getLetter } from "../data/letters.js";
 
 // ── Entity key normalization ──

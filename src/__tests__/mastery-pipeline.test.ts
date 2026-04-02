@@ -44,7 +44,7 @@ describe("Mastery Pipeline", () => {
 
   it("deriveMasteryState returns 'introduced' for entity with few attempts", () => {
     const state = deriveMasteryState(
-      { attempts: 2, correct: 2, sessionStreak: 0, intervalDays: 1 },
+      { attempts: 2, correct: 2, sessionStreak: 0, intervalDays: 1, lastSeen: null, nextReview: null },
       "2026-03-28"
     );
     expect(state).toBe("introduced");

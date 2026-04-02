@@ -1,25 +1,32 @@
 import { LESSONS } from "../data/lessons.js";
-import { isLessonUnlocked } from "./unlock.js";
-import { parseEntityKey, deriveMasteryState, ERROR_CATEGORIES } from "./mastery.js";
+import { isLessonUnlocked } from "./unlock";
+import { parseEntityKey, deriveMasteryState, ERROR_CATEGORIES } from "./mastery";
+import type { ParsedEntityKey, MasteryState, MasteryData } from "./mastery";
+import type { EntityState, SkillState, ConfusionState } from "./progress";
+import type { Lesson } from "../types/lesson";
 
 /** Derived: count of completed lessons. */
-export function getLessonsCompletedCount(completedLessonIds) {
+export function getLessonsCompletedCount(completedLessonIds: number[]): number {
   return completedLessonIds.length;
 }
 
 /** Derived: last completed lesson object (or null). */
-export function getLastCompletedLesson(completedLessonIds) {
+export function getLastCompletedLesson(completedLessonIds: number[]): Lesson | null {
   if (!completedLessonIds.length) return null;
   const lastId = Math.max(...completedLessonIds);
   return LESSONS.find(l => l.id === lastId) || null;
 }
 
-export function getCurrentLesson(completedLessonIds) {
+export function getCurrentLesson(completedLessonIds: number[]): Lesson {
   return LESSONS.find(l => !completedLessonIds.includes(l.id)) || LESSONS[LESSONS.length - 1];
 }
 
 /** Returns the first lesson that is not completed AND actually unlocked. */
-export function getCurrentUnlockedLesson(completedLessonIds, entities, today) {
+export function getCurrentUnlockedLesson(
+  completedLessonIds: number[],
+  entities: Record<string, EntityState> | undefined,
+  today: string
+): Lesson {
   for (let i = 0; i < LESSONS.length; i++) {
     const l = LESSONS[i];
     if (completedLessonIds.includes(l.id)) continue;
@@ -29,13 +36,24 @@ export function getCurrentUnlockedLesson(completedLessonIds, entities, today) {
   return LESSONS[LESSONS.length - 1];
 }
 
-export function getLearnedLetterIds(completedLessonIds) {
+export function getLearnedLetterIds(completedLessonIds: number[]): number[] {
   return [...new Set(
     LESSONS.filter(l => completedLessonIds.includes(l.id)).flatMap(l => l.teachIds || [])
   )];
 }
 
-export function getPhaseCounts(completedLessonIds) {
+export interface PhaseCounts {
+  p1Done: number;
+  p2Done: number;
+  p3Done: number;
+  p4Done: number;
+  p1Total: number;
+  p2Total: number;
+  p3Total: number;
+  p4Total: number;
+}
+
+export function getPhaseCounts(completedLessonIds: number[]): PhaseCounts {
   const p1 = LESSONS.filter(l => l.phase === 1);
   const p2 = LESSONS.filter(l => l.phase === 2);
   const p3 = LESSONS.filter(l => l.phase === 3);
@@ -53,7 +71,7 @@ export function getPhaseCounts(completedLessonIds) {
 }
 
 /** Compute daily goal from onboardingDailyGoal value (canonical, passed from state). */
-export function getDailyGoal(onboardingDailyGoal) {
+export function getDailyGoal(onboardingDailyGoal: string | null | undefined): number {
   if (!onboardingDailyGoal) return 1;
   const minutes = parseInt(onboardingDailyGoal, 10);
   if (isNaN(minutes)) return 1;
@@ -61,14 +79,17 @@ export function getDailyGoal(onboardingDailyGoal) {
   return Math.max(1, Math.round(minutes / 5));
 }
 
-export function getCurrentPhase(completedLessonIds) {
+export function getCurrentPhase(completedLessonIds: number[]): number {
   const current = getCurrentLesson(completedLessonIds);
   return current.phase;
 }
 
-export function getDueLetters(progress, today) {
+export function getDueLetters(
+  progress: Record<string, EntityState>,
+  today: string
+): number[] {
   return Object.entries(progress)
-    .filter(([id, entry]) => {
+    .filter(([, entry]) => {
       if (!entry?.nextReview) return false;
       if (!entry?.lastSeen) return false;
       return entry.nextReview <= today;
@@ -79,7 +100,10 @@ export function getDueLetters(progress, today) {
 // ── Review planner (mastery-aware) ──
 
 /** Entity keys whose SRS nextReview is today or earlier. */
-export function getDueEntityKeys(entities, today) {
+export function getDueEntityKeys(
+  entities: Record<string, EntityState> | undefined,
+  today: string
+): string[] {
   if (!entities) return [];
   return Object.entries(entities)
     .filter(([, e]) => e?.nextReview && e?.lastSeen && e.nextReview <= today)
@@ -87,7 +111,10 @@ export function getDueEntityKeys(entities, today) {
 }
 
 /** Entity keys with accuracy below threshold (weak). Requires minimum attempts. */
-export function getWeakEntityKeys(entities, { minAttempts = 3, accuracyThreshold = 0.6 } = {}) {
+export function getWeakEntityKeys(
+  entities: Record<string, EntityState> | undefined,
+  { minAttempts = 3, accuracyThreshold = 0.6 }: { minAttempts?: number; accuracyThreshold?: number } = {}
+): string[] {
   if (!entities) return [];
   return Object.entries(entities)
     .filter(([, e]) => {
@@ -103,21 +130,34 @@ export function getWeakEntityKeys(entities, { minAttempts = 3, accuracyThreshold
  * Derive mastery states for all entities.
  * Returns a Map-like object: { "letter:2": "accurate", "combo:ba-fatha": "introduced", ... }
  */
-export function getEntityMasteryStates(entities, today) {
+export function getEntityMasteryStates(
+  entities: Record<string, EntityState> | undefined,
+  today: string
+): Record<string, MasteryState> {
   if (!entities) return {};
-  const states = {};
+  const states: Record<string, MasteryState> = {};
   for (const [key, entry] of Object.entries(entities)) {
     states[key] = deriveMasteryState(entry, today);
   }
   return states;
 }
 
+export interface MasteryStateCounts {
+  introduced: number;
+  unstable: number;
+  accurate: number;
+  retained: number;
+}
+
 /**
  * Count entities by mastery state.
  * Returns { introduced: N, unstable: N, accurate: N, retained: N }
  */
-export function getMasteryStateCounts(entities, today) {
-  const counts = { introduced: 0, unstable: 0, accurate: 0, retained: 0 };
+export function getMasteryStateCounts(
+  entities: Record<string, EntityState> | undefined,
+  today: string
+): MasteryStateCounts {
+  const counts: MasteryStateCounts = { introduced: 0, unstable: 0, accurate: 0, retained: 0 };
   if (!entities) return counts;
   for (const entry of Object.values(entities)) {
     const state = deriveMasteryState(entry, today);
@@ -129,15 +169,28 @@ export function getMasteryStateCounts(entities, today) {
 /**
  * Get entity keys that are in a specific mastery state.
  */
-export function getEntitiesByMasteryState(entities, state, today) {
+export function getEntitiesByMasteryState(
+  entities: Record<string, EntityState> | undefined,
+  state: MasteryState,
+  today: string
+): string[] {
   if (!entities) return [];
   return Object.entries(entities)
     .filter(([, entry]) => deriveMasteryState(entry, today) === state)
     .map(([key]) => key);
 }
 
+export interface TopConfusion {
+  key: string;
+  count: number;
+  lastSeen: string | null;
+}
+
 /** Top N confusion pairs sorted by count descending. Returns [{ key, count, lastSeen }]. */
-export function getTopConfusions(confusions, limit = 5) {
+export function getTopConfusions(
+  confusions: Record<string, ConfusionState> | undefined,
+  limit: number = 5
+): TopConfusion[] {
   if (!confusions) return [];
   return Object.entries(confusions)
     .map(([key, val]) => ({ key, count: val.count, lastSeen: val.lastSeen }))
@@ -145,18 +198,28 @@ export function getTopConfusions(confusions, limit = 5) {
     .slice(0, limit);
 }
 
+export interface ErrorCategorySummary {
+  visual_confusion: number;
+  sound_confusion: number;
+  vowel_confusion: number;
+  random_miss: number;
+  total: number;
+}
+
 /**
  * Aggregate error category counts across all confusion entries.
  * Returns { visual_confusion: N, sound_confusion: N, vowel_confusion: N, random_miss: N, total: N }
  */
-export function getErrorCategorySummary(confusions) {
-  const summary = { visual_confusion: 0, sound_confusion: 0, vowel_confusion: 0, random_miss: 0, total: 0 };
+export function getErrorCategorySummary(
+  confusions: Record<string, ConfusionState> | undefined
+): ErrorCategorySummary {
+  const summary: ErrorCategorySummary = { visual_confusion: 0, sound_confusion: 0, vowel_confusion: 0, random_miss: 0, total: 0 };
   if (!confusions) return summary;
   for (const entry of Object.values(confusions)) {
     if (entry.categories) {
       for (const [cat, count] of Object.entries(entry.categories)) {
-        if (cat in summary) {
-          summary[cat] += count;
+        if (cat in summary && cat !== "total") {
+          (summary as unknown as Record<string, number>)[cat] += count;
           summary.total += count;
         }
       }
@@ -165,20 +228,35 @@ export function getErrorCategorySummary(confusions) {
   return summary;
 }
 
+export interface ReviewSessionPlan {
+  due: string[];
+  unstable: string[];
+  weak: string[];
+  confused: TopConfusion[];
+  items: string[];
+  totalItems: number;
+  hasReviewWork: boolean;
+  isUrgent: boolean;
+}
+
 /**
  * Build a review session plan from mastery state.
  * Pulls from: due items, unstable items, weak items, and confused pairs.
  * Returns { due, unstable, weak, confused, items, totalItems, hasReviewWork, isUrgent }
  */
-export function planReviewSession(mastery, today, { maxItems = 12 } = {}) {
+export function planReviewSession(
+  mastery: MasteryData,
+  today: string,
+  { maxItems = 12 }: { maxItems?: number } = {}
+): ReviewSessionPlan {
   const due = getDueEntityKeys(mastery.entities, today);
   const unstable = getEntitiesByMasteryState(mastery.entities, "unstable", today);
   const weak = getWeakEntityKeys(mastery.entities);
   const confused = getTopConfusions(mastery.confusions, 5);
 
   // Deduplicate: due first, then unstable, then weak, then confused
-  const picked = new Set();
-  const addUpTo = (keys, limit) => {
+  const picked = new Set<string>();
+  const addUpTo = (keys: string[], limit: number) => {
     for (const k of keys) {
       if (picked.size >= limit) break;
       picked.add(k);
@@ -190,7 +268,7 @@ export function planReviewSession(mastery, today, { maxItems = 12 } = {}) {
   addUpTo(weak, maxItems);
 
   // Extract entity keys from confusion pairs (both sides)
-  const confusedEntityKeys = [];
+  const confusedEntityKeys: string[] = [];
   for (const c of confused) {
     const parts = c.key.split("->");
     if (parts.length === 2) {
@@ -228,13 +306,18 @@ export function planReviewSession(mastery, today, { maxItems = 12 } = {}) {
   };
 }
 
+export interface ReviewItems {
+  letterIds: number[];
+  comboIds: string[];
+}
+
 /**
  * Extract review items from entity keys, split by type.
  * Returns { letterIds: number[], comboIds: string[] }
  */
-export function extractReviewItems(entityKeys) {
-  const letterIds = new Set();
-  const comboIds = new Set();
+export function extractReviewItems(entityKeys: string[]): ReviewItems {
+  const letterIds = new Set<number>();
+  const comboIds = new Set<string>();
   for (const key of entityKeys) {
     const parsed = parseEntityKey(key);
     if (parsed.type === "letter" && typeof parsed.rawId === "number" && !isNaN(parsed.rawId)) {
@@ -246,18 +329,34 @@ export function extractReviewItems(entityKeys) {
   return { letterIds: [...letterIds], comboIds: [...comboIds] };
 }
 
+export interface ReviewLessonPayload {
+  id: string;
+  phase: number;
+  lessonMode: string;
+  title: string;
+  description: string;
+  teachIds: number[];
+  teachCombos?: string[];
+  reviewIds: number[];
+  familyRule: string;
+}
+
 /**
  * Build a safe lesson override object for a review session.
  * Supports both letter and combo entities.
  * Returns null only when nothing is truly reviewable.
  */
-export function buildReviewLessonPayload(mastery, completedLessonIds, today) {
+export function buildReviewLessonPayload(
+  mastery: MasteryData,
+  completedLessonIds: number[],
+  today: string
+): ReviewLessonPayload | null {
   const plan = planReviewSession(mastery, today);
   const { letterIds, comboIds } = extractReviewItems(plan.items);
 
   // Fallback: if planner returned no letters, try legacy due letters
   if (letterIds.length === 0) {
-    const legacyEntries = {};
+    const legacyEntries: Record<string, EntityState> = {};
     for (const [key, val] of Object.entries(mastery.entities || {})) {
       const parsed = parseEntityKey(key);
       if (parsed.type === "letter" && typeof parsed.rawId === "number" && !isNaN(parsed.rawId)) {

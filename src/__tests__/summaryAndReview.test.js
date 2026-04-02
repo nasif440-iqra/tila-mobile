@@ -3,12 +3,12 @@ import {
   getPerformanceBand,
   getSummaryMessaging,
   getCompletionTier,
-} from "../engine/engagement.js";
+} from "../engine/engagement";
 import {
   extractReviewItems,
   buildReviewLessonPayload,
   planReviewSession,
-} from "../engine/selectors.js";
+} from "../engine/selectors";
 
 // ── Performance band tests ──
 

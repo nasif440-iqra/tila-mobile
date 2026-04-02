@@ -7,7 +7,8 @@
  */
 
 import { LESSONS, PHASE_1_COMPLETION_THRESHOLD, PHASE_2_COMPLETION_THRESHOLD, PHASE_3_COMPLETION_THRESHOLD } from "../data/lessons.js";
-import { deriveMasteryState } from "./mastery.js";
+import { deriveMasteryState } from "./mastery";
+import type { EntityState } from "./progress";
 
 /**
  * Minimum fraction of taught letters that must be at "accurate" or "retained"
@@ -17,14 +18,13 @@ export const PHASE_MASTERY_FRACTION = 0.7;
 
 /**
  * Check if a phase transition meets the mastery competence requirement.
- *
- * @param {number} phase - The phase whose lessons were completed (1 for P1→P2, 2 for P2→P3)
- * @param {number[]} completedLessonIds - All completed lesson IDs
- * @param {object} [entities] - mastery.entities map (null-safe: skips check if unavailable)
- * @param {string} [today] - YYYY-MM-DD for mastery state derivation
- * @returns {boolean}
  */
-export function isPhaseCompetent(phase, completedLessonIds, entities, today) {
+export function isPhaseCompetent(
+  phase: number,
+  completedLessonIds: number[],
+  entities?: Record<string, EntityState> | null,
+  today?: string | null
+): boolean {
   // If no mastery data available, fall back to lesson-count only (backward compat)
   if (!entities || !today) return true;
 
@@ -36,7 +36,7 @@ export function isPhaseCompetent(phase, completedLessonIds, entities, today) {
   if (completedPhaseLessons.length >= phaseLessons.length) return true;
 
   // Collect unique letters taught in the completed lessons of this phase
-  const taughtLetters = new Set();
+  const taughtLetters = new Set<number>();
   completedPhaseLessons.forEach(l => (l.teachIds || []).forEach(id => taughtLetters.add(id)));
 
   if (taughtLetters.size === 0) return true; // nothing to check
@@ -54,7 +54,12 @@ export function isPhaseCompetent(phase, completedLessonIds, entities, today) {
   return competentCount / taughtLetters.size >= PHASE_MASTERY_FRACTION;
 }
 
-export function isLessonUnlocked(lessonIndex, completedLessonIds, entities, today) {
+export function isLessonUnlocked(
+  lessonIndex: number,
+  completedLessonIds: number[],
+  entities?: Record<string, EntityState>,
+  today?: string
+): boolean {
   if (lessonIndex === 0) return true;
   const cur = LESSONS[lessonIndex];
   const prev = LESSONS[lessonIndex - 1];
@@ -81,19 +86,31 @@ export function isLessonUnlocked(lessonIndex, completedLessonIds, entities, toda
   return completedLessonIds.includes(prev.id);
 }
 
-export function isPhase2Unlocked(completedLessonIds, entities, today) {
+export function isPhase2Unlocked(
+  completedLessonIds: number[],
+  entities?: Record<string, EntityState>,
+  today?: string
+): boolean {
   const p1Done = LESSONS.filter(l => l.phase === 1 && completedLessonIds.includes(l.id)).length;
   if (p1Done < PHASE_1_COMPLETION_THRESHOLD) return false;
   return isPhaseCompetent(1, completedLessonIds, entities, today);
 }
 
-export function isPhase3Unlocked(completedLessonIds, entities, today) {
+export function isPhase3Unlocked(
+  completedLessonIds: number[],
+  entities?: Record<string, EntityState>,
+  today?: string
+): boolean {
   const p2Done = LESSONS.filter(l => l.phase === 2 && completedLessonIds.includes(l.id)).length;
   if (p2Done < PHASE_2_COMPLETION_THRESHOLD) return false;
   return isPhaseCompetent(2, completedLessonIds, entities, today);
 }
 
-export function isPhase4Unlocked(completedLessonIds, entities, today) {
+export function isPhase4Unlocked(
+  completedLessonIds: number[],
+  entities?: Record<string, EntityState>,
+  today?: string
+): boolean {
   const p3Done = LESSONS.filter(l => l.phase === 3 && completedLessonIds.includes(l.id)).length;
   if (p3Done < PHASE_3_COMPLETION_THRESHOLD) return false;
   return isPhaseCompetent(3, completedLessonIds, entities, today);
