@@ -29,7 +29,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [ ] **Phase 1: Lesson Flow Hardening** — Fix atomic completion + mastery celebration stale state
 - [ ] **Phase 2: Repo Cleanup & Design Consistency** — Remove scaffold, replace crescent emoji, guard remaining audio/RevenueCat calls
 - [x] **Phase 3: Onboarding & Personalization** — Name input, wird explanation, personalized home screen (completed 2026-04-01)
-- [ ] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7
+- [x] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7 (completed 2026-04-02)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
 - [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
 - [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
@@ -80,10 +80,10 @@ Plans:
 **Goal**: Users understand what makes Tila worth paying for before hitting the paywall
 **Depends on**: Phase 3
 **Requirements**: CONV-03, CONV-05
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 Plans:
 - [x] 04-01-PLAN.md — Engine insights module: post-lesson insight generation, review grouping, confusion pair parsing (CONV-03, CONV-05)
-- [ ] 04-02-PLAN.md — UI integration: LessonInsights card, ConfusionPairs + ReviewSchedule progress sections (CONV-03, CONV-05)
+- [x] 04-02-PLAN.md — UI integration: LessonInsights card, ConfusionPairs + ReviewSchedule progress sections (CONV-03, CONV-05)
 **Success Criteria** (what must be TRUE):
   1. Post-lesson insights appear during lessons 1-7 showing mastery engine intelligence (confusion detection, review scheduling)
   2. Progress screen shows mastery data: confused letter pairs, accuracy trends, upcoming review schedule
@@ -160,7 +160,7 @@ Phase 2 (cleanup) ───────┘                                      
 | 1. Lesson Flow Hardening | 0/1 | Not started | - |
 | 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
 | 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
-| 4. Value Communication | 1/2 | In Progress|  |
+| 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
 | 5. Conversion Surfaces | 0/TBD | Not started | - |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
