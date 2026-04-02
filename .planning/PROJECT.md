@@ -33,7 +33,8 @@ See MASTER-PLAN.md for full scope. Next milestone covers:
 - [x] Lesson completion atomicity (transaction-wrapped writes) — Phase 1
 - [x] Mastery celebration stale state fix — Phase 1
 - [x] Scaffold cleanup and design consistency — Phase 2
-- [ ] Paywall UX, conversion surfaces, personalization
+- [x] Onboarding personalization (name + motivation + wird tooltip) — Phase 3
+- [ ] Paywall UX, conversion surfaces
 - [ ] App Store submission (screenshots, metadata, privacy manifest)
 - [ ] TypeScript migration of engine layer
 - [ ] Cloud sync with accounts, history, social features
