@@ -29,6 +29,27 @@ const TEST_CONFIG: TableSyncConfig = {
   hasAutoIncrement: false,
 };
 
+const TEST_CONFIG_LESSON_ATTEMPTS: TableSyncConfig = {
+  localTable: 'lesson_attempts',
+  remoteTable: 'lesson_attempts',
+  primaryKey: 'id',
+  columns: ['lesson_id', 'accuracy', 'passed', 'duration_seconds', 'attempted_at'],
+  timestampColumn: 'attempted_at',
+  hasAutoIncrement: true,
+  remoteKeyColumn: 'local_id',
+  onConflictColumns: ['user_id', 'local_id'],
+};
+
+const TEST_CONFIG_USER_PROFILE: TableSyncConfig = {
+  localTable: 'user_profile',
+  remoteTable: 'user_profiles',
+  primaryKey: 'id',
+  columns: ['onboarded', 'name', 'daily_goal'],
+  timestampColumn: 'updated_at',
+  hasAutoIncrement: false,
+  onConflictColumns: ['user_id'],
+};
+
 vi.mock('../../src/sync/tables', () => ({
   SYNC_TABLE_CONFIGS: [
     {
@@ -46,6 +67,25 @@ vi.mock('../../src/sync/tables', () => ({
       ],
       timestampColumn: 'updated_at',
       hasAutoIncrement: false,
+    },
+    {
+      localTable: 'lesson_attempts',
+      remoteTable: 'lesson_attempts',
+      primaryKey: 'id',
+      columns: ['lesson_id', 'accuracy', 'passed', 'duration_seconds', 'attempted_at'],
+      timestampColumn: 'attempted_at',
+      hasAutoIncrement: true,
+      remoteKeyColumn: 'local_id',
+      onConflictColumns: ['user_id', 'local_id'],
+    },
+    {
+      localTable: 'user_profile',
+      remoteTable: 'user_profiles',
+      primaryKey: 'id',
+      columns: ['onboarded', 'name', 'daily_goal'],
+      timestampColumn: 'updated_at',
+      hasAutoIncrement: false,
+      onConflictColumns: ['user_id'],
     },
   ],
 }));
@@ -289,5 +329,140 @@ describe('syncAll', () => {
     expect(result.pulled).toBe(0);
     expect(result.errors.length).toBeGreaterThan(0);
     expect(result.errors[0]).toContain('Failed to fetch');
+  });
+});
+
+describe('syncTable — lesson_attempts (local_id mapping)', () => {
+  it('maps local id to remote local_id on push', async () => {
+    const db = createMockDb({
+      lesson_attempts: [
+        {
+          id: 42,
+          lesson_id: 3,
+          accuracy: 0.85,
+          passed: 1,
+          duration_seconds: 120,
+          attempted_at: '2026-04-01T12:00:00Z',
+          created_at: '2026-04-01T12:00:00Z',
+        },
+      ],
+    });
+
+    const supabase = createMockSupabase({
+      lesson_attempts: [],
+    });
+
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG_LESSON_ATTEMPTS);
+
+    expect(result.pushed).toBe(1);
+    expect(result.errors).toHaveLength(0);
+
+    // Verify the upserted record has local_id (not id)
+    const upsertCall = supabase._lastUpsertCall;
+    expect(upsertCall.table).toBe('lesson_attempts');
+    expect(upsertCall.options?.onConflict).toBe('user_id,local_id');
+    expect(upsertCall.rows[0]).toHaveProperty('local_id', 42);
+    expect(upsertCall.rows[0]).not.toHaveProperty('id');
+  });
+
+  it('pulls remote row and matches by local_id', async () => {
+    const db = createMockDb({
+      lesson_attempts: [
+        {
+          id: 42,
+          lesson_id: 3,
+          accuracy: 0.85,
+          passed: 1,
+          duration_seconds: 120,
+          attempted_at: '2026-04-01T12:00:00Z',
+        },
+      ],
+    });
+
+    const supabase = createMockSupabase({
+      lesson_attempts: [
+        {
+          user_id: 'user-1',
+          local_id: 42,
+          lesson_id: 3,
+          accuracy: 0.9,
+          passed: 1,
+          duration_seconds: 130,
+          attempted_at: '2026-04-02T00:00:00Z',
+        },
+      ],
+    });
+
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG_LESSON_ATTEMPTS);
+
+    expect(result.pulled).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    expect(db.runAsync).toHaveBeenCalled();
+  });
+});
+
+describe('syncTable — user_profile (single-row upsert)', () => {
+  it('pushes single row with user_id-only conflict', async () => {
+    const db = createMockDb({
+      user_profile: [
+        {
+          id: 1,
+          onboarded: 1,
+          name: 'Ali',
+          daily_goal: 5,
+          updated_at: '2026-04-01T12:00:00Z',
+          created_at: '2026-03-01T00:00:00Z',
+        },
+      ],
+    });
+
+    const supabase = createMockSupabase({
+      user_profiles: [],
+    });
+
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG_USER_PROFILE);
+
+    expect(result.pushed).toBe(1);
+    expect(result.errors).toHaveLength(0);
+
+    // Verify upserted record does NOT contain local id
+    const upsertCall = supabase._lastUpsertCall;
+    expect(upsertCall.table).toBe('user_profiles');
+    expect(upsertCall.options?.onConflict).toBe('user_id');
+    expect(upsertCall.rows[0]).not.toHaveProperty('id');
+    expect(upsertCall.rows[0]).toHaveProperty('user_id', 'user-1');
+    expect(upsertCall.rows[0]).toHaveProperty('name', 'Ali');
+  });
+
+  it('pulls remote row to single local row', async () => {
+    const db = createMockDb({
+      user_profile: [
+        {
+          id: 1,
+          onboarded: 1,
+          name: 'Old',
+          daily_goal: 3,
+          updated_at: '2026-04-01T00:00:00Z',
+        },
+      ],
+    });
+
+    const supabase = createMockSupabase({
+      user_profiles: [
+        {
+          user_id: 'user-1',
+          onboarded: 1,
+          name: 'Updated',
+          daily_goal: 5,
+          updated_at: '2026-04-02T00:00:00Z',
+        },
+      ],
+    });
+
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG_USER_PROFILE);
+
+    expect(result.pulled).toBe(1);
+    expect(result.errors).toHaveLength(0);
+    expect(db.runAsync).toHaveBeenCalled();
   });
 });
