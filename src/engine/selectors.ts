@@ -1,5 +1,5 @@
 import { LESSONS } from "../data/lessons.js";
-import { isLessonUnlocked } from "./unlock.js";
+import { isLessonUnlocked } from "./unlock";
 import { parseEntityKey, deriveMasteryState, ERROR_CATEGORIES } from "./mastery";
 import type { ParsedEntityKey, MasteryState, MasteryData } from "./mastery";
 import type { EntityState, SkillState, ConfusionState } from "./progress";
