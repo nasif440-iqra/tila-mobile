@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
 status: executing
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-04-02T20:07:58.226Z"
+stopped_at: Completed 08-04-PLAN.md
+last_updated: "2026-04-02T20:06:48.697Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
@@ -59,8 +59,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 08]: Added usesAppleSignIn and auth plugins to app.config.ts for native builds
 - [Phase 08]: Auth analytics tracked on successful sign-in only, not on errors
 - [Phase 08]: Schema v7 forward-includes theme_mode and account_prompt_declined_at for plans 04 and 06
-- [Phase 08]: AppStateProvider wraps useProgress and useHabit but does not duplicate SubscriptionState
-- [Phase 08]: Provider order: DatabaseProvider > AuthProvider > SyncProvider > SubscriptionProvider > AppStateProvider
+- [Phase 08]: SQL file designed for Supabase Dashboard SQL Editor copy-paste deployment
+- [Phase 08]: Privacy manifest declares email, userID, usage data for auth+sync App Store compliance
 
 ### Pending Todos
 
@@ -73,6 +73,6 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 
 ## Session Continuity
 
-Last session: 2026-04-02T20:07:58.221Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-04-02T20:06:48.691Z
+Stopped at: Completed 08-04-PLAN.md
 Resume file: None
