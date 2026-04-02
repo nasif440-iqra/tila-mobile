@@ -31,6 +31,8 @@ import { playLessonComplete, playLessonCompletePerfect } from "../audio/player";
 import { getLetter } from "../data/letters";
 import { LESSONS } from "../data/lessons";
 import { trackScholarshipTapped } from "../monetization/analytics";
+import type { LessonInsight } from "../engine/insights";
+import { LessonInsights } from "./insights/LessonInsights";
 
 // ── Confetti burst — lightweight particle overlay ──
 
@@ -153,6 +155,7 @@ interface LessonSummaryProps {
   showTrialCTA?: boolean;
   onStartTrial?: () => void;
   onScholarship?: () => void;
+  insights?: LessonInsight[];
 }
 
 // ── Icons ──
@@ -285,6 +288,7 @@ export function LessonSummary({
   showTrialCTA,
   onStartTrial,
   onScholarship,
+  insights,
 }: LessonSummaryProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -676,6 +680,11 @@ export function LessonSummary({
               {recap}
             </Text>
           </Animated.View>
+        )}
+
+        {/* ── 3b. Post-lesson insights (value communication) ── */}
+        {insights && insights.length > 0 && (
+          <LessonInsights insights={insights} />
         )}
 
         {/* ── 4. "Up Next" card ── */}

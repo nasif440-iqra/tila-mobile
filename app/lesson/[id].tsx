@@ -31,6 +31,8 @@ import { getLetter } from "../../src/data/letters.js";
 import { planReviewSession } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";
 import { LetterMasteryCelebration } from "../../src/components/celebrations/LetterMasteryCelebration";
+import { generatePostLessonInsights } from "../../src/engine/insights";
+import type { LessonInsight } from "../../src/engine/insights";
 
 // ── Types ──
 
@@ -63,6 +65,7 @@ export default function LessonScreen() {
   const [skipIntro, setSkipIntro] = useState(false);
   const [masteredLetters, setMasteredLetters] = useState<Array<{ letter: string; name: string }>>([]);
   const [goalCompleted, setGoalCompleted] = useState(false);
+  const [lessonInsights, setLessonInsights] = useState<LessonInsight[]>([]);
 
   const completedLessonIds = progress.completedLessonIds ?? [];
   const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
@@ -155,6 +158,21 @@ export default function LessonScreen() {
             total_questions: results.total,
           });
         }
+
+        // Compute post-lesson insights for value communication
+        const sessionResults = new Map<number, { correct: number; total: number }>();
+        for (const q of results.questions) {
+          const rawId = typeof q.targetId === 'number' ? q.targetId : parseInt(String(q.targetId), 10);
+          if (!isNaN(rawId)) {
+            const existing = sessionResults.get(rawId) || { correct: 0, total: 0 };
+            existing.total++;
+            if (q.correct) existing.correct++;
+            sessionResults.set(rawId, existing);
+          }
+        }
+        const lessonLetterIds = [...(lesson!.teachIds || []), ...(lesson!.reviewIds || [])];
+        const computedInsights = generatePostLessonInsights(updatedMastery, lessonLetterIds, sessionResults);
+        setLessonInsights(computedInsights);
 
         // Detect newly mastered letters using fresh transaction output (per STAB-02)
         const newlyMastered: Array<{ letter: string; name: string }> = [];
@@ -347,6 +365,7 @@ export default function LessonScreen() {
           showTrialCTA={lesson.id === FREE_LESSON_CUTOFF && !isPremiumActive && subStage !== "unknown"}
           onStartTrial={() => showPaywall("lesson_7_summary")}
           onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
+          insights={lessonInsights}
         />
       );
     }
