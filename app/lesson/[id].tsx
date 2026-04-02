@@ -106,9 +106,24 @@ export default function LessonScreen() {
       lesson &&
       (ACCOUNT_PROMPT_LESSONS as readonly number[]).includes(lesson.id)
     ) {
-      setShowAccountPrompt(true);
+      // Check if user declined the account prompt within the last 7 days
+      (async () => {
+        try {
+          const row = await db.getFirstAsync<{ account_prompt_declined_at: string | null }>(
+            'SELECT account_prompt_declined_at FROM user_profile WHERE id = 1'
+          );
+          if (row?.account_prompt_declined_at) {
+            const declined = new Date(row.account_prompt_declined_at);
+            const daysSince = (Date.now() - declined.getTime()) / (1000 * 60 * 60 * 24);
+            if (daysSince < 7) return;
+          }
+        } catch {
+          // Non-critical — show prompt if we can't check
+        }
+        setShowAccountPrompt(true);
+      })();
     }
-  }, [stage, quizResults?.passed, isAnonymous, lesson]);
+  }, [stage, quizResults?.passed, isAnonymous, lesson, db]);
 
   const handleAccountPromptDismiss = useCallback(async () => {
     setShowAccountPrompt(false);
