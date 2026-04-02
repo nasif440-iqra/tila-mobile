@@ -2,175 +2,61 @@
  * Sync service unit tests.
  *
  * Tests the LWW (last-write-wins) sync strategy, concurrency lock,
- * and offline/error handling. Uses mock Supabase client and mock DB
- * passed directly to syncAll/syncTable (dependency injection).
+ * and offline/error handling. Imports real production functions from
+ * src/sync/service.ts and mocks only external dependencies (Supabase, SQLite).
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockSupabase } from './helpers/mock-supabase';
 import { createMockDb } from './helpers/mock-db';
-import type { TableSyncConfig, SyncResult } from '../../src/sync/types';
+import type { TableSyncConfig } from '../../src/sync/types';
 
-// We test the sync logic by re-implementing the core algorithm inline,
-// since the actual source files import from uninstalled packages.
-// This mirrors the exact logic in src/sync/service.ts.
-
-// ── Inline sync logic (mirrors src/sync/service.ts) ──
-
-function parseTimestamp(value: unknown): Date | null {
-  if (!value) return null;
-  const date = new Date(String(value));
-  return isNaN(date.getTime()) ? null : date;
-}
-
-let syncInProgress = false;
-
-async function syncTable(
-  db: ReturnType<typeof createMockDb>,
-  supabase: ReturnType<typeof createMockSupabase>,
-  userId: string,
-  config: TableSyncConfig,
-): Promise<SyncResult> {
-  const result: SyncResult = { pushed: 0, pulled: 0, errors: [] };
-
-  // 1. Read local rows
-  const localRows = await db.getAllAsync(`SELECT * FROM ${config.localTable}`);
-
-  // 2. Fetch remote rows
-  let remoteRows: Record<string, unknown>[] = [];
-  try {
-    const queryResult = supabase
-      .from(config.remoteTable)
-      .select('*')
-      .eq('user_id', userId);
-
-    if (queryResult.error) {
-      result.errors.push(`Remote fetch ${config.remoteTable}: ${(queryResult.error as any).message}`);
-      return result;
-    }
-    remoteRows = (queryResult.data as Record<string, unknown>[]) ?? [];
-  } catch (err) {
-    result.errors.push(
-      `Network error ${config.remoteTable}: ${err instanceof Error ? err.message : String(err)}`,
-    );
-    return result;
-  }
-
-  // 3. Build remote lookup
-  const remoteMap = new Map<string, Record<string, unknown>>();
-  for (const row of remoteRows) {
-    const key = String(row[config.primaryKey] ?? '');
-    if (key) remoteMap.set(key, row);
-  }
-
-  // 4. Push local-newer rows
-  const toUpsert: Record<string, unknown>[] = [];
-  for (const localRow of localRows as Record<string, unknown>[]) {
-    const pk = String(localRow[config.primaryKey] ?? '');
-    if (!pk) continue;
-
-    const remoteRow = remoteMap.get(pk);
-    const localTs = parseTimestamp(localRow[config.timestampColumn]);
-    const remoteTs = remoteRow ? parseTimestamp(remoteRow[config.timestampColumn]) : null;
-
-    if (!remoteRow || (localTs && remoteTs && localTs > remoteTs)) {
-      const record: Record<string, unknown> = { user_id: userId };
-      record[config.primaryKey] = localRow[config.primaryKey];
-      for (const col of config.columns) {
-        record[col] = localRow[col];
-      }
-      record[config.timestampColumn] = localRow[config.timestampColumn];
-      record['created_at'] = localRow['created_at'] ?? new Date().toISOString();
-      toUpsert.push(record);
-    }
-  }
-
-  if (toUpsert.length > 0) {
-    const { error } = supabase
-      .from(config.remoteTable)
-      .upsert(toUpsert, { onConflict: `user_id,${config.primaryKey}` });
-
-    if (error) {
-      result.errors.push(`Push ${config.remoteTable}: ${(error as any).message}`);
-    } else {
-      result.pushed += toUpsert.length;
-    }
-  }
-
-  // 5. Pull remote-newer rows
-  const localMap = new Map<string, Record<string, unknown>>();
-  for (const row of localRows as Record<string, unknown>[]) {
-    const key = String(row[config.primaryKey] ?? '');
-    if (key) localMap.set(key, row);
-  }
-
-  for (const remoteRow of remoteRows) {
-    const pk = String(remoteRow[config.primaryKey] ?? '');
-    if (!pk) continue;
-
-    const localRow = localMap.get(pk);
-    const remoteTs = parseTimestamp(remoteRow[config.timestampColumn]);
-    const localTs = localRow ? parseTimestamp(localRow[config.timestampColumn]) : null;
-
-    if (!localRow || (remoteTs && localTs && remoteTs > localTs)) {
-      await db.runAsync('INSERT OR REPLACE ...');
-      result.pulled += 1;
-    }
-  }
-
-  return result;
-}
-
-async function syncAll(
-  db: ReturnType<typeof createMockDb>,
-  supabase: ReturnType<typeof createMockSupabase>,
-  userId: string,
-  configs: TableSyncConfig[],
-): Promise<SyncResult> {
-  if (syncInProgress) {
-    return { pushed: 0, pulled: 0, errors: ['Sync already in progress'] };
-  }
-  syncInProgress = true;
-
-  const totalResult: SyncResult = { pushed: 0, pulled: 0, errors: [] };
-
-  try {
-    for (const config of configs) {
-      try {
-        const result = await syncTable(db, supabase, userId, config);
-        totalResult.pushed += result.pushed;
-        totalResult.pulled += result.pulled;
-        totalResult.errors.push(...result.errors);
-      } catch (err) {
-        totalResult.errors.push(
-          `${config.localTable}: ${err instanceof Error ? err.message : String(err)}`,
-        );
-      }
-    }
-  } finally {
-    syncInProgress = false;
-  }
-
-  return totalResult;
-}
-
-// ── Test config ──
+// ── Mock SYNC_TABLE_CONFIGS so syncAll uses only our test config ──
 
 const TEST_CONFIG: TableSyncConfig = {
   localTable: 'mastery_entities',
   remoteTable: 'mastery_entities',
   primaryKey: 'entity_key',
-  columns: ['entity_key', 'correct', 'attempts', 'last_seen', 'next_review', 'interval_days', 'session_streak'],
+  columns: [
+    'entity_key',
+    'correct',
+    'attempts',
+    'last_seen',
+    'next_review',
+    'interval_days',
+    'session_streak',
+  ],
   timestampColumn: 'updated_at',
   hasAutoIncrement: false,
 };
 
+vi.mock('../../src/sync/tables', () => ({
+  SYNC_TABLE_CONFIGS: [
+    {
+      localTable: 'mastery_entities',
+      remoteTable: 'mastery_entities',
+      primaryKey: 'entity_key',
+      columns: [
+        'entity_key',
+        'correct',
+        'attempts',
+        'last_seen',
+        'next_review',
+        'interval_days',
+        'session_streak',
+      ],
+      timestampColumn: 'updated_at',
+      hasAutoIncrement: false,
+    },
+  ],
+}));
+
+// ── Import real production functions ──
+
+import { syncAll, syncTable } from '../../src/sync/service';
+
 // ── Tests ──
 
 describe('syncTable', () => {
-  beforeEach(() => {
-    syncInProgress = false;
-  });
-
   it('pushes local-newer rows to remote', async () => {
     const db = createMockDb({
       mastery_entities: [
@@ -200,7 +86,7 @@ describe('syncTable', () => {
       ],
     });
 
-    const result = await syncTable(db, supabase, 'user-1', TEST_CONFIG);
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG);
 
     expect(result.pushed).toBe(1);
     expect(result.errors).toHaveLength(0);
@@ -234,7 +120,7 @@ describe('syncTable', () => {
       ],
     });
 
-    const result = await syncTable(db, supabase, 'user-1', TEST_CONFIG);
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG);
 
     expect(result.pulled).toBe(1);
     expect(result.errors).toHaveLength(0);
@@ -256,7 +142,7 @@ describe('syncTable', () => {
       ],
     });
 
-    const result = await syncTable(db, supabase, 'user-1', TEST_CONFIG);
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG);
 
     expect(result.pushed).toBe(0);
     expect(result.pulled).toBe(0);
@@ -280,7 +166,7 @@ describe('syncTable', () => {
       mastery_entities: [],
     });
 
-    const result = await syncTable(db, supabase, 'user-1', TEST_CONFIG);
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG);
 
     expect(result.pushed).toBe(1);
     expect(result.pulled).toBe(0);
@@ -307,7 +193,7 @@ describe('syncTable', () => {
       ],
     });
 
-    const result = await syncTable(db, supabase, 'user-1', TEST_CONFIG);
+    const result = await syncTable(db as any, supabase as any, 'user-1', TEST_CONFIG);
 
     expect(result.pulled).toBe(1);
     expect(result.pushed).toBe(0);
@@ -316,14 +202,9 @@ describe('syncTable', () => {
 });
 
 describe('syncAll', () => {
-  beforeEach(() => {
-    syncInProgress = false;
-  });
-
   it('prevents concurrent sync with lock', async () => {
     const db = createMockDb({ mastery_entities: [] });
     const supabase = createMockSupabase({ mastery_entities: [] });
-    const configs = [TEST_CONFIG];
 
     // Start first sync but make it slow
     const originalGetAll = db.getAllAsync;
@@ -337,16 +218,16 @@ describe('syncAll', () => {
       return originalGetAll(sql);
     }) as any;
 
-    const sync1 = syncAll(db, supabase, 'user-1', configs);
+    const sync1 = syncAll(db as any, supabase as any, 'user-1');
 
     // Start second sync immediately — should return early
-    const sync2Result = await syncAll(db, supabase, 'user-1', configs);
+    const sync2Result = await syncAll(db as any, supabase as any, 'user-1');
 
     expect(sync2Result.errors).toContain('Sync already in progress');
     expect(sync2Result.pushed).toBe(0);
     expect(sync2Result.pulled).toBe(0);
 
-    // Release first sync
+    // Release first sync so lock is freed
     resolveFirst!();
     await sync1;
   });
@@ -372,7 +253,7 @@ describe('syncAll', () => {
       } as any;
     };
 
-    const result = await syncAll(db, supabase, 'user-1', [TEST_CONFIG]);
+    const result = await syncAll(db as any, supabase as any, 'user-1');
 
     // Should not throw — errors captured in result
     expect(result.errors.length).toBeGreaterThan(0);
@@ -388,19 +269,20 @@ describe('syncAll', () => {
 
     // Simulate Supabase returning an error (offline scenario)
     const supabase = createMockSupabase();
-    supabase.from = (table: string) => ({
-      select: () => ({
-        eq: () => ({
-          data: null,
-          error: { message: 'Failed to fetch' },
+    supabase.from = (table: string) =>
+      ({
+        select: () => ({
+          eq: () => ({
+            data: null,
+            error: { message: 'Failed to fetch' },
+          }),
         }),
-      }),
-      upsert: () => ({ data: null, error: { message: 'Failed to fetch' } }),
-      insert: () => ({ data: null, error: null }),
-      delete: () => ({ eq: () => ({ error: null }) }),
-    }) as any;
+        upsert: () => ({ data: null, error: { message: 'Failed to fetch' } }),
+        insert: () => ({ data: null, error: null }),
+        delete: () => ({ eq: () => ({ error: null }) }),
+      }) as any;
 
-    const result = await syncAll(db, supabase, 'user-1', [TEST_CONFIG]);
+    const result = await syncAll(db as any, supabase as any, 'user-1');
 
     // Should not crash, errors should be populated
     expect(result.pushed).toBe(0);
