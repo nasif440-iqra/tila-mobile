@@ -3,8 +3,8 @@ import { SCHEMA_VERSION, CREATE_TABLES } from "../db/schema";
 import type { OnboardingDraft } from "../types/onboarding";
 
 describe("Schema v6: name column in user_profile", () => {
-  it("schema version is 6", () => {
-    expect(SCHEMA_VERSION).toBe(6);
+  it("schema version is 7", () => {
+    expect(SCHEMA_VERSION).toBe(7);
   });
 
   it("CREATE_TABLES includes name TEXT in user_profile", () => {

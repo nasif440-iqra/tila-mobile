@@ -106,6 +106,25 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
     }
     await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (6)");
   }
+
+  if (currentVersion < 7) {
+    const profileInfo = await db.getAllAsync<{ name: string }>(
+      "PRAGMA table_info(user_profile)"
+    );
+    const hasSyncUserId = profileInfo.some((col) => col.name === "sync_user_id");
+    if (!hasSyncUserId) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN sync_user_id TEXT;");
+    }
+    const hasThemeMode = profileInfo.some((col) => col.name === "theme_mode");
+    if (!hasThemeMode) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN theme_mode TEXT NOT NULL DEFAULT 'system';");
+    }
+    const hasAccountPromptDeclinedAt = profileInfo.some((col) => col.name === "account_prompt_declined_at");
+    if (!hasAccountPromptDeclinedAt) {
+      await db.execAsync("ALTER TABLE user_profile ADD COLUMN account_prompt_declined_at TEXT;");
+    }
+    await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (7)");
+  }
 }
 
 export async function resetDatabase(): Promise<void> {
