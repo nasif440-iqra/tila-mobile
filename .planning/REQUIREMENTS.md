@@ -24,8 +24,8 @@
 - [x] **CONV-05**: Mastery engine insights visible to users (confusion tracking, accuracy trends, review scheduling)
 - [x] **CONV-06**: Upgrade/upsell cards redesigned to match design system (premium feel matching onboarding quality)
 - [x] **CONV-07**: Complete paywall flow — lesson 7 trigger, annual-first pricing, scholarship program, post-expiry review access
-- [ ] **CONV-08**: App Store submission complete — screenshots, metadata, privacy manifest, review notes, production build on device
-- [ ] **CONV-09**: Support contact visible in app settings (required for early adopter data-loss mitigation)
+- [x] **CONV-08**: App Store submission complete — screenshots, metadata, privacy manifest, review notes, production build on device
+- [x] **CONV-09**: Support contact visible in app settings (required for early adopter data-loss mitigation)
 
 ### Block 3: Make It Retain
 

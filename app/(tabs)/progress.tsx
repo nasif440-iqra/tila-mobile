@@ -45,7 +45,7 @@ import { ReviewScheduleSection } from "../../src/components/insights/ReviewSched
 
 // ── Privacy policy URL ──
 // Replace this with the hosted URL before App Store submission
-const PRIVACY_POLICY_URL = "https://tila.app/privacy";
+const PRIVACY_POLICY_URL = "https://tila-app.github.io/privacy/";
 
 // ── Phase metadata ──
 
@@ -370,6 +370,16 @@ export default function ProgressScreen() {
         >
           <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
             Privacy Policy
+          </Text>
+        </Pressable>
+
+        {/* Contact Support */}
+        <Pressable
+          onPress={() => Linking.openURL('mailto:support@tila.app')}
+          style={styles.privacyLink}
+        >
+          <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
+            Contact Support
           </Text>
         </Pressable>
 

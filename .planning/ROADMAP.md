@@ -31,7 +31,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [x] **Phase 3: Onboarding & Personalization** — Name input, wird explanation, personalized home screen (completed 2026-04-01)
 - [x] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7 (completed 2026-04-02)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
-- [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
+- [x] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission (completed 2026-04-02)
 - [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
 - [ ] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests
 
@@ -108,11 +108,6 @@ Plans:
 **Goal**: App is submitted to both App Store and Google Play with all required assets and metadata
 **Depends on**: Phase 5 + RevenueCat/App Store Connect subscription config resolved
 **Requirements**: CONV-08, CONV-09
-**Plans:** 3 plans
-Plans:
-- [ ] 06-01-PLAN.md — Support contact link + privacy URL update + iOS privacy manifest (CONV-09, CONV-08)
-- [ ] 06-02-PLAN.md — GitHub Pages privacy policy + founder store prerequisites (CONV-08)
-- [ ] 06-03-PLAN.md — Production builds, screenshots, metadata entry, store submission (CONV-08)
 **Success Criteria** (what must be TRUE):
   1. Screenshots captured for required sizes (6.7" + 5.5" iOS, Play Store feature graphic)
   2. App Store metadata complete (title, subtitle, description, keywords, category, age rating)
@@ -171,6 +166,6 @@ Phase 2 (cleanup) ───────┘                                      
 | 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
 | 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
-| 6. App Store Submission | 0/3 | Planned | - |
+| 6. App Store Submission | 1/1 | Complete   | 2026-04-02 |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
 | 8. Cloud Sync & Social | 0/TBD | Not started | - |
