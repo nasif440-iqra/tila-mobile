@@ -82,11 +82,21 @@ export async function syncTable(
     return result;
   }
 
-  // 3. Build remote lookup by primary key
+  // 3. Build remote lookup by primary key (or remoteKeyColumn if configured)
+  const isSingleRowTable = config.onConflictColumns?.length === 1 && config.onConflictColumns[0] === 'user_id';
   const remoteMap = new Map<string, Record<string, unknown>>();
   for (const row of remoteRows) {
-    const key = String(row[config.primaryKey] ?? '');
-    if (key) remoteMap.set(key, row);
+    if (isSingleRowTable) {
+      // Single-row-per-user tables — only one row, use sentinel key
+      remoteMap.set('__single', row);
+    } else if (config.remoteKeyColumn) {
+      // Tables with remoteKeyColumn — key by that column's value
+      const key = String(row[config.remoteKeyColumn] ?? '');
+      if (key) remoteMap.set(key, row);
+    } else {
+      const key = String(row[config.primaryKey] ?? '');
+      if (key) remoteMap.set(key, row);
+    }
   }
 
   // 4. Push local-newer rows to Supabase
@@ -95,14 +105,24 @@ export async function syncTable(
     const pk = String(localRow[config.primaryKey] ?? '');
     if (!pk) continue;
 
-    const remoteRow = remoteMap.get(pk);
+    const lookupKey = isSingleRowTable ? '__single' : pk;
+    const remoteRow = remoteMap.get(lookupKey);
     const localTs = parseTimestamp(localRow[config.timestampColumn]);
     const remoteTs = remoteRow ? parseTimestamp(remoteRow[config.timestampColumn]) : null;
 
     if (!remoteRow || (localTs && remoteTs && localTs > remoteTs)) {
       // Build remote record with user_id and configured columns
       const record: Record<string, unknown> = { user_id: userId };
-      record[config.primaryKey] = localRow[config.primaryKey];
+
+      if (isSingleRowTable) {
+        // Single-row tables (user_profile, habit): do NOT include local PK
+      } else if (config.remoteKeyColumn) {
+        // Map local PK to remote column name (e.g., id -> local_id)
+        record[config.remoteKeyColumn] = localRow[config.primaryKey];
+      } else {
+        record[config.primaryKey] = localRow[config.primaryKey];
+      }
+
       for (const col of config.columns) {
         record[col] = localRow[col];
       }
@@ -114,11 +134,12 @@ export async function syncTable(
 
   if (toUpsert.length > 0) {
     try {
+      const onConflict = config.onConflictColumns
+        ? config.onConflictColumns.join(',')
+        : `user_id,${config.primaryKey}`;
       const { error } = await supabase
         .from(config.remoteTable)
-        .upsert(toUpsert, {
-          onConflict: `user_id,${config.primaryKey}`,
-        });
+        .upsert(toUpsert, { onConflict });
 
       if (error) {
         result.errors.push(`Push ${config.remoteTable}: ${error.message}`);
@@ -135,25 +156,41 @@ export async function syncTable(
   // 5. Pull remote-newer rows to local SQLite
   const localMap = new Map<string, Record<string, unknown>>();
   for (const row of localRows) {
-    const key = String(row[config.primaryKey] ?? '');
-    if (key) localMap.set(key, row);
+    if (isSingleRowTable) {
+      localMap.set('__single', row);
+    } else {
+      const key = String(row[config.primaryKey] ?? '');
+      if (key) localMap.set(key, row);
+    }
   }
 
   for (const remoteRow of remoteRows) {
-    const pk = String(remoteRow[config.primaryKey] ?? '');
-    if (!pk) continue;
+    let lookupKey: string;
+    if (isSingleRowTable) {
+      lookupKey = '__single';
+    } else if (config.remoteKeyColumn) {
+      lookupKey = String(remoteRow[config.remoteKeyColumn] ?? '');
+    } else {
+      lookupKey = String(remoteRow[config.primaryKey] ?? '');
+    }
+    if (!lookupKey) continue;
 
-    const localRow = localMap.get(pk);
+    const localRow = localMap.get(lookupKey);
     const remoteTs = parseTimestamp(remoteRow[config.timestampColumn]);
     const localTs = localRow ? parseTimestamp(localRow[config.timestampColumn]) : null;
 
     if (!localRow || (remoteTs && localTs && remoteTs > localTs)) {
       try {
-        await upsertLocalRow(db, config, remoteRow);
+        // For remoteKeyColumn tables, map the remote key back to the local PK column
+        const rowToUpsert = { ...remoteRow };
+        if (config.remoteKeyColumn && remoteRow[config.remoteKeyColumn] != null) {
+          rowToUpsert[config.primaryKey] = remoteRow[config.remoteKeyColumn];
+        }
+        await upsertLocalRow(db, config, rowToUpsert);
         result.pulled += 1;
       } catch (err) {
         result.errors.push(
-          `Pull ${config.localTable} pk=${pk}: ${err instanceof Error ? err.message : String(err)}`,
+          `Pull ${config.localTable} pk=${lookupKey}: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }

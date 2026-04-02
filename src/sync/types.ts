@@ -19,6 +19,10 @@ export interface TableSyncConfig {
   columns: string[];
   timestampColumn: string;
   hasAutoIncrement: boolean;
+  /** When set, the local primaryKey value is mapped to this column name on the remote. */
+  remoteKeyColumn?: string;
+  /** Overrides the default `user_id,{primaryKey}` conflict target for upserts. */
+  onConflictColumns?: string[];
 }
 
 export interface SyncContextValue extends SyncState {
