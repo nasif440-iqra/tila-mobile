@@ -167,5 +167,5 @@ Phase 2 (cleanup) ───────┘                                      
 | 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
 | 6. App Store Submission | 0/TBD | Not started | - |
-| 7. Engine TypeScript Migration | 0/TBD | Not started | - |
+| 7. Engine TypeScript Migration | 1/4 | In Progress | - |
 | 8. Cloud Sync & Social | 0/TBD | Not started | - |
