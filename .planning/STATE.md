@@ -54,6 +54,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 05]: Extended vitest setup.ts with react-native-svg, reanimated Easing, and expo-haptics mocks for component-level testing
 - [Phase 05]: Used FadeInDown.springify() for UpgradeCard entrance animation for natural feel
 - [Phase 05]: Celebration-then-offer pattern: celebrate achievement first, delay monetization surface by 1.5s
+- [Phase 07]: Imported EntityState/SkillState/ConfusionState from progress.ts for mastery type sharing (avoids duplication)
+- [Phase 07]: Used readonly arrays for engagement microcopy constants to prevent mutation
 
 ### Pending Todos
 
@@ -67,5 +69,5 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 ## Session Continuity
 
 Last session: 2026-04-02T01:39:17.196Z
-Stopped at: Completed 05-02-PLAN.md
+Stopped at: Completed 07-04-PLAN.md (engine TypeScript migration — final 4 files)
 Resume file: None
