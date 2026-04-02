@@ -217,3 +217,53 @@ export const shadows = {
     elevation: 8,
   },
 } as const;
+
+export const darkShadows = {
+  card: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 4,
+  },
+  cardLifted: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.35,
+    shadowRadius: 32,
+    elevation: 6,
+  },
+  soft: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  hero: {
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.3,
+    shadowRadius: 40,
+    elevation: 8,
+  },
+} as const;
+
+interface ShadowStyle {
+  shadowColor: string;
+  shadowOffset: { width: number; height: number };
+  shadowOpacity: number;
+  shadowRadius: number;
+  elevation: number;
+}
+
+export interface ShadowTokens {
+  card: ShadowStyle;
+  cardLifted: ShadowStyle;
+  soft: ShadowStyle;
+  hero: ShadowStyle;
+}
+
+export function getShadows(mode: "light" | "dark"): ShadowTokens {
+  return mode === "dark" ? darkShadows : shadows;
+}

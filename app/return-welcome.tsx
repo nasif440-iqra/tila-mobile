@@ -1,16 +1,77 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
 import { useColors } from "../src/design/theme";
-import { typography, spacing, radii, fontFamilies } from "../src/design/tokens";
+import { spacing, radii, fontFamilies } from "../src/design/tokens";
 import { Button, Card } from "../src/design/components";
 import { CrescentIcon } from "../src/design/CrescentIcon";
 import { useProgress } from "../src/hooks/useProgress";
 import { getTodayDateString, getDayDifference } from "../src/engine/dateUtils";
 import { track } from "../src/analytics";
 import { useHabit } from "../src/hooks/useHabit";
+
+// ── Tiered content based on absence length ──
+
+interface ReturnContent {
+  greeting: string;
+  hadith: string;
+  attribution: string;
+  encouragement: string;
+  buttonText: string;
+}
+
+function getReturnContent(
+  daysSince: number,
+  streakBroke: boolean,
+  longestWird: number
+): ReturnContent {
+  if (daysSince <= 1) {
+    // Yesterday or today — light welcome back
+    return {
+      greeting: "Welcome back",
+      hadith:
+        "The most beloved of deeds to Allah are those that are most consistent, even if they are small.",
+      attribution: "Prophet Muhammad (peace be upon him)",
+      encouragement:
+        "Every return is a step forward. Pick up right where you left off.",
+      buttonText: "Continue",
+    };
+  }
+
+  if (daysSince <= 7) {
+    // 2-7 days — gentle we missed you
+    return {
+      greeting: "We missed you",
+      hadith:
+        "Whoever travels a path in search of knowledge, Allah will make easy for him a path to paradise.",
+      attribution: "Prophet Muhammad (peace be upon him)",
+      encouragement: streakBroke
+        ? `Your ${longestWird}-day streak shows real dedication. Let\u2019s build another one.`
+        : `You\u2019ve been away for ${daysSince} days. Your progress is right where you left it.`,
+      buttonText: streakBroke ? "Start fresh" : "Continue learning",
+    };
+  }
+
+  // 8+ days — warm it's never too late
+  return {
+    greeting: "It\u2019s never too late",
+    hadith:
+      "The best time to plant a tree was twenty years ago. The second best time is now.",
+    attribution: "Islamic proverb",
+    encouragement: streakBroke
+      ? `You reached a ${longestWird}-day streak before \u2014 that strength is still in you. One lesson is all it takes.`
+      : "Every great journey has pauses. Your learning is waiting for you, exactly where you left off.",
+    buttonText: "Begin again",
+  };
+}
+
+function getAbsenceTier(daysSince: number): "short" | "medium" | "long" {
+  if (daysSince <= 1) return "short";
+  if (daysSince <= 7) return "medium";
+  return "long";
+}
 
 export default function ReturnWelcomeScreen() {
   const colors = useColors();
@@ -21,17 +82,25 @@ export default function ReturnWelcomeScreen() {
   const longestWird = habit?.longestWird ?? 0;
   const streakBroke = currentWird === 0 && longestWird > 0;
 
-  useEffect(() => {
-    const lastPractice = habit?.lastPracticeDate;
-    const daysSince = lastPractice
-      ? getDayDifference(getTodayDateString(), lastPractice)
-      : 0;
+  const lastPractice = habit?.lastPracticeDate;
+  const daysSince = lastPractice
+    ? getDayDifference(getTodayDateString(), lastPractice)
+    : 0;
 
-    track('return_welcome_shown', {
+  const content = useMemo(
+    () => getReturnContent(daysSince, streakBroke, longestWird),
+    [daysSince, streakBroke, longestWird]
+  );
+
+  const absenceTier = getAbsenceTier(daysSince);
+
+  useEffect(() => {
+    track("return_welcome_shown", {
       days_since_last_practice: daysSince,
       current_wird: currentWird,
       streak_broke: streakBroke,
       longest_wird: longestWird,
+      absence_tier: absenceTier,
     });
   }, []);
 
@@ -42,61 +111,56 @@ export default function ReturnWelcomeScreen() {
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bgWarm }]}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.bgWarm }]}
+    >
       <View style={styles.content}>
         {/* Decorative crescent circle */}
         <Animated.View
           entering={FadeIn.duration(600)}
-          style={[styles.crescentCircle, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}
+          style={[
+            styles.crescentCircle,
+            { backgroundColor: colors.accentLight, borderColor: colors.accent },
+          ]}
         >
           <CrescentIcon size={32} color={colors.accent} />
         </Animated.View>
 
-        {/* Welcome back label */}
+        {/* Greeting label — adapts to absence tier */}
         <Animated.View entering={FadeInDown.delay(200).duration(500)}>
-          <Text style={[styles.label, { color: colors.accent }]}>Welcome back</Text>
+          <Text style={[styles.label, { color: colors.accent }]}>
+            {content.greeting}
+          </Text>
         </Animated.View>
 
-        {/* Hadith card */}
-        <Animated.View entering={FadeInDown.delay(400).duration(500)} style={{ width: "100%" }}>
+        {/* Hadith card — adapts to absence tier */}
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(500)}
+          style={{ width: "100%" }}
+        >
           <Card style={styles.hadithCard}>
             <Text style={[styles.hadithText, { color: colors.text }]}>
-              {'"The most beloved of deeds to Allah are those that are most consistent, even if they are small."'}
+              {`\u201C${content.hadith}\u201D`}
             </Text>
             <Text style={[styles.attribution, { color: colors.textMuted }]}>
-              {"-- Prophet Muhammad (peace be upon him)"}
+              {`\u2014 ${content.attribution}`}
             </Text>
           </Card>
         </Animated.View>
 
-        {/* Encouragement — compassionate recovery if streak broke, otherwise normal message */}
+        {/* Encouragement — adapts to absence and streak state */}
         <Animated.View entering={FadeInDown.delay(600).duration(500)}>
-          {streakBroke ? (
-            <View style={styles.recoveryWrap}>
-              <Text style={[styles.encouragement, { color: colors.textSoft }]}>
-                Your streak ended — but your longest streak of{" "}
-                <Text style={[styles.streakHighlight, { color: colors.accent }]}>
-                  {longestWird} {longestWird === 1 ? "day" : "days"}
-                </Text>{" "}
-                is yours forever. Every new day is a fresh start.
-              </Text>
-            </View>
-          ) : (
-            <Text style={[styles.encouragement, { color: colors.textSoft }]}>
-              Every return is a step forward. Pick up right where you left off.
-            </Text>
-          )}
+          <Text style={[styles.encouragement, { color: colors.textSoft }]}>
+            {content.encouragement}
+          </Text>
         </Animated.View>
 
-        {/* Continue / Start new streak button */}
+        {/* Action button — adapts text to tier */}
         <Animated.View
           entering={FadeInDown.delay(800).duration(500)}
           style={styles.buttonWrap}
         >
-          <Button
-            title={streakBroke ? "Start a new streak" : "Continue"}
-            onPress={handleContinue}
-          />
+          <Button title={content.buttonText} onPress={handleContinue} />
         </Animated.View>
       </View>
     </SafeAreaView>
@@ -160,12 +224,5 @@ const styles = StyleSheet.create({
   buttonWrap: {
     width: "100%",
     maxWidth: 320,
-  },
-  recoveryWrap: {
-    maxWidth: 300,
-    alignItems: "center",
-  },
-  streakHighlight: {
-    fontFamily: fontFamilies.bodySemiBold,
   },
 });

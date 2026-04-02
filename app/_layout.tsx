@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
@@ -24,7 +24,7 @@ import {
   Lora_700Bold,
   Lora_400Regular_Italic,
 } from "@expo-google-fonts/lora";
-import { ThemeContext, resolveColors, type ThemeMode } from "../src/design/theme";
+import { ThemeContext, resolveColors, useColors } from "../src/design/theme";
 import { DatabaseProvider } from "../src/db/provider";
 import { initRevenueCat } from "../src/monetization/revenuecat";
 import { SubscriptionProvider } from "../src/monetization/provider";
@@ -32,15 +32,66 @@ import { AuthProvider } from "../src/auth/provider";
 import { SyncProvider } from "../src/sync/provider";
 import { AppStateProvider } from "../src/state/provider";
 import { SocialProvider } from "../src/social/provider";
+import { useThemePreference } from "../src/hooks/useThemePreference";
 
 // Prevent splash from auto-hiding — we control when it goes away
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+/**
+ * ThemeWrapper lives inside DatabaseProvider so it can read the user's
+ * theme preference from SQLite. Falls back to system scheme until loaded.
+ */
+function ThemeWrapper({ children }: { children: ReactNode }) {
   const systemScheme = useColorScheme();
-  // Force light mode — dark mode ships later
-  const [themeMode] = useState<ThemeMode>("light");
+  const { themeMode, loaded } = useThemePreference();
 
+  // Use 'system' until preference is loaded from DB
+  const effectiveMode = loaded ? themeMode : "system";
+  const scheme = systemScheme as "light" | "dark" | null | undefined;
+  const { colors, mode } = resolveColors(effectiveMode, scheme);
+
+  return (
+    <ThemeContext.Provider value={{ colors, mode }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+/**
+ * AppNavigator consumes ThemeContext to apply dynamic background color
+ * to the navigation stack's content style.
+ */
+function AppNavigator() {
+  const colors = useColors();
+
+  return (
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bg },
+        animation: "fade",
+        animationDuration: 300,
+      }}
+    >
+      <Stack.Screen
+        name="lesson/[id]"
+        options={{
+          animation: "slide_from_bottom",
+          animationDuration: 400,
+        }}
+      />
+      <Stack.Screen
+        name="lesson/review"
+        options={{
+          animation: "slide_from_bottom",
+          animationDuration: 400,
+        }}
+      />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     Amiri_400Regular,
     Amiri_700Bold,
@@ -69,51 +120,27 @@ export default function RootLayout() {
     return null;
   }
 
-  const { colors, mode } = resolveColors(themeMode, systemScheme);
-
   return (
-    <ThemeContext.Provider value={{ colors, mode }}>
-      <Sentry.ErrorBoundary fallback={({ resetError }) => (
-        <ErrorFallback onRetry={resetError} />
-      )}>
-        <DatabaseProvider fallback={<AppLoadingScreen />}>
+    <Sentry.ErrorBoundary fallback={({ resetError }) => (
+      <ErrorFallback onRetry={resetError} />
+    )}>
+      <DatabaseProvider fallback={<AppLoadingScreen />}>
+        <ThemeWrapper>
           <AuthProvider>
             <SyncProvider>
               <SubscriptionProvider>
                 <AppStateProvider>
                   <SocialProvider>
                   <AnalyticsGate>
-                    <Stack
-                      screenOptions={{
-                        headerShown: false,
-                        contentStyle: { backgroundColor: colors.bg },
-                        animation: "fade",
-                        animationDuration: 300,
-                      }}
-                    >
-                      <Stack.Screen
-                        name="lesson/[id]"
-                        options={{
-                          animation: "slide_from_bottom",
-                          animationDuration: 400,
-                        }}
-                      />
-                      <Stack.Screen
-                        name="lesson/review"
-                        options={{
-                          animation: "slide_from_bottom",
-                          animationDuration: 400,
-                        }}
-                      />
-                    </Stack>
+                    <AppNavigator />
                   </AnalyticsGate>
                   </SocialProvider>
                 </AppStateProvider>
               </SubscriptionProvider>
             </SyncProvider>
           </AuthProvider>
-        </DatabaseProvider>
-      </Sentry.ErrorBoundary>
-    </ThemeContext.Provider>
+        </ThemeWrapper>
+      </DatabaseProvider>
+    </Sentry.ErrorBoundary>
   );
 }

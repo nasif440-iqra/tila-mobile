@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Revenue & Growth
 status: executing
-stopped_at: Completed 08-05-PLAN.md
-last_updated: "2026-04-02T20:14:54.069Z"
+stopped_at: Completed 08-06-PLAN.md
+last_updated: "2026-04-02T20:16:50.751Z"
 last_activity: 2026-04-02
 progress:
   total_phases: 8
@@ -61,7 +61,8 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 - [Phase 08]: Schema v7 forward-includes theme_mode and account_prompt_declined_at for plans 04 and 06
 - [Phase 08]: SQL file designed for Supabase Dashboard SQL Editor copy-paste deployment
 - [Phase 08]: Privacy manifest declares email, userID, usage data for auth+sync App Store compliance
-- [Phase 08]: SocialProvider placed inside AppStateProvider; invite acceptance creates bidirectional friendship
+- [Phase 08]: ThemeWrapper pattern inside DatabaseProvider solves theme-DB chicken-and-egg problem
+- [Phase 08]: Three absence tiers (<=1, 2-7, 8+ days) with distinct hadiths for return welcome
 
 ### Pending Todos
 
@@ -74,6 +75,6 @@ v1.0 decisions archived to .planning/milestones/v1.0-ROADMAP.md.
 
 ## Session Continuity
 
-Last session: 2026-04-02T20:14:54.064Z
-Stopped at: Completed 08-05-PLAN.md
+Last session: 2026-04-02T20:16:50.745Z
+Stopped at: Completed 08-06-PLAN.md
 Resume file: None
