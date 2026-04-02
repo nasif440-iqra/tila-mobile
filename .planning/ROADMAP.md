@@ -32,7 +32,7 @@ Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
 - [x] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7 (completed 2026-04-02)
 - [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
 - [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
-- [x] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations (completed 2026-04-02)
+- [x] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations (completed 2026-04-02)
 - [ ] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests
 
 ## Phase Details
@@ -130,6 +130,15 @@ Plans:
 **Goal**: Users have accounts, progress syncs to cloud, friends can see each other's progress, dark mode works
 **Depends on**: Phase 7 (typed engine) + Phase 6 (app in store)
 **Requirements**: RET-02, RET-03, RET-04, RET-05, RET-06, RET-07, RET-08, RET-09, RET-10
+**Plans:** 7 plans
+Plans:
+- [ ] 08-01-PLAN.md — Supabase client, auth helpers (Apple/Google/email), type contracts (RET-02, RET-03)
+- [ ] 08-02-PLAN.md — AuthProvider, sync service, SyncProvider, schema migration v7 (RET-03, RET-04, RET-06)
+- [ ] 08-03-PLAN.md — AppStateProvider, root layout wiring, AccountPrompt, AuthScreen (RET-02, RET-03)
+- [ ] 08-04-PLAN.md — Supabase Postgres schema SQL, anonymous-to-auth migration, privacy manifest (RET-03, RET-04, RET-06, RET-07)
+- [ ] 08-05-PLAN.md — Social features: friends, streaks, invite codes, FriendsList UI (RET-05)
+- [ ] 08-06-PLAN.md — Dark mode activation, theme preference, adaptive return welcome (RET-08, RET-10)
+- [ ] 08-07-PLAN.md — Integration tests: onboarding, lesson completion, premium locking, restore purchases (RET-09)
 **Success Criteria** (what must be TRUE):
   1. Shared state provider exists — screens subscribe to canonical progress/habit/subscription state
   2. User can create account (email or social auth) and sign in across devices
@@ -140,7 +149,6 @@ Plans:
   7. Return welcome screen adapts to absence length (1 day / 3-7 days / 14+ days)
   8. Integration tests cover: onboarding, lesson completion, premium locking, restore purchases
   9. Dark mode activates from existing tokens with system preference detection
-**Note**: This is the largest phase. Needs its own detailed design/planning session before execution. State layer and cloud sync must be designed as one architectural unit.
 
 ## Execution Order
 
@@ -168,4 +176,4 @@ Phase 2 (cleanup) ───────┘                                      
 | 5. Conversion Surfaces | 1/2 | In Progress|  |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 1/1 | Complete   | 2026-04-02 |
-| 8. Cloud Sync & Social | 0/TBD | Not started | - |
+| 8. Cloud Sync & Social | 0/7 | Planned | - |
