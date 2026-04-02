@@ -333,7 +333,7 @@ export default function LessonScreen() {
             <UpgradeCard
               variant="locked-gate"
               onStartTrial={async () => { await showPaywall("lesson_locked"); }}
-              onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
+              onScholarship={() => Linking.openURL("mailto:nasif.c7@gmail.com?subject=Tila%20Scholarship%20Request")}
             />
           )}
           <View style={{ marginTop: spacing.xl }}>
@@ -406,7 +406,7 @@ export default function LessonScreen() {
             onReview={() => router.replace("/lesson/review")}
             showTrialCTA={lesson.id === FREE_LESSON_CUTOFF && !isPremiumActive && subStage !== "unknown"}
             onStartTrial={() => showPaywall("lesson_7_summary")}
-            onScholarship={() => Linking.openURL("mailto:support@tila.app?subject=Tila%20Scholarship%20Request")}
+            onScholarship={() => Linking.openURL("mailto:nasif.c7@gmail.com?subject=Tila%20Scholarship%20Request")}
             insights={lessonInsights}
           />
           <AccountPrompt

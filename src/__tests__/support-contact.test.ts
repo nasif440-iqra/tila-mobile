@@ -10,8 +10,8 @@ describe("CONV-09: Support contact link on Progress tab", () => {
     expect(source).toContain("Contact Support");
   });
 
-  it("calls Linking.openURL with mailto:support@tila.app", () => {
-    expect(source).toMatch(/Linking\.openURL\(.*mailto:support@tila\.app.*\)/);
+  it("calls Linking.openURL with mailto:nasif.c7@gmail.com", () => {
+    expect(source).toMatch(/Linking\.openURL\(.*mailto:nasif\.c7@gmail\.com.*\)/);
   });
 
   it("uses the GitHub Pages privacy policy URL", () => {

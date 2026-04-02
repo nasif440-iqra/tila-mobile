@@ -395,7 +395,7 @@ export default function ProgressScreen() {
 
         {/* Contact Support */}
         <Pressable
-          onPress={() => Linking.openURL('mailto:support@tila.app')}
+          onPress={() => Linking.openURL('mailto:nasif.c7@gmail.com')}
           style={styles.privacyLink}
         >
           <Text style={[typography.bodySmall, { color: colors.textMuted }]}>
