@@ -5,11 +5,13 @@
  * Separates "attempt recorded" (mastery tracking) from "lesson passed" (progression).
  */
 
+import type { LessonOutcome } from '../types/engine';
+
 /**
  * Per-mode pass thresholds.
  * null = never gates progression (review sessions).
  */
-const MODE_THRESHOLDS = {
+const MODE_THRESHOLDS: Record<string, number | null> = {
   recognition: 0.8,
   sound: 0.8,
   contrast: 0.8,
@@ -26,19 +28,18 @@ const DEFAULT_THRESHOLD = 0.8;
  * Get the pass threshold for a given lesson mode.
  * Returns null for modes that never gate progression.
  */
-export function getPassThreshold(lessonMode) {
-  if (lessonMode in MODE_THRESHOLDS) return MODE_THRESHOLDS[lessonMode];
+export function getPassThreshold(lessonMode: string): number | null {
+  if (lessonMode in MODE_THRESHOLDS) return MODE_THRESHOLDS[lessonMode]!;
   return DEFAULT_THRESHOLD;
 }
 
 /**
  * Evaluate a lesson attempt.
- *
- * @param {Array} quizResults - array of { correct: boolean, ... }
- * @param {string} lessonMode - "recognition" | "sound" | "contrast" | "checkpoint" | "review" | "harakat" | ...
- * @returns {{ total: number, correct: number, accuracy: number, passed: boolean, threshold: number|null }}
  */
-export function evaluateLessonOutcome(quizResults, lessonMode) {
+export function evaluateLessonOutcome(
+  quizResults: Array<{ correct: boolean }>,
+  lessonMode: string,
+): LessonOutcome {
   const total = quizResults.length;
   const correct = quizResults.filter(r => r.correct).length;
   const accuracy = total > 0 ? correct / total : 0;
