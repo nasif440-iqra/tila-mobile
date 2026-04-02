@@ -80,6 +80,10 @@ Plans:
 **Goal**: Users understand what makes Tila worth paying for before hitting the paywall
 **Depends on**: Phase 3
 **Requirements**: CONV-03, CONV-05
+**Plans:** 2 plans
+Plans:
+- [ ] 04-01-PLAN.md — Engine insights module: post-lesson insight generation, review grouping, confusion pair parsing (CONV-03, CONV-05)
+- [ ] 04-02-PLAN.md — UI integration: LessonInsights card, ConfusionPairs + ReviewSchedule progress sections (CONV-03, CONV-05)
 **Success Criteria** (what must be TRUE):
   1. Post-lesson insights appear during lessons 1-7 showing mastery engine intelligence (confusion detection, review scheduling)
   2. Progress screen shows mastery data: confused letter pairs, accuracy trends, upcoming review schedule
@@ -156,7 +160,7 @@ Phase 2 (cleanup) ───────┘                                      
 | 1. Lesson Flow Hardening | 0/1 | Not started | - |
 | 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
 | 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
-| 4. Value Communication | 0/TBD | Not started | - |
+| 4. Value Communication | 0/2 | Planned | - |
 | 5. Conversion Surfaces | 0/TBD | Not started | - |
 | 6. App Store Submission | 0/TBD | Not started | - |
 | 7. Engine TypeScript Migration | 0/TBD | Not started | - |
