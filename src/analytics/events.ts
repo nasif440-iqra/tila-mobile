@@ -114,6 +114,25 @@ export interface ScholarshipLinkTappedProps {
   trigger: string;
 }
 
+export interface AuthScreenViewedProps {
+  source: 'account_prompt' | 'settings' | 'direct';
+}
+
+export interface AuthMethodSelectedProps {
+  method: 'email' | 'apple' | 'google';
+  mode: 'sign_in' | 'sign_up';
+}
+
+export interface AccountPromptShownProps {
+  lesson_id: number;
+  prompt_count: number;
+}
+
+export interface AccountPromptResultProps {
+  action: 'sign_in' | 'dismiss';
+  lesson_id: number;
+}
+
 export interface AuthSignInProps {
   method: 'email' | 'apple' | 'google';
 }
@@ -154,6 +173,10 @@ export interface EventMap {
   trial_expired: TrialExpiredProps;
   entitlement_changed: EntitlementChangedProps;
   scholarship_link_tapped: ScholarshipLinkTappedProps;
+  auth_screen_viewed: AuthScreenViewedProps;
+  auth_method_selected: AuthMethodSelectedProps;
+  account_prompt_shown: AccountPromptShownProps;
+  account_prompt_result: AccountPromptResultProps;
   auth_sign_in: AuthSignInProps;
   auth_sign_out: AuthSignOutProps;
   sync_completed: SyncCompletedProps;
