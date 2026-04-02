@@ -54,6 +54,14 @@ vi.mock("react-native", () => ({
   Pressable: "Pressable",
 }));
 
+vi.mock("expo-haptics", () => ({
+  impactAsync: vi.fn(),
+  notificationAsync: vi.fn(),
+  selectionAsync: vi.fn(),
+  ImpactFeedbackStyle: { Light: "Light", Medium: "Medium", Heavy: "Heavy" },
+  NotificationFeedbackType: { Success: "Success", Error: "Error", Warning: "Warning" },
+}));
+
 vi.mock("react-native-svg", () => ({
   default: "Svg",
   Svg: "Svg",
@@ -64,15 +72,28 @@ vi.mock("react-native-svg", () => ({
   Mask: "Mask",
 }));
 
-vi.mock("react-native-reanimated", () => ({
-  default: {
-    View: "Animated.View",
-    createAnimatedComponent: (c: unknown) => c,
-  },
-  useSharedValue: vi.fn((v: unknown) => ({ value: v })),
-  useAnimatedStyle: vi.fn((fn: () => unknown) => fn()),
-  withTiming: vi.fn((v: unknown) => v),
-  withDelay: vi.fn((_d: unknown, v: unknown) => v),
-  withSpring: vi.fn((v: unknown) => v),
-  FadeIn: { delay: vi.fn().mockReturnValue({}) },
-}));
+vi.mock("react-native-reanimated", () => {
+  const identity = (v: unknown) => v;
+  const easingFn = () => identity;
+  return {
+    default: {
+      View: "Animated.View",
+      createAnimatedComponent: (c: unknown) => c,
+    },
+    useSharedValue: vi.fn((v: unknown) => ({ value: v })),
+    useAnimatedStyle: vi.fn((fn: () => unknown) => fn()),
+    withTiming: vi.fn((v: unknown) => v),
+    withDelay: vi.fn((_d: unknown, v: unknown) => v),
+    withSpring: vi.fn((v: unknown) => v),
+    FadeIn: { delay: vi.fn().mockReturnValue({}) },
+    Easing: {
+      in: easingFn,
+      out: easingFn,
+      inOut: easingFn,
+      linear: identity,
+      cubic: identity,
+      exp: identity,
+      bezier: () => identity,
+    },
+  };
+});
