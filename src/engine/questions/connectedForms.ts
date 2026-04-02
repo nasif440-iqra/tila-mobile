@@ -1,18 +1,41 @@
 import { getLetter, ARABIC_LETTERS } from "../../data/letters.js";
 import { getConnectedForms, doesLetterJoin, getBreakerIds } from "../../data/connectedForms.js";
+import type { Lesson } from "../../types/lesson";
+import type { ArabicLetter, ConnectedFormData } from "../../types/engine";
+import type { QuestionOption } from "../../types/question";
 import { shuffle, pickRandom } from "./shared.js";
 
-const POSITIONS = ["isolated", "initial", "medial", "final"];
+const POSITIONS = ["isolated", "initial", "medial", "final"] as const;
+type Position = typeof POSITIONS[number];
 
-function getAvailablePositions(letterId) {
+interface ConnectedFormExercise {
+  type: string;
+  prompt?: string;
+  displayArabic?: string;
+  targetId: number | string;
+  letterId?: number;
+  options?: QuestionOption[];
+  promptSubtext?: string;
+  // guided_reveal specific
+  revealUpTo?: string;
+  explanation?: string;
+  // tap_in_order specific
+  letters?: Array<{ id: number; arabic: string; sound: string }>;
+  // spot_the_break specific
+  word?: { arabic: string; transliteration: string };
+  segments?: Array<{ arabic: string; letterIds: number[]; isBreakAfter: boolean }>;
+  breakerLetterId?: number;
+}
+
+function getAvailablePositions(letterId: number): Position[] {
   return doesLetterJoin(letterId)
-    ? POSITIONS
+    ? [...POSITIONS]
     : ["isolated", "final"];
 }
 
-function buildGuidedReveal(letterId) {
+function buildGuidedReveal(letterId: number): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
-  const cf = getConnectedForms(letterId);
+  const cf = getConnectedForms(letterId) as ConnectedFormData | null;
   if (!letter || !cf) return null;
   const joins = doesLetterJoin(letterId);
   const explanation = joins
@@ -23,17 +46,18 @@ function buildGuidedReveal(letterId) {
     letterId,
     revealUpTo: "final",
     explanation,
+    targetId: letterId,
   };
 }
 
-function buildPositionComprehension(letterId) {
+function buildPositionComprehension(letterId: number): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
-  const cf = getConnectedForms(letterId);
+  const cf = getConnectedForms(letterId) as ConnectedFormData | null;
   if (!letter || !cf) return null;
   const positions = getAvailablePositions(letterId);
-  const targetPos = pickRandom(positions);
+  const targetPos = pickRandom(positions)!;
   const displayForm = cf.forms[targetPos];
-  const positionLabels = {
+  const positionLabels: Record<string, string> = {
     isolated: "Isolated (standalone)",
     initial: "Initial (start of word)",
     medial: "Medial (middle of word)",
@@ -54,12 +78,12 @@ function buildPositionComprehension(letterId) {
   };
 }
 
-function buildFamilyComprehension(teachIds) {
-  const sourceLetterId = pickRandom(teachIds);
-  const cf = getConnectedForms(sourceLetterId);
+function buildFamilyComprehension(teachIds: number[]): ConnectedFormExercise | null {
+  const sourceLetterId = pickRandom(teachIds)!;
+  const cf = getConnectedForms(sourceLetterId) as ConnectedFormData | null;
   if (!cf) return null;
   const positions = getAvailablePositions(sourceLetterId);
-  const pos = pickRandom(positions);
+  const pos = pickRandom(positions)!;
   const displayForm = cf.forms[pos];
   const options = teachIds.map(lid => {
     const l = getLetter(lid);
@@ -80,21 +104,21 @@ function buildFamilyComprehension(teachIds) {
   };
 }
 
-function buildFamilyContrastExercises(teachIds) {
+function buildFamilyContrastExercises(teachIds: number[]): ConnectedFormExercise[] {
   if (teachIds.length < 2) return [];
-  const exercises = [];
+  const exercises: ConnectedFormExercise[] = [];
   // Pick positions to cycle through — one per exercise
-  const positionCycle = ["initial", "medial", "final"];
+  const positionCycle: Position[] = ["initial", "medial", "final"];
   const count = Math.min(3, teachIds.length);
   const letterPool = shuffle([...teachIds]);
   for (let i = 0; i < count; i++) {
     const letterId = letterPool[i % letterPool.length];
-    const cf = getConnectedForms(letterId);
+    const cf = getConnectedForms(letterId) as ConnectedFormData | null;
     if (!cf) continue;
     const positions = getAvailablePositions(letterId);
     const targetPos = positionCycle[i % positionCycle.length];
     // Fall back if this letter doesn't have that position
-    const pos = positions.includes(targetPos) ? targetPos : pickRandom(positions);
+    const pos = positions.includes(targetPos) ? targetPos : pickRandom(positions)!;
     const displayForm = cf.forms[pos];
     const options = shuffle(teachIds.map(id => {
       const l = getLetter(id);
@@ -115,19 +139,19 @@ function buildFamilyContrastExercises(teachIds) {
   return exercises;
 }
 
-function buildReverseIdentification(letterId) {
+function buildReverseIdentification(letterId: number): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
-  const cf = getConnectedForms(letterId);
+  const cf = getConnectedForms(letterId) as ConnectedFormData | null;
   if (!letter || !cf) return null;
   const positions = getAvailablePositions(letterId);
-  const targetPos = pickRandom(positions.filter(p => p !== "isolated"));
-  const posLabel = { initial: "START", medial: "MIDDLE", final: "END" }[targetPos] || "ISOLATED";
+  const targetPos = pickRandom(positions.filter(p => p !== "isolated"))!;
+  const posLabel = ({ initial: "START", medial: "MIDDLE", final: "END" } as Record<string, string>)[targetPos] || "ISOLATED";
   // Build options: show forms from different positions (including the correct one)
-  const optionPositions = shuffle(positions).slice(0, Math.min(4, positions.length));
+  const optionPositions = shuffle([...positions]).slice(0, Math.min(4, positions.length));
   if (!optionPositions.includes(targetPos)) {
     optionPositions[0] = targetPos;
   }
-  const positionLabels = {
+  const positionLabels: Record<string, string> = {
     isolated: "Isolated",
     initial: "Initial",
     medial: "Medial",
@@ -148,12 +172,12 @@ function buildReverseIdentification(letterId) {
   };
 }
 
-function buildFreeIdentification(letterId, teachIds) {
+function buildFreeIdentification(letterId: number, teachIds: number[]): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
-  const cf = getConnectedForms(letterId);
+  const cf = getConnectedForms(letterId) as ConnectedFormData | null;
   if (!letter || !cf) return null;
   const positions = getAvailablePositions(letterId);
-  const pos = pickRandom(positions);
+  const pos = pickRandom(positions)!;
   const displayForm = cf.forms[pos];
   // Get distractors from OTHER families
   const allOtherIds = Array.from({ length: 28 }, (_, i) => i + 1)
@@ -175,10 +199,10 @@ function buildFreeIdentification(letterId, teachIds) {
   };
 }
 
-function buildSoundReviewQuestion(letterId) {
+function buildSoundReviewQuestion(letterId: number): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
   if (!letter) return null;
-  const allLetters = ARABIC_LETTERS.filter(l => l.id !== letterId);
+  const allLetters = ARABIC_LETTERS.filter((l: ArabicLetter) => l.id !== letterId);
   const distractors = shuffle(allLetters).slice(0, 2);
   return {
     type: "comprehension",
@@ -192,7 +216,7 @@ function buildSoundReviewQuestion(letterId) {
   };
 }
 
-function buildHarakatReviewQuestion(letterId) {
+function buildHarakatReviewQuestion(letterId: number): ConnectedFormExercise | null {
   const letter = getLetter(letterId);
   if (!letter) return null;
   const vowels = [
@@ -200,7 +224,7 @@ function buildHarakatReviewQuestion(letterId) {
     { mark: "\u0650", sound: "i", name: "kasra" },
     { mark: "\u064F", sound: "u", name: "damma" },
   ];
-  const target = pickRandom(vowels);
+  const target = pickRandom(vowels)!;
   const display = letter.letter + target.mark;
   const correctSound = letter.transliteration + target.sound;
   const wrongVowels = vowels.filter(v => v.name !== target.name);
@@ -222,10 +246,11 @@ function buildHarakatReviewQuestion(letterId) {
 // 4.20 = Mastery Check (comprehension-only random sampling of all 28 letters)
 const NO_REVIEW_MODULES = new Set(["4.0", "4.18", "4.20"]);
 
-function generateRTLExercises() {
+function generateRTLExercises(): ConnectedFormExercise[] {
   return [
     {
       type: "tap_in_order",
+      targetId: "rtl_1",
       letters: [
         { id: 22, arabic: "\u0643\u064E", sound: "ka" },
         { id: 3,  arabic: "\u062A\u064E", sound: "ta" },
@@ -234,6 +259,7 @@ function generateRTLExercises() {
     },
     {
       type: "tap_in_order",
+      targetId: "rtl_2",
       letters: [
         { id: 12, arabic: "\u0633\u064E", sound: "sa" },
         { id: 23, arabic: "\u0644\u064E", sound: "la" },
@@ -252,8 +278,8 @@ function generateRTLExercises() {
   ];
 }
 
-function generateSpotTheBreakExercises(lesson) {
-  const breakerIds = getBreakerIds();
+function generateSpotTheBreakExercises(lesson: Lesson): ConnectedFormExercise[] {
+  const breakerIds = getBreakerIds() as number[];
   const connectorIds = Object.keys(
     Object.fromEntries(
       Array.from({ length: 28 }, (_, i) => i + 1)
@@ -262,15 +288,15 @@ function generateSpotTheBreakExercises(lesson) {
     )
   ).map(Number);
 
-  const exercises = [];
+  const exercises: ConnectedFormExercise[] = [];
   // Limit to 3 breaker exercises per lesson to keep lesson length manageable (~2 min target)
   const breakersToUse = shuffle(breakerIds).slice(0, 3);
   for (const breakerId of breakersToUse) {
     const breakerLetter = getLetter(breakerId);
-    const connector = getLetter(pickRandom(connectorIds));
+    const connector = getLetter(pickRandom(connectorIds)!);
     if (!breakerLetter || !connector) continue;
-    const breakerCf = getConnectedForms(breakerId);
-    const connectorCf = getConnectedForms(connector.id);
+    const breakerCf = getConnectedForms(breakerId) as ConnectedFormData | null;
+    const connectorCf = getConnectedForms(connector.id) as ConnectedFormData | null;
     if (!breakerCf || !connectorCf) continue;
     // Build a two-segment "word" where the breaker causes the chain to stop
     const wordArabic = connector.letter + "\u064E" + breakerLetter.letter + "\u064E";
@@ -284,19 +310,20 @@ function generateSpotTheBreakExercises(lesson) {
       ],
       breakerLetterId: breakerId,
       explanation: `${breakerLetter.name} doesn\u2019t connect forward \u2014 it breaks the chain.`,
+      targetId: breakerId,
     });
   }
   return exercises;
 }
 
-function generateMixedRetrievalExercises(lesson) {
+function generateMixedRetrievalExercises(lesson: Lesson): ConnectedFormExercise[] {
   const teachIds = lesson.teachIds || [];
   return teachIds.map(letterId => {
-    const cf = getConnectedForms(letterId);
+    const cf = getConnectedForms(letterId) as ConnectedFormData | null;
     const letter = getLetter(letterId);
     if (!cf || !letter) return null;
     const positions = getAvailablePositions(letterId);
-    const pos = pickRandom(positions);
+    const pos = pickRandom(positions)!;
     const displayForm = cf.forms[pos];
     const pool = shuffle(
       Array.from({ length: 28 }, (_, i) => i + 1).filter(id => id !== letterId)
@@ -315,19 +342,19 @@ function generateMixedRetrievalExercises(lesson) {
       targetId: letterId,
       options,
     };
-  }).filter(Boolean);
+  }).filter(Boolean) as ConnectedFormExercise[];
 }
 
-function generateMasteryCheckExercises() {
+function generateMasteryCheckExercises(): ConnectedFormExercise[] {
   const allIds = Array.from({ length: 28 }, (_, i) => i + 1);
   // Sample 12 of 28 letters for the mastery check — covers ~43% for a representative snapshot
   const sampled = shuffle(allIds).slice(0, 12);
   return sampled.map(letterId => {
-    const cf = getConnectedForms(letterId);
+    const cf = getConnectedForms(letterId) as ConnectedFormData | null;
     const letter = getLetter(letterId);
     if (!cf || !letter) return null;
     const positions = getAvailablePositions(letterId);
-    const pos = pickRandom(positions);
+    const pos = pickRandom(positions)!;
     const displayForm = cf.forms[pos];
     const pool = shuffle(allIds.filter(id => id !== letterId)).slice(0, 2);
     const options = shuffle([
@@ -344,15 +371,13 @@ function generateMasteryCheckExercises() {
       targetId: letterId,
       options,
     };
-  }).filter(Boolean);
+  }).filter(Boolean) as ConnectedFormExercise[];
 }
 
 /**
  * Generate exercises for Phase 4 connected forms lessons.
- * @param {{ id: number, phase: number, lessonMode: string, lessonType: string, module: string, teachIds: number[], reviewIds: number[], familyRule: string }} lesson
- * @returns {Array}
  */
-export function generateConnectedFormExercises(lesson) {
+export function generateConnectedFormExercises(lesson: Lesson): ConnectedFormExercise[] {
   if (!lesson) return [];
   if (lesson.module === "4.0") {
     return generateRTLExercises();
@@ -372,11 +397,11 @@ export function generateConnectedFormExercises(lesson) {
 
   // Standard connected forms lesson
   const teachIds = lesson.teachIds || [];
-  const exercises = [];
+  const exercises: ConnectedFormExercise[] = [];
   const isFamily = teachIds.length >= 2;
 
   if (isFamily) {
-    // ── Family lessons (2-3 teachIds): min 10 exercises ──
+    // -- Family lessons (2-3 teachIds): min 10 exercises --
 
     // 1. Guided reveal per letter (2-3)
     for (const letterId of teachIds) {
@@ -388,24 +413,24 @@ export function generateConnectedFormExercises(lesson) {
     const contrasts = buildFamilyContrastExercises(teachIds);
     exercises.push(...contrasts);
 
-    // 3. Position identification × 2
+    // 3. Position identification x 2
     const posLetters = shuffle([...teachIds]);
     for (let i = 0; i < 2; i++) {
       const posComp = buildPositionComprehension(posLetters[i % posLetters.length]);
       if (posComp) exercises.push(posComp);
     }
 
-    // 4. Mixed identification × 2: show form from any family member, options include family + one outsider
+    // 4. Mixed identification x 2: show form from any family member, options include family + one outsider
     for (let i = 0; i < 2; i++) {
-      const srcId = pickRandom(teachIds);
-      const cf = getConnectedForms(srcId);
+      const srcId = pickRandom(teachIds)!;
+      const cf = getConnectedForms(srcId) as ConnectedFormData | null;
       const letter = getLetter(srcId);
       if (!cf || !letter) continue;
       const positions = getAvailablePositions(srcId);
-      const pos = pickRandom(positions);
+      const pos = pickRandom(positions)!;
       const outsiderPool = Array.from({ length: 28 }, (_, j) => j + 1)
         .filter(id => !teachIds.includes(id));
-      const outsider = getLetter(pickRandom(outsiderPool));
+      const outsider = getLetter(pickRandom(outsiderPool)!);
       const options = shuffle([
         ...teachIds.map(id => {
           const l = getLetter(id);
@@ -422,31 +447,31 @@ export function generateConnectedFormExercises(lesson) {
       });
     }
   } else {
-    // ── Single-letter lessons (1 teachId): min 8 exercises ──
+    // -- Single-letter lessons (1 teachId): min 8 exercises --
     const letterId = teachIds[0];
 
     // 1. Guided reveal (1)
     const reveal = buildGuidedReveal(letterId);
     if (reveal) exercises.push(reveal);
 
-    // 2. Position identification × 2
+    // 2. Position identification x 2
     for (let i = 0; i < 2; i++) {
       const posComp = buildPositionComprehension(letterId);
       if (posComp) exercises.push(posComp);
     }
 
-    // 3. Reverse identification × 2
+    // 3. Reverse identification x 2
     for (let i = 0; i < 2; i++) {
       const rev = buildReverseIdentification(letterId);
       if (rev) exercises.push(rev);
     }
 
     // 4. Context word exercise — 1 (family comprehension style, using letter itself)
-    const cf = getConnectedForms(letterId);
+    const cf = getConnectedForms(letterId) as ConnectedFormData | null;
     const letter = getLetter(letterId);
     if (cf && letter) {
       const positions = getAvailablePositions(letterId);
-      const pos = pickRandom(positions);
+      const pos = pickRandom(positions)!;
       const outsiders = shuffle(
         Array.from({ length: 28 }, (_, i) => i + 1).filter(id => id !== letterId)
       ).slice(0, 2);
@@ -465,16 +490,16 @@ export function generateConnectedFormExercises(lesson) {
       });
     }
 
-    // 5. Free identification × 2
+    // 5. Free identification x 2
     for (let i = 0; i < 2; i++) {
       const free = buildFreeIdentification(letterId, teachIds);
       if (free) exercises.push(free);
     }
   }
 
-  // ── Add review questions for modules 4.1–4.17 and 4.19 ──
+  // -- Add review questions for modules 4.1-4.17 and 4.19 --
   if (!NO_REVIEW_MODULES.has(lesson.module)) {
-    const reviewQs = [];
+    const reviewQs: ConnectedFormExercise[] = [];
     for (const letterId of shuffle([...teachIds]).slice(0, 2)) {
       const soundQ = buildSoundReviewQuestion(letterId);
       if (soundQ) reviewQs.push(soundQ);
