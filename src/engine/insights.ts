@@ -4,7 +4,7 @@
  */
 
 import { getTopConfusions } from './selectors';
-import { parseEntityKey } from './mastery.js';
+import { parseEntityKey } from './mastery';
 import { getLetter } from '../data/letters.js';
 
 // ── Types ──

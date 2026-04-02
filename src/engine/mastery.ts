@@ -7,6 +7,8 @@
  */
 
 import { getLetter } from "../data/letters.js";
+import type { Question } from "../types/question";
+import type { EntityState, SkillState, ConfusionState } from "./progress";
 
 // ── Entity key normalization ──
 
@@ -18,7 +20,10 @@ import { getLetter } from "../data/letters.js";
  *  - If targetId is a string that looks like a combo id → "combo:<id>"
  *  - Fallback: "unknown:<targetId>"
  */
-export function normalizeEntityKey(targetId, question) {
+export function normalizeEntityKey(
+  targetId: string | number,
+  question?: Pick<Question, "isHarakat"> | null
+): string {
   if (question?.isHarakat && typeof targetId === "string") {
     return `combo:${targetId}`;
   }
@@ -39,11 +44,16 @@ export function normalizeEntityKey(targetId, question) {
   return `unknown:${String(targetId)}`;
 }
 
+export interface ParsedEntityKey {
+  type: string;
+  rawId: string | number;
+}
+
 /**
  * Parse an entity key back to its type and raw id.
  * Returns { type: "letter"|"combo"|"unknown", rawId: string|number }
  */
-export function parseEntityKey(key) {
+export function parseEntityKey(key: string): ParsedEntityKey {
   const idx = key.indexOf(":");
   if (idx === -1) return { type: "unknown", rawId: key };
   const type = key.slice(0, idx);
@@ -57,11 +67,11 @@ export function parseEntityKey(key) {
  * Derive skill keys from a question object.
  * Returns an array of skill key strings.
  */
-export function deriveSkillKeysFromQuestion(question) {
+export function deriveSkillKeysFromQuestion(question: Question | null | undefined): string[] {
   if (!question) return [];
-  const keys = [];
+  const keys: string[] = [];
   const tid = question.targetId;
-  const mode = question.lessonMode;
+  const mode = (question as Question & { lessonMode?: string }).lessonMode;
   const type = question.type;
   const isHarakat = question.isHarakat;
   const hasAudio = question.hasAudio;
@@ -92,7 +102,10 @@ export function deriveSkillKeysFromQuestion(question) {
     }
     // Contrast skill
     if (mode === "contrast" && question.options) {
-      const optIds = question.options.map(o => o.id).filter(id => typeof id === "number" && id !== tid).sort((a, b) => a - b);
+      const optIds = question.options
+        .map(o => o.id)
+        .filter((id): id is number => typeof id === "number" && id !== tid)
+        .sort((a, b) => a - b);
       if (optIds.length > 0) {
         keys.push(`contrast:${tid}-${optIds[0]}`);
       }
@@ -104,25 +117,33 @@ export function deriveSkillKeysFromQuestion(question) {
 
 // ── Entity attempt recording ──
 
-const DEFAULT_ENTITY = {
+const DEFAULT_ENTITY: EntityState = {
   correct: 0,
   attempts: 0,
   lastSeen: null,
   nextReview: null,
   intervalDays: 1,
   sessionStreak: 0,
-  lastLatencyMs: null,
 };
+
+interface AttemptResult {
+  correct: boolean;
+  latencyMs?: number;
+}
+
+interface EntityStateWithLatency extends EntityState {
+  lastLatencyMs?: number | null;
+}
 
 /**
  * Record a single attempt against an entity.
- * @param {object|null} entry - existing entity entry
- * @param {{ correct: boolean, latencyMs?: number }} result
- * @param {string} today - YYYY-MM-DD
- * @returns {object} updated entry
  */
-export function recordEntityAttempt(entry, result, today) {
-  const e = { ...DEFAULT_ENTITY, ...entry };
+export function recordEntityAttempt(
+  entry: EntityStateWithLatency | null | undefined,
+  result: AttemptResult,
+  today: string
+): EntityStateWithLatency {
+  const e: EntityStateWithLatency = { ...DEFAULT_ENTITY, lastLatencyMs: null, ...entry };
   e.attempts += 1;
   if (result.correct) e.correct += 1;
   e.lastSeen = today;
@@ -134,7 +155,7 @@ export function recordEntityAttempt(entry, result, today) {
 
 // ── Skill attempt recording ──
 
-const DEFAULT_SKILL = {
+const DEFAULT_SKILL: SkillState = {
   correct: 0,
   attempts: 0,
   lastSeen: null,
@@ -143,8 +164,12 @@ const DEFAULT_SKILL = {
 /**
  * Record a single attempt against a skill.
  */
-export function recordSkillAttempt(entry, result, today) {
-  const s = { ...DEFAULT_SKILL, ...entry };
+export function recordSkillAttempt(
+  entry: SkillState | null | undefined,
+  result: AttemptResult,
+  today: string
+): SkillState {
+  const s: SkillState = { ...DEFAULT_SKILL, ...entry };
   s.attempts += 1;
   if (result.correct) s.correct += 1;
   s.lastSeen = today;
@@ -153,21 +178,35 @@ export function recordSkillAttempt(entry, result, today) {
 
 // ── Error categorization ──
 
-/**
- * Valid error categories.
- */
-export const ERROR_CATEGORIES = ["visual_confusion", "sound_confusion", "vowel_confusion", "random_miss"];
+/** Valid error categories. */
+export const ERROR_CATEGORIES = ["visual_confusion", "sound_confusion", "vowel_confusion", "random_miss"] as const;
+
+export type ErrorCategory = (typeof ERROR_CATEGORIES)[number];
+
+interface ErrorResult {
+  correct: boolean;
+  isHarakat?: boolean;
+  hasAudio?: boolean;
+  questionType?: string | null;
+  targetId?: string | number;
+  selectedId?: string | number;
+}
+
+interface LetterData {
+  id: number;
+  family?: string;
+  [key: string]: unknown;
+}
 
 /**
  * Categorize a wrong answer into one of the error types.
  * Uses the quiz result's question context to classify the miss honestly.
  * If classification is ambiguous, returns "random_miss".
- *
- * @param {object} result - quiz result record from useLessonQuiz
- * @param {object} [letterData] - optional letter metadata lookup (getLetter)
- * @returns {"visual_confusion"|"sound_confusion"|"vowel_confusion"|"random_miss"}
  */
-export function categorizeError(result, getLetter) {
+export function categorizeError(
+  result: ErrorResult | null | undefined,
+  getLetterFn?: (id: number) => LetterData | undefined
+): ErrorCategory {
   if (!result || result.correct) return "random_miss";
 
   // Harakat / vowel questions → vowel confusion
@@ -179,9 +218,9 @@ export function categorizeError(result, getLetter) {
   }
 
   // Recognition questions → check if target and selected are in the same visual family
-  if (getLetter && typeof result.targetId === "number" && typeof result.selectedId === "number") {
-    const target = getLetter(result.targetId);
-    const selected = getLetter(result.selectedId);
+  if (getLetterFn && typeof result.targetId === "number" && typeof result.selectedId === "number") {
+    const target = getLetterFn(result.targetId);
+    const selected = getLetterFn(result.selectedId);
     if (target && selected && target.family === selected.family && target.id !== selected.id) {
       return "visual_confusion";
     }
@@ -195,16 +234,15 @@ export function categorizeError(result, getLetter) {
 /**
  * Record a confusion event (wrong answer).
  * Only called when the user picked a wrong option.
- *
- * @param {object} confusions - existing confusion map
- * @param {string} confusionKey - e.g. "recognition:2->3"
- * @param {string} today
- * @param {string} [errorCategory] - one of ERROR_CATEGORIES
- * @returns {object} updated confusion map
  */
-export function recordConfusion(confusions, confusionKey, today, errorCategory) {
+export function recordConfusion(
+  confusions: Record<string, ConfusionState>,
+  confusionKey: string,
+  today: string,
+  errorCategory?: string
+): Record<string, ConfusionState> {
   const existing = confusions[confusionKey] || { count: 0, lastSeen: null };
-  const categories = { ...(existing.categories || {}) };
+  const categories: Record<string, number> = { ...(existing.categories || {}) };
   if (errorCategory) {
     categories[errorCategory] = (categories[errorCategory] || 0) + 1;
   }
@@ -218,11 +256,20 @@ export function recordConfusion(confusions, confusionKey, today, errorCategory) 
   };
 }
 
+interface ConfusionResult {
+  correct: boolean;
+  selectedKey?: string | null;
+  targetKey?: string | null;
+  isHarakat?: boolean;
+  hasAudio?: boolean;
+  questionType?: string | null;
+}
+
 /**
  * Derive a stable confusion key from a quiz result.
  * Returns null if no confusion can be identified (e.g. correct answer).
  */
-export function deriveConfusionKey(result) {
+export function deriveConfusionKey(result: ConfusionResult): string | null {
   if (result.correct) return null;
   if (!result.selectedKey || !result.targetKey) return null;
   if (result.selectedKey === result.targetKey) return null;
@@ -258,6 +305,8 @@ export function deriveConfusionKey(result) {
 // Designed so future states (e.g. "accurate_isolated", "accurate_contrast")
 // can be added by extending the rules without changing the function signature.
 
+export type MasteryState = "introduced" | "unstable" | "accurate" | "retained";
+
 /** Minimum attempts before we judge accuracy. */
 const MASTERY_MIN_ATTEMPTS = 3;
 
@@ -272,12 +321,8 @@ const MASTERY_RETAINED_STREAK = 3;
 
 /**
  * Derive the mastery state for a single entity entry.
- *
- * @param {object|null} entry — entity entry from mastery.entities
- * @param {string} today — YYYY-MM-DD, used for retained-state time validation
- * @returns {"introduced"|"unstable"|"accurate"|"retained"}
  */
-export function deriveMasteryState(entry, today) {
+export function deriveMasteryState(entry: EntityState | null | undefined, today: string): MasteryState {
   if (!entry || !entry.attempts || entry.attempts < MASTERY_MIN_ATTEMPTS) {
     return "introduced";
   }
@@ -329,14 +374,14 @@ export {
 
 import { addDateDays, getDayDifference } from "./dateUtils.js";
 
-const SRS_INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14 };
+const SRS_INTERVALS: Record<number, number> = { 1: 1, 2: 3, 3: 7, 4: 14 };
 
 /**
  * Update SRS scheduling fields on an entity entry.
  * Called after aggregating session outcomes, not per-question.
  */
-export function updateEntitySRS(entry, wasCorrectOverall, today) {
-  const e = { ...entry };
+export function updateEntitySRS(entry: EntityState, wasCorrectOverall: boolean, today: string): EntityState {
+  const e: EntityState = { ...entry };
   if (wasCorrectOverall) {
     e.sessionStreak = (e.sessionStreak || 0) + 1;
     e.intervalDays = SRS_INTERVALS[e.sessionStreak] ?? 30;
@@ -352,19 +397,38 @@ export function updateEntitySRS(entry, wasCorrectOverall, today) {
 
 // ── Batch merge ──
 
+/** Rich quiz result record for mastery merging. */
+interface MasteryQuizResult {
+  targetId: string | number;
+  correct: boolean;
+  targetKey?: string;
+  selectedKey?: string;
+  skillKeys?: string[];
+  isHarakat?: boolean;
+  hasAudio?: boolean;
+  questionType?: string | null;
+  selectedId?: string | number;
+  latencyMs?: number;
+}
+
+export interface MasteryData {
+  entities: Record<string, EntityState>;
+  skills: Record<string, SkillState>;
+  confusions: Record<string, ConfusionState>;
+}
+
 /**
  * Merge an array of rich quiz results into the mastery object.
  * Returns a new mastery object (does not mutate).
- *
- * @param {{ entities: object, skills: object, confusions: object }} mastery
- * @param {Array} quizResults - rich result records from useLessonQuiz
- * @param {string} today
- * @returns {{ entities: object, skills: object, confusions: object }}
  */
-export function mergeQuizResultsIntoMastery(mastery, quizResults, today) {
-  const entities = { ...mastery.entities };
-  const skills = { ...mastery.skills };
-  let confusions = { ...mastery.confusions };
+export function mergeQuizResultsIntoMastery(
+  mastery: MasteryData,
+  quizResults: MasteryQuizResult[],
+  today: string
+): MasteryData {
+  const entities: Record<string, EntityState> = { ...mastery.entities };
+  const skills: Record<string, SkillState> = { ...mastery.skills };
+  let confusions: Record<string, ConfusionState> = { ...mastery.confusions };
 
   // Step 1: record per-question entity attempts and skill attempts
   for (const r of quizResults) {
@@ -388,7 +452,7 @@ export function mergeQuizResultsIntoMastery(mastery, quizResults, today) {
   }
 
   // Step 2: compute per-entity session outcome for SRS
-  const entityOutcomes = {};
+  const entityOutcomes: Record<string, { correct: number; total: number }> = {};
   for (const r of quizResults) {
     const eKey = r.targetKey || normalizeEntityKey(r.targetId, r);
     if (!entityOutcomes[eKey]) entityOutcomes[eKey] = { correct: 0, total: 0 };
@@ -408,7 +472,7 @@ export function mergeQuizResultsIntoMastery(mastery, quizResults, today) {
 /**
  * Create the empty v3 mastery shape.
  */
-export function emptyMastery() {
+export function emptyMastery(): MasteryData {
   return {
     entities: {},
     skills: {},
@@ -419,9 +483,11 @@ export function emptyMastery() {
 /**
  * Convert flat numeric-keyed progress to entity-keyed progress.
  */
-export function migrateFlatProgressToEntities(flatProgress) {
+export function migrateFlatProgressToEntities(
+  flatProgress: Record<string, EntityState> | null | undefined
+): Record<string, EntityState> {
   if (!flatProgress || typeof flatProgress !== "object") return {};
-  const entities = {};
+  const entities: Record<string, EntityState> = {};
   for (const [rawId, entry] of Object.entries(flatProgress)) {
     if (!entry || typeof entry !== "object") continue;
     const numId = parseInt(rawId, 10);
@@ -438,8 +504,8 @@ export function migrateFlatProgressToEntities(flatProgress) {
  * Build a flat progress map from mastery.entities for backward-compat consumers.
  * Strips the "letter:" prefix so keys are numeric again.
  */
-export function buildLegacyProgressView(entities) {
-  const flat = {};
+export function buildLegacyProgressView(entities: Record<string, EntityState>): Record<number, EntityState> {
+  const flat: Record<number, EntityState> = {};
   for (const [key, entry] of Object.entries(entities)) {
     if (key.startsWith("letter:")) {
       const numId = parseInt(key.slice(7), 10);

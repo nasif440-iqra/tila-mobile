@@ -10,7 +10,7 @@ import {
   type UserProfileUpdate,
 } from "../engine/progress";
 import type { QuestionAttempt, QuizResultItem } from "../types/quiz";
-import { normalizeEntityKey, mergeQuizResultsIntoMastery } from "../engine/mastery.js";
+import { normalizeEntityKey, mergeQuizResultsIntoMastery } from "../engine/mastery";
 import {
   saveMasteryEntity,
   saveMasterySkill,

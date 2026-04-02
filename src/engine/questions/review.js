@@ -1,7 +1,7 @@
 import { getLetter } from "../../data/letters.js";
 import { getCombo, generateHarakatCombos } from "../../data/harakat.js";
 import { shuffle, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
-import { parseEntityKey } from "../mastery.js";
+import { parseEntityKey } from "../mastery";
 
 /**
  * Generate questions for review sessions (spaced repetition).
