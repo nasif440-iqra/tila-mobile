@@ -24,21 +24,21 @@
 - [x] **CONV-05**: Mastery engine insights visible to users (confusion tracking, accuracy trends, review scheduling)
 - [x] **CONV-06**: Upgrade/upsell cards redesigned to match design system (premium feel matching onboarding quality)
 - [x] **CONV-07**: Complete paywall flow — lesson 7 trigger, annual-first pricing, scholarship program, post-expiry review access
-- [x] **CONV-08**: App Store submission complete — screenshots, metadata, privacy manifest, review notes, production build on device
-- [x] **CONV-09**: Support contact visible in app settings (required for early adopter data-loss mitigation)
+- [ ] **CONV-08**: App Store submission complete — screenshots, metadata, privacy manifest, review notes, production build on device
+- [ ] **CONV-09**: Support contact visible in app settings (required for early adopter data-loss mitigation)
 
 ### Block 3: Make It Retain
 
 - [ ] **RET-01**: All 18 engine .js files migrated to TypeScript with proper type annotations
-- [x] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
-- [x] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
-- [x] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
-- [x] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
-- [x] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
-- [x] **RET-07**: Privacy manifest updated for auth + cloud sync data collection
-- [x] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
-- [ ] **RET-09**: High-value integration tests for critical flows (onboarding, lesson completion, premium locking, restore purchases)
-- [x] **RET-10**: Dark mode activated using existing tokens, system preference detection
+- [ ] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
+- [ ] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
+- [ ] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
+- [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
+- [ ] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
+- [ ] **RET-07**: Privacy manifest updated for auth + cloud sync data collection
+- [ ] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
+- [x] **RET-09**: High-value integration tests for critical flows (onboarding, lesson completion, premium locking, restore purchases)
+- [ ] **RET-10**: Dark mode activated using existing tokens, system preference detection
 
 ## Deferred
 
