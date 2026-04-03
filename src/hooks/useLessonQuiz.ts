@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import {
   generateLessonQuestions,
   shuffle,
-} from "../engine/questions/index.js";
+} from "../engine/questions/index";
 import type { Lesson } from '../types/lesson';
 import type { ProgressState } from '../engine/progress';
 import type { Question, QuestionOption } from '../types/question';
@@ -138,6 +138,17 @@ export default function useLessonQuiz(
   const currentQuestion = questions[qIndex] || null;
   const correctCount = quizResults.filter((r) => r.correct).length;
 
+  // Memoize results so the reference is stable between renders
+  // (prevents useEffect re-fires in LessonQuiz when isComplete is true)
+  const results = useMemo(
+    () => ({
+      correct: correctCount,
+      total: quizResults.length,
+      questions: quizResults,
+    }),
+    [correctCount, quizResults]
+  );
+
   return {
     currentQuestion,
     questionIndex: qIndex,
@@ -148,10 +159,6 @@ export default function useLessonQuiz(
     handleAnswer,
     isComplete,
     error,
-    results: {
-      correct: correctCount,
-      total: quizResults.length,
-      questions: quizResults,
-    },
+    results,
   };
 }

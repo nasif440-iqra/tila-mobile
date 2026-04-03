@@ -1,9 +1,9 @@
 import { getLetter } from "../../data/letters.js";
-import { getCombo, generateHarakatCombos } from "../../data/harakat.js";
+import { getCombo, generateHarakatCombos } from "../../data/harakat";
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { ArabicLetter, HarakatCombo } from "../../types/engine";
-import { shuffle, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
+import { shuffle, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared";
 import { parseEntityKey } from "../mastery";
 
 interface ReviewProgress {

@@ -1,8 +1,8 @@
-import { getHarakah, getCombo, generateHarakatCombos } from "../../data/harakat.js";
+import { getHarakah, getCombo, generateHarakatCombos } from "../../data/harakat";
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { Harakah, HarakatCombo } from "../../types/engine";
-import { shuffle, pickRandom } from "./shared.js";
+import { shuffle, pickRandom } from "./shared";
 
 /** Extended lesson interface for harakat-specific fields not on base Lesson */
 interface HarakatLesson extends Lesson {

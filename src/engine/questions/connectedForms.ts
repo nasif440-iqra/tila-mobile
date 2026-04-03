@@ -1,9 +1,9 @@
 import { getLetter, ARABIC_LETTERS } from "../../data/letters.js";
-import { getConnectedForms, doesLetterJoin, getBreakerIds } from "../../data/connectedForms.js";
+import { getConnectedForms, doesLetterJoin, getBreakerIds } from "../../data/connectedForms";
 import type { Lesson } from "../../types/lesson";
 import type { ArabicLetter, ConnectedFormData } from "../../types/engine";
 import type { QuestionOption } from "../../types/question";
-import { shuffle, pickRandom } from "./shared.js";
+import { shuffle, pickRandom } from "./shared";
 
 const POSITIONS = ["isolated", "initial", "medial", "final"] as const;
 type Position = typeof POSITIONS[number];

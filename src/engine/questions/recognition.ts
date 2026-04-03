@@ -2,7 +2,7 @@ import { ARABIC_LETTERS, getLetter } from "../../data/letters.js";
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { ArabicLetter } from "../../types/engine";
-import { shuffle, getKnownIds, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared.js";
+import { shuffle, getKnownIds, getDistractors, getRuleDistractors, makeOpts, makeNameOpts } from "./shared";
 
 export function generateRecognitionQs(lesson: Lesson): Question[] {
   const known = getKnownIds(lesson.id);
