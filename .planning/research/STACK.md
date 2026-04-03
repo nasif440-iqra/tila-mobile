@@ -1,244 +1,143 @@
-# Technology Stack: Stability & App Store Readiness
+# Technology Stack: Emotional UI Design
 
-**Project:** Tila — Hardening for App Store Submission
-**Researched:** 2026-03-31
-**Mode:** Additive — what to add to the existing stack, not replace it
+**Project:** Tila - Emotional Design Overhaul
+**Researched:** 2026-04-03
+**Overall Confidence:** HIGH
 
-## Existing Stack (Do Not Change)
+## Recommendation: Do NOT Add Skia. Use What You Have.
 
-These are locked. This research covers what to layer on top.
+The existing stack -- react-native-reanimated 4.2.1 + react-native-svg 15.15.3 + expo-linear-gradient 55.0.11 -- handles every effect described in the PROJECT.md requirements. Adding @shopify/react-native-skia would increase app download size by 4-6 MB and introduce a second rendering pipeline for effects achievable with the current stack. The codebase already demonstrates the correct pattern (WarmGlow.tsx uses SVG RadialGradient with Reanimated breathing animations).
 
-| Technology | Version | Status |
-|------------|---------|--------|
-| Expo SDK | 55.0.8 | Locked |
-| React Native | 0.83.2 | Locked |
-| React | 19.2.0 | Locked |
-| TypeScript | 5.9.2 | Locked |
-| expo-sqlite | 55.0.11 | Locked |
-| react-native-purchases | 9.15.0 | Locked |
-| Sentry | 7.11.0 | Locked |
-| PostHog | 4.39.0 | Locked |
-| Vitest | 4.1.2 | Locked |
-| react-native-reanimated | 4.2.1 | Locked |
-| expo-audio | 55.0.9 | Locked |
+## Recommended Stack (Additions Only)
 
-## Recommended Additions
+### Already Installed -- No Changes Needed
 
-### 1. Error Boundaries
+| Technology | Version | Purpose | Performance on Mid-Range Android |
+|------------|---------|---------|----------------------------------|
+| react-native-reanimated | 4.2.1 | All ambient motion: breathing, drifting, settling, ripples, scale pulses | UI-thread worklets, 60fps guaranteed for opacity/transform animations |
+| react-native-svg | 15.15.3 | RadialGradient glows, geometric patterns via `<Pattern>`, SVG-based ripple effects | Native rendering, performant for static + lightly animated SVGs |
+| expo-linear-gradient | 55.0.11 | Linear gradient backgrounds, atmospheric color washes | Native view, negligible perf cost |
+
+### New Addition: expo-blur
 
 | Technology | Version | Purpose | Why | Confidence |
 |------------|---------|---------|-----|------------|
-| `react-error-boundary` | ^6.1.1 | Component-level crash recovery | De-facto standard by Brian Vaughn (React team). Works with React 19. Provides `ErrorBoundary` component, `useErrorBoundary` hook, and `withErrorBoundary` HOC. Expo Router docs reference this pattern. Handles reset/retry natively. | HIGH |
+| expo-blur | ~55.0.11 | Soft atmospheric blur for overlay effects, frosted glass on sacred screens | Already part of Expo SDK 55. Uses native blur (RenderNode API on Android 12+). Animatable intensity via Reanimated. Adds warm depth to layered compositions. | HIGH |
 
-**Do NOT use:** `react-native-error-boundary` (carloscuesta). It has fewer features, no hook API, and lower maintenance cadence. `react-error-boundary` by bvaughn is the community standard and works identically in React Native.
+**Performance note:** expo-blur uses RenderNode API on Android SDK 31+ (Android 12+) which is efficient. On Android 9-11, falls back to less efficient RenderScript. For mid-range Android devices from the last 3 years, this is fine. Use `dimezisBlurViewSdk31Plus` blur method if you want to skip blur on old devices entirely.
 
-**Implementation pattern:** Screen-level boundaries wrapping each route, plus a root-level boundary in `_layout.tsx` as the last-resort fallback. Sentry's `Sentry.ErrorBoundary` exists but is for web — use `react-error-boundary` and manually call `Sentry.captureException` in the `onError` callback.
+**Known limitation (SDK 55):** BlurView inside React Native Modal requires `BlurTargetView` wrapper on Android. This only matters if you use blur inside modals.
 
-```typescript
-// Per-screen pattern
-import { ErrorBoundary } from "react-error-boundary";
+### New Addition: No Other Packages
 
-function ScreenErrorFallback({ error, resetErrorBoundary }) {
-  // Log to Sentry
-  Sentry.captureException(error);
-  return <ErrorRecoveryScreen onRetry={resetErrorBoundary} />;
-}
+No other packages needed. Here is why:
 
-// In route layout
-<ErrorBoundary FallbackComponent={ScreenErrorFallback}>
-  <Slot />
-</ErrorBoundary>
-```
+**Lottie (lottie-react-native):** Not needed. The emotional design spec calls for ambient, structural motion (breathing, drifting, settling) -- all achievable with Reanimated shared values. Lottie is for pre-authored vector animations (character animations, complex illustrated sequences). Tila's motion language is parametric, not pre-authored.
 
-### 2. Test Coverage Tooling
+**@shopify/react-native-skia:** Not needed. Would add 4-6 MB to download size. Skia excels at: real-time drawing, canvas-based rendering, complex shader effects, 120fps data visualization. Tila needs: radial gradient glows (SVG RadialGradient does this), geometric patterns (SVG Pattern does this), opacity/scale/translate animations (Reanimated does this). The WarmGlow component already proves the SVG approach works.
 
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| `@vitest/coverage-v8` | ^4.1.2 | Code coverage reports | Matches existing Vitest 4.1.2 exactly. V8-based coverage is faster than Istanbul for Node environments. Generates text, HTML, and JSON reports. Zero config beyond adding the package. | HIGH |
+**Moti:** Not needed. Moti wraps Reanimated with a simpler API, but the codebase already uses Reanimated directly and the team is comfortable with it. Adding an abstraction layer adds bundle size without capability gain.
 
-**Do NOT use:** `@vitest/coverage-istanbul` — slower, and V8 provider is the Vitest-recommended default. Also do NOT use `vitest-react-native` — it is experimental/WIP and unnecessary for testing pure engine logic and hooks (which is the priority here).
+## Effect-to-Technology Mapping
 
-**Configuration:**
-```typescript
-// vitest.config.ts addition
-export default defineConfig({
-  test: {
-    include: ["src/__tests__/**/*.test.{js,ts}"],
-    setupFiles: ["src/__tests__/setup.ts"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html", "json-summary"],
-      include: ["src/engine/**", "src/hooks/**", "src/db/**"],
-      exclude: ["src/__tests__/**", "src/design/**", "src/components/**"],
-      thresholds: {
-        statements: 70,
-        branches: 60,
-        functions: 70,
-        lines: 70,
-      },
-    },
-  },
-});
-```
+This maps every required effect from PROJECT.md to the specific technology and approach.
 
-### 3. Database Migration Safety
+### Ambient Background System
 
-**No new library needed.** The existing `expo-sqlite` API is sufficient. What's needed is a pattern fix, not a dependency.
+| Effect | Technology | Approach |
+|--------|-----------|----------|
+| Layered gradient backgrounds | expo-linear-gradient + react-native-svg | Stack LinearGradient (vertical wash) with SVG RadialGradient (warm center glow) |
+| Slow ambient motion | react-native-reanimated | `withRepeat` + `withTiming` on opacity/translateY with long durations (8-15s). Budget: 2-4 shared values per screen |
+| Geometric patterns | react-native-svg `<Pattern>` | SVG `<Defs><Pattern>` with repeated geometric shapes. Static render, zero animation cost |
+| Floating Arabic letters | react-native-reanimated | Already implemented (FloatingLettersLayer.tsx). 12 letters, 1 shared value each. Works. |
 
-| Approach | Purpose | Why | Confidence |
-|----------|---------|-----|------------|
-| Transaction-wrapped migrations | Atomic migration execution | `db.withExclusiveTransactionAsync()` ensures a failed migration rolls back cleanly instead of leaving the DB in a half-migrated state. Already available in expo-sqlite 55. | HIGH |
-| PRAGMA table_info checks | Column existence verification | Already partially used (migrations v3-v5). Migration v2 uses bare try/catch which swallows real errors. Standardize on PRAGMA checks for all migrations. | HIGH |
+### Letter Hero / Glow Effects
 
-**Do NOT use:** Drizzle ORM, Knex, or any ORM/query-builder. The app has 8 simple tables with hand-written SQL. Adding an ORM for migration safety is massive over-engineering. Fix the migration pattern, not the toolchain.
+| Effect | Technology | Approach |
+|--------|-----------|----------|
+| Breathing letter with warm glow | react-native-reanimated + react-native-svg | Scale (1.0-1.06) + opacity pulse on SVG RadialGradient wrapper. Already proven in WarmGlow.tsx |
+| Radial glow behind letters | react-native-svg RadialGradient | Multi-stop RadialGradient with smooth falloff. Already implemented. |
+| Correct answer warm ripple | react-native-reanimated | Scale (0 to 1.5) + opacity (0.6 to 0) on a circular SVG, duration 400-600ms |
+| Wrong answer gentle nudge | react-native-reanimated | Small translateX oscillation (3px, 200ms) + subtle color shift. No red, no shake. |
 
-**Pattern fix for existing migrations:**
-```typescript
-async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
-  const currentVersion = await getCurrentVersion(db);
+### Sacred Screen Atmosphere
 
-  // Each migration wrapped in exclusive transaction
-  if (currentVersion < 2) {
-    await db.withExclusiveTransactionAsync(async (tx) => {
-      // Check column existence via PRAGMA before ALTER
-      const cols = await tx.getAllAsync<{ name: string }>(
-        "PRAGMA table_info(user_profile)"
-      );
-      const existing = new Set(cols.map(c => c.name));
-      if (!existing.has("wird_intro_seen")) {
-        await tx.execAsync("ALTER TABLE user_profile ADD COLUMN wird_intro_seen INTEGER NOT NULL DEFAULT 0;");
-      }
-      // ... remaining columns
-      await tx.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (2)");
-    });
-  }
-}
-```
+| Effect | Technology | Approach |
+|--------|-----------|----------|
+| Phrase-by-phrase reveal | react-native-reanimated | Staggered opacity + translateY (20px to 0) per phrase segment. `withDelay` for sequencing |
+| Frosted overlay on sacred text | expo-blur | BlurView with intensity 15-25, tint "light". Layer behind text for depth |
+| Warm ambient glow | react-native-svg | RadialGradient positioned center-bottom, subtle gold-to-transparent |
 
-### 4. Audio Error Handling
+## Animation Budget Guidelines
 
-**No new library needed.** The existing `expo-audio` API handles this — the app just needs try/catch wrappers.
+For 60fps on mid-range Android, follow these budgets:
 
-| Approach | Purpose | Why | Confidence |
-|----------|---------|-----|------------|
-| try/catch on all `player.play()` and `player.replace()` calls | Prevent unhandled promise rejections | expo-audio can throw on corrupted assets, interrupted playback, or audio session conflicts. Currently the `playVoice` function is async but `playSFX` is sync with no error handling. Both need guards. | HIGH |
+| Context | Max Shared Values | Max Animated Components | Notes |
+|---------|-------------------|------------------------|-------|
+| Static screen (Home) | 8-12 | 4-6 | Background ambient + floating letters |
+| Active screen (Quiz) | 15-20 | 8-10 | Hero breathing + answer feedback + ambient |
+| Celebration moment | 20-25 | 10-12 | Brief burst, auto-cleans up |
+| Transition | 4-6 | 2-3 | Enter/exit only |
 
-**Current problem:** `playVoice` is `async` but callers (`playLetterName`, `playLetterSound`) discard the promise — any rejection is unhandled. `playSFX` calls `player.play()` synchronously but `play()` can fail silently or throw on some devices.
+**Rules:**
+- Only animate `opacity`, `transform` (scale, translate, rotate). Never animate layout properties (width, height, margin, padding) -- these trigger layout recalculation every frame.
+- Use `Easing.inOut(Easing.ease)` for all ambient motion. No spring physics for ambient effects.
+- Long durations (8-15s) for ambient. Short durations (200-600ms) for feedback.
+- Always pair with `useReducedMotion()` from Reanimated for accessibility.
 
-**Fix pattern:**
-```typescript
-async function playVoice(source: AudioSource): Promise<void> {
-  if (_muted) return;
-  try {
-    const player = getVoicePlayer();
-    player.replace(source);
-    player.play();
-  } catch (e) {
-    console.warn("[Audio] Voice playback failed:", e);
-    // Do NOT crash — audio failure is non-fatal
-  }
-}
+## Accessibility: Reduce Motion Support
 
-function playSFX(source: AudioSource, priority: number, guardMs: number): void {
-  if (_muted) return;
-  try {
-    // ... existing priority logic ...
-    player.replace(source);
-    player.play();
-  } catch (e) {
-    console.warn("[Audio] SFX playback failed:", e);
-  }
-}
-```
-
-### 5. Offline Subscription Handling
-
-**No new library needed.** RevenueCat SDK (`react-native-purchases` 9.15.0) already caches entitlements locally.
-
-| Approach | Purpose | Why | Confidence |
-|----------|---------|-----|------------|
-| `Purchases.getCustomerInfo()` with try/catch + cached fallback | Graceful offline subscription checks | RevenueCat SDK caches the last known CustomerInfo on-device. When offline, `getCustomerInfo()` returns cached data. The app needs to handle the case where the SDK fails to initialize (missing API key, unconfigured) by defaulting to "free tier" rather than crashing. | HIGH |
-
-**Key pattern:** Never gate UI rendering on subscription state. Load subscription state async, default to free tier, upgrade UI when state resolves.
+react-native-reanimated 4.2.1 provides built-in accessibility support:
 
 ```typescript
-async function getSubscriptionState(): Promise<"free" | "premium"> {
-  try {
-    const info = await Purchases.getCustomerInfo();
-    return info.entitlements.active["premium"] ? "premium" : "free";
-  } catch {
-    // Offline, unconfigured, or error — default to free
-    // RevenueCat SDK caches last known state, so this rarely fires
-    // for previously-authenticated users
-    return "free";
-  }
-}
+import { useReducedMotion } from 'react-native-reanimated';
+
+// In any component with ambient motion:
+const reduceMotion = useReducedMotion();
+// If true: skip withRepeat animations, show static states
+// Keep: opacity fades for entrances (these are accessibility-OK)
+// Remove: scale breathing, translate drifting, floating letters
 ```
 
-### 6. Type Safety Improvements
-
-**No new library needed.** TypeScript 5.9 already has everything required.
-
-| Approach | Purpose | Why | Confidence |
-|----------|---------|-----|------------|
-| Strict hook return types | Eliminate `any` leakage from hooks | Hooks currently return spread objects without explicit return types. Adding explicit interfaces prevents downstream `any` propagation. | HIGH |
-| `satisfies` operator on data constants | Type-check static data without widening | `LESSONS satisfies Lesson[]` catches data errors at compile time without changing runtime behavior. Available since TS 4.9, underused in codebase. | HIGH |
-
-### 7. App Store Submission Tooling
-
-| Technology | Version | Purpose | Why | Confidence |
-|------------|---------|---------|-----|------------|
-| EAS Build (already configured) | CLI >= 15.0.0 | Production builds | Already in `eas.json`. No new tooling needed for builds. | HIGH |
-| EAS Submit | (part of EAS CLI) | App Store / Play Store submission | `eas submit` automates upload to both stores. Already available, just needs production build profile. | HIGH |
-
-**Pre-submission checklist (no tooling, just process):**
-- Run `npm run validate` (lint + typecheck) — zero errors required
-- Run `npm test` — all tests pass
-- Production build on real device (not simulator) — full lesson flow test
-- "Reviewer run": install fresh, complete onboarding, finish lesson 1, check subscription screen, verify offline behavior
+**ReducedMotionConfig component:** Can wrap sections of the app to globally disable animations when the OS reduce-motion setting is on. Consider wrapping the root layout.
 
 ## Alternatives Considered and Rejected
 
 | Category | Recommended | Rejected | Why Not |
 |----------|-------------|----------|---------|
-| Error boundaries | `react-error-boundary` | `react-native-error-boundary`, hand-rolled class components | Less features, no hook API, more boilerplate |
-| Coverage | `@vitest/coverage-v8` | `@vitest/coverage-istanbul`, `c8` standalone | V8 is faster, Istanbul unnecessary overhead, c8 is deprecated |
-| DB migrations | Pattern fix (transactions + PRAGMA) | Drizzle ORM, TypeORM, Knex | Massive over-engineering for 8 tables and 5 migrations |
-| Audio errors | try/catch wrappers | `expo-av` (legacy API), third-party audio libs | expo-audio is the current Expo standard; switching APIs adds risk |
-| Subscription offline | RevenueCat SDK cache (built-in) | Custom caching layer, AsyncStorage mirror | RevenueCat already caches; duplicating is unnecessary complexity |
-| State management | Keep current (SQLite + hooks) | Zustand, Jotai, Redux | Adding state management for "stability" is scope creep |
-| Testing | Keep Vitest, add coverage | Switch to Jest, add Detox/Maestro E2E | Jest migration is unnecessary churn; E2E is future milestone |
+| Graphics engine | react-native-svg (existing) | @shopify/react-native-skia | +4-6 MB download size, second rendering pipeline, overkill for gradient/pattern effects |
+| Animation | react-native-reanimated (existing) | Moti, react-native-animatable | Abstraction over what's already used; no capability gain |
+| Pre-authored animation | None | lottie-react-native | Effects are parametric (breathing, drifting), not pre-authored sequences |
+| Gradient backgrounds | expo-linear-gradient + SVG RadialGradient | react-native-linear-gradient, expo-blur gradient | expo-linear-gradient already installed; SVG handles radial; no gap |
+| Blur effects | expo-blur | @react-native-community/blur | expo-blur is SDK-aligned, maintained by Expo team, version-locked |
+| Pattern rendering | react-native-svg Pattern | Hand-coded Views, Image-based patterns | SVG Pattern is resolution-independent, lightweight, and animatable |
 
 ## Installation
 
 ```bash
-# New dependencies (just 2 packages)
-npm install react-error-boundary
-
-# Dev dependencies
-npm install -D @vitest/coverage-v8
+# Only new package needed
+npx expo install expo-blur
 ```
 
-Total new packages: **2**. Everything else is pattern fixes in existing code.
+That is it. One package. Everything else is already installed.
 
-## What This Does NOT Cover
+## Version Compatibility Matrix
 
-These are explicitly out of scope for this hardening milestone:
-
-- **Dark mode** — tokens exist but activation is a separate milestone
-- **E2E testing** (Detox, Maestro) — valuable but separate milestone after stability
-- **Cloud sync / backend** — future milestone
-- **Push notifications** — future milestone
-- **Performance profiling tools** (Flipper, React DevTools Profiler) — dev workflow, not hardening
-- **CI/CD pipeline** (GitHub Actions) — valuable but not blocking App Store submission
+| Package | Installed | Expo 55 Compatible | New Architecture | Notes |
+|---------|-----------|-------------------|-----------------|-------|
+| react-native-reanimated | 4.2.1 | Yes | Yes (Fabric) | UI-thread worklets |
+| react-native-svg | 15.15.3 | Yes | Yes | Native SVG rendering |
+| expo-linear-gradient | 55.0.11 | Yes (SDK-locked) | Yes | Native gradient view |
+| expo-blur | ~55.0.11 | Yes (SDK-locked) | Yes | Native blur (RenderNode) |
 
 ## Sources
 
-- [Expo Router Error Handling](https://docs.expo.dev/router/error-handling/) — official Expo docs on error boundaries in file-based routing
-- [react-error-boundary npm](https://www.npmjs.com/package/react-error-boundary) — v6.1.1, React 19 compatible
-- [Expo SQLite Documentation](https://docs.expo.dev/versions/latest/sdk/sqlite/) — `withExclusiveTransactionAsync` API
-- [@vitest/coverage-v8 npm](https://www.npmjs.com/package/@vitest/coverage-v8) — v4.1.2, matches Vitest version
-- [RevenueCat React Native Docs](https://www.revenuecat.com/docs/getting-started/installation/reactnative) — offline caching behavior
-- [Expo Audio Documentation](https://docs.expo.dev/versions/latest/sdk/audio/) — AudioPlayer API
-- [App Store Best Practices — Expo](https://docs.expo.dev/distribution/app-stores/) — submission checklist
-- [App Store Review Guidelines 2025](https://nextnative.dev/blog/app-store-review-guidelines) — common rejection reasons
+- [react-native-svg Usage - Pattern, RadialGradient](https://github.com/software-mansion/react-native-svg/blob/main/USAGE.md)
+- [Reanimated Performance Guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/performance/)
+- [Reanimated useReducedMotion](https://docs.swmansion.com/react-native-reanimated/docs/device/useReducedMotion/)
+- [Reanimated useAnimatedProps](https://docs.swmansion.com/react-native-reanimated/docs/core/useAnimatedProps/)
+- [Reanimated Accessibility Guide](https://docs.swmansion.com/react-native-reanimated/docs/guides/accessibility/)
+- [React Native Skia Bundle Size](https://shopify.github.io/react-native-skia/docs/getting-started/bundle-size/) -- 4MB Android, 6MB iOS increase
+- [expo-blur Documentation (SDK 55)](https://docs.expo.dev/versions/latest/sdk/blur-view/)
+- [Expo SVG Documentation](https://docs.expo.dev/versions/latest/sdk/svg/)
+- [SVG Animation Guide 2025](https://www.svgai.org/blog/guides/react-native-svg-animation)
