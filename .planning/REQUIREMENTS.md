@@ -1,88 +1,105 @@
-# Requirements: Tila — Revenue & Growth
+# Requirements: Tila Emotional Design Overhaul
 
-**Defined:** 2026-04-01
-**Core Value:** A personal, trustworthy Quran reading teacher that remembers what you forget and never loses your progress
-**Source:** MASTER-PLAN.md (synthesized from two expert reviews + founder input)
+**Defined:** 2026-04-03
+**Core Value:** Every screen should feel like entering a quiet, beautiful room that was made for people who aren't sure they belong yet.
+
+## v1 Requirements
+
+The 5 things that must land: one ambient visual language, sacred screens unfold instead of display, quiz letter becomes the subject, correct/wrong feedback feels human and calm, Arabic looks respected and intentional.
+
+### Foundation
+
+- [ ] **FOUN-01**: Arabic text never clips diacritics on any screen — lineHeight ratios updated, overflow visible, cross-platform verified
+- [ ] **FOUN-02**: Global ambient background system with presets (home, sacred, quiz, celebration, loading, onboarding) replaces per-screen background hacks
+- [ ] **FOUN-03**: Animation tier expansion — breathing (2-4s), drift (18-32s), and settle timings added to shared animations alongside existing interaction tier
+- [ ] **FOUN-04**: Reduce Motion support — all ambient animations disabled, entrance animations replaced with opacity fades when device setting is on
+- [ ] **FOUN-05**: FloatingLettersLayer withRepeat(-1) 12-minute freeze bug fixed with restart-loop pattern
+
+### Quiz Experience
+
+- [ ] **QUIZ-01**: LetterHero component — Arabic letter dominates top half of quiz screen with slow breathing animation (2s inhale, 0.5s hold, 2s exhale) and warm gold glow
+- [ ] **QUIZ-02**: Correct answer triggers warm gold ripple expanding from tapped option (500ms, 15-20% opacity) with hapticSelection — no floating "+1"
+- [ ] **QUIZ-03**: Wrong answer feels like encouragement — option dims briefly (opacity dip 200ms), correct answer illuminates with warm glow, no shake, no red, no X icon
+- [ ] **QUIZ-04**: WrongAnswerPanel uses warm palette (accentLight bg, brown text, no danger colors) with existing encouragement copy
+- [ ] **QUIZ-05**: Arabic text in quiz options uses generous sizing (48-56px hero tier) so letters are always the primary content, never labels
+
+### Sacred Moments
+
+- [ ] **SACR-01**: Sacred phrase reveal primitive — word-by-word fade-in (600-800ms per word, 300-400ms stagger) with transliteration appearing beneath each word
+- [ ] **SACR-02**: Bismillah micro-lesson — 4 semantic units (Bismi / Allahi / Ar-Rahmani / Ar-Raheem) with word-by-word Arabic, transliteration, and meaning. Both spiritual threshold and first teaching moment.
+- [ ] **SACR-03**: Onboarding Welcome screen atmosphere — warm ambient background, gentle entrance, quiet welcome feeling
+- [ ] **SACR-04**: Onboarding Tilawah screen — sacred phrase reveals word-by-word instead of static quote card
+- [ ] **SACR-05**: Onboarding Hadith screen — sacred phrase reveals word-by-word instead of static quote card
+- [ ] **SACR-06**: Onboarding Finish screen atmosphere — lands with gravity, not bounce. "You've already begun" feels earned.
+
+## v1.1 Requirements
+
+Ship shortly after v1. Valuable secondary surfaces that aren't required to prove the new design language.
+
+### Polish
+
+- **PLSH-01**: Streak escalation — Day 3 quiet banner, Day 5 warmer banner, Day 7 dignified full-screen with breathing Arabic phrase
+- **PLSH-02**: Home screen quiet welcome — entrance stagger, hero card settles gently, no urgency
+- **PLSH-03**: State screens polish — loading, empty, error screens use ambient background and warm messaging
+- **PLSH-04**: Progress screen reflection — mastery glow on letter grid (glow intensity proportional to mastery level)
 
 ## v2 Requirements
 
-### Block 1: Make It Not Crash
+Deferred unless v1 is stable and scope allows.
 
-- [x] **STAB-01**: Lesson completion writes are atomic — wrapped in a single DB transaction that returns fresh post-write state
-- [x] **STAB-02**: Mastery celebration uses fresh data from the completion transaction, not a stale hook closure
-- [x] **STAB-03**: RevenueCat initialization wrapped in try/catch — defaults to free tier on failure, logs to Sentry
-- [x] **STAB-04**: All audio calls (playSFX, playVoice) wrapped in try/catch — failures reported to Sentry, never crash the app
-- [x] **STAB-05**: Expo scaffold leftovers removed (SpaceMono-Regular.ttf, EditScreenInfo.tsx, useClientOnlyValue.ts, constants/Colors.ts)
-- [x] **STAB-06**: Crescent emoji (☽) replaced with SVG icon matching TilaLogoMark style in ReviewCard and ReturnWelcomeScreen
+### Enhancements
 
-### Block 2: Make It Convert
+- **ENHN-01**: Geometric pattern prototype — Islamic geometric pattern at 3-5% opacity as ambient texture
+- **ENHN-02**: Deeper progress glow refinements beyond basic mastery-proportional glow
+- **ENHN-03**: Custom celebration copy logic beyond basic streak tiering
+- **ENHN-04**: Subtle audio experimentation (completion tones, ambient sound)
 
-- [x] **CONV-01**: Optional name input added to onboarding flow, stored in user profile
-- [x] **CONV-02**: Wird concept explained on first encounter via one-time tooltip/explanation
-- [x] **CONV-03**: Value communication woven into lessons 1–7 (mastery insights shown after lessons)
-- [x] **CONV-04**: Home screen greeting personalized with user name and motivation
-- [x] **CONV-05**: Mastery engine insights visible to users (confusion tracking, accuracy trends, review scheduling)
-- [x] **CONV-06**: Upgrade/upsell cards redesigned to match design system (premium feel matching onboarding quality)
-- [x] **CONV-07**: Complete paywall flow — lesson 7 trigger, annual-first pricing, scholarship program, post-expiry review access
-- [ ] **CONV-08**: App Store submission complete — screenshots, metadata, privacy manifest, review notes, production build on device
-- [ ] **CONV-09**: Support contact visible in app settings (required for early adopter data-loss mitigation)
+## Out of Scope
 
-### Block 3: Make It Retain
-
-- [ ] **RET-01**: All 18 engine .js files migrated to TypeScript with proper type annotations
-- [ ] **RET-02**: Shared state layer for progress, habit, and subscription — screens subscribe to canonical state, designed to anticipate cloud sync
-- [x] **RET-03**: Cloud sync with user accounts (email/social auth), anonymous-to-authenticated upgrade path
-- [ ] **RET-04**: Learning history synced to cloud (completion, accuracy trends over time)
-- [ ] **RET-05**: Social features — friend connections, streaks, phase milestones (supportive tone, not competitive)
-- [ ] **RET-06**: Offline-first guarantee maintained — local SQLite source of truth, cloud syncs when connected
-- [ ] **RET-07**: Privacy manifest updated for auth + cloud sync data collection
-- [ ] **RET-08**: Adaptive return welcome screen based on absence length (1 day vs 7 days vs 14+ days)
-- [x] **RET-09**: High-value integration tests for critical flows (onboarding, lesson completion, premium locking, restore purchases)
-- [ ] **RET-10**: Dark mode activated using existing tokens, system preference detection
-
-## Deferred
-
-- **DEFER-01**: E2E testing (Detox/Maestro) — separate milestone
-- **DEFER-02**: Push notifications — after cloud sync + accounts
-- **DEFER-03**: CI/CD pipeline (GitHub Actions) — not blocking submission
-- **DEFER-04**: Internationalization
-- **DEFER-05**: iPad / tablet layout
+| Feature | Reason |
+|---------|--------|
+| Confetti / particle explosions | Arcade energy. Beauty that performs. Contradicts emotional contract. |
+| Floating "+1" score indicator | Gamification. Reduces sacred learning to point accumulation. |
+| Shake animation on wrong answer | Physically aggressive. Contradicts "Close!" energy. |
+| Red/danger coloring on wrong answers | Punitive. Wrong answers should feel like "not yet." |
+| Streak loss anxiety messaging | Exploits loss aversion. Spiritually harmful for reconnecting learners. |
+| Countdown timers / urgency | Dark pattern. Contradicts sanctuary feeling. |
+| Complex parallax / 3D effects | Performance killer on Android. Beauty that performs. |
+| Achievement badges / trophies | Gamification of sacred learning. Trivializes spiritual journey. |
+| Leaderboards / social comparison | Competition has no place in spiritual learning. |
+| Skeleton screens with shimmer | Generic tech pattern. Breaks atmosphere. |
+| Sound effects on every interaction | Arcade energy. Audio should be quiet and intentional. |
+| @shopify/react-native-skia | 4-6MB overhead for effects achievable with existing stack. |
+| Business logic / engine changes | Out of scope for design milestone. |
+| Routing changes | Expo Router structure stays the same. |
+| Dark mode | Separate milestone. |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| STAB-01 | Phase 1 | Not started |
-| STAB-02 | Phase 1 | Not started |
-| STAB-03 | Phase 2 | Not started |
-| STAB-04 | Phase 2 | Not started |
-| STAB-05 | Phase 2 | Not started |
-| STAB-06 | Phase 2 | Not started |
-| CONV-01 | Phase 3 | Not started |
-| CONV-02 | Phase 3 | Not started |
-| CONV-03 | Phase 4 | Not started |
-| CONV-04 | Phase 3 | Not started |
-| CONV-05 | Phase 4 | Not started |
-| CONV-06 | Phase 5 | Not started |
-| CONV-07 | Phase 5 | Not started |
-| CONV-08 | Phase 6 | Not started |
-| CONV-09 | Phase 6 | Not started |
-| RET-01 | Phase 7 | Not started |
-| RET-02 | Phase 8 | Not started |
-| RET-03 | Phase 8 | Not started |
-| RET-04 | Phase 8 | Not started |
-| RET-05 | Phase 8 | Not started |
-| RET-06 | Phase 8 | Not started |
-| RET-07 | Phase 8 | Not started |
-| RET-08 | Phase 8 | Not started |
-| RET-09 | Phase 8 | Not started |
-| RET-10 | Phase 8 | Not started |
+| FOUN-01 | Phase 1 | Pending |
+| FOUN-02 | Phase 1 | Pending |
+| FOUN-03 | Phase 1 | Pending |
+| FOUN-04 | Phase 1 | Pending |
+| FOUN-05 | Phase 1 | Pending |
+| QUIZ-01 | Phase 2 | Pending |
+| QUIZ-02 | Phase 2 | Pending |
+| QUIZ-03 | Phase 2 | Pending |
+| QUIZ-04 | Phase 2 | Pending |
+| QUIZ-05 | Phase 2 | Pending |
+| SACR-01 | Phase 3 | Pending |
+| SACR-02 | Phase 3 | Pending |
+| SACR-03 | Phase 3 | Pending |
+| SACR-04 | Phase 3 | Pending |
+| SACR-05 | Phase 3 | Pending |
+| SACR-06 | Phase 3 | Pending |
 
 **Coverage:**
-- v2 requirements: 25 total
-- Mapped to phases: 25
+- v1 requirements: 16 total
+- Mapped to phases: 16
 - Unmapped: 0 ✓
 
 ---
-*Requirements defined: 2026-04-01*
-*Source: MASTER-PLAN.md*
+*Requirements defined: 2026-04-03*
+*Last updated: 2026-04-03 after initial definition*
