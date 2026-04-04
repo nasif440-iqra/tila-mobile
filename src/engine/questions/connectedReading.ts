@@ -2,7 +2,7 @@ import { getLetter } from "../../data/letters.js";
 import type { Lesson } from "../../types/lesson";
 import type { ArabicLetter } from "../../types/engine";
 import type { QuestionOption } from "../../types/question";
-import { shuffle, pickRandom } from "./shared";
+import { shuffle, pickRandom } from "./shared.js";
 
 const VOWEL_MARKS: Record<string, string> = {
   fatha: "\u064E",

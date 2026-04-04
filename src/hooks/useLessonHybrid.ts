@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { generateHybridExercises } from "../engine/questions/index";
+import { generateHybridExercises } from "../engine/questions/index.js";
 
 // ── Stage classification ──
 

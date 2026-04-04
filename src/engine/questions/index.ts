@@ -1,22 +1,22 @@
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 
-export { shuffle, pickRandom } from "./shared";
-export { generateRecognitionQs } from "./recognition";
-export { generateSoundQs } from "./sound";
-export { generateContrastQs } from "./contrast";
-export { generateHarakatIntroQs, generateHarakatQs } from "./harakat";
-export { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "./explanations";
+export { shuffle, pickRandom } from "./shared.js";
+export { generateRecognitionQs } from "./recognition.js";
+export { generateSoundQs } from "./sound.js";
+export { generateContrastQs } from "./contrast.js";
+export { generateHarakatIntroQs, generateHarakatQs } from "./harakat.js";
+export { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "./explanations.js";
 
-import { generateRecognitionQs } from "./recognition";
-import { generateSoundQs } from "./sound";
-import { generateContrastQs } from "./contrast";
-import { generateHarakatIntroQs, generateHarakatQs } from "./harakat";
-import { generateCheckpointQs } from "./checkpoint";
-import { generateReviewQs } from "./review";
-import { filterValidQuestions } from "./shared";
-import { generateConnectedFormExercises } from "./connectedForms";
-import { generateConnectedReadingExercises } from "./connectedReading";
+import { generateRecognitionQs } from "./recognition.js";
+import { generateSoundQs } from "./sound.js";
+import { generateContrastQs } from "./contrast.js";
+import { generateHarakatIntroQs, generateHarakatQs } from "./harakat.js";
+import { generateCheckpointQs } from "./checkpoint.js";
+import { generateReviewQs } from "./review.js";
+import { filterValidQuestions } from "./shared.js";
+import { generateConnectedFormExercises } from "./connectedForms.js";
+import { generateConnectedReadingExercises } from "./connectedReading.js";
 
 /** Progress data passed through to individual generators (checkpoint, review). */
 interface LessonProgress {

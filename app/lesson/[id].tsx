@@ -27,7 +27,7 @@ import type { QuizResultItem } from '../../src/types/quiz';
 import { track } from '../../src/analytics';
 import { playLessonStart } from "../../src/audio/player";
 import { durations } from "../../src/design/animations";
-import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery";
+import { deriveMasteryState, parseEntityKey } from "../../src/engine/mastery.js";
 import { getLetter } from "../../src/data/letters.js";
 import { planReviewSession } from "../../src/engine/selectors";
 import { getTodayDateString } from "../../src/engine/dateUtils";

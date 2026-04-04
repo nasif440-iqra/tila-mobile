@@ -21,7 +21,7 @@ import {
   playWrong,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
-import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations";
+import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations.js";
 import { track } from "../analytics";
 // haptics now handled in StreakMilestoneOverlay
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";
@@ -78,9 +78,6 @@ export function LessonQuiz({
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
   const prevStreakRef = useRef(0);
 
-  // Guard against multiple onComplete calls
-  const completeFiredRef = useRef(false);
-
   // Screen flash animations
   const wrongFlashOpacity = useSharedValue(0);
   const goldTintOpacity = useSharedValue(0);
@@ -134,8 +131,7 @@ export function LessonQuiz({
   }, [selectedId, isSoundQuestion, lessonAudioType]);
 
   useEffect(() => {
-    if (isComplete && !completeFiredRef.current) {
-      completeFiredRef.current = true;
+    if (isComplete) {
       onComplete(results);
     }
   }, [isComplete, results, onComplete]);

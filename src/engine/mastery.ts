@@ -372,7 +372,7 @@ export {
 
 // ── SRS scheduling ──
 
-import { addDateDays, getDayDifference } from "./dateUtils";
+import { addDateDays, getDayDifference } from "./dateUtils.js";
 
 const SRS_INTERVALS: Record<number, number> = { 1: 1, 2: 3, 3: 7, 4: 14 };
 
