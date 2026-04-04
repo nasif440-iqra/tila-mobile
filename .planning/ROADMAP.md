@@ -28,7 +28,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Enabling "Reduce Motion" in device settings disables all breathing/drift animations and replaces entrances with simple opacity fades
   4. FloatingLettersLayer runs for 15+ minutes without freezing or visual glitch on Android
   5. Animation system includes breathing (2-4s), drift (18-32s), and settle timing presets accessible from shared animation config
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 01-01-PLAN.md — Arabic typography fix (lineHeight ratios, quizHero tier, overflow:visible) + animation tier tokens (breathing, drift, settle)
+- [ ] 01-02-PLAN.md — Atmosphere system (relocate WarmGlow/FloatingLettersLayer, fix withRepeat bug, reduce motion, AtmosphereBackground with 6 presets)
 **UI hint**: yes
 
 ### Phase 2: Quiz Experience
@@ -64,7 +67,7 @@ Phases execute in numeric order: 1 -> 2 -> 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Foundation | 0/? | Not started | - |
+| 1. Foundation | 0/2 | Planning complete | - |
 | 2. Quiz Experience | 0/? | Not started | - |
 | 3. Sacred Moments | 0/? | Not started | - |
 
