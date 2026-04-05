@@ -38,19 +38,19 @@ created: 2026-04-05
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 1 | QUIZ-01, QUIZ-05 | — | N/A | unit | `npx vitest run src/__tests__/quiz-letterhero.test.ts` | ❌ W0 | ⬜ pending |
-| 02-01-02 | 01 | 1 | QUIZ-02 | — | N/A | unit | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts` | ❌ W0 | ⬜ pending |
-| 02-02-01 | 02 | 2 | QUIZ-03, QUIZ-04 | — | N/A | unit | `npx vitest run src/__tests__/quiz-wrong-feedback.test.ts` | ❌ W0 | ⬜ pending |
+| 02-01-01 | 01 | 1 | QUIZ-01, QUIZ-05 | — | N/A | unit | `npx vitest run src/__tests__/quiz-letterhero.test.ts` | W0 | pending |
+| 02-02-01 | 02 | 2 | QUIZ-02, QUIZ-03 | — | N/A | unit | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts` | W0 | pending |
+| 02-02-02 | 02 | 2 | QUIZ-04 | — | N/A | unit | `npx vitest run src/__tests__/quiz-wrong-feedback.test.ts` | W0 | pending |
 
-*Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
+*Status: pending / green / red / flaky*
 
 ---
 
 ## Wave 0 Requirements
 
-- [ ] `src/__tests__/quiz-letterhero.test.ts` — LetterHero breathing, sizing, WarmGlow integration
-- [ ] `src/__tests__/quiz-correct-feedback.test.ts` — Gold ripple, +1 removal, simultaneous dim
-- [ ] `src/__tests__/quiz-wrong-feedback.test.ts` — Wrong answer panel color swap, shake removal, haptic swap
+- [ ] `src/__tests__/quiz-letterhero.test.ts` — Created in Plan 01 Task 1: LetterHero sizing, WarmGlow breathing, quizOption tier
+- [ ] `src/__tests__/quiz-correct-feedback.test.ts` — Created in Plan 02 Task 1: Gold ripple, +1 removal, simultaneous dim, revealedCorrect glow (D-08)
+- [ ] `src/__tests__/quiz-wrong-feedback.test.ts` — Created in Plan 02 Task 2: Wrong answer panel color swap, X icon removal, warm palette
 
 *Existing Vitest infrastructure covers framework needs. Only test files need creation.*
 

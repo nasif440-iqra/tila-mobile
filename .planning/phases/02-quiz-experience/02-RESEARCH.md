@@ -244,17 +244,17 @@ if (state === "selectedWrong") {
 |----------|-------|
 | Framework | Vitest 4.1.2 |
 | Config file | vitest.config.ts |
-| Quick run command | `npx vitest run src/__tests__/quiz-option-redesign.test.ts --reporter=verbose` |
+| Quick run command | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts --reporter=verbose` |
 | Full suite command | `npm test` |
 
 ### Phase Requirements to Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| QUIZ-01 | LetterHero 160px circle, WarmGlow 240px, display size text | source-audit | `npx vitest run src/__tests__/quiz-letterhero.test.ts -x` | Wave 0 |
-| QUIZ-02 | No +1 animation, gold glow overlay uses accent color | source-audit | `npx vitest run src/__tests__/quiz-option-redesign.test.ts -x` | Wave 0 |
-| QUIZ-03 | No shake, no hapticError, opacity dim on wrong, glow on revealedCorrect | source-audit | `npx vitest run src/__tests__/quiz-option-redesign.test.ts -x` | Wave 0 |
-| QUIZ-04 | WrongAnswerPanel no danger colors, no X icon, uses accentLight/brown | source-audit | `npx vitest run src/__tests__/quiz-warm-panel.test.ts -x` | Wave 0 |
-| QUIZ-05 | ArabicText has quizOption size, QuizOption uses quizOption | source-audit | `npx vitest run src/__tests__/quiz-option-redesign.test.ts -x` | Wave 0 |
+| QUIZ-01 | LetterHero 160px circle, WarmGlow 240px, display size text, breathing animated | source-audit | `npx vitest run src/__tests__/quiz-letterhero.test.ts -x` | Wave 0 |
+| QUIZ-02 | No +1 animation, gold glow overlay uses accent color | source-audit | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts -x` | Wave 0 |
+| QUIZ-03 | No shake, no hapticError, opacity dim on wrong, glow on revealedCorrect | source-audit | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts -x` | Wave 0 |
+| QUIZ-04 | WrongAnswerPanel no danger colors, no X icon, uses accentLight/brown | source-audit | `npx vitest run src/__tests__/quiz-wrong-feedback.test.ts -x` | Wave 0 |
+| QUIZ-05 | ArabicText has quizOption size, QuizOption uses quizOption | source-audit | `npx vitest run src/__tests__/quiz-correct-feedback.test.ts -x` | Wave 0 |
 
 ### Sampling Rate
 - **Per task commit:** `npx vitest run src/__tests__/quiz-*.test.ts --reporter=verbose`
@@ -262,9 +262,9 @@ if (state === "selectedWrong") {
 - **Phase gate:** Full suite green before `/gsd-verify-work`
 
 ### Wave 0 Gaps
-- [ ] `src/__tests__/quiz-letterhero.test.ts` -- covers QUIZ-01 (circle size, WarmGlow size, import path)
-- [ ] `src/__tests__/quiz-option-redesign.test.ts` -- covers QUIZ-02, QUIZ-03, QUIZ-05 (no +1, no shake, no hapticError, accent glow, quizOption size)
-- [ ] `src/__tests__/quiz-warm-panel.test.ts` -- covers QUIZ-04 (no danger tokens, no X icon, accentLight/brown)
+- [ ] `src/__tests__/quiz-letterhero.test.ts` -- covers QUIZ-01 (circle size, WarmGlow size, import path, breathing animated prop)
+- [ ] `src/__tests__/quiz-correct-feedback.test.ts` -- covers QUIZ-02, QUIZ-03, QUIZ-05 (no +1, no shake, no hapticError, accent glow, quizOption size, revealedCorrect glow)
+- [ ] `src/__tests__/quiz-wrong-feedback.test.ts` -- covers QUIZ-04 (no danger tokens, no X icon, accentLight/brown)
 
 Existing tests to update:
 - `src/__tests__/quiz-question.test.ts` -- currently passing, may need update if assertions become stale
