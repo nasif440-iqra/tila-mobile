@@ -22,8 +22,10 @@ created: 2026-04-05
 | Component library | Custom design system in `src/design/` |
 | Icon library | Not applicable to this phase |
 | Font (Arabic) | Amiri (Amiri_400Regular) |
-| Font (Body) | Inter (400, 500, 600) |
-| Font (Heading) | Lora (500, 600) |
+| Font (Body) | Inter (400, 600) |
+| Font (Heading) | Lora (600) |
+
+Note on weight consolidation: The existing `caption` token (11px) uses Inter 500 (Medium) and `heading3` token (17px) uses Lora 500 (Medium). For this phase, quiz-screen usage remaps both to weight 600: caption uses `Inter_600SemiBold` for small-size legibility, and non-Arabic option text uses `Lora_600SemiBold` (heading2-family weight). This keeps the phase contract to 2 weights per font family. The underlying tokens.ts values are not changed globally -- the quiz components apply the weight override locally via explicit `fontFamily` or `fontWeight` style props where needed.
 
 Source: `src/design/tokens.ts` (existing), Phase 1 UI-SPEC
 
@@ -47,7 +49,6 @@ Existing scale in `src/design/tokens.ts`. No changes in this phase.
 Exceptions:
 - LetterHero circle: 160px diameter (not a spacing token -- component dimension)
 - Quiz option touch target: minimum 80px height (existing `minHeight: 80` in QuizOption)
-- Options grid gap: 14px (existing, not a token -- keep as-is for backward compatibility)
 
 Source: `src/design/tokens.ts` (existing, unchanged)
 
@@ -74,15 +75,18 @@ Implementation: Add `quizOption` to `ArabicSize` union in ArabicText.tsx. Map to
 
 Rationale: D-11 from CONTEXT.md specifies a `quizOption` tier at 52px. The Phase 1 `arabicQuizHero` token already defines 52px/114px. Add `quizOption` as a semantic size alias pointing to the same values rather than duplicating tokens.
 
-### Latin Typography Used in Quiz (unchanged)
+### Latin Typography Used in Quiz
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
 | heading2 | 20px | Lora SemiBold (600) | 28px | Prompt text ("Which letter is this?") |
 | body | 15px | Inter Regular (400) | 22px | Prompt subtext, replay link |
 | bodySmall | 13px | Inter Regular (400) | 18px | Encouragement text in WrongAnswerPanel |
-| caption | 11px | Inter Medium (500) | 16px | Letter name labels in comparison, hear labels |
-| heading3 | 17px | Lora Medium (500) | 24px | Non-Arabic option text |
+| caption | 11px | Inter SemiBold (600) | 16px | Letter name labels in comparison, hear labels |
+
+Note: The existing `caption` token uses Inter 500 (Medium). In quiz components, override to Inter 600 (SemiBold) via `fontFamily: fontFamilies.bodySemiBold` to consolidate to 2 weights. At 11px the heavier weight improves legibility with no visual regression.
+
+Note: `heading3` (17px Lora Medium) was previously listed for non-Arabic option text in QuizOption. This is the same 17px size as `bodyLarge`. For this phase, non-Arabic option text uses `heading2` style (20px Lora SemiBold 600) to give option text proper visual weight and eliminate the Lora 500 weight dependency. If 20px proves too large for option buttons during implementation, fall back to 17px at Lora SemiBold (600) -- either way, the weight stays at 600.
 
 Source: D-11, D-12 from CONTEXT.md; Phase 1 UI-SPEC typography section
 
@@ -158,6 +162,19 @@ The letter is a living presence, not a label. It dominates the top half of the q
 | Full cycle | 4500ms | `breathing.cycle` |
 | Easing | `Easing.inOut(Easing.ease)` | Phase 1 animation rules |
 | WarmGlow animated | `true` | Uses AnimatedWarmGlow path |
+
+### Sound Question Behavior (LetterHero suppression)
+
+LetterHero rendering depends on question type:
+
+| Question Type | LetterHero Shown? | What Renders Instead |
+|---------------|-------------------|---------------------|
+| `isLetterToSound` (letter shown, pick the sound) | Yes -- letter in circle + small HearButton (44px) below | LetterPrompt with full LetterHero circle |
+| `isLetterToName` (letter shown, pick the name) | Yes -- letter in circle, no audio | LetterPrompt with full LetterHero circle |
+| `isAudioQuestion` (hear sound, pick the letter) | No -- suppressed | Large HearButton (72px) + prompt text + "Replay" link |
+| `isVisualQuestion` (text prompt, pick the answer) | No -- suppressed | Plain text prompt only (heading2 style) |
+
+LetterHero and its WarmGlow breathing animation only render when the question type includes a visible Arabic letter in the prompt (`isLetterToSound` or `isLetterToName`). For audio-only and visual-text questions, LetterHero is not shown and no placeholder is rendered in its place.
 
 ### Reduce Motion Fallback
 
@@ -369,9 +386,9 @@ Source: D-10 from CONTEXT.md (keep encouraging copy); REQUIREMENTS.md QUIZ-04
 | Component | Location | New/Modified | Responsibility |
 |-----------|----------|-------------|----------------|
 | ArabicText | `src/design/components/ArabicText.tsx` | Modified | Add `quizOption` size alias |
-| QuizOption | `src/design/components/QuizOption.tsx` | Modified | Remove +1/shake, add gold ripple, warm wrong colors, use `quizOption` size |
+| QuizOption | `src/design/components/QuizOption.tsx` | Modified | Remove +1/shake, add gold ripple, warm wrong colors, use `quizOption` size, remap non-Arabic text to Lora 600 |
 | QuizQuestion | `src/components/quiz/QuizQuestion.tsx` | Modified | Enlarge LetterHero circle to 160px, update WarmGlow size to 240px |
-| WrongAnswerPanel | `src/components/quiz/WrongAnswerPanel.tsx` | Modified | Replace danger colors with warm palette, remove X icon |
+| WrongAnswerPanel | `src/components/quiz/WrongAnswerPanel.tsx` | Modified | Replace danger colors with warm palette, remove X icon, remap caption to Inter 600 |
 
 No new components. No new files. All changes modify existing components.
 
