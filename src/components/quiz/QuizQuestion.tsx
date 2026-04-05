@@ -10,7 +10,7 @@ import Animated, {
 import { useColors } from "../../design/theme";
 import { typography, spacing } from "../../design/tokens";
 import { QuizOption, ArabicText, HearButton } from "../../design/components";
-import { WarmGlow } from "../onboarding/WarmGlow";
+import { WarmGlow } from "../../design/atmosphere/WarmGlow";
 
 const OPTIONS_MAX_WIDTH = 360;
 
@@ -82,7 +82,7 @@ function LetterPrompt({
     <View style={styles.promptCenter}>
       <View style={styles.letterCircleWrapper}>
         <WarmGlow
-          size={180}
+          size={240}
           animated
           color="rgba(196,164,100,0.3)"
           pulseMin={0.1}
@@ -266,9 +266,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   letterCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
