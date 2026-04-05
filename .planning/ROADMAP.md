@@ -44,7 +44,10 @@ Plans:
   3. Tapping the wrong answer dims the option briefly and illuminates the correct answer with a warm glow -- no shake, no red flash, no X icon
   4. The wrong answer explanation panel uses warm cream/brown colors with encouraging tone -- no danger/error colors
   5. Arabic letters in quiz options are sized at 48-56px so they read as primary content, not small labels
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — quizOption typography tier (ArabicText) + LetterHero enlargement (160px circle, 240px WarmGlow)
+- [ ] 02-02-PLAN.md — QuizOption animation rewrite (gold ripple, gentle dim, no +1/shake) + WrongAnswerPanel warm redesign
 **UI hint**: yes
 
 ### Phase 3: Sacred Moments
@@ -68,7 +71,7 @@ Phases execute in numeric order: 1 -> 2 -> 3
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete | 2026-04-04 |
-| 2. Quiz Experience | 0/? | Not started | - |
+| 2. Quiz Experience | 0/2 | Not started | - |
 | 3. Sacred Moments | 0/? | Not started | - |
 
 ## Self-Review Gate
