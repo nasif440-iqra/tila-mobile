@@ -40,27 +40,3 @@ export const pressScale = {
   subtle: 0.98,
   bouncy: 0.95,
 } as const;
-
-// ── Ambient Tiers (Phase 1) ──
-
-export const breathing = {
-  inhale: 2000,
-  hold: 500,
-  exhale: 2000,
-  cycle: 4500,
-  opacityMin: 0.08,
-  opacityMax: 0.25,
-  scaleMin: 1.0,
-  scaleMax: 1.06,
-} as const;
-
-export const drift = {
-  slow: 24000,
-  normal: 18000,
-  rangeX: { min: 20, max: 40 },
-  rangeY: { min: 10, max: 25 },
-} as const;
-
-export const settle = {
-  duration: 600,
-} as const;

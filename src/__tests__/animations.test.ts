@@ -26,9 +26,6 @@ import {
   easings,
   screenTransitions,
   pressScale,
-  breathing,
-  drift,
-  settle,
 } from "../design/animations";
 
 describe("animations presets", () => {
@@ -111,58 +108,6 @@ describe("animations presets", () => {
       expect(pressScale.normal).toBe(0.97);
       expect(pressScale.subtle).toBe(0.98);
       expect(pressScale.bouncy).toBe(0.95);
-    });
-  });
-
-  describe("breathing tier", () => {
-    it("has inhale 2000ms", () => {
-      expect(breathing.inhale).toBe(2000);
-    });
-
-    it("has hold 500ms", () => {
-      expect(breathing.hold).toBe(500);
-    });
-
-    it("has exhale 2000ms", () => {
-      expect(breathing.exhale).toBe(2000);
-    });
-
-    it("has cycle 4500ms", () => {
-      expect(breathing.cycle).toBe(4500);
-    });
-
-    it("has opacity range 0.08-0.25", () => {
-      expect(breathing.opacityMin).toBe(0.08);
-      expect(breathing.opacityMax).toBe(0.25);
-    });
-
-    it("has scale range 1.0-1.06", () => {
-      expect(breathing.scaleMin).toBe(1.0);
-      expect(breathing.scaleMax).toBe(1.06);
-    });
-  });
-
-  describe("drift tier", () => {
-    it("has slow 24000ms", () => {
-      expect(drift.slow).toBe(24000);
-    });
-
-    it("has normal 18000ms", () => {
-      expect(drift.normal).toBe(18000);
-    });
-
-    it("has rangeX min 20 max 40", () => {
-      expect(drift.rangeX).toEqual({ min: 20, max: 40 });
-    });
-
-    it("has rangeY min 10 max 25", () => {
-      expect(drift.rangeY).toEqual({ min: 10, max: 25 });
-    });
-  });
-
-  describe("settle tier", () => {
-    it("has duration 600ms", () => {
-      expect(settle.duration).toBe(600);
     });
   });
 });
