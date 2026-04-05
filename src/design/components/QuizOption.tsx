@@ -101,6 +101,7 @@ export function QuizOption({
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }, { translateX: translateX.value }],
+    opacity: wrongOpacity.value,
   }));
 
   const glowStyle = useAnimatedStyle(() => ({
@@ -166,7 +167,7 @@ export function QuizOption({
             backgroundColor,
             borderColor,
             borderWidth: borderW,
-            opacity: isDimmed ? 0.35 : isWrong ? wrongOpacity.value : 1,
+            opacity: isDimmed ? 0.35 : 1,
           },
           animatedStyle,
         ]}
