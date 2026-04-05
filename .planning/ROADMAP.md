@@ -48,7 +48,7 @@ Plans:
 Plans:
 - [x] 02-01-PLAN.md — quizOption typography tier (ArabicText) + LetterHero enlargement (160px circle, 240px WarmGlow)
 - [x] 02-02-PLAN.md — QuizOption animation rewrite (gold ripple, gentle dim, no +1/shake) + WrongAnswerPanel warm redesign
-- [ ] 02-03-PLAN.md — Gap closure: restore reverted tokens (breathing/drift/arabicQuizHero/lineHeights), restore LetterHero 160px, fix wrongOpacity worklet
+- [x] 02-03-PLAN.md — Gap closure: restore reverted tokens (breathing/drift/arabicQuizHero/lineHeights), restore LetterHero 160px, fix wrongOpacity worklet
 **UI hint**: yes
 
 ### Phase 3: Sacred Moments
