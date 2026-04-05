@@ -72,17 +72,22 @@ export const typography = {
   arabicDisplay: {
     fontFamily: fontFamilies.arabicRegular,
     fontSize: 72,
-    lineHeight: 100,
+    lineHeight: 158,
+  },
+  arabicQuizHero: {
+    fontFamily: fontFamilies.arabicRegular,
+    fontSize: 52,
+    lineHeight: 114,
   },
   arabicLarge: {
     fontFamily: fontFamilies.arabicRegular,
     fontSize: 36,
-    lineHeight: 54,
+    lineHeight: 72,
   },
   arabicBody: {
     fontFamily: fontFamilies.arabicRegular,
     fontSize: 24,
-    lineHeight: 36,
+    lineHeight: 48,
   },
   heading1: {
     fontFamily: fontFamilies.headingBold,

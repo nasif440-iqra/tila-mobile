@@ -40,3 +40,21 @@ export const pressScale = {
   subtle: 0.98,
   bouncy: 0.95,
 } as const;
+
+export const breathing = {
+  inhale: 2000,
+  hold: 500,
+  exhale: 2000,
+  cycle: 4500,
+  opacityMin: 0.08,
+  opacityMax: 0.22,
+  scaleMin: 0.96,
+  scaleMax: 1.04,
+} as const;
+
+export const drift = {
+  minDuration: 18000,
+  maxDuration: 32000,
+  minDelay: 0,
+  maxDelay: 5000,
+} as const;
