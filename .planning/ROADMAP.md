@@ -1,182 +1,79 @@
-# Roadmap: Tila — Revenue & Growth
+# Roadmap: Tila Emotional Design Overhaul
 
 ## Overview
 
-This milestone takes Tila from a hardened prototype to a revenue-generating App Store product. The work follows three blocks: stabilize the core user flows (lesson completion, audio, subscriptions), build the conversion surfaces that turn free users into paying users (paywall, personalization, value communication), then add the retention infrastructure that prevents churn (cloud sync, accounts, social features, dark mode).
-
-Source: MASTER-PLAN.md (synthesized from two expert reviews + founder input)
-
-## Milestones
-
-- ✅ **v1.0 Stability & App Store Readiness** — Phases 1-5 (shipped 2026-04-01)
-- 🚧 **v2.0 Revenue & Growth** — Phases 1-8 (in progress)
+Three phases transform Tila from a functional content app into an inhabited space. Phase 1 fixes the typography foundation and builds the ambient/animation infrastructure every subsequent screen depends on. Phase 2 redesigns the quiz -- the screen users spend the most time on -- so Arabic letters feel alive and feedback feels human. Phase 3 applies the established design language to sacred moments and onboarding, where first impressions and emotional differentiation live.
 
 ## Phases
 
-<details>
-<summary>✅ v1.0 Stability & App Store Readiness (Phases 1-5) — SHIPPED 2026-04-01</summary>
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [x] Phase 1: Correctness Blockers (3/3 plans) — completed 2026-04-01
-- [x] Phase 2: Crash Containment (2/2 plans) — completed 2026-04-01
-- [x] Phase 3: Monetization Hardening (2/2 plans) — completed 2026-04-01
-- [x] Phase 4: Type & Test Cleanup (2/2 plans) — completed 2026-04-01
-- [x] Phase 5: Launch Ops Checklist (3/3 plans) — completed 2026-04-01
+Decimal phases appear between their surrounding integers in numeric order.
 
-</details>
-
-### 🚧 v2.0 Revenue & Growth
-
-- [ ] **Phase 1: Lesson Flow Hardening** — Fix atomic completion + mastery celebration stale state
-- [ ] **Phase 2: Repo Cleanup & Design Consistency** — Remove scaffold, replace crescent emoji, guard remaining audio/RevenueCat calls
-- [x] **Phase 3: Onboarding & Personalization** — Name input, wird explanation, personalized home screen (completed 2026-04-01)
-- [x] **Phase 4: Value Communication** — Surface mastery engine, weave insights into lessons 1-7 (completed 2026-04-02)
-- [ ] **Phase 5: Conversion Surfaces** — Redesign upgrade cards, complete paywall flow with scholarship program
-- [ ] **Phase 6: App Store Submission** — Screenshots, metadata, privacy manifest, support contact, production build, submission
-- [ ] **Phase 7: Engine TypeScript Migration** — Convert 18 .js files to .ts with proper type annotations
-- [x] **Phase 8: Cloud Sync & Social** — Shared state layer, user accounts, cloud sync, history, friend features, dark mode, integration tests (completed 2026-04-02)
+- [x] **Phase 1: Foundation** - Arabic typography fix, ambient background system, animation tiers, reduce motion, FloatingLetters bug patch (completed 2026-04-04)
+- [ ] **Phase 2: Quiz Experience** - LetterHero breathing component, answer feedback overhaul (warm ripple / encouraging nudge), quiz Arabic sizing
+- [ ] **Phase 3: Sacred Moments** - Bismillah micro-lesson, phrase reveal primitive, onboarding atmosphere (Welcome, Tilawah, Hadith, Finish)
 
 ## Phase Details
 
-### Phase 1: Lesson Flow Hardening
-**Goal**: Lesson completion is atomic and mastery celebrations always display correctly
+### Phase 1: Foundation
+**Goal**: Every screen has a consistent ambient atmosphere, Arabic text never clips, and all animations respect accessibility settings
 **Depends on**: Nothing (first phase)
-**Requirements**: STAB-01, STAB-02
-**Plans:** 1 plan
-Plans:
-- [x] 01-01-PLAN.md — Atomic completion transaction + fresh mastery celebration detection
+**Requirements**: FOUN-01, FOUN-02, FOUN-03, FOUN-04, FOUN-05
 **Success Criteria** (what must be TRUE):
-  1. `completeLesson` wraps all DB writes in a single `withExclusiveTransactionAsync` call
-  2. The completion transaction returns fresh mastery state that the UI uses directly for celebration display
-  3. A simulated crash during completion leaves DB in a consistent pre-completion state (no partial writes)
-
-### Phase 2: Repo Cleanup & Design Consistency
-**Goal**: Remove all scaffold leftovers, guard remaining unsafe calls, achieve design consistency
-**Depends on**: Nothing (independent of Phase 1)
-**Requirements**: STAB-03, STAB-04, STAB-05, STAB-06
+  1. Arabic text with full diacritics (test with "bismillah" phrase) renders without clipping on both iOS and Android at every size tier used in the app
+  2. Switching between Home, Quiz, Onboarding, and Loading screens shows a consistent ambient gradient background (no raw cream/white screens, no per-screen visual discontinuity)
+  3. Enabling "Reduce Motion" in device settings disables all breathing/drift animations and replaces entrances with simple opacity fades
+  4. FloatingLettersLayer runs for 15+ minutes without freezing or visual glitch on Android
+  5. Animation system includes breathing (2-4s), drift (18-32s), and settle timing presets accessible from shared animation config
 **Plans:** 2 plans
 Plans:
-- [x] 02-01-PLAN.md — Scaffold cleanup + RevenueCat init guard (STAB-03, STAB-04 pre-satisfied, STAB-05)
-- [x] 02-02-PLAN.md — CrescentIcon SVG component + emoji replacement (STAB-06)
-**Success Criteria** (what must be TRUE):
-  1. SpaceMono-Regular.ttf, EditScreenInfo.tsx, useClientOnlyValue.ts, and constants/Colors.ts are deleted with no broken imports
-  2. RevenueCat `Purchases.configure()` is wrapped in try/catch with free-tier fallback and Sentry logging
-  3. All `player.play()` and `player.replace()` calls are wrapped in try/catch with Sentry reporting
-  4. No unicode emoji (☽) appears in any component — replaced with SVG icon matching TilaLogoMark style
+- [x] 01-01-PLAN.md — Arabic typography fix (lineHeight ratios, quizHero tier, overflow:visible) + animation tier tokens (breathing, drift, settle)
+- [x] 01-02-PLAN.md — Atmosphere system (relocate WarmGlow/FloatingLettersLayer, fix withRepeat bug, reduce motion, AtmosphereBackground with 6 presets)
+**UI hint**: yes
 
-### Phase 3: Onboarding & Personalization
-**Goal**: Users feel personally known — the app uses their name and understands their motivation
-**Depends on**: Phase 1 or 2 (either)
-**Requirements**: CONV-01, CONV-02, CONV-04
-**Plans:** 2/2 plans complete
+### Phase 2: Quiz Experience
+**Goal**: The quiz screen makes Arabic letters feel like living presences and answer feedback feels warm and encouraging, never punitive
+**Depends on**: Phase 1
+**Requirements**: QUIZ-01, QUIZ-02, QUIZ-03, QUIZ-04, QUIZ-05
+**Success Criteria** (what must be TRUE):
+  1. Quiz screen shows the target Arabic letter large in the top half with a visible slow breathing animation and warm glow -- the letter is the dominant visual element, not a label
+  2. Tapping the correct answer triggers a warm gold ripple expanding from the tapped option with haptic feedback -- no floating "+1" appears anywhere
+  3. Tapping the wrong answer dims the option briefly and illuminates the correct answer with a warm glow -- no shake, no red flash, no X icon
+  4. The wrong answer explanation panel uses warm cream/brown colors with encouraging tone -- no danger/error colors
+  5. Arabic letters in quiz options are sized at 48-56px so they read as primary content, not small labels
+**Plans:** 2 plans
 Plans:
-- [x] 03-01-PLAN.md — Data layer + NameMotivation onboarding step (CONV-01)
-- [x] 03-02-PLAN.md — Personalized home greeting + wird tooltip (CONV-02, CONV-04)
+- [ ] 02-01-PLAN.md — quizOption typography tier (ArabicText) + LetterHero enlargement (160px circle, 240px WarmGlow)
+- [ ] 02-02-PLAN.md — QuizOption animation rewrite (gold ripple, gentle dim, no +1/shake) + WrongAnswerPanel warm redesign
+**UI hint**: yes
+
+### Phase 3: Sacred Moments
+**Goal**: Onboarding and Bismillah feel like spiritual thresholds, not static content -- text unfolds word-by-word instead of appearing all at once, creating genuine moments of revelation
+**Depends on**: Phase 2
+**Requirements**: SACR-02, SACR-01, SACR-03, SACR-04, SACR-05, SACR-06
 **Success Criteria** (what must be TRUE):
-  1. Onboarding flow includes an optional name input step that stores the name in user profile
-  2. First wird/streak badge appearance shows a one-time explanation of the wird concept
-  3. Home screen greeting uses user name and motivation (falls back to generic if no name provided)
-
-### Phase 4: Value Communication
-**Goal**: Users understand what makes Tila worth paying for before hitting the paywall
-**Depends on**: Phase 3
-**Requirements**: CONV-03, CONV-05
-**Plans:** 2/2 plans complete
-Plans:
-- [x] 04-01-PLAN.md — Engine insights module: post-lesson insight generation, review grouping, confusion pair parsing (CONV-03, CONV-05)
-- [x] 04-02-PLAN.md — UI integration: LessonInsights card, ConfusionPairs + ReviewSchedule progress sections (CONV-03, CONV-05)
-**Success Criteria** (what must be TRUE):
-  1. Post-lesson insights appear during lessons 1-7 showing mastery engine intelligence (confusion detection, review scheduling)
-  2. Progress screen shows mastery data: confused letter pairs, accuracy trends, upcoming review schedule
-  3. Free-tier SRS reviews are functional and visible (verified: usePremiumReviewRights includes lessons ≤ FREE_LESSON_CUTOFF)
-
-### Phase 5: Conversion Surfaces
-**Goal**: Upgrade cards and paywall flow match the app's premium design quality and drive conversion
-**Depends on**: Phase 4 (value communication must exist before paywall is polished)
-**Requirements**: CONV-06, CONV-07
-**Plans:** 1/2 plans executed
-Plans:
-- [x] 05-01-PLAN.md — Monetization component library: LockIcon, UpgradeCard, TrialCountdownBadge (CONV-06, CONV-07)
-- [x] 05-02-PLAN.md — Wire components into screens: celebration flow, locked gate, JourneyNode, trial badge (CONV-06, CONV-07)
-**Success Criteria** (what must be TRUE):
-  1. Upgrade card, trial badge, and expired card use the design system (tokens, fonts, colors, shadows) — visually match onboarding quality
-  2. Paywall triggers after completing lesson 7 and when free user taps lesson 8+
-  3. Annual plan ($49.99/yr) is preselected and visually primary; monthly ($8.99/mo) is secondary
-  4. Scholarship option is prominently displayed with clear language and links to request form
-  5. Post-expiry: users can still review premium letters learned during trial/subscription
-
-### Phase 6: App Store Submission
-**Goal**: App is submitted to both App Store and Google Play with all required assets and metadata
-**Depends on**: Phase 5 + RevenueCat/App Store Connect subscription config resolved
-**Requirements**: CONV-08, CONV-09
-**Success Criteria** (what must be TRUE):
-  1. Screenshots captured for required sizes (6.7" + 5.5" iOS, Play Store feature graphic)
-  2. App Store metadata complete (title, subtitle, description, keywords, category, age rating)
-  3. Privacy manifest declares PostHog analytics + Sentry crash reporting data collection
-  4. Support contact (email/link) visible in app settings
-  5. Production EAS build installs and completes full lesson flow on real device
-  6. App submitted to Apple App Store and Google Play Store
-
-### Phase 7: Engine TypeScript Migration
-**Goal**: All engine files are typed, eliminating `any` leakage from the core learning algorithm
-**Depends on**: Phase 2 (clean repo first)
-**Requirements**: RET-01
-**Success Criteria** (what must be TRUE):
-  1. All 18 .js files in src/engine/ converted to .ts with explicit type annotations
-  2. `npm run typecheck` passes with zero errors
-  3. No `any` type in any engine file's exported function signatures
-  4. All existing tests still pass after migration
-
-### Phase 8: Cloud Sync & Social
-**Goal**: Users have accounts, progress syncs to cloud, friends can see each other's progress, dark mode works
-**Depends on**: Phase 7 (typed engine) + Phase 6 (app in store)
-**Requirements**: RET-02, RET-03, RET-04, RET-05, RET-06, RET-07, RET-08, RET-09, RET-10
-**Plans:** 9 plans
-Plans:
-- [x] 08-01-PLAN.md — Auth + sync types, Supabase client, state types
-- [x] 08-02-PLAN.md — Auth provider, sync service, sync provider, DB migration v7
-- [x] 08-03-PLAN.md — AppStateProvider, AccountPrompt component, AuthScreen, auth route
-- [x] 08-04-PLAN.md — Supabase SQL migration, anonymous-to-auth migration
-- [x] 08-05-PLAN.md — Social layer (friends, invites, FriendsList, InviteCard)
-- [x] 08-06-PLAN.md — Theme preference hook, adaptive return welcome, dark mode activation
-- [x] 08-07-PLAN.md — Integration tests (onboarding, lesson completion, premium locking, restore purchases)
-- [ ] 08-08-PLAN.md — Gap closure: Wire AccountPrompt into lesson completion flow (RET-03)
-- [x] 08-09-PLAN.md — Gap closure: Rewrite sync/auth tests to import real source (RET-09)
-**Success Criteria** (what must be TRUE):
-  1. Shared state provider exists — screens subscribe to canonical progress/habit/subscription state
-  2. User can create account (email or social auth) and sign in across devices
-  3. Anonymous users can upgrade to authenticated without losing local progress
-  4. Progress syncs to cloud when connected; app works identically offline
-  5. Users can add friends and see their streaks and phase milestones
-  6. Privacy manifest updated for auth + cloud sync data collection
-  7. Return welcome screen adapts to absence length (1 day / 3-7 days / 14+ days)
-  8. Integration tests cover: onboarding, lesson completion, premium locking, restore purchases
-  9. Dark mode activates from existing tokens with system preference detection
-**Note**: This is the largest phase. Needs its own detailed design/planning session before execution. State layer and cloud sync must be designed as one architectural unit.
-
-## Execution Order
-
-Phases 1 and 2 are independent — can run in parallel.
-Phase 3 requires either Phase 1 or Phase 2 complete.
-Phases 3 → 4 → 5 → 6 are sequential (each builds on the previous).
-Phase 7 can start after Phase 2 (independent of conversion work).
-Phase 8 starts after Phase 7 and Phase 6 are both complete.
-
-```
-Phase 1 (lesson flow) ──┐
-                         ├──→ Phase 3 → Phase 4 → Phase 5 → Phase 6 ──┐
-Phase 2 (cleanup) ───────┘                                              ├──→ Phase 8 (cloud sync)
-                         └──→ Phase 7 (TS migration) ──────────────────┘
-```
+  1. Bismillah screen presents 4 semantic units (Bismi / Allahi / Ar-Rahmani / Ar-Raheem) with Arabic, transliteration, and meaning for each -- functions as both spiritual threshold and first teaching moment
+  2. Sacred Arabic phrases (Bismillah, Tilawah quote, Hadith quote) reveal word-by-word with transliteration appearing beneath each word -- not displayed all at once
+  3. Onboarding Welcome screen opens with atmospheric warmth (ambient background, gentle entrance) -- feels like entering a quiet room, not loading a form
+  4. Onboarding Tilawah and Hadith screens use the word-by-word reveal instead of static quote cards
+  5. Onboarding Finish screen lands with gravity ("You've already begun" feels earned) -- no bounce, no celebratory excess
+**Plans**: TBD
+**UI hint**: yes
 
 ## Progress
 
+**Execution Order:**
+Phases execute in numeric order: 1 -> 2 -> 3
+
 | Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Lesson Flow Hardening | 0/1 | Not started | - |
-| 2. Repo Cleanup & Design Consistency | 0/2 | Planned | - |
-| 3. Onboarding & Personalization | 2/2 | Complete   | 2026-04-01 |
-| 4. Value Communication | 2/2 | Complete   | 2026-04-02 |
-| 5. Conversion Surfaces | 1/2 | In Progress|  |
-| 6. App Store Submission | 0/TBD | Not started | - |
-| 7. Engine TypeScript Migration | 0/TBD | Not started | - |
-| 8. Cloud Sync & Social | 7/9 | Gap closure | 2026-04-02 |
+|-------|---------------|--------|-----------|
+| 1. Foundation | 2/2 | Complete | 2026-04-04 |
+| 2. Quiz Experience | 0/2 | Not started | - |
+| 3. Sacred Moments | 0/? | Not started | - |
+
+## Self-Review Gate
+
+Before marking any phase complete, list the screens changed, shared components added or modified, and what would still feel flat to a first-time user.
