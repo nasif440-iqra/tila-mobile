@@ -6,22 +6,22 @@ import Animated, {
   withSpring,
   withSequence,
   withTiming,
-  withDelay,
   Easing,
+  useReducedMotion,
 } from "react-native-reanimated";
-import { typography, spacing, radii, borderWidths, shadows } from "../tokens";
+import { typography, spacing, radii, borderWidths, shadows, fontFamilies } from "../tokens";
 import { useColors } from "../theme";
 import { springs, pressScale } from "../animations";
-import { hapticTap, hapticSuccess, hapticError } from "../haptics";
+import { hapticTap, hapticSuccess } from "../haptics";
 import { ArabicText } from "./ArabicText";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // ── 5-state option model ──
-// selectedCorrect: user picked this AND it's correct → celebrate
-// selectedWrong:   user picked this AND it's wrong → shake
-// revealedCorrect: user picked something else wrong, this IS the correct one → calm reveal only
-// dimmed:          answered, this is neither selected nor correct → fade out
+// selectedCorrect: user picked this AND it's correct -> celebrate with gold glow
+// selectedWrong:   user picked this AND it's wrong -> gentle opacity dim
+// revealedCorrect: user picked something else wrong, this IS the correct one -> warm glow reveal
+// dimmed:          answered, this is neither selected nor correct -> fade out
 // default:         unanswered
 type QuizOptionState = "default" | "selectedCorrect" | "selectedWrong" | "revealedCorrect" | "dimmed";
 
@@ -47,58 +47,55 @@ export function QuizOption({
   style,
 }: QuizOptionProps) {
   const colors = useColors();
+  const reducedMotion = useReducedMotion();
   const scale = useSharedValue(1);
   const translateX = useSharedValue(0);
   const glowOpacity = useSharedValue(0);
-  const plusOneOpacity = useSharedValue(0);
-  const plusOneY = useSharedValue(0);
-  const plusOneScale = useSharedValue(0.8);
+  const wrongOpacity = useSharedValue(1);
 
   useEffect(() => {
     if (state === "selectedCorrect") {
-      // Quick confident pulse
-      scale.value = withSequence(
-        withTiming(1.04, { duration: 150 }),
-        withTiming(1, { duration: 150 })
-      );
-      // Subtle glow
-      glowOpacity.value = withSequence(
-        withTiming(0.3, { duration: 180 }),
-        withTiming(0.1, { duration: 300 }),
-        withTiming(0, { duration: 200 })
-      );
-      // Floating "+1"
-      plusOneOpacity.value = withSequence(
-        withTiming(1, { duration: 80 }),
-        withDelay(200, withTiming(0, { duration: 350, easing: Easing.out(Easing.cubic) }))
-      );
-      plusOneY.value = withTiming(-56, { duration: 650, easing: Easing.bezierFn(0.2, 0.8, 0.4, 1) });
-      plusOneScale.value = withSequence(
-        withTiming(1.3, { duration: 250 }),
-        withTiming(1.3, { duration: 400 })
-      );
+      if (reducedMotion) {
+        // Skip animations, apply final states instantly
+        scale.value = 1;
+        glowOpacity.value = 0;
+      } else {
+        // Quick confident pulse
+        scale.value = withSequence(
+          withTiming(1.04, { duration: 150 }),
+          withTiming(1, { duration: 150 })
+        );
+        // Gold glow flash
+        glowOpacity.value = withSequence(
+          withTiming(0.15, { duration: 200, easing: Easing.out(Easing.cubic) }),
+          withTiming(0, { duration: 300, easing: Easing.in(Easing.cubic) })
+        );
+      }
       hapticSuccess();
     } else if (state === "selectedWrong") {
-      // Snappy shake — fewer oscillations, quicker settle
-      translateX.value = withSequence(
-        withTiming(-6, { duration: 50 }),
-        withTiming(6, { duration: 60 }),
-        withTiming(-4, { duration: 60 }),
-        withTiming(4, { duration: 60 }),
-        withTiming(0, { duration: 70 })
-      );
-      hapticError();
+      if (reducedMotion) {
+        wrongOpacity.value = 0.7;
+      } else {
+        // Gentle opacity dip -- no shake, no buzz
+        wrongOpacity.value = withSequence(
+          withTiming(0.5, { duration: 200, easing: Easing.out(Easing.cubic) }),
+          withTiming(0.7, { duration: 200, easing: Easing.in(Easing.cubic) })
+        );
+      }
+      hapticTap();
     } else if (state === "revealedCorrect") {
-      // NO celebration, NO haptic, NO pulse, NO +1
-      // Just calm visual state — handled by colors below
+      // Warm glow to illuminate correct answer (D-08: 0.20 opacity)
+      if (reducedMotion) {
+        glowOpacity.value = 0.20;
+      } else {
+        glowOpacity.value = withTiming(0.20, { duration: 400, easing: Easing.inOut(Easing.ease) });
+      }
     } else {
       // Reset all animation state cleanly
       translateX.value = 0;
       scale.value = 1;
       glowOpacity.value = 0;
-      plusOneOpacity.value = 0;
-      plusOneY.value = 0;
-      plusOneScale.value = 0.8;
+      wrongOpacity.value = 1;
     }
   }, [state]);
 
@@ -108,14 +105,6 @@ export function QuizOption({
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: glowOpacity.value,
-  }));
-
-  const plusOneStyle = useAnimatedStyle(() => ({
-    opacity: plusOneOpacity.value,
-    transform: [
-      { translateY: plusOneY.value },
-      { scale: plusOneScale.value },
-    ],
   }));
 
   function handlePressIn() {
@@ -137,17 +126,18 @@ export function QuizOption({
 
   const isPressable = state === "default" && !disabled;
   const isDimmed = state === "dimmed";
+  const isWrong = state === "selectedWrong";
 
   // Color mapping for all 5 states
   const backgroundColor =
     state === "selectedCorrect" ? colors.primarySoft
-    : state === "selectedWrong" ? colors.dangerLight
+    : state === "selectedWrong" ? colors.accentLight
     : state === "revealedCorrect" ? colors.primarySoft
     : colors.bgCard;
 
   const borderColor =
-    state === "selectedCorrect" ? colors.primary
-    : state === "selectedWrong" ? colors.danger
+    state === "selectedCorrect" ? colors.accent
+    : state === "selectedWrong" ? colors.border
     : state === "revealedCorrect" ? colors.primary
     : colors.border;
 
@@ -158,7 +148,7 @@ export function QuizOption({
 
   const textColor =
     state === "selectedCorrect" ? colors.primaryDark
-    : state === "selectedWrong" ? colors.danger
+    : state === "selectedWrong" ? colors.brown
     : state === "revealedCorrect" ? colors.primaryDark
     : colors.text;
 
@@ -176,18 +166,18 @@ export function QuizOption({
             backgroundColor,
             borderColor,
             borderWidth: borderW,
-            opacity: isDimmed ? 0.45 : 1,
+            opacity: isDimmed ? 0.35 : isWrong ? wrongOpacity.value : 1,
           },
           animatedStyle,
         ]}
         accessibilityRole="button"
       >
-        {/* Correct glow overlay — only on selectedCorrect */}
-        {state === "selectedCorrect" && (
+        {/* Gold glow overlay -- on selectedCorrect and revealedCorrect */}
+        {(state === "selectedCorrect" || state === "revealedCorrect") && (
           <Animated.View
             style={[
               StyleSheet.absoluteFill,
-              { borderRadius: radii.xl, backgroundColor: colors.primary },
+              { borderRadius: radii.xl, backgroundColor: colors.accent },
               glowStyle,
             ]}
             pointerEvents="none"
@@ -195,7 +185,7 @@ export function QuizOption({
         )}
 
         {isArabic ? (
-          <ArabicText size="large" color={textColor}>
+          <ArabicText size="quizOption" color={textColor}>
             {label}
           </ArabicText>
         ) : isSound ? (
@@ -209,13 +199,6 @@ export function QuizOption({
           <Text style={[styles.text, { color: textColor }]}>{label}</Text>
         )}
       </AnimatedPressable>
-
-      {/* Floating "+1" — only on selectedCorrect */}
-      {state === "selectedCorrect" && (
-        <Animated.View style={[styles.plusOneContainer, plusOneStyle]} pointerEvents="none">
-          <Text style={[styles.plusOneText, { color: colors.accent }]}>+1</Text>
-        </Animated.View>
-      )}
     </View>
   );
 }
@@ -232,7 +215,9 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   text: {
-    ...typography.heading3,
+    fontFamily: fontFamilies.headingSemiBold,
+    fontSize: 20,
+    lineHeight: 28,
   },
   soundContent: {
     alignItems: "center",
@@ -247,17 +232,5 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 14,
     textAlign: "center",
-  },
-  plusOneContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-    zIndex: 10,
-  },
-  plusOneText: {
-    fontSize: 18,
-    fontWeight: "700",
   },
 });

@@ -2,7 +2,7 @@ import { Text, type TextProps, type TextStyle } from "react-native";
 import { typography } from "../tokens";
 import { useColors } from "../theme";
 
-type ArabicSize = "display" | "large" | "body";
+type ArabicSize = "display" | "quizOption" | "large" | "body";
 
 interface ArabicTextProps extends Omit<TextProps, "style"> {
   size?: ArabicSize;
@@ -13,6 +13,7 @@ interface ArabicTextProps extends Omit<TextProps, "style"> {
 
 const SIZE_MAP: Record<ArabicSize, { fontFamily: string; fontSize: number; lineHeight: number }> = {
   display: typography.arabicDisplay,
+  quizOption: { fontFamily: typography.arabicLarge.fontFamily, fontSize: 52, lineHeight: 114 },
   large: typography.arabicLarge,
   body: typography.arabicBody,
 };
