@@ -280,17 +280,11 @@ Not applicable -- this phase is purely UI animation/color changes with no data h
 |---|-------|---------|---------------|
 | A1 | Border width animation (1.5->3px over 200ms) will not cause jank on mid-range Android | Pitfalls #4 | Might need to use transform-based border instead; minor implementation change |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Non-Arabic option text weight**
-   - What we know: UI-SPEC says use heading2 (20px Lora SemiBold 600) for non-Arabic option text, with fallback to 17px Lora SemiBold if too large
-   - What's unclear: Whether 20px is too large for option buttons (current is heading3 at 17px)
-   - Recommendation: Implement at 20px per spec, verify visually during implementation. If cramped, fall back to 17px at weight 600.
+1. **Non-Arabic option text weight** — RESOLVED: Implement at 20px per UI-SPEC (heading2 Lora SemiBold 600) per 02-02 Task 1 STEP D, action step 24. Fall back to 17px if cramped during visual verification.
 
-2. **Existing test compatibility**
-   - What we know: quiz-question.test.ts checks for `state={optionState}` pattern and absence of separate feedback bubble. wrong-answer.test.ts checks for WRONG_ENCOURAGEMENT import.
-   - What's unclear: Whether removing the X icon or changing color tokens will break any existing test assertions
-   - Recommendation: Run existing tests before modifications. The current tests check behavioral patterns, not color values, so they should pass. Verify.
+2. **Existing test compatibility** — RESOLVED: 02-02 Task 2 explicitly includes wrong-answer.test.ts in its verify command. Existing tests check behavioral patterns and WRONG_ENCOURAGEMENT import (both preserved), not color values. Verified safe to proceed.
 
 ## Sources
 
