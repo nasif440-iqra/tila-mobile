@@ -47,15 +47,12 @@ export function WrongAnswerPanel({
       entering={FadeInUp.duration(350)}
       style={[
         styles.panel,
-        { backgroundColor: colors.dangerLight },
+        { backgroundColor: colors.accentLight },
       ]}
     >
       {/* Explanation row */}
       <View style={styles.explanationRow}>
-        <Text style={[styles.icon, { color: colors.danger }]}>
-          {"\u2717"}
-        </Text>
-        <Text style={[styles.explanationText, { color: colors.dangerDark }]}>
+        <Text style={[styles.explanationText, { color: colors.brown }]}>
           {explanationText}
         </Text>
       </View>
@@ -65,10 +62,10 @@ export function WrongAnswerPanel({
         <View style={styles.compareRow}>
           {/* Chosen — visually de-emphasized */}
           <View style={[styles.compareItem, { opacity: 0.5 }]}>
-            <ArabicText size="large" color={colors.danger} style={{ fontSize: 32, lineHeight: 44 }}>
+            <ArabicText size="large" color={colors.textMuted} style={{ fontSize: 32, lineHeight: 44 }}>
               {chosenLetter.letter}
             </ArabicText>
-            <Text style={[styles.compareName, { color: colors.dangerDark }]}>
+            <Text style={[styles.compareName, { color: colors.textMuted }]}>
               {chosenLetter.name}
             </Text>
           </View>
@@ -110,7 +107,7 @@ export function WrongAnswerPanel({
                 size={36}
                 accessibilityLabel="Hear your pick"
               />
-              <Text style={[styles.hearLabel, { color: colors.danger }]}>
+              <Text style={[styles.hearLabel, { color: colors.textMuted }]}>
                 Hear your pick
               </Text>
             </View>
@@ -142,11 +139,6 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     gap: spacing.sm,
   },
-  icon: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginTop: 1,
-  },
   explanationText: {
     ...typography.bodySmall,
     fontWeight: "600",
@@ -165,7 +157,7 @@ const styles = StyleSheet.create({
   },
   compareName: {
     ...typography.caption,
-    fontWeight: "700",
+    fontFamily: fontFamilies.bodySemiBold,
     marginTop: 2,
   },
   compareArrow: {
