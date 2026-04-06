@@ -78,3 +78,23 @@ Phases execute in numeric order: 1 -> 2 -> 3
 ## Self-Review Gate
 
 Before marking any phase complete, list the screens changed, shared components added or modified, and what would still feel flat to a first-time user.
+
+### Phase 4: Dark Mode & UI Polish
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 3
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 4 to break down)
+
+### Phase 5: Quiz & Learning Engine — 4 options, question types, lesson insights
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 4
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 5 to break down)
