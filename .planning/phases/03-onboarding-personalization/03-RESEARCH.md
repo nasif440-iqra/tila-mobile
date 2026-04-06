@@ -498,17 +498,13 @@ useEffect(() => {
 | A3 | Tilawah screen PhraseReveal applies to the single Arabic word only, not a longer verse | Code Examples | Low -- the screen currently shows one Arabic word with English headline. |
 | A4 | Skip-ahead behavior (D-02 "Tap anywhere to skip ahead") means tapping reveals all remaining words instantly | Architecture Patterns | Low -- standard skip pattern. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Hadith Screen: What text gets PhraseReveal treatment?**
-   - What we know: D-12 says "Replace static quote with word-by-word PhraseReveal." Current Hadith.tsx shows English-only quote. Success Criteria #2 says "Sacred Arabic phrases (Bismillah, Tilawah quote, Hadith quote) reveal word-by-word with transliteration."
-   - What's unclear: Should PhraseReveal reveal Arabic text (new content) or the existing English text word-by-word? Adding Arabic hadith text is new content that was not previously on this screen.
-   - Recommendation: Add the Arabic hadith text and reveal it word-by-word with transliteration, then show the English translation after reveal completes (matching D-04 pattern for non-Bismillah screens). If this is too much new content scope, the planner should flag it for confirmation.
+1. **Hadith Screen: What text gets PhraseReveal treatment?** -- RESOLVED
+   - Resolution: Add Arabic hadith text and reveal it word-by-word with transliteration (6 words from Sahih al-Bukhari 4937). English translation appears after reveal completes per D-04 pattern. Implemented in Plan 02, Task 3.
 
-2. **Tilawah Screen: Single-Word PhraseReveal Value**
-   - What we know: Current screen has one Arabic word. D-11 says replace static Arabic with PhraseReveal.
-   - What's unclear: A single-word reveal is essentially a fade-in with transliteration. Is that sufficient?
-   - Recommendation: Apply PhraseReveal to the single word. The value is the transliteration appearing beneath -- teaching the word, not just displaying it. The ShimmerWord in the English headline is removed and replaced with static styled text.
+2. **Tilawah Screen: Single-Word PhraseReveal Value** -- RESOLVED
+   - Resolution: Apply PhraseReveal to the single Arabic word. The value is the transliteration appearing beneath -- teaching the word, not just displaying it. ShimmerWord removed and replaced with static accent-colored text per D-11. Implemented in Plan 02, Task 2.
 
 ## Validation Architecture
 
