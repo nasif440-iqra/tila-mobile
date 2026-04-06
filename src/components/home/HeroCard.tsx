@@ -120,8 +120,8 @@ export default function HeroCard({
             pulseMin={0.12}
             pulseMax={0.35}
           />
-          <View style={[styles.letterCircle, { backgroundColor: colors.bgCard, borderColor: colors.border }]}>
-            <ArabicText size="display" color={colors.primary}>
+          <View style={[styles.letterCircle, { backgroundColor: colors.bgCard, borderColor: colors.border, overflow: 'visible' }]}>
+            <ArabicText size="quizHero" color={colors.primary}>
               {heroLetter ? heroLetter.letter : "?"}
             </ArabicText>
           </View>
