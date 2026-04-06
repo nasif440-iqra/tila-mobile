@@ -2,7 +2,7 @@ import { ARABIC_LETTERS, getLetter } from "../../data/letters.js";
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { ArabicLetter } from "../../types/engine";
-import { shuffle, getDistractors, getConfusionDistractors, getRuleDistractors, makeOpts, makeNameOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP } from "./shared.js";
+import { shuffle, getDistractors, getConfusionDistractors, getRuleDistractors, makeOpts, makeNameOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP } from "./shared";
 
 interface LetterEntry {
   attempts?: number;

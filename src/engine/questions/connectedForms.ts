@@ -3,7 +3,7 @@ import { getConnectedForms, doesLetterJoin, getBreakerIds } from "../../data/con
 import type { Lesson } from "../../types/lesson";
 import type { ArabicLetter, ConnectedFormData } from "../../types/engine";
 import type { QuestionOption } from "../../types/question";
-import { shuffle, pickRandom } from "./shared.js";
+import { shuffle, pickRandom } from "./shared";
 
 const POSITIONS = ["isolated", "initial", "medial", "final"] as const;
 type Position = typeof POSITIONS[number];

@@ -2,7 +2,7 @@ import { getLetter } from "../../data/letters.js";
 import type { Lesson } from "../../types/lesson";
 import type { Question } from "../../types/question";
 import type { ArabicLetter } from "../../types/engine";
-import { shuffle, pickRandom, getKnownIds, getConfusionDistractors, makeOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP, SOUND_PROMPTS } from "./shared.js";
+import { shuffle, pickRandom, getKnownIds, getConfusionDistractors, makeOpts, makeSoundOpts, getSoundPrompt, getLetterSoundPrompt, SOUND_CONFUSION_MAP, SOUND_PROMPTS } from "./shared";
 
 export function generateSoundQs(lesson: Lesson): Question[] {
   const known = getKnownIds(lesson.id);

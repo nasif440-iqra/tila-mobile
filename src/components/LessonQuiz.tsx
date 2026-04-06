@@ -21,7 +21,7 @@ import {
   playWrong,
 } from "../audio/player";
 import { getLetter } from "../data/letters";
-import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations.js";
+import { getWrongExplanation, getContrastExplanation, getHarakatWrongExplanation } from "../engine/questions/explanations";
 import { track } from "../analytics";
 // haptics now handled in StreakMilestoneOverlay
 import useLessonQuiz, { computeQuizProgress } from "../hooks/useLessonQuiz";

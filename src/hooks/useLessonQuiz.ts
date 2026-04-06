@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   generateLessonQuestions,
   shuffle,
-} from "../engine/questions/index.js";
+} from "../engine/questions/index";
 import type { Lesson } from '../types/lesson';
 import type { ProgressState } from '../engine/progress';
 import type { Question, QuestionOption } from '../types/question';

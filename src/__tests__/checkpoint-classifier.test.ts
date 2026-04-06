@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { generateCheckpointQs } from "../engine/questions/checkpoint.js";
+import { generateCheckpointQs } from "../engine/questions/checkpoint";
 import { LESSONS } from "../data/lessons.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
