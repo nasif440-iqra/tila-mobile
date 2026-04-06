@@ -1,12 +1,16 @@
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { supabase } from './supabase';
 
-// Configure Google Sign-In at module load.
-// Must use the **Web application** OAuth client ID (not iOS/Android) --
-// this is required for Supabase signInWithIdToken validation (pitfall #3).
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
-});
+// Lazily configure Google Sign-In — calling configure() at module load
+// crashes on iOS with a TurboModule ObjC exception (SIGABRT).
+let _configured = false;
+function ensureConfigured() {
+  if (_configured) return;
+  _configured = true;
+  GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!,
+  });
+}
 
 /**
  * Sign in with Google using native credential prompt.
@@ -17,6 +21,7 @@ export async function signInWithGoogle(): Promise<{
   error: Error | null;
 }> {
   try {
+    ensureConfigured();
     await GoogleSignin.hasPlayServices();
     const response = await GoogleSignin.signIn();
 
