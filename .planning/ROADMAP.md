@@ -91,10 +91,11 @@ Plans:
 
 ### Phase 5: Quiz & Learning Engine — 4 options, question types, lesson insights
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** All quiz questions show 4 options, recognition mode balances rule/name/reverse identification equally, and post-lesson insights celebrate mastery progress instead of showing confusing scheduling language
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09
 **Depends on:** Phase 4
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 5 to break down)
+- [ ] 05-01-PLAN.md — 4 options across all generators + recognition type balance (33/33/33 rule/name/reverse)
+- [ ] 05-02-PLAN.md — Rewrite lesson insights: mastery celebration + confusion awareness, remove scheduling language
