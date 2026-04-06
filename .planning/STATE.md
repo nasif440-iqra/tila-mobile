@@ -66,6 +66,11 @@ Recent decisions affecting current work:
 
 None yet.
 
+### Roadmap Evolution
+
+- Phase 4 added: Dark Mode & UI Polish — Fix dark mode color palette, streak banner completeness, onboarding progress bar
+- Phase 5 added: Quiz & Learning Engine — 4 multiple choice options, more identify-the-letter questions, better lesson insights
+
 ### Blockers/Concerns
 
 - [Research] Profile Reanimated 4.2.1 + New Architecture on mid-range Android before Phase 2. If regression is severe, reduce per-screen shared value budget below 15.
