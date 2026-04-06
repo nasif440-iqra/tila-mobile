@@ -5,14 +5,16 @@ import Animated, {
   FadeInDown,
   useSharedValue,
   useAnimatedStyle,
-  withSpring,
+  withSequence,
+  withTiming,
+  Easing,
   interpolate,
 } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { useColors } from "../../../design/theme";
 import { ArabicText, Button } from "../../../design/components";
 import { spacing, radii, fontFamilies } from "../../../design/tokens";
-import { springs } from "../../../design/animations";
+import { durations } from "../../../design/animations";
 import { hapticSuccess } from "../../../design/haptics";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import {
@@ -41,20 +43,23 @@ export function Finish({
   const subtextDelay = SPLASH_STAGGER_BASE * 2;
   const ctaDelay = SPLASH_STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
 
-  // Bouncy spring checkmark entrance
-  const scale = useSharedValue(0.5);
+  // Gentle scale settle — sacred moment, not bouncy
+  const scale = useSharedValue(0.85);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       hapticSuccess();
-      scale.value = withSpring(1.0, springs.bouncy);
+      scale.value = withSequence(
+        withTiming(1.03, { duration: durations.slow, easing: Easing.out(Easing.cubic) }),
+        withTiming(1.0, { duration: durations.normal, easing: Easing.inOut(Easing.ease) })
+      );
     }, checkDelay);
     return () => clearTimeout(timer);
   }, []);
 
   const checkAnimStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-    opacity: interpolate(scale.value, [0.5, 1.0], [0, 1]),
+    opacity: interpolate(scale.value, [0.85, 1.0], [0, 1]),
   }));
 
   return (
@@ -100,7 +105,7 @@ export function Finish({
         </ArabicText>
       </Animated.View>
 
-      {/* Checkmark circle — bouncy spring entrance */}
+      {/* Checkmark circle — gentle scale settle */}
       <Animated.View
         style={[
           styles.checkCircle,
