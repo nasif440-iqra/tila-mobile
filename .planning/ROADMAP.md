@@ -81,13 +81,24 @@ Before marking any phase complete, list the screens changed, shared components a
 
 ### Phase 4: Dark Mode & UI Polish — Fix dark mode color palette, streak banner completeness, onboarding progress bar
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Dark mode feels like a dimly lit mosque at night with warm earth tones, streak celebrations feel organic and varied, and the onboarding progress bar blends into the atmosphere
+**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08
 **Depends on:** Phase 3
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. Dark mode uses warm charcoal-brown backgrounds and cream text instead of cold green tones
+  2. Gold accent (#C4A464) is preserved unchanged in dark mode
+  3. AtmosphereBackground dark gradients match the warm brown palette
+  4. Streak celebrations vary between banners and popups based on streak tier
+  5. Non-milestone streaks occasionally trigger surprise celebrations (~15-20%)
+  6. Streak overlay uses theme-aware colors (not hardcoded light mode)
+  7. Onboarding progress bar is thin and barely visible
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 4 to break down)
+- [ ] 04-01-PLAN.md — Dark palette rewrite (warm earth tokens), atmosphere dark presets, minimal progress bar
+- [ ] 04-02-PLAN.md — Streak celebration variety system (dispatch logic, theme-aware overlay, varied messaging)
+
+**UI hint**: yes
 
 ### Phase 5: Quiz & Learning Engine — 4 multiple choice options, more identify-the-letter questions, better lesson insights
 
