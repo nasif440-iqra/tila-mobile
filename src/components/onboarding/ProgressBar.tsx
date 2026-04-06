@@ -15,13 +15,17 @@ export function ProgressBar({
       {Array.from({ length: total }, (_, i) => (
         <View
           key={i}
-          style={[progressStyles.track, { backgroundColor: colors.border }]}
+          style={[
+            progressStyles.track,
+            { backgroundColor: colors.border, opacity: 0.4 },
+          ]}
         >
           <View
             style={[
               progressStyles.fill,
               {
                 backgroundColor: colors.primary,
+                opacity: 0.6,
                 width: i < current ? "100%" : i === current ? "50%" : "0%",
               },
             ]}
@@ -35,17 +39,17 @@ export function ProgressBar({
 const progressStyles = StyleSheet.create({
   bar: {
     flexDirection: "row",
-    gap: 3,
+    gap: 2,
     width: "100%",
   },
   track: {
     flex: 1,
-    height: 2.5,
-    borderRadius: 1.5,
+    height: 1.5,
+    borderRadius: 1,
     overflow: "hidden",
   },
   fill: {
     height: "100%",
-    borderRadius: 2,
+    borderRadius: 1,
   },
 });
