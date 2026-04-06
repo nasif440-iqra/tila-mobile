@@ -3,11 +3,7 @@ import { useColorScheme } from "react-native";
 import { Stack } from "expo-router";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
-import * as Sentry from "@sentry/react-native";
-import { initSentry } from "../src/analytics/sentry";
-
-// Initialize Sentry FIRST so it captures any crash during startup
-try { initSentry(); } catch (e) { console.warn("Early Sentry init failed:", e); }
+import { ErrorBoundary } from "react-error-boundary";
 import { AnalyticsGate } from "../src/components/shared/AnalyticsGate";
 import { AppLoadingScreen } from "../src/components/feedback/AppLoadingScreen";
 import { ErrorFallback } from "../src/components/feedback/ErrorFallback";
@@ -125,9 +121,7 @@ export default function RootLayout() {
   }
 
   return (
-    <Sentry.ErrorBoundary fallback={({ resetError }) => (
-      <ErrorFallback onRetry={resetError} />
-    )}>
+    <ErrorBoundary fallback={<ErrorFallback onRetry={() => {}} />}>
       <DatabaseProvider fallback={<AppLoadingScreen />}>
         <ThemeWrapper>
           <AuthProvider>
@@ -145,6 +139,6 @@ export default function RootLayout() {
           </AuthProvider>
         </ThemeWrapper>
       </DatabaseProvider>
-    </Sentry.ErrorBoundary>
+    </ErrorBoundary>
   );
 }
