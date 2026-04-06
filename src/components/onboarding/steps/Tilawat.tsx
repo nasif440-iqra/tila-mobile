@@ -1,17 +1,12 @@
-import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   FadeIn,
   FadeInDown,
   FadeInUp,
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  Easing,
 } from "react-native-reanimated";
 import { useColors } from "../../../design/theme";
-import { ArabicText, Button } from "../../../design/components";
+import { Button, PhraseReveal } from "../../../design/components";
+import type { PhraseWord } from "../../../design/components";
 import { spacing, fontFamilies } from "../../../design/tokens";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
 import {
@@ -21,30 +16,11 @@ import {
   CTA_DURATION,
 } from "../animations";
 
-function ShimmerWord() {
-  const colors = useColors();
-  const opacity = useSharedValue(0.35);
+// ── Tilawah word data ──
 
-  useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(1, { duration: 1800, easing: Easing.linear }),
-      -1,
-      true,
-    );
-  }, []);
-
-  const animStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  return (
-    <Animated.View style={animStyle}>
-      <Text style={[styles.tilawatWord, { color: colors.accent }]}>
-        Tilawat
-      </Text>
-    </Animated.View>
-  );
-}
+const TILAWAH_WORDS: PhraseWord[] = [
+  { arabic: "\u062A\u0650\u0644\u0627\u0648\u064E\u0629", transliteration: "Tilawah" },
+];
 
 export function Tilawat({ onNext }: { onNext: () => void }) {
   const colors = useColors();
@@ -67,20 +43,21 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
         </Animated.View>
       }
     >
-      {/* Arabic calligraphy */}
+      {/* Arabic calligraphy via PhraseReveal */}
       <Animated.View entering={FadeInDown.delay(calligraphyDelay).duration(SPLASH_STAGGER_DURATION)}>
-        <ArabicText
-          size="display"
-          color={colors.primaryDark}
-          style={{ fontSize: 56, lineHeight: 78, zIndex: 1 }}
-        >
-          {"\u062A\u0650\u0644\u0627\u0648\u064E\u0629"}
-        </ArabicText>
+        <PhraseReveal
+          words={TILAWAH_WORDS}
+          layout="vertical"
+          arabicSize="display"
+          arabicStyle={{ fontSize: 56, lineHeight: 78 }}
+          wordDuration={700}
+          accessibilityLabel="Tilawah - to recite the Quran beautifully"
+        />
       </Animated.View>
 
       <View style={{ height: spacing.lg }} />
 
-      {/* Headline — two-part layout for hierarchy */}
+      {/* Headline */}
       <Animated.View
         entering={FadeInDown.delay(headlineDelay).duration(SPLASH_STAGGER_DURATION)}
         style={{ alignItems: "center", zIndex: 1 }}
@@ -92,7 +69,9 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
           <Text style={[styles.headlineBody, { color: colors.brown }]}>
             beautifully is{" "}
           </Text>
-          <ShimmerWord />
+          <Text style={[styles.tilawatWord, { color: colors.accent }]}>
+            Tilawah
+          </Text>
         </View>
       </Animated.View>
 
