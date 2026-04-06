@@ -75,6 +75,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260406-iq4 | Fix 5 device testing issues from Sacred Moments | 2026-04-06 | 95e3c16 | [260406-iq4](./quick/260406-iq4-fix-5-device-testing-issues-from-phase-0/) |
+| 260406-m5t | Fix letter circles - theme-aware dark mode | 2026-04-06 | d3f9893 | [260406-m5t](./quick/260406-m5t-fix-letter-circles-dark-mode/) |
 
 ## Session Continuity
 
