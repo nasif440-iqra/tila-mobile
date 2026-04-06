@@ -92,12 +92,12 @@ function LetterPrompt({
           style={[
             styles.letterCircle,
             {
-              backgroundColor: "#F2F5F3",
-              borderColor: "rgba(255, 255, 255, 0.8)",
+              backgroundColor: colors.primarySoft,
+              borderColor: colors.primary,
             },
           ]}
         >
-          <ArabicText size="display" color={colors.primaryDark}>
+          <ArabicText size="display" color={colors.primary}>
             {prompt}
           </ArabicText>
         </View>
