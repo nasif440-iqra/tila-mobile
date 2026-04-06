@@ -30,7 +30,8 @@ describe('generatePostLessonInsights', () => {
 
     const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
 
-    expect(insights.every(i => i.type !== 'review')).toBe(true);
+    // Cast to string to verify at runtime that no 'review' type leaks through
+    expect(insights.every(i => (i.type as string) !== 'review')).toBe(true);
   });
 
   it('never contains day names or "Review X on" pattern in any message (D-06)', () => {
