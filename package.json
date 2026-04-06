@@ -67,15 +67,5 @@
     "typescript": "~5.9.2",
     "vitest": "^4.1.2"
   },
-  "private": true,
-  "expo": {
-    "autolinking": {
-      "exclude": [
-        "react-native-purchases",
-        "react-native-purchases-ui",
-        "@react-native-google-signin/google-signin",
-        "@sentry/react-native"
-      ]
-    }
-  }
+  "private": true
 }
