@@ -76,14 +76,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-asset",
     "expo-apple-authentication",
     "expo-web-browser",
-    "@react-native-google-signin/google-signin",
-    [
-      "@sentry/react-native/expo",
-      {
-        organization: "tila",
-        project: "tila-mobile",
-      },
-    ],
+    // "@react-native-google-signin/google-signin", // disabled for beta — re-enable with monetization
+    // ["@sentry/react-native/expo", { organization: "tila", project: "tila-mobile" }], // disabled for beta — native module crashes on iOS
   ],
   extra: {
     eas: {
