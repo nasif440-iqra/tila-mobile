@@ -21,15 +21,19 @@ export function initRevenueCat(): void {
     console.log("[RevenueCat] Initializing with key:", apiKey.slice(0, 10) + "...");
   }
 
-  try {
-    Purchases.configure({ apiKey });
-    _initialized = true;
-    if (__DEV__) {
-      console.log("[RevenueCat] Configured successfully");
+  // Defer configure to avoid TurboModule ObjC exceptions on startup.
+  // RevenueCat will be configured on first subscription check instead.
+  setTimeout(() => {
+    try {
+      Purchases.configure({ apiKey });
+      _initialized = true;
+      if (__DEV__) {
+        console.log("[RevenueCat] Configured successfully");
+      }
+    } catch (e) {
+      Sentry.captureException(e);
+      console.warn('RevenueCat init failed:', e);
+      // _initialized remains false — app defaults to free tier
     }
-  } catch (e) {
-    Sentry.captureException(e);
-    console.warn('RevenueCat init failed:', e);
-    // _initialized remains false — app defaults to free tier
-  }
+  }, 2000);
 }
