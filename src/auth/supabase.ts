@@ -2,6 +2,7 @@ import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 import * as aesjs from 'aes-js';
 
 /**
@@ -17,7 +18,7 @@ class LargeSecureStore {
     if (existing) {
       return aesjs.utils.hex.toBytes(existing);
     }
-    const key = crypto.getRandomValues(new Uint8Array(32));
+    const key = Crypto.getRandomValues(new Uint8Array(32));
     await SecureStore.setItemAsync(
       'supabase-encryption-key',
       aesjs.utils.hex.fromBytes(key),
