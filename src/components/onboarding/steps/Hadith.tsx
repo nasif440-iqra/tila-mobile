@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import Animated, { FadeIn, FadeInDown, FadeInUp } from "react-native-reanimated";
 import Svg, { Path } from "react-native-svg";
 import { useColors } from "../../../design/theme";
-import { Button, PhraseReveal } from "../../../design/components";
-import type { PhraseWord } from "../../../design/components";
+import { Button } from "../../../design/components";
 import { spacing, fontFamilies } from "../../../design/tokens";
 import { WarmGlow } from "../WarmGlow";
 import { OnboardingStepLayout } from "../OnboardingStepLayout";
@@ -14,16 +12,6 @@ import {
   CTA_DELAY_OFFSET,
   CTA_DURATION,
 } from "../animations";
-
-// ── Hadith Arabic word data ──
-
-const HADITH_WORDS: PhraseWord[] = [
-  { arabic: "\u0627\u0644\u0651\u064E\u0630\u0650\u064A", transliteration: "Alladhi" },
-  { arabic: "\u064A\u064E\u0642\u0652\u0631\u064E\u0623\u064F", transliteration: "Yaqra'u" },
-  { arabic: "\u0627\u0644\u0652\u0642\u064F\u0631\u0652\u0622\u0646\u064E", transliteration: "Al-Qur'ana" },
-  { arabic: "\u0648\u064E\u064A\u064E\u062A\u064E\u062A\u064E\u0639\u0652\u062A\u064E\u0639\u064F", transliteration: "wa yatata'ta'u" },
-  { arabic: "\u0641\u0650\u064A\u0647\u0650", transliteration: "fihi" },
-];
 
 function ArchOutline({ color }: { color: string }) {
   return (
@@ -42,16 +30,12 @@ function ArchOutline({ color }: { color: string }) {
 
 export function Hadith({ onNext }: { onNext: () => void }) {
   const colors = useColors();
-  const [revealComplete, setRevealComplete] = useState(false);
 
-  // Splash stagger: 0 = arabic reveal, 1 = headline, 2 = diamond, 3 = quote, 4 = source
   const headlineDelay = 0;
   const diamondDelay = SPLASH_STAGGER_BASE;
-  const ctaDelay = SPLASH_STAGGER_BASE * 4 + CTA_DELAY_OFFSET;
-
-  const handleRevealComplete = () => {
-    setRevealComplete(true);
-  };
+  const quoteDelay = SPLASH_STAGGER_BASE * 2;
+  const sourceDelay = SPLASH_STAGGER_BASE * 3;
+  const ctaDelay = SPLASH_STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
 
   return (
     <OnboardingStepLayout
@@ -88,50 +72,30 @@ export function Hadith({ onNext }: { onNext: () => void }) {
 
       <View style={{ height: spacing.lg }} />
 
-      {/* Arabic hadith text via PhraseReveal — horizontal RTL */}
-      <PhraseReveal
-        words={HADITH_WORDS}
-        layout="horizontal"
-        arabicSize="large"
-        arabicStyle={{ fontSize: 28, lineHeight: 56 }}
-        wordDuration={600}
-        staggerDelay={300}
-        onComplete={handleRevealComplete}
-        accessibilityLabel="The one who struggles with the Quran receives a double reward"
-      />
-
-      <View style={{ height: spacing.lg }} />
-
-      {/* English translation — appears after Arabic reveal */}
-      {revealComplete && (
-        <Animated.Text
-          entering={FadeIn.duration(600)}
-          style={[styles.hadithQuote, { color: colors.textSoft, zIndex: 1 }]}
-        >
-          {"\u201C"}The one who struggles with the Qur{"\u2019"}an receives
-          a double reward.{"\u201D"}
-        </Animated.Text>
-      )}
+      {/* Hadith quote */}
+      <Animated.Text
+        entering={FadeIn.delay(quoteDelay).duration(SPLASH_STAGGER_DURATION)}
+        style={[styles.hadithQuote, { color: colors.textSoft, zIndex: 1 }]}
+      >
+        {"\u201C"}The one who struggles with the Qur{"\u2019"}an receives
+        a double reward.{"\u201D"}
+      </Animated.Text>
 
       <View style={{ height: spacing.lg }} />
 
       {/* Divider line */}
-      {revealComplete && (
-        <Animated.View
-          entering={FadeIn.duration(400)}
-          style={[styles.dividerLine, { backgroundColor: colors.accent, zIndex: 1 }]}
-        />
-      )}
+      <Animated.View
+        entering={FadeIn.delay(sourceDelay).duration(400)}
+        style={[styles.dividerLine, { backgroundColor: colors.accent, zIndex: 1 }]}
+      />
 
       {/* Source */}
-      {revealComplete && (
-        <Animated.Text
-          entering={FadeIn.duration(400)}
-          style={[styles.hadithSource, { color: colors.textMuted, zIndex: 1 }]}
-        >
-          SAHIH AL-BUKHARI 4937
-        </Animated.Text>
-      )}
+      <Animated.Text
+        entering={FadeIn.delay(sourceDelay).duration(400)}
+        style={[styles.hadithSource, { color: colors.textMuted, zIndex: 1 }]}
+      >
+        SAHIH AL-BUKHARI 4937
+      </Animated.Text>
     </OnboardingStepLayout>
   );
 }

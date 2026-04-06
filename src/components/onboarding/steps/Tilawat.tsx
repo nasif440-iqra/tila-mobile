@@ -16,10 +16,10 @@ import {
   CTA_DURATION,
 } from "../animations";
 
-// ── Tilawah word data ──
+// ── Tilawat word data ──
 
 const TILAWAH_WORDS: PhraseWord[] = [
-  { arabic: "\u062A\u0650\u0644\u0627\u0648\u064E\u0629", transliteration: "Tilawah" },
+  { arabic: "\u062A\u0650\u0644\u0627\u0648\u064E\u0629", transliteration: "Tilawat" },
 ];
 
 export function Tilawat({ onNext }: { onNext: () => void }) {
@@ -51,7 +51,7 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
           arabicSize="display"
           arabicStyle={{ fontSize: 56, lineHeight: 78 }}
           wordDuration={700}
-          accessibilityLabel="Tilawah - to recite the Quran beautifully"
+          accessibilityLabel="Tilawat - to recite the Quran beautifully"
         />
       </Animated.View>
 
@@ -70,7 +70,7 @@ export function Tilawat({ onNext }: { onNext: () => void }) {
             beautifully is{" "}
           </Text>
           <Text style={[styles.tilawatWord, { color: colors.accent }]}>
-            Tilawah
+            Tilawat
           </Text>
         </View>
       </Animated.View>

@@ -21,8 +21,8 @@ describe("BismillahMoment", () => {
     expect(arabicMatches!.length).toBe(4);
   });
 
-  it("uses vertical layout", () => {
-    expect(componentSource).toContain('layout="vertical"');
+  it("uses horizontal layout", () => {
+    expect(componentSource).toContain('layout="horizontal"');
   });
 
   it("has Continue CTA button (no auto-advance)", () => {

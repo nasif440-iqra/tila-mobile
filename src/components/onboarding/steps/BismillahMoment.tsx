@@ -29,7 +29,7 @@ export function BismillahMoment({ onNext }: { onNext: () => void }) {
   };
 
   // Total reveal time for CTA delay calculation
-  const totalRevealTime = (BISMILLAH_WORDS.length - 1) * 350 + 700;
+  const totalRevealTime = (BISMILLAH_WORDS.length - 1) * 800 + 1200;
 
   return (
     <OnboardingStepLayout
@@ -52,10 +52,10 @@ export function BismillahMoment({ onNext }: { onNext: () => void }) {
     >
       <PhraseReveal
         words={BISMILLAH_WORDS}
-        layout="vertical"
+        layout="horizontal"
         arabicSize="large"
-        wordDuration={700}
-        staggerDelay={350}
+        wordDuration={1200}
+        staggerDelay={800}
         onComplete={handleRevealComplete}
         accessibilityLabel="Bismillah ir-Rahman ir-Raheem. In the name of God, the Most Gracious, the Most Merciful."
       />
