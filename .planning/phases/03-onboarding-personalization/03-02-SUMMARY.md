@@ -2,104 +2,121 @@
 phase: 03-onboarding-personalization
 plan: 02
 subsystem: ui
-tags: [react-native, phrase-reveal, sacred-moments, onboarding, reanimated]
+tags: [react-native, greeting, personalization, tooltip, reanimated]
 
 # Dependency graph
 requires:
   - phase: 03-01
-    provides: "PhraseReveal component with PhraseWord API"
+    provides: "userName field in ProgressState, onboarding name/motivation collection"
 provides:
-  - "BismillahMoment rewritten as micro-lesson with PhraseReveal vertical layout"
-  - "Tilawat using PhraseReveal instead of ShimmerWord"
-  - "Hadith with Arabic PhraseReveal horizontal layout and post-reveal English translation"
-affects: [onboarding]
+  - "Personalized home greeting with name and motivation subtitle"
+  - "One-time wird explanation tooltip on first streak badge display"
+  - "Shared greeting helper utilities (src/utils/greetingHelpers.ts)"
+affects: [home-screen, onboarding]
 
 # Tech tracking
 tech-stack:
   added: []
   patterns:
-    - "PhraseWord data arrays defined as module-level constants for sacred text"
-    - "Post-reveal state pattern: onComplete callback sets revealComplete, gating UI elements"
+    - "Extract testable pure functions to src/utils/ for unit testing without React Native mocking"
 
 key-files:
-  created: []
+  created:
+    - src/components/home/WirdTooltip.tsx
+    - src/utils/greetingHelpers.ts
+    - src/__tests__/home-greeting.test.ts
+    - src/__tests__/wird-tooltip.test.ts
   modified:
-    - src/design/components/PhraseReveal.tsx
-    - src/design/components/index.ts
-    - src/components/onboarding/steps/BismillahMoment.tsx
-    - src/components/onboarding/steps/Tilawat.tsx
-    - src/components/onboarding/steps/Hadith.tsx
-    - src/__tests__/phrase-reveal.test.ts
-    - src/__tests__/phrase-reveal-barrel.test.ts
-    - src/__tests__/sacred-moments-animations.test.ts
-    - src/__tests__/finish-settle.test.ts
-    - src/__tests__/onboarding-flow-structure.test.ts
-    - src/__tests__/onboarding-atmosphere.test.ts
-    - src/__tests__/bismillah.test.ts
+    - app/(tabs)/index.tsx
+    - src/__tests__/motivation-mapping.test.ts
 
 key-decisions:
-  - "PhraseReveal rebuilt with PhraseWord interface (arabic, transliteration, meaning) replacing generic phrases:string[] API"
-  - "BismillahMoment auto-advance timer replaced with Continue CTA that appears after reveal completes"
-  - "Hadith English translation gated behind Arabic PhraseReveal completion for reading-first experience"
+  - "Extracted greeting logic to src/utils/greetingHelpers.ts to avoid React Native mock complexity in tests"
+  - "WirdTooltip uses absolute positioning without arrow pointer for simplicity"
 
 patterns-established:
-  - "Sacred text components use PhraseWord[] constants with PhraseReveal for consistent word-by-word reveal"
-  - "Post-reveal CTA pattern: useState(false) + onComplete callback + conditional rendering"
+  - "Pure logic extraction: testable functions live in src/utils/, imported by both components and tests"
 
-requirements-completed: []
+requirements-completed: [CONV-02, CONV-04]
 
 # Metrics
-duration: 8min
-completed: 2026-04-06
+duration: 5min
+completed: 2026-04-01
 ---
 
-# Phase 03 Plan 02: Sacred Moments PhraseReveal Integration Summary
+# Phase 03 Plan 02: Personalized Greeting & Wird Tooltip Summary
 
-**Rebuilt PhraseReveal with PhraseWord API (arabic/transliteration/meaning), then rewrote BismillahMoment, Tilawat, and Hadith to use word-by-word reveal with tap-to-skip and reduced motion support**
+**Home screen greeting personalized with user name (uppercase) and motivation subtitle, plus one-time wird explanation tooltip on first streak badge**
 
 ## Performance
 
-- **Duration:** 8 min
-- **Tasks:** 5 (2 fix + 3 feat)
-- **Files modified:** 12
-- **Tests:** 829 passing across 81 files
+- **Duration:** 5 min
+- **Started:** 2026-04-01T23:48:03Z
+- **Completed:** 2026-04-01T23:52:51Z
+- **Tasks:** 1
+- **Files modified:** 6
 
 ## Accomplishments
-
-### Job 1: PhraseReveal Rebuild
-- Replaced generic `phrases: string[]` API with `PhraseWord` interface (`arabic`, `transliteration`, optional `meaning`)
-- Added `onComplete` callback with timer cleanup on unmount and skip
-- Added `Pressable` tap-to-skip with accessibility hint
-- Added `useReducedMotion` from Reanimated for immediate reveal when reduced motion enabled
-- Horizontal layout uses `flexDirection: 'row-reverse'`, `writingDirection: 'rtl'` for Arabic text flow
-- Added `minHeight` reservation and `flexShrink: 0` on word units
-- Exported `PhraseWord` and `PhraseRevealProps` types from barrel
-
-### Job 2: Screen Rewrites
-- **BismillahMoment:** 4 BISMILLAH_WORDS with meanings, vertical layout, Continue CTA after reveal (no auto-advance timer)
-- **Tilawat:** Single TILAWAH_WORDS entry replacing ShimmerWord animated opacity loop
-- **Hadith:** 5 HADITH_WORDS in horizontal RTL layout, English translation appears only after Arabic reveal completes
-
-### Test Rewrites
-- All 6 Wave 0 test scaffolds rewritten to verify correct PhraseWord API
-- Bismillah test updated to verify PhraseReveal integration and no auto-advance
+- Home greeting shows "ASSALAMU ALAIKUM, [NAME]" when user has a name, plain "ASSALAMU ALAIKUM" when not
+- Motivation-specific subtitle for all 5 motivation values (D-09), with fallback to progress-based subtitle
+- WirdTooltip component with FadeIn animation, tap-to-dismiss, and wirdIntroSeen persistence
+- 32 new/updated tests covering greeting logic, tooltip visibility, and motivation subtitle mapping
 
 ## Task Commits
 
-1. **fix(03-01): rebuild PhraseReveal** - `9251d20`
-2. **fix(03-01): rewrite Wave 0 test scaffolds** - `a6386af`
-3. **feat(03-02): rewrite BismillahMoment** - `1bff83a`
-4. **feat(03-02): replace Tilawat ShimmerWord** - `b1c57a7`
-5. **feat(03-02): add Arabic PhraseReveal to Hadith** - `f9de531`
+Each task was committed atomically:
+
+1. **Task 1: Personalized greeting + wird tooltip** - `fcd78ec` (feat)
+
+**Plan metadata:** [pending final commit]
+
+## Files Created/Modified
+- `src/utils/greetingHelpers.ts` - Pure greeting functions: getGreetingLine1, getMotivationSubtitle, MOTIVATION_SUBTITLES
+- `src/components/home/WirdTooltip.tsx` - One-time wird explanation tooltip with fade animation
+- `app/(tabs)/index.tsx` - Integrated personalized greeting and wird tooltip into home screen
+- `src/__tests__/home-greeting.test.ts` - Tests for greeting line 1 (name) and motivation subtitle fallback
+- `src/__tests__/wird-tooltip.test.ts` - Tests for tooltip visibility logic and dismiss handler
+- `src/__tests__/motivation-mapping.test.ts` - Added D-09 subtitle string verification tests
+
+## Decisions Made
+- Extracted greeting helpers to `src/utils/greetingHelpers.ts` instead of keeping inline in index.tsx -- avoids React Native mock complexity in Vitest tests while maintaining clean imports
+- WirdTooltip rendered without arrow pointer per research recommendation (arrows are fiddly in RN)
 
 ## Deviations from Plan
 
-None - plan executed as specified.
+### Auto-fixed Issues
+
+**1. [Rule 3 - Blocking] Extracted pure logic to separate utility file**
+- **Found during:** Task 1 (test creation)
+- **Issue:** Importing from `app/(tabs)/index.tsx` in tests triggered react-native-reanimated mock errors since the component file imports React Native modules
+- **Fix:** Created `src/utils/greetingHelpers.ts` with all pure greeting functions, imported by both the component and tests
+- **Files modified:** src/utils/greetingHelpers.ts, app/(tabs)/index.tsx, src/__tests__/home-greeting.test.ts, src/__tests__/motivation-mapping.test.ts
+- **Verification:** All 32 tests pass without React Native mocking issues
+- **Committed in:** fcd78ec (Task 1 commit)
+
+---
+
+**Total deviations:** 1 auto-fixed (1 blocking)
+**Impact on plan:** File organization improvement. No scope creep -- same functionality, better testability.
+
+## Issues Encountered
+None
+
+## User Setup Required
+None - no external service configuration required.
 
 ## Known Stubs
+None - all data sources wired (userName and onboardingMotivation from ProgressState via useProgress hook).
 
-None - all PhraseWord data arrays contain real Arabic text with transliterations and meanings where appropriate.
+## Next Phase Readiness
+- Phase 03 (onboarding-personalization) complete -- both plans executed
+- Home screen fully personalized with name, motivation, and wird tooltip
+- Ready for Phase 04 execution
 
 ## Self-Check: PASSED
 
-All 12 created/modified files verified present. All 5 commits verified in git log.
+All created files verified present. Commit fcd78ec verified in git log.
+
+---
+*Phase: 03-onboarding-personalization*
+*Completed: 2026-04-01*
