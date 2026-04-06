@@ -8,12 +8,12 @@ import type { LessonInsight } from "../../engine/insights";
 
 function getIndicatorColor(type: LessonInsight["type"], colors: any) {
   switch (type) {
+    case "mastery":
+      return colors.accent;       // gold — celebratory
     case "confusion":
-      return colors.accent;
-    case "review":
-      return colors.primaryLight;
-    case "trend":
-      return colors.primary;
+      return colors.primaryLight; // soft green — constructive, not alarming
+    case "encouragement":
+      return colors.primary;      // deep green — grounding
     default:
       return colors.textMuted;
   }
@@ -42,7 +42,7 @@ export function LessonInsights({ insights }: LessonInsightsProps) {
       ]}
     >
       <Text style={[typography.sectionHeader, { color: colors.brownLight }]}>
-        Your Lesson Insights
+        How You Did
       </Text>
 
       {insights.map((insight, index) => (
