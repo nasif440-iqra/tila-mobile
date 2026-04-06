@@ -160,10 +160,10 @@ export function getConfusionDistractors(tid: number, pool: number[], cnt: number
 export function makeOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
   const seen = new Set<number>();
   const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
-  if (u.length < 2) {
+  if (u.length < 4) {
     const target = u.find(l => l.id === cid) || u[0];
     if (target) {
-      const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
+      const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 4 - u.length);
       u.push(...extra);
     }
   }
@@ -173,8 +173,8 @@ export function makeOpts(letters: (ArabicLetter | undefined)[], cid: number): Qu
 export function makeNameOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
   const seen = new Set<number>();
   const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
-  if (u.length < 2) {
-    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
+  if (u.length < 4) {
+    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 4 - u.length);
     u.push(...extra);
   }
   return shuffle(u.map(l => ({ id: l.id, label: l.name, isCorrect: l.id === cid })));
@@ -183,8 +183,8 @@ export function makeNameOpts(letters: (ArabicLetter | undefined)[], cid: number)
 export function makeSoundOpts(letters: (ArabicLetter | undefined)[], cid: number): QuestionOption[] {
   const seen = new Set<number>();
   const u = (letters.filter(l => { if (!l || seen.has(l.id)) return false; seen.add(l.id); return true; }) as ArabicLetter[]);
-  if (u.length < 2) {
-    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 2 - u.length);
+  if (u.length < 4) {
+    const extra = shuffle(ARABIC_LETTERS.filter((l: ArabicLetter) => !seen.has(l.id))).slice(0, 4 - u.length);
     u.push(...extra);
   }
   return shuffle(u.map(l => ({ id: l.id, label: `"${l.transliteration}"`, sublabel: l.soundHint, isCorrect: l.id === cid })));
@@ -256,7 +256,7 @@ export function validateQuestion(q: Question | null | undefined): ValidationResu
 export function buildFallbackQuestion(targetId: number, pool: number[]): Question | null {
   const t = getLetter(targetId);
   if (!t) return null;
-  const dists = getDistractors(t.id, pool.length > 0 ? pool : [t.id], 2);
+  const dists = getDistractors(t.id, pool.length > 0 ? pool : [t.id], 3);
   if (dists.length === 0) return null;
   // Alternate between tap and name_to_letter
   const useTap = Math.random() > 0.5;

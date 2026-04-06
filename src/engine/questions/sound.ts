@@ -9,7 +9,7 @@ export function generateSoundQs(lesson: Lesson): Question[] {
   const allPool = [...new Set([...known, ...(lesson.teachIds || []), ...(lesson.reviewIds || [])])];
   const teach = (lesson.teachIds || []).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
   const isLater = lesson.id >= 50;
-  const dCount = isLater ? 2 : 1;
+  const dCount = 3;
   const qs: Question[] = [];
 
   for (const t of teach) {
@@ -27,7 +27,7 @@ export function generateSoundQs(lesson: Lesson): Question[] {
     for (const t of shuffle([...teach]).slice(0, 2)) {
       const others = teach.filter(x => x.id !== t.id);
       const hasConfusion = others.some(o => (SOUND_CONFUSION_MAP[t.id] || []).includes(o.id));
-      qs.push({ type: "contrast_audio", prompt: getSoundPrompt("contrast_audio", hasConfusion), targetId: t.id, hasAudio: true, options: makeOpts(teach.length <= 3 ? teach : [t, ...shuffle(others).slice(0, 2)], t.id) });
+      qs.push({ type: "contrast_audio", prompt: getSoundPrompt("contrast_audio", hasConfusion), targetId: t.id, hasAudio: true, options: makeOpts(teach.length <= 4 ? teach : [t, ...shuffle(others).slice(0, 3)], t.id) });
     }
   }
 
@@ -40,7 +40,7 @@ export function generateSoundQs(lesson: Lesson): Question[] {
     const candidates = teach.filter(t => (SOUND_CONFUSION_MAP[t.id] || []).some(id => allPool.includes(id)));
     for (const t of shuffle(candidates).slice(0, 1)) {
       const confusionIds = (SOUND_CONFUSION_MAP[t.id] || []).filter(id => allPool.includes(id));
-      const confusors = confusionIds.slice(0, 2).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
+      const confusors = confusionIds.slice(0, 3).map(id => getLetter(id)).filter(Boolean) as ArabicLetter[];
       if (confusors.length > 0) {
         qs.push({ type: "audio_to_letter", prompt: pickRandom(SOUND_PROMPTS.confused_contrast), targetId: t.id, hasAudio: true, isConfusionQ: true, options: makeOpts([t, ...confusors], t.id) });
       }

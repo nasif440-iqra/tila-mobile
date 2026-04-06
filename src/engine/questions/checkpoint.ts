@@ -70,7 +70,7 @@ function generateRecognitionCheckpointQs(lesson: Lesson, progress: CheckpointPro
     if (!t) continue;
 
     const type = qTypes[i % qTypes.length];
-    const dists = getDistractors(t.id, allPool, 2);
+    const dists = getDistractors(t.id, allPool, 3);
 
     if (type === "tap") {
       qs.push({ type: "tap", prompt: `Tap ${t.name}`, targetId: t.id, options: makeOpts([t, ...dists], t.id) });
@@ -79,7 +79,7 @@ function generateRecognitionCheckpointQs(lesson: Lesson, progress: CheckpointPro
     } else if (type === "letter_to_name") {
       qs.push({ type: "letter_to_name", prompt: t.letter, promptSubtext: "What is this letter?", targetId: t.id, options: makeNameOpts([t, ...dists], t.id) });
     } else if (type === "rule") {
-      const rd = getRuleDistractors(t, allPool, 2);
+      const rd = getRuleDistractors(t, allPool, 3);
       qs.push({ type: "rule", prompt: t.dots > 0 ? `Which has ${t.visualRule}?` : `Which has no dots?`, targetId: t.id, options: makeOpts([t, ...rd], t.id) });
     } else {
       qs.push({ type: "find", prompt: `Find ${t.name}`, targetId: t.id, options: makeOpts([t, ...dists], t.id) });
@@ -127,7 +127,7 @@ function generateSoundCheckpointQs(lesson: Lesson, progress: CheckpointProgress 
     const type = qTypes[i % qTypes.length];
 
     if (type === "audio_to_letter") {
-      const d = getConfusionDistractors(t.id, allPool, 2);
+      const d = getConfusionDistractors(t.id, allPool, 3);
       const hasConfusion = d.some(l => (SOUND_CONFUSION_MAP[t.id] || []).includes(l.id));
       qs.push({
         type: "audio_to_letter",
@@ -137,7 +137,7 @@ function generateSoundCheckpointQs(lesson: Lesson, progress: CheckpointProgress 
         options: makeOpts([t, ...d], t.id),
       });
     } else if (type === "letter_to_sound") {
-      const d = getConfusionDistractors(t.id, allPool, 2);
+      const d = getConfusionDistractors(t.id, allPool, 3);
       qs.push({
         type: "letter_to_sound",
         prompt: t.letter,
@@ -160,7 +160,7 @@ function generateSoundCheckpointQs(lesson: Lesson, progress: CheckpointProgress 
           });
         }
       } else {
-        const d = getConfusionDistractors(t.id, allPool, 2);
+        const d = getConfusionDistractors(t.id, allPool, 3);
         qs.push({
           type: "audio_to_letter",
           prompt: getSoundPrompt("audio_to_letter", false),

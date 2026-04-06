@@ -20,43 +20,28 @@ interface StreakMilestoneOverlayProps {
   onDismiss: () => void;
 }
 
-// ── Messaging pools for varied celebrations ──
-
-type MilestoneMessage = { emoji: string; headline: string; subline: string; arabicPrefix?: string };
-
-const MILESTONE_POOLS: Record<number, MilestoneMessage[]> = {
-  3: [
-    { emoji: "\u2728", headline: "3 in a row!", subline: "You\u2019re finding your rhythm." },
-    { emoji: "\u2728", headline: "Three!", subline: "Steady and sure." },
-    { emoji: "\u2728", headline: "3 straight", subline: "That focus is real." },
-  ],
-  5: [
-    { emoji: "\u2B50", headline: "5 in a row!", subline: "Sharp focus \u2014 keep this going." },
-    { emoji: "\u2B50", headline: "Five!", subline: "You\u2019re in the zone." },
-    { emoji: "\u2B50", headline: "5 straight", subline: "This is how learning feels." },
-  ],
-  7: [
-    { emoji: "\uD83C\uDF1F", headline: "7 in a row!", arabicPrefix: "\u0645\u0627 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647", subline: "Beautiful work." },
-    { emoji: "\uD83C\uDF1F", headline: "Seven!", arabicPrefix: "\u0628\u0627\u0631\u0643 \u0627\u0644\u0644\u0647", subline: "What a streak." },
-    { emoji: "\uD83C\uDF1F", headline: "7 straight", arabicPrefix: "\u0645\u0627 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647", subline: "Your heart remembers this." },
-  ],
+const MILESTONES: Record<number, { emoji: string; headline: string; subline: string; arabicPrefix?: string }> = {
+  3: {
+    emoji: "\u2728",
+    headline: "3 in a row!",
+    subline: "You\u2019re finding your rhythm.",
+  },
+  5: {
+    emoji: "\u2B50",
+    headline: "5 in a row!",
+    subline: "Sharp focus \u2014 keep this going.",
+  },
+  7: {
+    emoji: "\uD83C\uDF1F",
+    headline: "7 in a row!",
+    arabicPrefix: "\u0645\u0627 \u0634\u0627\u0621 \u0627\u0644\u0644\u0647",
+    subline: "Beautiful work.",
+  },
 };
-
-function pickFromPool(pool: MilestoneMessage[]): MilestoneMessage {
-  return pool[Math.floor(Math.random() * pool.length)];
-}
 
 export function StreakMilestoneOverlay({ streak, onDismiss }: StreakMilestoneOverlayProps) {
   const colors = useColors();
-
-  // Surprise pool for non-standard streak numbers
-  const SURPRISE_POOL: MilestoneMessage[] = [
-    { emoji: "\u2728", headline: `${streak}!`, subline: "Keep going." },
-    { emoji: "\u2726", headline: `${streak} in a row`, subline: "You\u2019re on a roll." },
-  ];
-
-  const pool = MILESTONE_POOLS[streak] ?? SURPRISE_POOL;
-  const milestone = pickFromPool(pool);
+  const milestone = MILESTONES[streak] ?? MILESTONES[3];
 
   const backdropOpacity = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
@@ -129,7 +114,7 @@ export function StreakMilestoneOverlay({ streak, onDismiss }: StreakMilestoneOve
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       {/* Backdrop */}
-      <Animated.View style={[styles.backdrop, { backgroundColor: colors.bg }, backdropStyle]}>
+      <Animated.View style={[styles.backdrop, backdropStyle]}>
         <Pressable style={StyleSheet.absoluteFill} onPress={handleDismiss} />
       </Animated.View>
 
@@ -173,6 +158,7 @@ export function StreakMilestoneOverlay({ streak, onDismiss }: StreakMilestoneOve
 const styles = StyleSheet.create({
   backdrop: {
     ...StyleSheet.absoluteFillObject,
+    backgroundColor: "#F8F6F0",
   },
   centerWrap: {
     ...StyleSheet.absoluteFillObject,

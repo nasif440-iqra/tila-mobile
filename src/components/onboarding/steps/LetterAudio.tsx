@@ -244,11 +244,11 @@ export function LetterAudio({
 
           {/* Floating circle */}
           <Animated.View style={[styles.letterCircleWrap, floatStyle]}>
-            <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
+            <View style={styles.letterCircle}>
               <ArabicText
                 size="display"
-                color={colors.primary}
-                style={{ marginTop: -8 }}
+                color={colors.primaryDark}
+                style={{ marginTop: 6 }}
               >
                 {"\u0627"}
               </ArabicText>
@@ -331,7 +331,9 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
+    backgroundColor: "#F2F5F3",
     borderWidth: 2,
+    borderColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     // Inner + outer depth matching web

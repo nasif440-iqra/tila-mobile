@@ -199,14 +199,17 @@ describe("shared.js utilities", () => {
       expect(correct[0].id).toBe(1);
     });
 
-    it("deduplicates by ID", () => {
+    it("deduplicates by ID and pads to 4", () => {
       const letters = [
         { id: 1, letter: "a" },
         { id: 1, letter: "a" },
         { id: 2, letter: "b" },
       ];
       const opts = makeOpts(letters, 1);
-      expect(opts).toHaveLength(2);
+      // 2 unique inputs + 2 padded from alphabet = 4
+      expect(opts).toHaveLength(4);
+      const ids = opts.map(o => o.id);
+      expect(new Set(ids).size).toBe(4);
     });
 
     it("uses letter glyph as label", () => {
@@ -1142,6 +1145,72 @@ describe("buildFallbackQuestion", () => {
     const fb = buildFallbackQuestion(5, []);
     expect(fb).not.toBeNull();
     expect(validateQuestion(fb).valid).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4-option enforcement (05-01)
+// ---------------------------------------------------------------------------
+
+describe("4-option enforcement", () => {
+  it("makeOpts returns exactly 4 options when given 4 unique letters", () => {
+    const letters = [1, 2, 3, 4].map(id => getLetter(id));
+    const opts = makeOpts(letters, 1);
+    expect(opts).toHaveLength(4);
+  });
+
+  it("makeOpts pads to 4 from alphabet when given only 2 letters", () => {
+    const letters = [getLetter(1), getLetter(2)];
+    const opts = makeOpts(letters, 1);
+    expect(opts).toHaveLength(4);
+  });
+
+  it("makeNameOpts pads to 4 when given fewer than 4 unique letters", () => {
+    const letters = [getLetter(1), getLetter(2)];
+    const opts = makeNameOpts(letters, 1);
+    expect(opts).toHaveLength(4);
+  });
+
+  it("makeSoundOpts pads to 4 when given fewer than 4 unique letters", () => {
+    const letters = [getLetter(1), getLetter(2)];
+    const opts = makeSoundOpts(letters, 1);
+    expect(opts).toHaveLength(4);
+  });
+
+  it("buildFallbackQuestion returns a question with 4 options", () => {
+    const fb = buildFallbackQuestion(2, [1, 2, 3, 4, 5]);
+    expect(fb).not.toBeNull();
+    expect(fb.options).toHaveLength(4);
+  });
+
+  it("every recognition question has exactly 4 options", () => {
+    const lesson = findLesson(l => l.lessonMode === "recognition" && l.teachIds?.length === 1);
+    for (let run = 0; run < 20; run++) {
+      const qs = generateRecognitionQs(lesson);
+      for (const q of qs) {
+        expect(q.options).toHaveLength(4);
+      }
+    }
+  });
+
+  it("every sound question has exactly 4 options", () => {
+    const lesson = findLesson(l => l.lessonMode === "sound");
+    for (let run = 0; run < 20; run++) {
+      const qs = generateSoundQs(lesson);
+      for (const q of qs) {
+        expect(q.options).toHaveLength(4);
+      }
+    }
+  });
+
+  it("every review letter question has exactly 4 options", () => {
+    const reviewLesson = { id: 999, lessonMode: "review", teachIds: [2, 5, 10, 14, 21], reviewIds: [] };
+    for (let run = 0; run < 20; run++) {
+      const qs = generateReviewQs(reviewLesson, {});
+      for (const q of qs) {
+        expect(q.options).toHaveLength(4);
+      }
+    }
   });
 });
 

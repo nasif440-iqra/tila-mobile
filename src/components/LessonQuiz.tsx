@@ -32,31 +32,10 @@ import { QuizCelebration } from "./quiz/QuizCelebration";
 import { QuizQuestion } from "./quiz/QuizQuestion";
 import { WrongAnswerPanel } from "./quiz/WrongAnswerPanel";
 import { StreakMilestoneOverlay } from "./quiz/StreakMilestoneOverlay";
-import { StreakBanner } from "./quiz/StreakBanner";
 
-// ── Celebration dispatch ──
+// ── Streak milestones ──
 
-function pickCelebrationFormat(currentStreak: number): "banner" | "popup" | null {
-  // Big streaks (7+): always popup
-  if (currentStreak >= 7 && currentStreak % 7 === 0) return "popup";
-
-  // Medium streaks (5-6): 60% popup, 40% banner
-  if (currentStreak === 5 || currentStreak === 6) {
-    return Math.random() < 0.6 ? "popup" : "banner";
-  }
-
-  // Small streaks (3-4): 80% banner, 20% popup
-  if (currentStreak === 3 || currentStreak === 4) {
-    return Math.random() < 0.8 ? "banner" : "popup";
-  }
-
-  // Non-milestone: ~18% chance of surprise banner
-  if (currentStreak >= 2 && Math.random() < 0.18) {
-    return "banner";
-  }
-
-  return null;
-}
+const STREAK_MILESTONES = [3, 5, 7] as const;
 
 // ── Types ──
 
@@ -95,9 +74,8 @@ export function LessonQuiz({
   const [answered, setAnswered] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
 
-  // Streak celebration state
+  // Streak milestone overlay state
   const [milestoneStreak, setMilestoneStreak] = useState<number | null>(null);
-  const [streakBanner, setStreakBanner] = useState<number | null>(null);
   const prevStreakRef = useRef(0);
 
   // Screen flash animations
@@ -164,28 +142,19 @@ export function LessonQuiz({
     setIsCorrect(false);
   }, [questionIndex]);
 
-  // ── Banner auto-dismiss (3 seconds) ──
+  // ── Synchronized streak milestone ──
   useEffect(() => {
-    if (streakBanner !== null) {
-      const timer = setTimeout(() => setStreakBanner(null), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [streakBanner]);
+    if (
+      streak > prevStreakRef.current &&
+      STREAK_MILESTONES.includes(streak as 3 | 5 | 7)
+    ) {
+      // Full-screen milestone overlay (replaces banner for milestone streaks)
+      setMilestoneStreak(streak);
 
-  // ── Celebration dispatch ──
-  useEffect(() => {
-    if (streak > prevStreakRef.current) {
-      const format = pickCelebrationFormat(streak);
-      if (format === "popup") {
-        setMilestoneStreak(streak);
-
-        goldTintOpacity.value = withSequence(
-          withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) }),
-          withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) })
-        );
-      } else if (format === "banner") {
-        setStreakBanner(streak);
-      }
+      goldTintOpacity.value = withSequence(
+        withTiming(1, { duration: 150, easing: Easing.out(Easing.cubic) }),
+        withTiming(0, { duration: 350, easing: Easing.in(Easing.cubic) })
+      );
     }
     prevStreakRef.current = streak;
   }, [streak]);
@@ -343,11 +312,6 @@ export function LessonQuiz({
         style={[styles.screenFlash, { backgroundColor: "rgba(196, 164, 100, 0.06)" }, goldTintStyle]}
         pointerEvents="none"
       />
-
-      {/* Streak banner — non-popup celebration */}
-      {streakBanner !== null && (
-        <StreakBanner streak={streakBanner} />
-      )}
 
       {/* Streak milestone — full-screen overlay */}
       {milestoneStreak !== null && (

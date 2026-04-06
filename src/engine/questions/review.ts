@@ -96,7 +96,7 @@ export function generateReviewQs(lesson: ReviewLesson, progress: ReviewProgress 
       if (!t) continue;
 
       const type = qTypes[i % qTypes.length];
-      const dists = getDistractors(t.id, allPool, 2);
+      const dists = getDistractors(t.id, allPool, 3);
 
       if (type === "tap") {
         qs.push({ type: "tap", prompt: `Tap ${t.name}`, targetId: t.id, options: makeOpts([t, ...dists], t.id) });
@@ -105,7 +105,7 @@ export function generateReviewQs(lesson: ReviewLesson, progress: ReviewProgress 
       } else if (type === "letter_to_name") {
         qs.push({ type: "letter_to_name", prompt: t.letter, promptSubtext: "What is this letter?", targetId: t.id, options: makeNameOpts([t, ...dists], t.id) });
       } else if (type === "rule") {
-        const rd = getRuleDistractors(t, allPool, 2);
+        const rd = getRuleDistractors(t, allPool, 3);
         qs.push({ type: "rule", prompt: t.dots > 0 ? `Which has ${t.visualRule}?` : `Which has no dots?`, targetId: t.id, options: makeOpts([t, ...rd], t.id) });
       } else {
         qs.push({ type: "find", prompt: `Find ${t.name}`, targetId: t.id, options: makeOpts([t, ...dists], t.id) });

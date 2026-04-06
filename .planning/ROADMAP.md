@@ -78,24 +78,3 @@ Phases execute in numeric order: 1 -> 2 -> 3
 ## Self-Review Gate
 
 Before marking any phase complete, list the screens changed, shared components added or modified, and what would still feel flat to a first-time user.
-
-### Phase 4: Dark Mode & UI Polish
-
-**Goal:** [To be planned]
-**Requirements**: TBD
-**Depends on:** Phase 3
-**Plans:** 0 plans
-
-Plans:
-- [ ] TBD (run /gsd-plan-phase 4 to break down)
-
-### Phase 5: Quiz & Learning Engine — 4 options, question types, lesson insights
-
-**Goal:** All quiz questions show 4 options, recognition mode balances rule/name/reverse identification equally, and post-lesson insights celebrate mastery progress instead of showing confusing scheduling language
-**Requirements**: D-01, D-02, D-03, D-04, D-05, D-06, D-07, D-08, D-09
-**Depends on:** Phase 4
-**Plans:** 2 plans
-
-Plans:
-- [ ] 05-01-PLAN.md — 4 options across all generators + recognition type balance (33/33/33 rule/name/reverse)
-- [ ] 05-02-PLAN.md — Rewrite lesson insights: mastery celebration + confusion awareness, remove scheduling language
