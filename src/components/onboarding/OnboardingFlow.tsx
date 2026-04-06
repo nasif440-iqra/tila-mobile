@@ -20,7 +20,7 @@ import {
 import type { OnboardingDraft } from "../../types/onboarding";
 import { track } from "../../analytics";
 
-import { AtmosphereBackground } from "../../design/atmosphere";
+import { FloatingLettersLayer } from "./FloatingLettersLayer";
 import { ProgressBar } from "./ProgressBar";
 import { Welcome } from "./steps/Welcome";
 import { Tilawat } from "./steps/Tilawat";
@@ -138,8 +138,10 @@ export function OnboardingFlow() {
   const fadeStyle = useAnimatedStyle(() => ({ opacity: fadeOpacity.value }));
 
   return (
-    <AtmosphereBackground preset="onboarding">
-    <Animated.View style={[styles.root, fadeStyle]}>
+    <Animated.View style={[styles.root, { backgroundColor: colors.bgWarm }, fadeStyle]}>
+      {/* Floating Arabic letters — visible on steps 0-3 (Welcome through StartingPoint) */}
+      {step <= STEP.STARTING_POINT && <FloatingLettersLayer color={colors.primary} />}
+
       {/* Progress bar — positioned close to top safe area, matching web */}
       {showProgressBar && (
         <View style={[styles.progressContainer, { paddingTop: insets.top + spacing.sm }]}>
@@ -200,7 +202,6 @@ export function OnboardingFlow() {
         </Animated.View>
       </ScrollView>
     </Animated.View>
-    </AtmosphereBackground>
   );
 }
 

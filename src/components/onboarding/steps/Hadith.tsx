@@ -31,11 +31,12 @@ function ArchOutline({ color }: { color: string }) {
 export function Hadith({ onNext }: { onNext: () => void }) {
   const colors = useColors();
 
+  // Splash stagger: 0 = headline, 1 = diamond, 2 = quote, 3 = divider+source
   const headlineDelay = 0;
   const diamondDelay = SPLASH_STAGGER_BASE;
   const quoteDelay = SPLASH_STAGGER_BASE * 2;
   const sourceDelay = SPLASH_STAGGER_BASE * 3;
-  const ctaDelay = SPLASH_STAGGER_BASE * 3 + CTA_DELAY_OFFSET;
+  const ctaDelay = SPLASH_STAGGER_BASE * 4 + CTA_DELAY_OFFSET;
 
   return (
     <OnboardingStepLayout
@@ -50,7 +51,7 @@ export function Hadith({ onNext }: { onNext: () => void }) {
         </Animated.View>
       }
     >
-      {/* Ambient glow */}
+      {/* Ambient glow — animated pulsing */}
       <WarmGlow size={340} animated pulseMin={0.08} pulseMax={0.18} />
 
       {/* Arch outline */}
@@ -85,13 +86,13 @@ export function Hadith({ onNext }: { onNext: () => void }) {
 
       {/* Divider line */}
       <Animated.View
-        entering={FadeIn.delay(sourceDelay).duration(400)}
+        entering={FadeIn.delay(sourceDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.dividerLine, { backgroundColor: colors.accent, zIndex: 1 }]}
       />
 
       {/* Source */}
       <Animated.Text
-        entering={FadeIn.delay(sourceDelay).duration(400)}
+        entering={FadeIn.delay(sourceDelay).duration(SPLASH_STAGGER_DURATION)}
         style={[styles.hadithSource, { color: colors.textMuted, zIndex: 1 }]}
       >
         SAHIH AL-BUKHARI 4937

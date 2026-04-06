@@ -1,122 +1,147 @@
 ---
 phase: 03-onboarding-personalization
-verified: 2026-04-06T13:15:00Z
-status: human_needed
-score: 5/6 roadmap success criteria verified (1 needs human)
-gaps: []
-human_verification:
-  - test: "Navigate through the full onboarding flow on a device or simulator to the Welcome screen"
-    expected: "Welcome screen opens with atmospheric warmth — ambient gradient background visible behind the logo, floating Arabic letters drifting, warm glow present — feels like entering a quiet room, not loading a form"
-    why_human: "SACR-03 requires a felt quality ('atmospheric warmth', 'entering a quiet room'). AtmosphereBackground wraps all of OnboardingFlow including Welcome, but the subjective quality of 'warmth on first screen' cannot be verified programmatically — only a human viewer can confirm the visual impression."
+verified: 2026-04-01T19:58:00Z
+status: passed
+score: 8/8 must-haves verified
+re_verification: false
 ---
 
-# Phase 03: Sacred Moments Verification Report
+# Phase 03: Onboarding Personalization Verification Report
 
-**Phase Goal:** Sacred Moments — Transform onboarding sacred text screens (Bismillah, Tilawat, Hadith) with word-by-word PhraseReveal animation, atmospheric warmth, and gentle gravity.
-**Verified:** 2026-04-06T13:15:00Z
-**Status:** human_needed
+**Phase Goal:** Users feel personally known — the app uses their name and understands their motivation
+**Verified:** 2026-04-01T19:58:00Z
+**Status:** PASSED
 **Re-verification:** No — initial verification
+
+---
 
 ## Goal Achievement
 
 ### Observable Truths
 
 | # | Truth | Status | Evidence |
-|---|-------|--------|---------|
-| 1 | Bismillah screen presents 4 semantic units (Bismi / Allahi / Ar-Rahmani / Ar-Raheem) with Arabic, transliteration, and meaning for each — functions as both spiritual threshold and first teaching moment | ✓ VERIFIED | `BismillahMoment.tsx`: 4-entry `BISMILLAH_WORDS` array with `arabic`, `transliteration`, and `meaning` fields. `PhraseReveal` with `layout="vertical"`. Continue CTA only appears after `onComplete` fires. No auto-advance timer (`setTimeout` absent). |
-| 2 | Sacred Arabic phrases (Bismillah, Tilawah, Hadith) reveal word-by-word with transliteration beneath each word — not displayed all at once | ✓ VERIFIED | `PhraseReveal.tsx` (202 lines): staggered `withDelay+withTiming` per word, default `wordDuration=700ms`, `staggerDelay=350ms`. Each `RevealWord` renders Arabic + transliteration. All three screens import and use `PhraseReveal`. `useReducedMotion` shows all immediately when device setting is on. |
-| 3 | Onboarding Welcome screen opens with atmospheric warmth (ambient background, gentle entrance) — feels like entering a quiet room | ? UNCERTAIN | `OnboardingFlow.tsx` wraps the entire flow (including Welcome step) in `<AtmosphereBackground preset="onboarding">`. `Welcome.tsx` uses staggered `FadeInDown`/`FadeIn` entrance animations. Visual quality of "warmth" requires human inspection. |
-| 4 | Onboarding Tilawah and Hadith screens use word-by-word reveal instead of static quote cards | ✓ VERIFIED | `Tilawat.tsx`: `TILAWAH_WORDS` array with single Arabic entry, `PhraseReveal` rendered. No `ShimmerWord` or `withRepeat`. `Hadith.tsx`: 5-entry `HADITH_WORDS`, `PhraseReveal layout="horizontal"`, English translation gated behind `revealComplete` state. |
-| 5 | Onboarding Finish screen lands with gravity — no bounce, "You've already begun" feels earned | ✓ VERIFIED | `Finish.tsx`: checkmark scale starts at `0.85`, uses `withSequence(withTiming(1.03), withTiming(1.0))`. No `withSpring` found. Headline text is "You've already begun". |
-| 6 | `PhraseReveal` primitive exists as a reusable design system component with configurable word-by-word fade-in and transliteration support | ✓ VERIFIED | `src/design/components/PhraseReveal.tsx` (202 lines). Exports `PhraseReveal`, `PhraseWord`, `PhraseRevealProps`. Barrel `index.ts` exports all three. Props: `words`, `wordDuration`, `staggerDelay`, `onComplete`, `layout`, `arabicSize`, `arabicStyle`, `accessibilityLabel`. |
+|---|-------|--------|----------|
+| 1 | Onboarding flow has 10 steps with NameMotivation at index 8 and Finish at index 9 | VERIFIED | `TOTAL_STEPS = 10`, `NAME_MOTIVATION: 8`, `FINISH: 9` confirmed in OnboardingFlow.tsx (line 36, 41); 5 passing tests in onboarding-flow.test.ts |
+| 2 | User can enter an optional name and select a motivation during onboarding | VERIFIED | NameMotivation.tsx (165 lines): TextInput for name, 5 OptionCard pressables for motivation. Continue button always enabled. |
+| 3 | Name and motivation are saved to user_profile in SQLite on onboarding completion | VERIFIED | handleFinish passes `name: draft.userName.trim() \|\| null` and `motivation: draft.motivation` to updateProfile (OnboardingFlow.tsx lines 107-108); saveUserProfile writes both columns via parameterized UPDATE |
+| 4 | DB migration v6 adds name column for existing users; fresh installs include it in CREATE_TABLES | VERIFIED | `SCHEMA_VERSION = 6` in schema.ts; `name TEXT` in CREATE TABLE; `currentVersion < 6` migration block in client.ts with PRAGMA table_info guard |
+| 5 | Home screen greeting shows 'ASSALAMU ALAIKUM, [NAME]' when user has a name, plain when not | VERIFIED | `getGreetingLine1` in greetingHelpers.ts; used in index.tsx line 421; 4 passing unit tests covering name, null, empty string, mixed-case |
+| 6 | Greeting subtitle shows motivation-specific message when motivation is set, falls back to dynamic subtitle | VERIFIED | `getMotivationSubtitle` in greetingHelpers.ts; all 5 motivation values mapped; null/unknown falls back to getGreetingSubtitle; 7 passing tests |
+| 7 | Wird tooltip appears once on first streak badge display when wirdIntroSeen is false | VERIFIED | useEffect in index.tsx triggers `setShowWirdTooltip(true)` when `currentWird > 0 && !progress.wirdIntroSeen`; 2 passing visibility tests |
+| 8 | Wird tooltip dismisses on tap and never appears again | VERIFIED | handleWirdTooltipDismiss calls `setShowWirdTooltip(false)` then `updateProfile({ wirdIntroSeen: true })`; wirdIntroSeen persisted to SQLite (wird_intro_seen column); 1 passing dismiss test |
 
-**Score:** 5/6 truths verified (1 needs human)
+**Score:** 8/8 truths verified
+
+---
 
 ### Required Artifacts
 
 | Artifact | Expected | Status | Details |
-|----------|---------|--------|---------|
-| `src/design/components/PhraseReveal.tsx` | Sacred phrase reveal primitive with staggered word-by-word animation | ✓ VERIFIED | 202 lines. `PhraseWord` interface with `arabic`, `transliteration`, `meaning?`. `RevealWord` internal component with animated opacity. Timer cleanup on unmount. `useReducedMotion` support. |
-| `src/design/components/index.ts` | Barrel export includes PhraseReveal and types | ✓ VERIFIED | Exports `PhraseReveal`, `PhraseWord`, `PhraseRevealProps`. |
-| `src/components/onboarding/steps/BismillahMoment.tsx` | Bismillah micro-lesson with PhraseReveal and CTA | ✓ VERIFIED | 82 lines. `BISMILLAH_WORDS` (4 entries with meanings). `PhraseReveal layout="vertical"`. Continue button appears post-reveal. No `setTimeout`. |
-| `src/components/onboarding/steps/Tilawat.tsx` | Tilawah with PhraseReveal replacing ShimmerWord | ✓ VERIFIED | 117 lines. `TILAWAH_WORDS` (1 entry). `PhraseReveal layout="vertical"`. No `ShimmerWord`, no `withRepeat`. "Begin" CTA retained. |
-| `src/components/onboarding/steps/Hadith.tsx` | Hadith with Arabic PhraseReveal and post-reveal English translation | ✓ VERIFIED | 179 lines. `HADITH_WORDS` (5 entries). `PhraseReveal layout="horizontal"`. English translation conditionally rendered via `{revealComplete && ...}`. `WarmGlow` and `ArchOutline` retained. |
-| `src/components/onboarding/OnboardingFlow.tsx` | AtmosphereBackground wrapping the entire flow | ✓ VERIFIED | Imports `AtmosphereBackground` from `../../design/atmosphere`. Wraps entire JSX tree in `<AtmosphereBackground preset="onboarding">`. |
-| `src/components/onboarding/steps/Finish.tsx` | Gentle settle animation (no bounce) | ✓ VERIFIED | `withSequence(withTiming(1.03), withTiming(1.0))` replacing `withSpring`. `scale` starts at `0.85`. |
+|----------|----------|--------|---------|
+| `src/components/onboarding/steps/NameMotivation.tsx` | Combined name input + motivation picker onboarding step, min 60 lines | VERIFIED | 165 lines; TextInput + 5 OptionCard components; "What should we call you?" headline present |
+| `src/types/onboarding.ts` | Extended OnboardingDraft with userName and motivation | VERIFIED | Both fields present: `userName: string` and `motivation: union \| null` |
+| `src/db/schema.ts` | Schema v6 with name column in user_profile | VERIFIED | `SCHEMA_VERSION = 6`; `name TEXT` in CREATE TABLE |
+| `src/engine/progress.ts` | userName in ProgressState, name in UserProfileUpdate and saveUserProfile | VERIFIED | `userName: string \| null` in ProgressState (line 56); `name?: string \| null` in UserProfileUpdate (line 297); `name = ?` UPDATE clause (line 330) |
+| `app/(tabs)/index.tsx` | Personalized greeting with name and motivation subtitle | VERIFIED | MOTIVATION_SUBTITLES imported from greetingHelpers; greetingLine1/greetingLine2 rendered at lines 494/497 |
+| `src/components/home/WirdTooltip.tsx` | One-time wird explanation tooltip, min 30 lines | VERIFIED | 71 lines; FadeIn animation; Pressable dismiss; "a wird is a daily practice" content present |
+| `src/__tests__/home-greeting.test.ts` | Tests for personalized greeting logic | VERIFIED | 86 lines; 10 passing tests covering all greeting variants and all 5 motivation values |
+| `src/__tests__/wird-tooltip.test.ts` | Tests for tooltip show/dismiss logic | VERIFIED | 49 lines; 4 passing tests for show/no-show conditions and dismiss handler |
+| `src/utils/greetingHelpers.ts` | Pure greeting functions (deviation from plan — extracted for testability) | VERIFIED | 37 lines; exports getGreetingLine1, getMotivationSubtitle, MOTIVATION_SUBTITLES |
+
+---
 
 ### Key Link Verification
 
 | From | To | Via | Status | Details |
 |------|----|-----|--------|---------|
-| `BismillahMoment.tsx` | `src/design/components/PhraseReveal.tsx` | `import { PhraseReveal, Button } from "../../../design/components"` | ✓ WIRED | Import found line 4. `<PhraseReveal>` rendered line 53. |
-| `Tilawat.tsx` | `src/design/components/PhraseReveal.tsx` | `import { Button, PhraseReveal } from "../../../design/components"` | ✓ WIRED | Import found line 8. `<PhraseReveal>` rendered line 48. |
-| `Hadith.tsx` | `src/design/components/PhraseReveal.tsx` | `import { Button, PhraseReveal } from "../../../design/components"` | ✓ WIRED | Import found line 6. `<PhraseReveal>` rendered line 92. |
-| `OnboardingFlow.tsx` | `AtmosphereBackground` | `import { AtmosphereBackground } from "../../design/atmosphere"` | ✓ WIRED | Import line 23. Used line 141/203. |
-| `Finish.tsx` | Gentle settle animation | `withSequence` + `withTiming` (no `withSpring`) | ✓ WIRED | `withSequence` import line 8. Used lines 52-55. |
+| `OnboardingFlow.tsx` | `NameMotivation.tsx` | step rendering at STEP.NAME_MOTIVATION | VERIFIED | `{step === STEP.NAME_MOTIVATION && <NameMotivation ...>}` at line 186 |
+| `OnboardingFlow.tsx` | `src/engine/progress.ts` | handleFinish calling updateProfile with name and motivation | VERIFIED | `name: draft.userName.trim() \|\| null` and `motivation: draft.motivation` at lines 107-108 |
+| `src/db/client.ts` | `src/db/schema.ts` | migration v6 adding name column | VERIFIED | `if (currentVersion < 6)` block at line 99; ALTER TABLE with PRAGMA guard |
+| `app/(tabs)/index.tsx` | `src/engine/progress.ts` | reading progress.userName and progress.onboardingMotivation | VERIFIED | `progress.userName ?? null` at line 418; `progress.onboardingMotivation ?? null` at line 419 |
+| `app/(tabs)/index.tsx` | `WirdTooltip.tsx` | rendering WirdTooltip near AnimatedStreakBadge | VERIFIED | `<WirdTooltip visible={showWirdTooltip} onDismiss={handleWirdTooltipDismiss} />` at line 487 |
+| `WirdTooltip.tsx` (via index.tsx) | `src/engine/progress.ts` | updateProfile({ wirdIntroSeen: true }) on dismiss | VERIFIED | handleWirdTooltipDismiss calls `await updateProfile({ wirdIntroSeen: true })` at line 438 |
+
+---
 
 ### Data-Flow Trace (Level 4)
 
 | Artifact | Data Variable | Source | Produces Real Data | Status |
-|----------|--------------|--------|--------------------|--------|
-| `BismillahMoment.tsx` | `BISMILLAH_WORDS` | Module-level constant (4 static entries) | Yes — static sacred text, intentional | ✓ FLOWING |
-| `Tilawat.tsx` | `TILAWAH_WORDS` | Module-level constant (1 static entry) | Yes — static sacred text, intentional | ✓ FLOWING |
-| `Hadith.tsx` | `HADITH_WORDS` | Module-level constant (5 static entries) | Yes — static sacred text, intentional | ✓ FLOWING |
-| `Hadith.tsx` | `revealComplete` | `useState(false)` + `onComplete` callback | Yes — state driven by animation completion | ✓ FLOWING |
-| `BismillahMoment.tsx` | `revealComplete` | `useState(false)` + `onComplete` callback | Yes — state driven by animation completion | ✓ FLOWING |
+|----------|---------------|--------|--------------------|--------|
+| `app/(tabs)/index.tsx` (greetingLine1) | `progress.userName` | `loadProgress()` SELECT query — `SELECT ... name ... FROM user_profile WHERE id = 1` (progress.ts line 96) | Yes — reads from SQLite `name` column written by `saveUserProfile` | FLOWING |
+| `app/(tabs)/index.tsx` (greetingLine2) | `progress.onboardingMotivation` | Same SELECT query — `motivation` column from user_profile | Yes — reads from SQLite `motivation` column | FLOWING |
+| `app/(tabs)/index.tsx` (WirdTooltip) | `progress.wirdIntroSeen` | Same SELECT query — `wird_intro_seen` column from user_profile | Yes — reads from SQLite, written by dismiss handler | FLOWING |
+| `OnboardingFlow.tsx` (handleFinish) | `draft.userName`, `draft.motivation` | Controlled state set by TextInput `onChangeName` and OptionCard `onSelectMotivation` | Yes — user input flows to SQLite via saveUserProfile | FLOWING |
+
+---
 
 ### Behavioral Spot-Checks
 
-| Behavior | Check | Result | Status |
-|----------|-------|--------|--------|
-| PhraseReveal exports from barrel | `grep "PhraseReveal" src/design/components/index.ts` | Found: `export { PhraseReveal }` and type exports | ✓ PASS |
-| BismillahMoment has no auto-advance | `grep "setTimeout\|BISMILLAH_HOLD" BismillahMoment.tsx` | Empty result | ✓ PASS |
-| Tilawat has no ShimmerWord | `grep "ShimmerWord\|withRepeat" Tilawat.tsx` | Empty result | ✓ PASS |
-| Finish has no withSpring | `grep "withSpring" Finish.tsx` | Empty result | ✓ PASS |
-| Hadith English gated by reveal | `grep "revealComplete &&" Hadith.tsx` | 3 matches (quote, divider, source) | ✓ PASS |
-| 829 tests pass | `npm test` | 829 passed, 0 failed, 81 test files | ✓ PASS |
-| PhraseReveal Reduce Motion | `grep "useReducedMotion" PhraseReveal.tsx` | Found: `useReducedMotion()` hook + immediate reveal path | ✓ PASS |
+| Behavior | Command | Result | Status |
+|----------|---------|--------|--------|
+| 41 phase-03 tests pass | `npx vitest run` on 5 test files | 41 passed, 4 todo (todo items are pre-existing stubs for future ONB-02/ONB-03 tests, not blockers) | PASS |
+| getGreetingLine1 produces correct output | Unit test — "Nasif" → "ASSALAMU ALAIKUM, NASIF" | Confirmed passing | PASS |
+| Motivation mapping covers all 5 values | Unit test — all 5 keys produce D-09 subtitle strings | Confirmed passing | PASS |
+| Wird tooltip show/dismiss logic | Unit test — shouldShowWirdTooltip + updateProfile mock | Confirmed passing | PASS |
+| Schema v6 name column in CREATE_TABLES | Unit test — regex match on CREATE TABLE string | Confirmed passing | PASS |
+
+---
 
 ### Requirements Coverage
 
 | Requirement | Source Plan | Description | Status | Evidence |
-|------------|------------|-------------|--------|---------|
-| SACR-01 | Plan 02 (implicit via PhraseReveal) | Sacred phrase reveal primitive — word-by-word fade-in (600-800ms per word, 300-400ms stagger) with transliteration appearing beneath each word | ✓ SATISFIED | `PhraseReveal.tsx` default `wordDuration=700ms` (within 600-800ms), `staggerDelay=350ms` (within 300-400ms). Transliteration rendered beneath each Arabic word in `RevealWord`. |
-| SACR-02 | Plan 02 | Bismillah micro-lesson — 4 semantic units with word-by-word Arabic, transliteration, and meaning | ✓ SATISFIED | `BismillahMoment.tsx` with 4-entry `BISMILLAH_WORDS`. All four units have `arabic`, `transliteration`, and `meaning`. CTA appears only after reveal completes. |
-| SACR-03 | Plan 01 (AtmosphereBackground) | Onboarding Welcome screen atmosphere — warm ambient background, gentle entrance | ? NEEDS HUMAN | `AtmosphereBackground preset="onboarding"` wraps all of `OnboardingFlow` including Welcome. Visual warmth and subjective atmospheric quality require human inspection. |
-| SACR-04 | Plan 02 | Onboarding Tilawah screen — sacred phrase reveals word-by-word | ✓ SATISFIED | `Tilawat.tsx` uses `PhraseReveal` with single `TILAWAH_WORDS` entry. `ShimmerWord` removed. |
-| SACR-05 | Plan 02 | Onboarding Hadith screen — sacred phrase reveals word-by-word | ✓ SATISFIED | `Hadith.tsx` uses `PhraseReveal` with 5 `HADITH_WORDS`. English translation deferred until after Arabic reveal completes. |
-| SACR-06 | Plan 01 (Finish settle) | Onboarding Finish screen — lands with gravity, not bounce | ✓ SATISFIED | `Finish.tsx` uses `withSequence(withTiming(1.03), withTiming(1.0))` from `0.85`. No `withSpring`. |
-| CONV-01 | Plan 01 (Name/Motivation) | Optional name input stored in user profile | ✓ SATISFIED (bonus) | `NameMotivation.tsx`, schema v6, `OnboardingFlow` 10 steps with `NAME_MOTIVATION` at index 8. Not a Sacred Moments requirement per REQUIREMENTS.md — not in the SACR-xx requirement set — but delivered as additional work in Plan 01. |
+|-------------|-------------|-------------|--------|----------|
+| CONV-01 | 03-01-PLAN.md | Optional name input added to onboarding flow, stored in user profile | SATISFIED | NameMotivation.tsx TextInput; handleFinish saves trimmed name to SQLite; schema v6 adds name column |
+| CONV-02 | 03-02-PLAN.md | Wird concept explained on first encounter via one-time tooltip/explanation | SATISFIED | WirdTooltip renders "In Islamic tradition, a wird is a daily practice..."; wirdIntroSeen persisted on dismiss |
+| CONV-04 | 03-02-PLAN.md | Home screen greeting personalized with user name and motivation | SATISFIED | greetingLine1 uses userName (uppercase), greetingLine2 uses MOTIVATION_SUBTITLES mapping with progress-based fallback |
 
-**Note on CONV-01:** This requirement ID does not appear in `REQUIREMENTS.md`. It is referenced only in plan/summary frontmatter. The NameMotivation step is functional and wired, but the requirement itself has no canonical entry in the requirements document. This is an informational gap only — the work is complete and valuable.
+**CONV-03** (value communication in lessons 1-7) and **CONV-05** (mastery insights visible) are assigned to Phase 4 per REQUIREMENTS.md traceability table — correctly not in scope for this phase. No orphaned requirements detected.
+
+---
 
 ### Anti-Patterns Found
 
 | File | Line | Pattern | Severity | Impact |
 |------|------|---------|----------|--------|
-| `OnboardingFlow.tsx` | 66 | `// TODO: Update analytics to use STEP_NAMES instead of numeric indices` | ⚠️ Warning | Analytics step tracking may be slightly off after STEP index shifts. Not a blocker — tracking still fires, just index-shifted. |
-| `BismillahMoment.tsx` | 15-18 | Meaning wording deviates from plan acceptance criteria: `"In the name of"` (plan: `"In the name"`) and `"God"` (plan: `"of God"`) | ℹ️ Info | Meaning semantics differ from D-05 spec. Both are accurate translations of the Bismillah. Doesn't break functionality or the SACR-02 requirement, which requires meanings to be present — not exact wording. |
-| `Hadith.tsx` | 20-26 | 5 `HADITH_WORDS` entries (plan spec said 6 — al-mahir through al-bararah, but implementation uses Alladhi/Yaqra'u/Al-Qur'ana/wa yatata'ta'u/fihi) | ℹ️ Info | Implementation uses a different portion of the Hadith text than the plan specified. Summary says "5 HADITH_WORDS". Both are authentic Hadith text fragments. Not a functional gap — word-by-word reveal works correctly. |
-| `Tilawat.tsx` | 50 | `layout="vertical"` (plan 02 action said `layout="horizontal"` for single-word) | ℹ️ Info | Plan action said horizontal, implementation uses vertical. For a single Arabic word, the visual difference is minimal. Functionality unaffected. |
+| `OnboardingFlow.tsx` | 66 | `TODO: Update analytics to use STEP_NAMES instead of numeric indices` | Info | Not a blocker — the tracking call on the same line already uses `STEP_NAMES[step]` correctly. Comment is a legacy note about a prior refactor concern, not a missing implementation. |
+| `NameMotivation.tsx` | 103-104 | `placeholder="Your name"` / `placeholderTextColor` | Info | TextInput placeholder text — not a stub, this is the correct UX pattern for an optional name field. |
 
-### Human Verification Required
-
-#### 1. Welcome Screen Atmospheric Warmth (SACR-03)
-
-**Test:** Open the app fresh (or clear onboarding state) and observe the Welcome onboarding screen for 3-5 seconds before tapping "Get Started."
-**Expected:** The screen should feel warm and atmospheric — a gradient background is visible, there may be subtle floating Arabic letters and a warm glow, and the entrance animations are gentle (fade-in, not snap-in). It should feel like entering a quiet room, not launching a utility app.
-**Why human:** The `AtmosphereBackground preset="onboarding"` wraps all of `OnboardingFlow` including the Welcome step, providing the infrastructure. Whether this combination achieves the felt quality of "entering a quiet room" is inherently subjective and cannot be verified by reading source code.
-
-### Gaps Summary
-
-No blocking gaps were found. All six ROADMAP success criteria have been verified or require human inspection. One item (SACR-03 — Welcome screen atmospheric warmth) needs human visual confirmation because it depends on a subjective felt quality that cannot be verified programmatically.
-
-Additional observations (informational, not blocking):
-- The NameMotivation step (CONV-01) is fully implemented and wired but the requirement ID has no canonical entry in REQUIREMENTS.md — it appears only in phase plan/summary frontmatter.
-- Bismillah meanings slightly deviate from the plan's D-05 wording spec (both translations are accurate; this affects only plan acceptance criteria traceability, not the SACR-02 requirement).
-- Hadith Arabic text uses a different portion of the Hadith than the plan spec (5 words instead of 6), but the word-by-word reveal and post-reveal English translation work correctly.
+No blocker or warning anti-patterns found.
 
 ---
 
-_Verified: 2026-04-06T13:15:00Z_
+### Human Verification Required
+
+#### 1. Name Display on Home Screen After Onboarding
+
+**Test:** Install fresh build. Complete full onboarding, enter name "Fatima" at the NameMotivation step, select a motivation. Complete onboarding. Verify home screen shows "ASSALAMU ALAIKUM, FATIMA" as the greeting label.
+**Expected:** Greeting label shows personalized name in uppercase.
+**Why human:** Visual rendering on device cannot be verified programmatically.
+
+#### 2. Wird Tooltip Appearance and Dismissal
+
+**Test:** Complete enough lessons to reach a streak (wird > 0) for the first time. Verify the tooltip appears near the streak badge. Tap it. Verify it disappears. Force-close and reopen app. Verify tooltip does NOT reappear.
+**Expected:** Tooltip shows once, dismisses on tap, never shows again.
+**Why human:** Requires real app session with streak state; persistence across restarts can't be verified without device.
+
+#### 3. Motivation Subtitle Override on Home Screen
+
+**Test:** After choosing "Building toward confident salah" during onboarding, verify the home screen subtitle reads "Building toward confident salah" instead of the default progress-based subtitle.
+**Expected:** Motivation subtitle overrides dynamic subtitle.
+**Why human:** Visual rendering; requires end-to-end onboarding completion on device.
+
+#### 4. NameMotivation Step Skippable (Both Fields Optional)
+
+**Test:** In onboarding, reach the NameMotivation step. Leave name empty and select no motivation. Tap Continue. Verify onboarding completes normally and home screen shows "ASSALAMU ALAIKUM" (no name, progress-based subtitle).
+**Expected:** Continue is always enabled; empty name saved as null; no motivation falls back gracefully.
+**Why human:** Requires full onboarding flow on device.
+
+---
+
+### Gaps Summary
+
+No gaps. All 8 observable truths are verified. All must-have artifacts exist, are substantive, are wired, and have real data flowing through them. Requirements CONV-01, CONV-02, and CONV-04 are fully satisfied. The 4 todo tests in onboarding-flow.test.ts are pre-existing stubs for Phase 03 ONB-02/ONB-03 behaviors that were out of scope for this phase and do not block the phase goal.
+
+---
+
+_Verified: 2026-04-01T19:58:00Z_
 _Verifier: Claude (gsd-verifier)_
