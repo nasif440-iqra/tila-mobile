@@ -117,12 +117,12 @@ function LetterCard({
           style={[
             styles.letterCircle,
             isSmall ? styles.letterCircleSmall : undefined,
+            { backgroundColor: colors.bgCard, borderColor: colors.border },
           ]}
         >
           <ArabicText
             size={isSmall ? "large" : "display"}
-            color={colors.primaryDark}
-            style={{ marginTop: isSmall ? 2 : 4 }}
+            color={colors.primary}
           >
             {letter.letter}
           </ArabicText>
@@ -342,10 +342,7 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     alignItems: "center",
     justifyContent: "center",
-    // Match web: neutral off-white, white border, subtle inset shadow
-    backgroundColor: "#F2F5F3",
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.8)",
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
