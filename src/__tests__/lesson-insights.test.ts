@@ -6,6 +6,7 @@ vi.mock('../data/letters.js', () => ({
       1: { id: 1, letter: '\u0627', name: 'Alif' },
       2: { id: 2, letter: '\u0628', name: 'Ba' },
       3: { id: 3, letter: '\u062A', name: 'Ta' },
+      4: { id: 4, letter: '\u062B', name: 'Tha' },
       7: { id: 7, letter: '\u062E', name: 'Kha' },
       8: { id: 8, letter: '\u062F', name: 'Dal' },
     };
@@ -13,10 +14,112 @@ vi.mock('../data/letters.js', () => ({
   }),
 }));
 
-import { generatePostLessonInsights } from '../engine/insights';
+import { generatePostLessonInsights, type LessonInsight } from '../engine/insights';
 
 describe('generatePostLessonInsights', () => {
-  it('returns confusion insight with caring teacher tone when confused pairs involve lesson letters', () => {
+  // D-06: No scheduling language
+  it('never returns a "review" type insight', () => {
+    const mastery = {
+      entities: {
+        'letter:2': { correct: 5, attempts: 10, nextReview: '2026-04-08', intervalDays: 3, lastSeen: '2026-04-01', sessionStreak: 2, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [2];
+    const sessionResults = new Map<number, { correct: number; total: number }>();
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    expect(insights.every(i => i.type !== 'review')).toBe(true);
+  });
+
+  it('never contains day names or "Review X on" pattern in any message (D-06)', () => {
+    const mastery = {
+      entities: {
+        'letter:1': { correct: 8, attempts: 10, nextReview: '2026-04-10', intervalDays: 14, lastSeen: '2026-04-01', sessionStreak: 5, lastLatencyMs: null },
+        'letter:2': { correct: 5, attempts: 10, nextReview: '2026-04-08', intervalDays: 3, lastSeen: '2026-04-01', sessionStreak: 2, lastLatencyMs: null },
+      },
+      confusions: {
+        'recognition:1->2': { count: 3, lastSeen: '2026-04-01' },
+      },
+    };
+    const lessonLetterIds = [1, 2];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [1, { correct: 9, total: 10 }],
+      [2, { correct: 8, total: 10 }],
+    ]);
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    const dayPattern = /Review\s+\w+\s+on\s+\w+day/i;
+    for (const insight of insights) {
+      expect(insight.message).not.toMatch(dayPattern);
+    }
+  });
+
+  // D-07: Mastery celebration
+  it('shows "You mastered [name]!" when a letter reaches retained state', () => {
+    const mastery = {
+      entities: {
+        'letter:1': { correct: 12, attempts: 14, nextReview: '2026-04-20', intervalDays: 14, lastSeen: '2026-04-01', sessionStreak: 5, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [1];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [1, { correct: 9, total: 10 }],
+    ]);
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    const mastery_ = insights.find(i => i.type === 'mastery');
+    expect(mastery_).toBeDefined();
+    expect(mastery_!.message).toContain('You mastered Alif');
+  });
+
+  it('shows "[name] is getting stronger" when a letter reaches accurate state', () => {
+    // accurate: accuracy >= threshold, but not enough streak/interval for retained
+    const mastery = {
+      entities: {
+        'letter:2': { correct: 8, attempts: 10, nextReview: '2026-04-05', intervalDays: 3, lastSeen: '2026-04-01', sessionStreak: 2, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [2];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [2, { correct: 8, total: 10 }],
+    ]);
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    const mastery_ = insights.find(i => i.type === 'mastery');
+    expect(mastery_).toBeDefined();
+    expect(mastery_!.message).toContain('Ba is getting stronger');
+  });
+
+  it('shows "N letters now retained" when multiple letters are retained', () => {
+    const mastery = {
+      entities: {
+        'letter:1': { correct: 12, attempts: 14, nextReview: '2026-04-20', intervalDays: 14, lastSeen: '2026-04-01', sessionStreak: 5, lastLatencyMs: null },
+        'letter:2': { correct: 10, attempts: 12, nextReview: '2026-04-18', intervalDays: 14, lastSeen: '2026-04-01', sessionStreak: 4, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [1, 2];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [1, { correct: 9, total: 10 }],
+      [2, { correct: 8, total: 10 }],
+    ]);
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    const mastery_ = insights.find(i => i.type === 'mastery');
+    expect(mastery_).toBeDefined();
+    expect(mastery_!.message).toContain('2 letters now retained');
+  });
+
+  // D-08: Confusion pairs with warm tone
+  it('shows confusion pairs with encouraging tone (D-08)', () => {
     const mastery = {
       entities: {},
       confusions: {
@@ -30,39 +133,17 @@ describe('generatePostLessonInsights', () => {
 
     const confusion = insights.find(i => i.type === 'confusion');
     expect(confusion).toBeDefined();
-    expect(confusion!.message).toContain('Tila noticed you mixed up');
+    expect(confusion!.message).toContain('You sometimes confuse');
     expect(confusion!.message).toContain('Ba');
     expect(confusion!.message).toContain('Ta');
+    expect(confusion!.message).toContain('keep practicing');
   });
 
-  it('returns review timing insight with human-readable day name', () => {
-    // Use a known date - a Wednesday
-    const nextReviewDate = '2026-04-08'; // a Wednesday
+  // D-09: Encouragement fallback
+  it('shows encouraging message when no confusions and accuracy >= 80% (D-09)', () => {
     const mastery = {
       entities: {
-        'letter:2': { correct: 5, attempts: 10, nextReview: nextReviewDate, intervalDays: 3, lastSeen: '2026-04-01', sessionStreak: 2, lastLatencyMs: null },
-      },
-      confusions: {},
-    };
-    const lessonLetterIds = [2];
-    const sessionResults = new Map<number, { correct: number; total: number }>();
-
-    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
-
-    const review = insights.find(i => i.type === 'review');
-    expect(review).toBeDefined();
-    expect(review!.message).toContain('Review');
-    expect(review!.message).toContain('Ba');
-    expect(review!.message).toMatch(/on\s+\w+day/); // "on Wednesday" or similar day name
-  });
-
-  it('returns accuracy trend insight when improvement detected', () => {
-    // Entity has 20 attempts, 12 correct (60% prior)
-    // Session: 10 attempts, 9 correct (90% this session)
-    // Prior was (12-9)/(20-10) = 3/10 = 30%. Current session 90%. Improvement > 10pp.
-    const mastery = {
-      entities: {
-        'letter:1': { correct: 12, attempts: 20, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+        'letter:1': { correct: 3, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
       },
       confusions: {},
     };
@@ -73,22 +154,49 @@ describe('generatePostLessonInsights', () => {
 
     const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
 
-    const trend = insights.find(i => i.type === 'trend');
-    expect(trend).toBeDefined();
-    expect(trend!.message).toContain('getting stronger');
-    expect(trend!.message).toContain('Alif');
+    const encouragement = insights.find(i => i.type === 'encouragement');
+    expect(encouragement).toBeDefined();
+    expect(encouragement!.message.length).toBeGreaterThan(0);
   });
 
-  it('returns empty array when no interesting data exists (D-04)', () => {
-    const mastery = { entities: {}, confusions: {} };
-    const lessonLetterIds = [1, 2];
-    const sessionResults = new Map<number, { correct: number; total: number }>();
+  it('shows encouragement even for moderate accuracy (50-79%)', () => {
+    const mastery = {
+      entities: {
+        'letter:1': { correct: 3, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [1];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [1, { correct: 6, total: 10 }],
+    ]);
 
     const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
 
-    expect(insights).toEqual([]);
+    const encouragement = insights.find(i => i.type === 'encouragement');
+    expect(encouragement).toBeDefined();
   });
 
+  it('shows encouragement for low accuracy (< 50%)', () => {
+    const mastery = {
+      entities: {
+        'letter:1': { correct: 1, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+      },
+      confusions: {},
+    };
+    const lessonLetterIds = [1];
+    const sessionResults = new Map<number, { correct: number; total: number }>([
+      [1, { correct: 3, total: 10 }],
+    ]);
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    const encouragement = insights.find(i => i.type === 'encouragement');
+    expect(encouragement).toBeDefined();
+    expect(encouragement!.message).toContain('Every attempt teaches you something');
+  });
+
+  // No confusion insight for unrelated letters
   it('returns no confusion insight when confusions do not involve lesson letters', () => {
     const mastery = {
       entities: {},
@@ -96,7 +204,7 @@ describe('generatePostLessonInsights', () => {
         'recognition:7->8': { count: 3, lastSeen: '2026-04-01' },
       },
     };
-    const lessonLetterIds = [1, 2]; // letters 7 and 8 are not in this lesson
+    const lessonLetterIds = [1, 2];
     const sessionResults = new Map<number, { correct: number; total: number }>();
 
     const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
@@ -105,10 +213,11 @@ describe('generatePostLessonInsights', () => {
     expect(confusion).toBeUndefined();
   });
 
+  // Max 3 insights, max 1 per type
   it('returns max 1 insight per type, max 3 total', () => {
     const mastery = {
       entities: {
-        'letter:1': { correct: 12, attempts: 20, nextReview: '2026-04-08', intervalDays: 3, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+        'letter:1': { correct: 12, attempts: 14, nextReview: '2026-04-20', intervalDays: 14, lastSeen: '2026-04-01', sessionStreak: 5, lastLatencyMs: null },
         'letter:2': { correct: 15, attempts: 25, nextReview: '2026-04-09', intervalDays: 4, lastSeen: '2026-04-01', sessionStreak: 2, lastLatencyMs: null },
       },
       confusions: {
@@ -127,6 +236,19 @@ describe('generatePostLessonInsights', () => {
     expect(insights.length).toBeLessThanOrEqual(3);
     const types = insights.map(i => i.type);
     const uniqueTypes = new Set(types);
-    expect(uniqueTypes.size).toBe(types.length); // no duplicate types
+    expect(uniqueTypes.size).toBe(types.length);
+  });
+
+  // Empty data
+  it('returns encouragement even when no entity data exists (no empty array)', () => {
+    const mastery = { entities: {}, confusions: {} };
+    const lessonLetterIds = [1, 2];
+    const sessionResults = new Map<number, { correct: number; total: number }>();
+
+    const insights = generatePostLessonInsights(mastery, lessonLetterIds, sessionResults);
+
+    // Should have at least an encouragement insight, not an empty array
+    expect(insights.length).toBeGreaterThanOrEqual(1);
+    expect(insights[0].type).toBe('encouragement');
   });
 });
