@@ -1,41 +1,45 @@
-# Phase 3: Onboarding & Personalization - Research
+# Phase 3: Sacred Moments - Research
 
-**Researched:** 2026-04-01
-**Domain:** React Native onboarding UX, SQLite migrations, component composition
+**Researched:** 2026-04-06
+**Domain:** React Native Reanimated staggered word-reveal animations, onboarding atmosphere integration
 **Confidence:** HIGH
 
 ## Summary
 
-This phase adds three features: (1) a combined name + motivation onboarding step, (2) personalized home screen greeting, and (3) a wird explanation tooltip. All three are well-scoped UI + data layer changes with minimal risk. The existing codebase provides strong patterns to follow -- the onboarding flow has a clean draft state pattern, the DB migration system uses PRAGMA checks, and the profile save pipeline already handles motivation.
+Phase 3 transforms onboarding and Bismillah from static content into spiritual thresholds. The primary technical challenge is building a `PhraseReveal` component that auto-reveals Arabic words sequentially with transliteration fading in beneath each word. This is a pure animation challenge using Reanimated 4.2.1's `withDelay`, `withTiming`, and `withSequence` -- no new libraries needed.
 
-The key insight is that no new libraries or architectural changes are needed. Every requirement can be met by extending existing patterns: adding a step component, extending the OnboardingDraft type, adding a DB migration for the `name` column, and modifying the home screen greeting renderer.
+The existing codebase provides strong foundations: `AtmosphereBackground` with 'onboarding' preset is ready to wrap `OnboardingFlow`, `ArabicText` handles Arabic rendering with proper line heights, and `OnboardingStepLayout` with its `splash` variant handles centering and safe areas. The Finish screen already uses `withSpring` with `springs.bouncy` which needs replacing with a gentle timing-based settle.
 
-**Primary recommendation:** Follow existing onboarding step patterns exactly (StartingPoint.tsx as template), reuse `wird_intro_seen` flag for the tooltip, and keep the DB migration minimal (single `name` column addition).
+**Primary recommendation:** Build PhraseReveal as a single reusable component in `src/design/components/`, data-driven by an array of word objects. Apply AtmosphereBackground at the OnboardingFlow level. All animation work uses existing Reanimated APIs -- no new dependencies.
 
 <user_constraints>
 ## User Constraints (from CONTEXT.md)
 
 ### Locked Decisions
-- D-01: Combined name input (optional) + motivation picker (5 options) in ONE new onboarding step
-- D-02: Step placed after LetterQuiz (step 8), before Finish (step 9). Current Finish moves from step 8 to step 9. TOTAL_STEPS becomes 10.
-- D-03: Name is optional, motivation picker should have default or skip option
-- D-04: DB migration adds `name` column to `user_profile` table. `motivation` column already exists.
-- D-05: Follow existing draft state pattern -- add `userName` and `motivation` to OnboardingDraft, save via updateProfile() in handleFinish
-- D-06: Greeting WITH name: "ASSALAMU ALAIKUM, [NAME]" + motivation subtitle
-- D-07: Greeting WITHOUT name: "ASSALAMU ALAIKUM" + motivation subtitle
-- D-08: Greeting WITHOUT motivation: "ASSALAMU ALAIKUM" + current dynamic subtitle
-- D-09: Motivation-to-subtitle mapping (5 values, exact strings provided)
-- D-10: Location: `app/(tabs)/index.tsx` lines 473-478
-- D-11: Auto tooltip on first streak badge appearance on home screen
-- D-12: Tap to dismiss, one-time, tracked via flag in user_profile
-- D-13: Tooltip content: "In Islamic tradition, a wird is a daily practice -- a small, consistent effort. Your learning wird builds day by day."
-- D-14: Visual style: warm cream background, dark green text, subtle shadow, positioned near AnimatedStreakBadge
+- **D-01:** Build a shared `PhraseReveal` component that takes Arabic words + transliterations as data. Used by Bismillah, Tilawah, and Hadith screens.
+- **D-02:** Auto-timed reveal -- words appear automatically with staggered timing (600-800ms per word, 300-400ms stagger). Tap anywhere to skip ahead.
+- **D-03:** Transliteration fades in beneath each Arabic word after it reveals -- creates a two-line pair per word. Clear connection between Arabic and pronunciation.
+- **D-04:** English meaning appears per-word ONLY in Bismillah (teaching moment). Tilawah and Hadith show full English translation after the reveal completes.
+- **D-05:** Break Bismillah into 4 semantic units: Bismi / Allahi / Ar-Rahmani / Ar-Raheem. Each unit shows Arabic word, transliteration, and English meaning.
+- **D-06:** All 4 units auto-reveal sequentially using the PhraseReveal primitive. The current 4-second auto-advance timer is removed.
+- **D-07:** After all 4 units reveal, show a CTA button (e.g., "Continue"). User absorbs at their own pace -- no auto-advance on sacred content.
+- **D-08:** Stacked vertical layout -- each unit on its own row: Arabic word on top, transliteration below, meaning below that. Clean, spacious, meditative.
+- **D-09:** Wrap the entire onboarding flow in AtmosphereBackground 'onboarding' preset. Every step feels like one continuous inhabited space.
+- **D-10:** Welcome screen: AtmosphereBackground only. Keep existing staggered fade-in animations and BrandedLogo. The atmosphere IS the upgrade.
+- **D-11:** Tilawah screen: Replace static Arabic block with word-by-word PhraseReveal. Remove ShimmerWord animation (replaced by reveal). Keep headline and motto text.
+- **D-12:** Hadith screen: Keep ArchOutline and WarmGlow (they add atmosphere). Replace static quote with word-by-word PhraseReveal. Keep source attribution.
+- **D-13:** Replace bouncy spring checkmark with gentle fade-in + subtle scale settle (1.02 to 1.0). Checkmark appears quietly -- gravity, not celebration.
+- **D-14:** Keep the ambient Alif watermark (200px, 8% opacity). It's subtle and ties back to "you're about to learn your first letter."
+- **D-15:** Keep CTA text as "Start Lesson 1" -- direct, clear, grounding after emotional buildup.
 
 ### Claude's Discretion
-- Exact tooltip visual design (card shape, arrow, animation)
-- Name + motivation step UI layout (cards, form, split-screen)
-- DB migration version number
-- Test approach
+- PhraseReveal animation easing curves and exact timing values within the 600-800ms/300-400ms ranges
+- Reduce Motion fallback for PhraseReveal (likely: show all words at once with simple fade)
+- Where to place AtmosphereBackground wrapper (OnboardingFlow level vs per-screen)
+- Exact scale settle curve for Finish checkmark
+- Whether Bismillah CTA says "Continue" or something else
+- Typography sizing for transliteration text in PhraseReveal
+- Whether PhraseReveal lives in `src/design/components/` or `src/components/shared/`
 
 ### Deferred Ideas (OUT OF SCOPE)
 None -- discussion stayed within phase scope
@@ -46,279 +50,465 @@ None -- discussion stayed within phase scope
 
 | ID | Description | Research Support |
 |----|-------------|------------------|
-| CONV-01 | Optional name input added to onboarding flow, stored in user profile | OnboardingDraft pattern documented, DB migration pattern established, StartingPoint.tsx provides template for data-collecting steps |
-| CONV-02 | Wird concept explained on first encounter via one-time tooltip/explanation | `wird_intro_seen` flag already exists in schema and ProgressState; AnimatedStreakBadge component identified as tooltip anchor |
-| CONV-04 | Home screen greeting personalized with user name and motivation | `onboardingMotivation` already loaded in ProgressState; greeting section at lines 471-478 identified; `getGreetingSubtitle` function ready to extend |
+| SACR-01 | Sacred phrase reveal primitive -- word-by-word fade-in (600-800ms per word, 300-400ms stagger) with transliteration appearing beneath each word | PhraseReveal component architecture, Reanimated stagger pattern, data-driven word array |
+| SACR-02 | Bismillah micro-lesson -- 4 semantic units with Arabic, transliteration, and meaning | Bismillah data structure, BismillahMoment.tsx rewrite pattern, CTA addition |
+| SACR-03 | Onboarding Welcome screen atmosphere -- warm ambient background, gentle entrance | AtmosphereBackground 'onboarding' preset at OnboardingFlow level |
+| SACR-04 | Onboarding Tilawah screen -- sacred phrase reveals word-by-word | PhraseReveal integration, ShimmerWord removal, Tilawah Arabic word data |
+| SACR-05 | Onboarding Hadith screen -- sacred phrase reveals word-by-word | PhraseReveal integration, preserving ArchOutline + WarmGlow, Hadith Arabic word data |
+| SACR-06 | Onboarding Finish screen atmosphere -- lands with gravity, not bounce | Replace withSpring(bouncy) with withTiming settle pattern |
 </phase_requirements>
 
 ## Standard Stack
 
-No new packages needed. All requirements are met with the existing stack.
-
-### Core (Existing -- No Changes)
+### Core
 | Library | Version | Purpose | Why Standard |
 |---------|---------|---------|--------------|
-| expo-sqlite | 55.0.11 | User profile storage (name, motivation, flags) | Already used for all persistence |
-| react-native-reanimated | 4.2.1 | Step transitions, tooltip entrance animation | Already used in onboarding and home |
-| React Native TextInput | 0.83.2 | Name input field | Built-in, no extra dependency needed |
+| react-native-reanimated | 4.2.1 | All PhraseReveal animations, stagger, fade, scale settle | Already installed; project standard for animations [VERIFIED: package.json] |
+| expo-haptics | 55.0.11 | hapticSelection for Bismillah entrance | Already installed; project standard [VERIFIED: package.json] |
+
+### Supporting
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| react-native-svg | 15.15.3 | ArchOutline in Hadith (existing), WarmGlow SVG gradients | Already used in Hadith.tsx [VERIFIED: codebase] |
+| expo-linear-gradient | 55.0.11 | AtmosphereBackground linear gradient layer | Already used in AtmosphereBackground [VERIFIED: codebase] |
 
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| React Native TextInput | react-native-paper or custom | Over-engineering for a single optional field |
-| Manual tooltip | react-native-tooltip, @gorhom/portal | Adds dependency for a one-time tooltip; inline View is simpler |
+| Reanimated withDelay stagger | LayoutAnimation | LayoutAnimation cannot control per-word timing; Reanimated is already the project standard |
+| Custom PhraseReveal | react-native-animatable | Adds dependency; Reanimated already covers all needed primitives |
+
+**No new dependencies required.** Everything needed is already installed.
 
 ## Architecture Patterns
 
-### New Onboarding Step Component
+### Recommended Project Structure
+```
+src/design/components/
+  PhraseReveal.tsx        # New shared reveal primitive (SACR-01)
+  index.ts                # Add PhraseReveal export
 
-Follow the exact pattern from `StartingPoint.tsx`:
+src/components/onboarding/steps/
+  BismillahMoment.tsx     # Rewrite with PhraseReveal + CTA (SACR-02)
+  Tilawat.tsx             # Replace static Arabic + ShimmerWord (SACR-04)
+  Hadith.tsx              # Replace static quote with PhraseReveal (SACR-05)
+  Welcome.tsx             # No content changes (SACR-03 via flow wrapper)
+  Finish.tsx              # Replace bouncy spring with settle (SACR-06)
 
+src/components/onboarding/
+  OnboardingFlow.tsx      # Wrap in AtmosphereBackground (SACR-03)
+```
+
+### Pattern 1: PhraseReveal Component -- Data-Driven Word Array
+**What:** A reusable component that accepts an array of word objects and reveals them sequentially with staggered timing. Each word is a vertical unit: Arabic on top, transliteration below, optional meaning below that.
+**When to use:** Any screen with sacred Arabic text that should reveal word-by-word.
+**Recommendation:** Place in `src/design/components/PhraseReveal.tsx` since it is a design-system-level primitive (like ArabicText), not a feature component. [ASSUMED]
+
+**Data structure:**
 ```typescript
-// src/components/onboarding/steps/NameMotivation.tsx
-// Pattern: receive onNext prop, render with OnboardingStepLayout, call onNext() to advance
-export function NameMotivation({
-  userName,
-  motivation,
-  onChangeName,
-  onSelectMotivation,
-  onNext,
-}: {
-  userName: string;
-  motivation: string | null;
-  onChangeName: (value: string) => void;
-  onSelectMotivation: (value: string) => void;
-  onNext: () => void;
+interface PhraseWord {
+  arabic: string;
+  transliteration: string;
+  meaning?: string; // Only provided for Bismillah (D-04)
+}
+
+interface PhraseRevealProps {
+  words: PhraseWord[];
+  wordDuration?: number;   // 600-800ms per word (D-02)
+  staggerDelay?: number;   // 300-400ms between words (D-02)
+  onComplete?: () => void; // Fires after all words revealed
+  layout?: 'horizontal' | 'vertical'; // Bismillah = vertical (D-08), others = horizontal
+}
+```
+
+**Critical implementation note -- hook rules:** Cannot call `useSharedValue` inside a `.map()` loop. Each word's animation must be managed by a child `RevealWord` component that owns its own shared values. The parent coordinates via props (index, timing config) and a shared skip signal. [VERIFIED: React hooks rules apply to Reanimated hooks]
+
+**Child component pattern:**
+```typescript
+// Source: Reanimated withDelay + withTiming stagger pattern [VERIFIED: Reanimated API in codebase]
+function RevealWord({ word, index, staggerDelay, wordDuration, skipImmediate }: {
+  word: PhraseWord;
+  index: number;
+  staggerDelay: number;
+  wordDuration: number;
+  skipImmediate: boolean; // When true, show immediately (skip or reduce motion)
 }) {
-  // Use OnboardingStepLayout variant="card"
-  // TextInput for name (optional)
-  // OptionCard list for motivation (reuse pattern from StartingPoint.tsx)
-  // Continue button always enabled (name is optional, motivation can default)
-}
-```
+  const arabicOpacity = useSharedValue(skipImmediate ? 1 : 0);
+  const translitOpacity = useSharedValue(skipImmediate ? 1 : 0);
+  const meaningOpacity = useSharedValue(skipImmediate ? 1 : 0);
 
-### OnboardingFlow Integration Points
-
-1. **TOTAL_STEPS**: 9 -> 10
-2. **STEP constant**: Add `NAME_MOTIVATION: 8`, shift `FINISH: 8` -> `FINISH: 9`
-3. **STEP_NAMES**: Add `'name_motivation'` at index 8, `'finish'` moves to index 9
-4. **Draft state**: Extend with `userName: string` and `motivation: string | null`
-5. **handleFinish**: Add `name: draft.userName` and `motivation: draft.motivation` to `updateProfile()` call
-6. **Render**: Add step rendering between LETTER_QUIZ and FINISH
-
-### Draft State Extension
-
-```typescript
-// src/types/onboarding.ts
-export interface OnboardingDraft {
-  startingPoint: 'new' | 'some_arabic' | 'rusty' | 'can_read' | null;
-  userName: string;
-  motivation: 'read_quran' | 'pray_confidently' | 'connect_heritage' | 'teach_children' | 'personal_growth' | null;
-}
-```
-
-Initial draft state: `{ startingPoint: null, userName: '', motivation: null }`
-
-### DB Migration Pattern (v6)
-
-```typescript
-// In src/db/client.ts, inside runMigrations()
-if (currentVersion < 6) {
-  const profileInfo = await db.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(user_profile)"
-  );
-  const hasName = profileInfo.some((col) => col.name === "name");
-  if (!hasName) {
-    await db.execAsync(
-      "ALTER TABLE user_profile ADD COLUMN name TEXT;"
+  useEffect(() => {
+    if (skipImmediate) return;
+    const baseDelay = index * staggerDelay;
+    arabicOpacity.value = withDelay(baseDelay,
+      withTiming(1, { duration: wordDuration, easing: Easing.out(Easing.cubic) })
     );
-  }
-  await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (6)");
+    translitOpacity.value = withDelay(baseDelay + 200,
+      withTiming(1, { duration: wordDuration * 0.8, easing: Easing.out(Easing.cubic) })
+    );
+    if (word.meaning) {
+      meaningOpacity.value = withDelay(baseDelay + 400,
+        withTiming(1, { duration: wordDuration * 0.7, easing: Easing.out(Easing.cubic) })
+      );
+    }
+  }, [skipImmediate]);
+
+  const arabicStyle = useAnimatedStyle(() => ({ opacity: arabicOpacity.value }));
+  const translitStyle = useAnimatedStyle(() => ({ opacity: translitOpacity.value }));
+  const meaningStyle = useAnimatedStyle(() => ({ opacity: meaningOpacity.value }));
+
+  return (
+    <View style={styles.wordUnit}>
+      <Animated.View style={arabicStyle}>
+        <ArabicText size="large" /* ... */>{word.arabic}</ArabicText>
+      </Animated.View>
+      <Animated.Text style={[styles.transliteration, translitStyle]}>
+        {word.transliteration}
+      </Animated.Text>
+      {word.meaning && (
+        <Animated.Text style={[styles.meaning, meaningStyle]}>
+          {word.meaning}
+        </Animated.Text>
+      )}
+    </View>
+  );
 }
 ```
 
-Also update `SCHEMA_VERSION` from 5 to 6 in `schema.ts` and add `name TEXT` column to `CREATE_TABLES`.
-
-### Home Screen Greeting Modification
-
-Current flow: `getGreetingSubtitle()` returns a dynamic string based on lesson count.
-
-New flow:
-1. Read `progress.onboardingMotivation` and a new `progress.userName` (requires adding to ProgressState)
-2. If motivation exists, use motivation-to-subtitle mapping instead of `getGreetingSubtitle()`
-3. If name exists, append to "ASSALAMU ALAIKUM"
-4. Fall back gracefully at each level
-
+**Parent component handles skip and completion:**
 ```typescript
-const MOTIVATION_SUBTITLES: Record<string, string> = {
-  read_quran: "Reading toward the Quran",
-  pray_confidently: "Building toward confident salah",
-  connect_heritage: "Connecting to your heritage",
-  teach_children: "Learning to teach your children",
-  personal_growth: "Growing in your faith",
-};
+function PhraseReveal({ words, wordDuration = 700, staggerDelay = 350, onComplete, layout = 'vertical' }: PhraseRevealProps) {
+  const reducedMotion = useReducedMotion();
+  const [skipped, setSkipped] = useState(reducedMotion ?? false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-// In HomeScreen:
-const userName = progress.userName ?? null;
-const motivation = progress.onboardingMotivation ?? null;
+  useEffect(() => {
+    if (skipped) {
+      onComplete?.();
+      return;
+    }
+    const totalTime = (words.length - 1) * staggerDelay + wordDuration + 400;
+    timerRef.current = setTimeout(() => {
+      onComplete?.();
+    }, totalTime);
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
+  }, [skipped]);
 
-const greetingLine1 = userName
-  ? `ASSALAMU ALAIKUM, ${userName.toUpperCase()}`
-  : "ASSALAMU ALAIKUM";
+  function handleSkip() {
+    if (skipped) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setSkipped(true);
+    // Setting skipped=true triggers re-render; RevealWord children
+    // receive skipImmediate=true and show instantly via quick withTiming
+  }
 
-const greetingLine2 = motivation && MOTIVATION_SUBTITLES[motivation]
-  ? MOTIVATION_SUBTITLES[motivation]
-  : getGreetingSubtitle(lessonsCompleted, learnedLetterIds.length);
+  const containerStyle = layout === 'vertical' ? styles.vertical : styles.horizontal;
+
+  return (
+    <Pressable onPress={handleSkip} style={containerStyle}>
+      {words.map((word, i) => (
+        <RevealWord
+          key={i}
+          word={word}
+          index={i}
+          staggerDelay={staggerDelay}
+          wordDuration={wordDuration}
+          skipImmediate={skipped}
+        />
+      ))}
+    </Pressable>
+  );
+}
 ```
 
-### Wird Tooltip Pattern
+### Pattern 2: AtmosphereBackground at Flow Level
+**What:** Wrap `OnboardingFlow` root in `AtmosphereBackground preset="onboarding"` so all steps share a continuous ambient background.
+**When to use:** D-09 specifies entire flow gets atmosphere.
 
-The `wird_intro_seen` flag already exists in the schema and is loaded via `progress.wirdIntroSeen`. The full wird-intro screen (`app/wird-intro.tsx`) sets this flag. The tooltip should reuse this same flag:
+**Key changes to OnboardingFlow.tsx:**
+1. Import `AtmosphereBackground` from `../../design/atmosphere/AtmosphereBackground`
+2. Wrap the root `Animated.View` in `<AtmosphereBackground preset="onboarding">`
+3. Remove `backgroundColor: colors.bgWarm` from `styles.root` (AtmosphereBackground provides gradient)
+4. Remove the standalone `<FloatingLettersLayer>` on line 143 -- AtmosphereBackground's 'onboarding' preset already has `floatingLetters: true` [VERIFIED: AtmosphereBackground.tsx line 88]
 
-- If `wirdIntroSeen` is false AND `currentWird > 0` (streak badge visible), show tooltip
-- On tap dismiss, call `updateProfile({ wirdIntroSeen: true })`
-- This ensures users who already saw the full wird-intro screen don't see the tooltip again
+```typescript
+// OnboardingFlow.tsx -- updated render
+return (
+  <AtmosphereBackground preset="onboarding">
+    <Animated.View style={[styles.root, fadeStyle]}>
+      {/* REMOVED: FloatingLettersLayer -- now provided by AtmosphereBackground */}
+      {showProgressBar && (
+        <View style={[styles.progressContainer, { paddingTop: insets.top + spacing.sm }]}>
+          <ProgressBar current={step} total={TOTAL_STEPS} colors={colors} />
+        </View>
+      )}
+      <ScrollView ...>
+        {/* All step content unchanged */}
+      </ScrollView>
+    </Animated.View>
+  </AtmosphereBackground>
+);
+```
 
-The tooltip should be a simple absolutely-positioned View near the AnimatedStreakBadge, with a FadeIn entrance animation and tap-to-dismiss.
+### Pattern 3: Gentle Scale Settle (Finish Screen)
+**What:** Replace `withSpring(1.0, springs.bouncy)` with `withTiming` for a gentle 1.02 to 1.0 settle.
+**When to use:** D-13 -- Finish screen checkmark.
+
+**Current code** (Finish.tsx lines 45-53):
+```typescript
+// CURRENT: bouncy spring
+scale.value = withSpring(1.0, springs.bouncy);
+```
+
+**Replacement:**
+```typescript
+// NEW: gentle settle (D-13)
+const reducedMotion = useReducedMotion();
+
+// Replace initial value: was 0.5, now 0.98 (smaller range = subtler)
+const scale = useSharedValue(reducedMotion ? 1 : 0.98);
+const checkOpacity = useSharedValue(reducedMotion ? 1 : 0);
+
+useEffect(() => {
+  if (reducedMotion) { hapticSuccess(); return; }
+  const timer = setTimeout(() => {
+    hapticSuccess();
+    checkOpacity.value = withTiming(1, {
+      duration: 600,
+      easing: Easing.out(Easing.cubic),
+    });
+    scale.value = withSequence(
+      withTiming(1.02, { duration: 600, easing: Easing.out(Easing.cubic) }),
+      withTiming(1.0, { duration: 400, easing: Easing.inOut(Easing.ease) })
+    );
+  }, checkDelay);
+  return () => clearTimeout(timer);
+}, []);
+
+const checkAnimStyle = useAnimatedStyle(() => ({
+  transform: [{ scale: scale.value }],
+  opacity: checkOpacity.value,
+}));
+```
 
 ### Anti-Patterns to Avoid
-- **Don't create a separate wird_explanation_seen flag** -- reuse the existing `wird_intro_seen` which already tracks wird concept awareness
-- **Don't make name required** -- the onboarding must work with empty name (D-03)
-- **Don't change the motivation column or its CHECK constraint** -- it already exists with the correct values
-- **Don't modify LetterQuiz or earlier steps** -- only add the new step and update constants
+- **Calling useSharedValue in a loop:** Reanimated hooks must follow React hook rules. Use child components for dynamic lists where each child owns its own shared values.
+- **Auto-advancing sacred content:** D-06 explicitly removes the 4-second setTimeout. Never auto-advance after PhraseReveal completes -- show a CTA button instead.
+- **Nesting AtmosphereBackground:** Do not put AtmosphereBackground inside individual steps AND at the flow level. One wrapper at the flow level is sufficient (D-09).
+- **Forgetting to remove old patterns:** ShimmerWord in Tilawat.tsx, FloatingLettersLayer in OnboardingFlow.tsx, setTimeout in BismillahMoment.tsx must all be explicitly removed.
 
 ## Don't Hand-Roll
 
 | Problem | Don't Build | Use Instead | Why |
 |---------|-------------|-------------|-----|
-| Tooltip positioning | Custom measurement/portal system | Absolute-positioned View near badge | One-time tooltip doesn't justify a positioning library |
-| Form validation | Custom validation framework | Simple string length check | Name is optional, motivation has fixed options |
-| Text capitalization | Manual string transforms | CSS/style textTransform or `.toUpperCase()` | Built-in and consistent |
+| Staggered word reveal | Custom setTimeout chains with setState | Reanimated `withDelay` + `withTiming` per child | setTimeout chains cause re-renders; Reanimated runs on UI thread [VERIFIED: Reanimated architecture] |
+| Ambient background | Per-screen gradient + glow | `AtmosphereBackground` preset='onboarding' | Already built in Phase 1 with proper layering [VERIFIED: codebase] |
+| Reduce Motion detection | Manual AccessibilityInfo listeners | `useReducedMotion()` from Reanimated | Already used in WarmGlow and FloatingLettersLayer [VERIFIED: codebase grep] |
+| Arabic text rendering | Raw `<Text>` with manual font/lineHeight | `ArabicText` component with size tiers | Handles writingDirection, overflow visible, font family [VERIFIED: ArabicText.tsx] |
 
 ## Common Pitfalls
 
-### Pitfall 1: STEP Index Shift Breaking Analytics
-**What goes wrong:** Inserting a new step at index 8 shifts FINISH from 8 to 9. Any hardcoded step index references in analytics or conditions break.
-**Why it happens:** The codebase already has a TODO comment about this (line 66 of OnboardingFlow.tsx).
-**How to avoid:** Use STEP.* constants everywhere, never raw numbers. The existing code already uses STEP constants for all conditions. Verify `showProgressBar` condition still works after the shift.
-**Warning signs:** Analytics events showing wrong step names.
+### Pitfall 1: Shared Value Hook Rules Violation
+**What goes wrong:** Calling `useSharedValue` inside a `.map()` loop or conditionally creates hook ordering violations.
+**Why it happens:** PhraseReveal needs N opacity values for N words. Tempting to create them in a loop.
+**How to avoid:** Each `RevealWord` child component calls `useSharedValue` once for its own opacity. The parent renders N children.
+**Warning signs:** React "hooks called in different order" error, or silent bugs where animations target wrong words.
 
-### Pitfall 2: TextInput Keyboard Covering Content
-**What goes wrong:** On Android, the keyboard pushes or covers the motivation picker below the name input.
-**Why it happens:** ScrollView + keyboard interaction in React Native is notoriously tricky.
-**How to avoid:** The step already renders inside a ScrollView (OnboardingFlow wraps all steps in ScrollView). Ensure `keyboardShouldPersistTaps="handled"` and consider `KeyboardAvoidingView` if needed. Test on both platforms.
-**Warning signs:** Content hidden behind keyboard on Android.
+### Pitfall 2: Double FloatingLetters
+**What goes wrong:** Floating Arabic letters appear doubled -- one set from `OnboardingFlow.tsx` line 143, another from `AtmosphereBackground`.
+**Why it happens:** `OnboardingFlow` currently renders its own `<FloatingLettersLayer>` for steps 0-3. The 'onboarding' preset in `AtmosphereBackground` also has `floatingLetters: true`.
+**How to avoid:** Remove the standalone `FloatingLettersLayer` from `OnboardingFlow.tsx` when adding `AtmosphereBackground` wrapper.
+**Warning signs:** Doubled semi-transparent Arabic letters on Welcome/Tilawat/Hadith screens.
 
-### Pitfall 3: Empty Name Stored as Empty String vs Null
-**What goes wrong:** An empty TextInput stores `""` instead of `null`, causing the greeting to show "ASSALAMU ALAIKUM, " (with trailing comma-space).
-**Why it happens:** TextInput value is always a string, never null.
-**How to avoid:** In `handleFinish`, convert empty string to null: `name: draft.userName.trim() || null`. In the greeting, check `userName` truthiness (empty string is falsy).
-**Warning signs:** Greeting shows comma with no name after it.
+### Pitfall 3: Stale Timer After Skip
+**What goes wrong:** User taps to skip PhraseReveal, but the `onComplete` callback fires twice -- once from skip handler, once from the stale setTimeout.
+**Why it happens:** The total-time setTimeout in PhraseReveal is not cleared when user taps to skip.
+**How to avoid:** Clear the completion timer in the skip handler. Use a ref for the timer and clear it on skip + unmount.
+**Warning signs:** CTA button appearing twice or onComplete firing after navigation.
 
-### Pitfall 4: Migration Not Running for Fresh Installs
-**What goes wrong:** Fresh installs use `CREATE_TABLES` which doesn't have the `name` column, and migration v6 doesn't run because schema version is stamped at 6.
-**Why it happens:** `CREATE_TABLES` is the source of truth for fresh installs; migrations only run for existing databases.
-**How to avoid:** Add `name TEXT` to the `CREATE_TABLES` string in `schema.ts` AND add migration v6 in `client.ts`. Both must be updated.
-**Warning signs:** Name not saved on fresh installs, works on upgrades.
+### Pitfall 4: BismillahMoment Timer Not Removed
+**What goes wrong:** Bismillah auto-advances after 4 seconds despite D-06 saying to remove auto-advance.
+**Why it happens:** Forgetting to remove the `setTimeout(onNext, BISMILLAH_HOLD)` and replacing it with a CTA button.
+**How to avoid:** Delete the setTimeout entirely. Replace `onNext` prop usage with a CTA `<Button>` that becomes visible after PhraseReveal completes.
+**Warning signs:** Screen auto-advances before user presses Continue.
 
-### Pitfall 5: Progress Bar Visibility Logic
-**What goes wrong:** The new NAME_MOTIVATION step might not show the progress bar, or the progress bar ratio looks wrong.
-**Why it happens:** `showProgressBar` has explicit exclusions for certain steps. TOTAL_STEPS affects the progress bar ratio.
-**How to avoid:** The NAME_MOTIVATION step should show the progress bar (it's a data-collection step like StartingPoint). Update TOTAL_STEPS to 10 and verify `showProgressBar` doesn't accidentally exclude the new step index.
-**Warning signs:** Progress bar missing or showing wrong progress on the new step.
+### Pitfall 5: Missing Reduce Motion Fallback
+**What goes wrong:** PhraseReveal animations play on devices with Reduce Motion enabled, violating accessibility.
+**Why it happens:** New component does not check `useReducedMotion()`.
+**How to avoid:** Check `useReducedMotion()` at the top of PhraseReveal. If true, render all words immediately with a simple 300ms opacity fade (no stagger). This matches the existing pattern in WarmGlow and FloatingLettersLayer.
+**Warning signs:** Accessibility audit failure, FOUN-04 regression.
 
-### Pitfall 6: Tooltip Showing on Every Home Screen Visit
-**What goes wrong:** The wird tooltip re-appears every time the user returns to the home screen.
-**Why it happens:** Flag not persisted before tooltip dismissed, or state not refreshed after updateProfile.
-**How to avoid:** Call `updateProfile({ wirdIntroSeen: true })` on dismiss, then refresh progress state. Use local state to immediately hide the tooltip without waiting for DB round-trip.
-**Warning signs:** Users see the tooltip repeatedly.
+### Pitfall 6: Arabic Word Segmentation
+**What goes wrong:** Arabic words split at wrong boundaries, breaking meaning or display.
+**Why it happens:** Arabic text has connecting forms -- splitting at the wrong point creates orphaned connectors.
+**How to avoid:** The Bismillah data is pre-segmented into 4 semantic units (D-05). Tilawah and Hadith quotes should also be pre-segmented as static data arrays, not split programmatically. Each word is a string literal.
+**Warning signs:** Broken Arabic letterforms, incorrect word boundaries.
+
+### Pitfall 7: BismillahMoment Prop Interface Change
+**What goes wrong:** BismillahMoment currently receives `onNext` and auto-advances. After changes, it needs `onNext` for the CTA button but must NOT auto-advance.
+**Why it happens:** The prop interface stays the same but behavior changes completely.
+**How to avoid:** Keep `onNext` prop. Remove the useEffect timer. Add a `<Button>` in footer that calls `onNext`. PhraseReveal's `onComplete` controls when the button becomes visible.
+**Warning signs:** No way to advance past Bismillah screen.
 
 ## Code Examples
 
-### Example 1: Existing Step Pattern (from StartingPoint.tsx)
-
+### Bismillah Data Structure
 ```typescript
-// All onboarding steps follow this contract:
-// - Receive onNext callback
-// - Use OnboardingStepLayout for consistent layout
-// - Use FadeIn/FadeInDown animations for staggered content reveal
-// - Button in footer via OnboardingStepLayout's footer prop
+// Pre-segmented Bismillah semantic units [VERIFIED: D-05 from CONTEXT.md]
+// Arabic strings extracted from current BismillahMoment.tsx and split at word boundaries
+const BISMILLAH_WORDS: PhraseWord[] = [
+  { arabic: "\u0628\u0650\u0633\u0652\u0645\u0650", transliteration: "Bismi", meaning: "In the name" },
+  { arabic: "\u0627\u0644\u0644\u0651\u0670\u0647\u0650", transliteration: "Allahi", meaning: "of God" },
+  { arabic: "\u0627\u0644\u0631\u0651\u064E\u062D\u0652\u0645\u0670\u0646\u0650", transliteration: "Ar-Rahmani", meaning: "the Most Gracious" },
+  { arabic: "\u0627\u0644\u0631\u0651\u064E\u062D\u0650\u064A\u0645\u0650", transliteration: "Ar-Raheem", meaning: "the Most Merciful" },
+];
+```
 
-export function StepName({
-  onNext,
-  // ...data props
-}: {
-  onNext: () => void;
-}) {
+### Tilawah Data Structure
+```typescript
+// Tilawat.tsx currently shows: تِلاوَة (single Arabic word) [VERIFIED: Tilawat.tsx line 77]
+// For PhraseReveal, this is a single-word reveal with transliteration
+const TILAWAH_WORDS: PhraseWord[] = [
+  { arabic: "\u062A\u0650\u0644\u0627\u0648\u064E\u0629", transliteration: "Tilawah" },
+];
+// Note: single-word PhraseReveal still adds the transliteration pair.
+// The ShimmerWord "Tilawat" in English headline gets removed (D-11).
+```
+
+### Hadith Data Structure
+```typescript
+// The Hadith screen currently shows an English-only quote [VERIFIED: Hadith.tsx line 80-82]
+// Success criteria #2 says "Sacred Arabic phrases (Bismillah, Tilawah quote, Hadith quote) 
+// reveal word-by-word with transliteration"
+// The Arabic hadith text needs to be added. Key phrase:
+const HADITH_WORDS: PhraseWord[] = [
+  { arabic: "\u0627\u0644\u0645\u0627\u0647\u0631", transliteration: "Al-mahir" },
+  { arabic: "\u0628\u0650\u0627\u0644\u0642\u064F\u0631\u0622\u0646\u0650", transliteration: "bil-Qurani" },
+  { arabic: "\u0645\u064E\u0639\u064E", transliteration: "ma'a" },
+  { arabic: "\u0627\u0644\u0633\u0651\u064E\u0641\u064E\u0631\u064E\u0629\u0650", transliteration: "as-safarati" },
+  { arabic: "\u0627\u0644\u0643\u0650\u0631\u0627\u0645\u0650", transliteration: "al-kirami" },
+  { arabic: "\u0627\u0644\u0628\u064E\u0631\u064E\u0631\u064E\u0629\u0650", transliteration: "al-bararah" },
+];
+// [ASSUMED] This uses the first portion of the hadith. The full hadith is longer.
+// English translation shown after reveal completes per D-04.
+// Alternative: use shorter key phrase. Needs confirmation.
+```
+
+### Updated BismillahMoment Structure
+```typescript
+// BismillahMoment.tsx -- after changes [pattern from CONTEXT.md decisions]
+export function BismillahMoment({ onNext }: { onNext: () => void }) {
   const colors = useColors();
+  const [revealComplete, setRevealComplete] = useState(false);
+
+  useEffect(() => {
+    hapticSelection();
+    playSacredMoment();
+  }, []);
+
   return (
     <OnboardingStepLayout
-      variant="card"
-      fadeInDuration={STAGGER_DURATION}
-      footer={<Button title="Continue" onPress={onNext} />}
+      variant="splash"
+      fadeInDuration={800}
+      footer={
+        revealComplete ? (
+          <Animated.View entering={FadeIn.duration(400)} style={{ zIndex: 1 }}>
+            <Button title="Continue" onPress={onNext} />
+          </Animated.View>
+        ) : undefined
+      }
     >
-      {/* Content */}
+      <PhraseReveal
+        words={BISMILLAH_WORDS}
+        layout="vertical"
+        onComplete={() => setRevealComplete(true)}
+      />
     </OnboardingStepLayout>
   );
 }
+// Key changes from current:
+// - REMOVED: setTimeout(onNext, BISMILLAH_HOLD)
+// - REMOVED: timerRef
+// - ADDED: PhraseReveal with onComplete
+// - ADDED: CTA Button visible after reveal completes
+// - KEPT: hapticSelection + playSacredMoment on mount
 ```
 
-### Example 2: DB Migration Pattern (from client.ts v4)
-
+### OnboardingFlow AtmosphereBackground Integration
 ```typescript
-if (currentVersion < 4) {
-  const profileInfo = await db.getAllAsync<{ name: string }>(
-    "PRAGMA table_info(user_profile)"
-  );
-  const hasColumn = profileInfo.some((col) => col.name === "analytics_consent");
-  if (!hasColumn) {
-    await db.execAsync(
-      "ALTER TABLE user_profile ADD COLUMN analytics_consent INTEGER CHECK (...);"
+// OnboardingFlow.tsx -- changes [VERIFIED: AtmosphereBackground component structure]
+import { AtmosphereBackground } from "../../design/atmosphere/AtmosphereBackground";
+
+// In render:
+return (
+  <AtmosphereBackground preset="onboarding">
+    <Animated.View style={[styles.root, fadeStyle]}>
+      {/* REMOVED: {step <= STEP.STARTING_POINT && <FloatingLettersLayer color={colors.primary} />} */}
+      {showProgressBar && (/* unchanged */)}
+      <ScrollView ...>
+        {/* All step content unchanged */}
+      </ScrollView>
+    </Animated.View>
+  </AtmosphereBackground>
+);
+
+// styles.root update: remove backgroundColor: colors.bgWarm
+```
+
+### Finish Screen Settle Pattern
+```typescript
+// Finish.tsx -- replace bouncy spring [VERIFIED: current code uses springs.bouncy]
+import { withTiming, withSequence, Easing, useReducedMotion } from "react-native-reanimated";
+
+const reducedMotion = useReducedMotion();
+const scale = useSharedValue(reducedMotion ? 1 : 0.98);
+const checkOpacity = useSharedValue(reducedMotion ? 1 : 0);
+
+useEffect(() => {
+  if (reducedMotion) { hapticSuccess(); return; }
+  const timer = setTimeout(() => {
+    hapticSuccess();
+    checkOpacity.value = withTiming(1, {
+      duration: 600, easing: Easing.out(Easing.cubic),
+    });
+    scale.value = withSequence(
+      withTiming(1.02, { duration: 600, easing: Easing.out(Easing.cubic) }),
+      withTiming(1.0, { duration: 400, easing: Easing.inOut(Easing.ease) })
     );
-  }
-  await db.runAsync("INSERT OR REPLACE INTO schema_version (version) VALUES (4)");
-}
+  }, checkDelay);
+  return () => clearTimeout(timer);
+}, []);
 ```
 
-### Example 3: Draft State Pattern (from OnboardingFlow.tsx)
+## State of the Art
 
-```typescript
-const [draft, setDraft] = useState<OnboardingDraft>({ startingPoint: null });
+| Old Approach | Current Approach | When Changed | Impact |
+|--------------|------------------|--------------|--------|
+| `withSpring(bouncy)` for entrances | `withTiming` + `withSequence` for calm settle | Phase 3 (now) | Matches emotional design -- gravity over celebration |
+| Static Arabic text blocks | Word-by-word PhraseReveal | Phase 3 (now) | Sacred content unfolds like revelation |
+| Per-screen background hacks | `AtmosphereBackground` presets | Phase 1 | Consistent atmosphere across onboarding |
+| ShimmerWord opacity loop | PhraseReveal word entrance | Phase 3 (now) | Replace shimmer with intentional reveal |
 
-// In step rendering:
-<StartingPoint
-  startingPoint={draft.startingPoint}
-  onSelectStartingPoint={(value) =>
-    setDraft((d) => ({ ...d, startingPoint: value }))
-  }
-  onNext={goNext}
-/>
+## Assumptions Log
 
-// In handleFinish:
-await updateProfile({
-  onboarded: true,
-  startingPoint: draft.startingPoint,
-  // ...
-});
-```
+| # | Claim | Section | Risk if Wrong |
+|---|-------|---------|---------------|
+| A1 | PhraseReveal should live in `src/design/components/` rather than `src/components/shared/` | Architecture Patterns | Low -- location is organizational, easy to move. Design components barrel export makes it more discoverable. |
+| A2 | Hadith screen should show Arabic text of the hadith for PhraseReveal | Code Examples | Medium -- the current Hadith.tsx shows only English. CONTEXT says "Sacred Arabic phrases" reveal word-by-word, suggesting Arabic is expected. But adding Arabic hadith text is new content scope. |
+| A3 | Tilawah screen PhraseReveal applies to the single Arabic word only, not a longer verse | Code Examples | Low -- the screen currently shows one Arabic word with English headline. |
+| A4 | Skip-ahead behavior (D-02 "Tap anywhere to skip ahead") means tapping reveals all remaining words instantly | Architecture Patterns | Low -- standard skip pattern. |
 
-### Example 4: Profile Save Pipeline (from progress.ts)
+## Open Questions
 
-```typescript
-// UserProfileUpdate already supports motivation. Need to add name.
-export interface UserProfileUpdate {
-  // existing fields...
-  motivation?: string | null;
-  // add:
-  name?: string | null;
-}
+1. **Hadith Screen: What text gets PhraseReveal treatment?**
+   - What we know: D-12 says "Replace static quote with word-by-word PhraseReveal." Current Hadith.tsx shows English-only quote. Success Criteria #2 says "Sacred Arabic phrases (Bismillah, Tilawah quote, Hadith quote) reveal word-by-word with transliteration."
+   - What's unclear: Should PhraseReveal reveal Arabic text (new content) or the existing English text word-by-word? Adding Arabic hadith text is new content that was not previously on this screen.
+   - Recommendation: Add the Arabic hadith text and reveal it word-by-word with transliteration, then show the English translation after reveal completes (matching D-04 pattern for non-Bismillah screens). If this is too much new content scope, the planner should flag it for confirmation.
 
-// In saveUserProfile(), add:
-if (profile.name !== undefined) {
-  sets.push('name = ?');
-  values.push(profile.name);
-}
-```
+2. **Tilawah Screen: Single-Word PhraseReveal Value**
+   - What we know: Current screen has one Arabic word. D-11 says replace static Arabic with PhraseReveal.
+   - What's unclear: A single-word reveal is essentially a fade-in with transliteration. Is that sufficient?
+   - Recommendation: Apply PhraseReveal to the single word. The value is the transliteration appearing beneath -- teaching the word, not just displaying it. The ShimmerWord in the English headline is removed and replaced with static styled text.
 
 ## Validation Architecture
 
@@ -326,81 +516,66 @@ if (profile.name !== undefined) {
 | Property | Value |
 |----------|-------|
 | Framework | Vitest 4.1.2 |
-| Config file | vitest.config.ts (inferred from package.json) |
-| Quick run command | `npm test` |
+| Config file | `vitest.config.ts` |
+| Quick run command | `npm test -- --run` |
 | Full suite command | `npm test` |
 
 ### Phase Requirements to Test Map
 | Req ID | Behavior | Test Type | Automated Command | File Exists? |
 |--------|----------|-----------|-------------------|-------------|
-| CONV-01a | OnboardingDraft type includes userName and motivation | unit | `npx vitest run src/__tests__/onboarding-flow.test.ts -x` | Exists (needs update) |
-| CONV-01b | TOTAL_STEPS equals 10, STEP has NAME_MOTIVATION entry | unit | `npx vitest run src/__tests__/onboarding-flow.test.ts -x` | Exists (needs update) |
-| CONV-01c | handleFinish passes name and motivation to updateProfile | unit | `npx vitest run src/__tests__/onboarding-flow.test.ts -x` | Exists (needs update) |
-| CONV-01d | Schema includes name column, migration v6 adds it | unit | `npx vitest run src/__tests__/schema-v6.test.ts -x` | Wave 0 |
-| CONV-02a | Wird tooltip shows when wirdIntroSeen=false and currentWird>0 | unit | `npx vitest run src/__tests__/wird-tooltip.test.ts -x` | Wave 0 |
-| CONV-02b | Wird tooltip sets wirdIntroSeen=true on dismiss | unit | `npx vitest run src/__tests__/wird-tooltip.test.ts -x` | Wave 0 |
-| CONV-04a | Motivation-to-subtitle mapping covers all 5 values | unit | `npx vitest run src/__tests__/motivation-mapping.test.ts -x` | Exists (needs label update) |
-| CONV-04b | Greeting shows name when available, omits when not | unit | `npx vitest run src/__tests__/home-greeting.test.ts -x` | Wave 0 |
-| CONV-04c | Greeting falls back to dynamic subtitle when no motivation | unit | `npx vitest run src/__tests__/home-greeting.test.ts -x` | Wave 0 |
+| SACR-01 | PhraseReveal exports PhraseWord type and PhraseRevealProps | unit (source scan) | `npm test -- --run src/__tests__/phrase-reveal.test.ts` | Wave 0 |
+| SACR-01 | PhraseReveal imports useReducedMotion | unit (source scan) | `npm test -- --run src/__tests__/phrase-reveal.test.ts` | Wave 0 |
+| SACR-02 | BismillahMoment uses PhraseReveal, has 4 words, has CTA button, no setTimeout | unit (source scan) | `npm test -- --run src/__tests__/bismillah-sacred.test.ts` | Wave 0 |
+| SACR-03 | OnboardingFlow wraps in AtmosphereBackground, no standalone FloatingLettersLayer | unit (source scan) | `npm test -- --run src/__tests__/onboarding-atmosphere.test.ts` | Wave 0 |
+| SACR-04 | Tilawat uses PhraseReveal, does not contain ShimmerWord | unit (source scan) | `npm test -- --run src/__tests__/tilawat-reveal.test.ts` | Wave 0 |
+| SACR-05 | Hadith uses PhraseReveal, keeps ArchOutline and WarmGlow | unit (source scan) | `npm test -- --run src/__tests__/hadith-reveal.test.ts` | Wave 0 |
+| SACR-06 | Finish does not import springs.bouncy, uses withSequence for settle | unit (source scan) | `npm test -- --run src/__tests__/finish-settle.test.ts` | Wave 0 |
 
 ### Sampling Rate
-- **Per task commit:** `npm test`
-- **Per wave merge:** `npm test && npm run validate`
-- **Phase gate:** Full suite green before `/gsd:verify-work`
+- **Per task commit:** `npm test -- --run`
+- **Per wave merge:** `npm test`
+- **Phase gate:** Full suite green before `/gsd-verify-work`
 
 ### Wave 0 Gaps
-- [ ] `src/__tests__/schema-v6.test.ts` -- covers CONV-01d (migration adds name column)
-- [ ] `src/__tests__/wird-tooltip.test.ts` -- covers CONV-02a, CONV-02b (tooltip show/dismiss logic)
-- [ ] `src/__tests__/home-greeting.test.ts` -- covers CONV-04b, CONV-04c (personalized greeting logic)
-- [ ] Update `src/__tests__/onboarding-flow.test.ts` -- update TOTAL_STEPS assertion to 10
-- [ ] Update `src/__tests__/motivation-mapping.test.ts` -- update display labels to match D-09 subtitles
+- [ ] `src/__tests__/phrase-reveal.test.ts` -- covers SACR-01 (PhraseReveal component structure, types, reduce motion)
+- [ ] `src/__tests__/bismillah-sacred.test.ts` -- covers SACR-02 (Bismillah micro-lesson structure, replaces old bismillah.test.ts todos)
+- [ ] `src/__tests__/onboarding-atmosphere.test.ts` -- covers SACR-03 (AtmosphereBackground integration)
+- [ ] `src/__tests__/tilawat-reveal.test.ts` -- covers SACR-04 (Tilawat PhraseReveal, ShimmerWord removed)
+- [ ] `src/__tests__/hadith-reveal.test.ts` -- covers SACR-05 (Hadith PhraseReveal, preserves existing elements)
+- [ ] `src/__tests__/finish-settle.test.ts` -- covers SACR-06 (Finish gentle settle, no bouncy spring)
 
-## State of the Art
+Note: Existing `src/__tests__/bismillah.test.ts` has only `.todo` tests describing the old pattern. It should be updated or replaced by `bismillah-sacred.test.ts`.
 
-| Old Approach | Current Approach | When Changed | Impact |
-|--------------|------------------|--------------|--------|
-| Full-screen wird intro as only explanation | Tooltip + full intro as dual paths | This phase | Users get contextual wird explanation at first streak badge |
-| Generic "ASSALAMU ALAIKUM" greeting | Personalized with name + motivation | This phase | Warmer first impression, higher perceived value |
+## Security Domain
 
-## Open Questions
-
-1. **Keyboard handling on the name input step**
-   - What we know: OnboardingFlow wraps content in ScrollView. Android keyboard behavior varies.
-   - What's unclear: Whether the existing ScrollView setup handles keyboard appearance gracefully.
-   - Recommendation: Test on Android during implementation. Add `keyboardShouldPersistTaps="handled"` to the ScrollView if not already present. Wrap in KeyboardAvoidingView if needed.
-
-2. **Motivation display labels vs stored values**
-   - What we know: CONTEXT.md D-09 provides subtitle strings. The existing `motivation-mapping.test.ts` has different display labels.
-   - What's unclear: Whether the motivation picker should show the D-09 subtitle strings or different aspirational labels.
-   - Recommendation: Use the D-09 subtitle strings as picker labels per the Specifics section ("Use the subtitle phrasing from D-09 as the option labels"). Update the test accordingly.
-
-3. **Tooltip arrow/pointer design**
-   - What we know: D-14 specifies warm cream background, dark green text, subtle shadow, positioned near badge.
-   - What's unclear: Whether to include an arrow pointing to the badge.
-   - Recommendation: Simple card below the badge area, no arrow. Arrows are fiddly in React Native and add complexity for a one-time tooltip. Claude's discretion per CONTEXT.md.
+Not applicable. This phase is purely UI animation and visual changes with no data handling, authentication, network calls, or user input processing changes.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- `src/components/onboarding/OnboardingFlow.tsx` -- onboarding flow architecture, step constants, draft state pattern
-- `src/components/onboarding/steps/StartingPoint.tsx` -- data-collecting step template
-- `src/db/schema.ts` -- user_profile table schema, existing columns including motivation
-- `src/db/client.ts` -- migration pattern (PRAGMA table_info checks), version tracking
-- `src/engine/progress.ts` -- ProgressState shape, loadProgress query, saveUserProfile pipeline
-- `app/(tabs)/index.tsx` -- home screen greeting rendering, AnimatedStreakBadge usage
-- `src/components/home/AnimatedStreakBadge.tsx` -- streak badge component structure
-- `src/types/onboarding.ts` -- OnboardingDraft type definition
+- Codebase: `BismillahMoment.tsx` -- current implementation with 4s auto-advance timer, haptic, audio
+- Codebase: `Tilawat.tsx` -- current implementation with ShimmerWord, single Arabic word, stagger pattern
+- Codebase: `Hadith.tsx` -- current implementation with English-only quote, ArchOutline, WarmGlow
+- Codebase: `Welcome.tsx` -- current implementation with BrandedLogo, stagger animations
+- Codebase: `Finish.tsx` -- current implementation with bouncy spring checkmark, Alif watermark
+- Codebase: `OnboardingFlow.tsx` -- flow orchestrator with FloatingLettersLayer, step constants
+- Codebase: `AtmosphereBackground.tsx` -- preset configs verified, 'onboarding' has floatingLetters: true
+- Codebase: `animations.ts` (design) -- springs.bouncy, easings.contentReveal, breathing/drift tokens
+- Codebase: `ArabicText.tsx` -- size tiers and props
+- Codebase: `useReducedMotion` usage pattern -- WarmGlow.tsx, FloatingLettersLayer.tsx, QuizOption.tsx
+- Codebase: `OnboardingStepLayout.tsx` -- splash/centered/card variants, footer prop
+- Codebase: `animations.ts` (onboarding) -- SPLASH_STAGGER_BASE, SPLASH_STAGGER_DURATION constants
 
 ### Secondary (MEDIUM confidence)
-- `app/wird-intro.tsx` -- existing wird intro flow, confirms `wirdIntroSeen` flag usage
-- `app/post-lesson-onboard.tsx` -- wird intro trigger flow
+- Reanimated API: `withDelay`, `withTiming`, `withSequence`, `useReducedMotion`, `useSharedValue` -- confirmed from existing codebase usage patterns [VERIFIED: multiple files in codebase]
 
 ## Metadata
 
 **Confidence breakdown:**
-- Standard stack: HIGH -- no new packages, all existing patterns verified in codebase
-- Architecture: HIGH -- every integration point inspected, patterns clear and consistent
-- Pitfalls: HIGH -- identified from direct code inspection (keyboard, empty string, migration dual-path)
+- Standard stack: HIGH -- no new libraries, everything already installed and used in codebase
+- Architecture: HIGH -- PhraseReveal pattern is straightforward Reanimated stagger; AtmosphereBackground integration is well-defined
+- Pitfalls: HIGH -- identified from direct code inspection (double FloatingLetters, hook rules, timer cleanup)
+- Arabic data: MEDIUM -- Bismillah segmentation is clear (4 units defined in CONTEXT), Hadith/Tilawah Arabic content needs confirmation
 
-**Research date:** 2026-04-01
-**Valid until:** 2026-05-01 (stable -- no dependency changes expected)
+**Research date:** 2026-04-06
+**Valid until:** 2026-05-06 (stable -- no dependency changes expected)
