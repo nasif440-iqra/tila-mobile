@@ -120,8 +120,8 @@ export default function HeroCard({
             pulseMin={0.12}
             pulseMax={0.35}
           />
-          <View style={styles.letterCircle}>
-            <ArabicText size="display" color={colors.text} style={{ marginTop: 6 }}>
+          <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
+            <ArabicText size="display" color={colors.primary} style={{ marginTop: 6 }}>
               {heroLetter ? heroLetter.letter : "?"}
             </ArabicText>
           </View>
@@ -201,9 +201,7 @@ const styles = StyleSheet.create({
     borderRadius: 56,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#F2F5F3",
     borderWidth: 2,
-    borderColor: "rgba(255, 255, 255, 0.8)",
     // Subtle inner shadow effect
     shadowColor: "#000000",
     shadowOffset: { width: 0, height: 2 },
