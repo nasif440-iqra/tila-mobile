@@ -61,7 +61,10 @@ Plans:
   3. Onboarding Welcome screen opens with atmospheric warmth (ambient background, gentle entrance) -- feels like entering a quiet room, not loading a form
   4. Onboarding Tilawah and Hadith screens use the word-by-word reveal instead of static quote cards
   5. Onboarding Finish screen lands with gravity ("You've already begun" feels earned) -- no bounce, no celebratory excess
-**Plans**: TBD
+**Plans:** 2 plans
+Plans:
+- [ ] 03-01-PLAN.md — PhraseReveal primitive + OnboardingFlow AtmosphereBackground wrap + Finish gentle settle
+- [ ] 03-02-PLAN.md — Bismillah micro-lesson + Tilawah PhraseReveal + Hadith Arabic PhraseReveal
 **UI hint**: yes
 
 ## Progress
@@ -73,7 +76,7 @@ Phases execute in numeric order: 1 -> 2 -> 3
 |-------|---------------|--------|-----------|
 | 1. Foundation | 2/2 | Complete | 2026-04-04 |
 | 2. Quiz Experience | 2/3 | In progress | - |
-| 3. Sacred Moments | 0/? | Not started | - |
+| 3. Sacred Moments | 0/2 | Not started | - |
 
 ## Self-Review Gate
 
