@@ -4,13 +4,13 @@
  */
 
 import { getTopConfusions } from './selectors';
-import { parseEntityKey } from './mastery';
+import { parseEntityKey, deriveMasteryState } from './mastery';
 import { getLetter } from '../data/letters.js';
 
 // ── Types ──
 
 export interface LessonInsight {
-  type: 'confusion' | 'review' | 'trend';
+  type: 'mastery' | 'confusion' | 'encouragement';
   message: string;
 }
 
@@ -56,6 +56,21 @@ function addDays(dateStr: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ── Encouragement messages ──
+
+const ENCOURAGEMENT_HIGH = [
+  "Great focus today!",
+  "Masha'Allah, well done!",
+  "You're building something beautiful",
+];
+
+const ENCOURAGEMENT_MID = [
+  "Keep going -- every lesson makes you stronger",
+  "Practice makes permanent",
+];
+
+const ENCOURAGEMENT_LOW = "Every attempt teaches you something. Keep going!";
+
 // ── Post-Lesson Insights ──
 
 interface MasteryData {
@@ -65,7 +80,9 @@ interface MasteryData {
 
 /**
  * Generate post-lesson insights based on mastery data and session results.
- * Returns max 3 insights (1 per type), empty array if no interesting data (D-04).
+ * Celebrates mastery progress first, surfaces confusion pairs warmly,
+ * and always provides encouragement. No scheduling language.
+ * Returns max 3 insights (1 per type).
  */
 export function generatePostLessonInsights(
   mastery: MasteryData,
@@ -74,20 +91,75 @@ export function generatePostLessonInsights(
 ): LessonInsight[] {
   const insights: LessonInsight[] = [];
   const lessonIdSet = new Set(lessonLetterIds);
+  const today = new Date().toISOString().slice(0, 10);
 
-  // Confusion insight (D-03.1)
+  // Mastery celebration (D-07) — leads insights
+  const masteryInsight = buildMasteryInsight(mastery.entities, lessonLetterIds, today);
+  if (masteryInsight) insights.push(masteryInsight);
+
+  // Confusion awareness (D-08)
   const confusionInsight = buildConfusionInsight(mastery.confusions, lessonIdSet);
   if (confusionInsight) insights.push(confusionInsight);
 
-  // Review insight (D-03.2)
-  const reviewInsight = buildReviewInsight(mastery.entities, lessonLetterIds);
-  if (reviewInsight) insights.push(reviewInsight);
+  // Encouragement fallback (D-09) — always show if no mastery or confusion
+  if (insights.length === 0) {
+    const encouragementInsight = buildEncouragementInsight(sessionResults);
+    insights.push(encouragementInsight);
+  }
 
-  // Trend insight (D-03.3)
-  const trendInsight = buildTrendInsight(mastery.entities, lessonLetterIds, sessionResults);
-  if (trendInsight) insights.push(trendInsight);
+  return insights.slice(0, 3);
+}
 
-  return insights;
+// ── Insight builders ──
+
+function buildMasteryInsight(
+  entities: Record<string, any>,
+  lessonLetterIds: number[],
+  today: string
+): LessonInsight | null {
+  if (!entities) return null;
+
+  const retainedNames: string[] = [];
+  let firstAccurateName: string | null = null;
+
+  for (const id of lessonLetterIds) {
+    const entity = entities[`letter:${id}`];
+    if (!entity) continue;
+
+    const state = deriveMasteryState(entity, today);
+    const letter = getLetter(id);
+    if (!letter) continue;
+
+    if (state === 'retained') {
+      retainedNames.push(letter.name);
+    } else if (state === 'accurate' && !firstAccurateName) {
+      firstAccurateName = letter.name;
+    }
+  }
+
+  // Priority: multiple retained > single retained > accurate
+  if (retainedNames.length >= 2) {
+    return {
+      type: 'mastery',
+      message: `${retainedNames.length} letters now retained`,
+    };
+  }
+
+  if (retainedNames.length === 1) {
+    return {
+      type: 'mastery',
+      message: `You mastered ${retainedNames[0]}!`,
+    };
+  }
+
+  if (firstAccurateName) {
+    return {
+      type: 'mastery',
+      message: `${firstAccurateName} is getting stronger`,
+    };
+  }
+
+  return null;
 }
 
 function buildConfusionInsight(
@@ -108,62 +180,40 @@ function buildConfusionInsight(
 
     return {
       type: 'confusion',
-      message: `Tila noticed you mixed up ${letter1.name} and ${letter2.name} \u2014 we'll practice these together`,
+      message: `You sometimes confuse ${letter1.name} and ${letter2.name} \u2014 keep practicing!`,
     };
   }
   return null;
 }
 
-function buildReviewInsight(
-  entities: Record<string, any>,
-  lessonLetterIds: number[]
-): LessonInsight | null {
-  for (const id of lessonLetterIds) {
-    const entity = entities[`letter:${id}`];
-    if (!entity || !entity.nextReview) continue;
-
-    const letter = getLetter(id);
-    if (!letter) continue;
-
-    const dayName = new Date(entity.nextReview).toLocaleDateString('en-US', { weekday: 'long' });
-    return {
-      type: 'review',
-      message: `Review ${letter.name} on ${dayName}`,
-    };
-  }
-  return null;
-}
-
-function buildTrendInsight(
-  entities: Record<string, any>,
-  lessonLetterIds: number[],
+function buildEncouragementInsight(
   sessionResults: Map<number, { correct: number; total: number }>
-): LessonInsight | null {
-  for (const id of lessonLetterIds) {
-    const session = sessionResults.get(id);
-    if (!session || session.total === 0) continue;
+): LessonInsight {
+  const accuracy = calculateSessionAccuracy(sessionResults);
 
-    const entity = entities[`letter:${id}`];
-    if (!entity || entity.attempts <= session.total) continue;
-
-    const priorCorrect = entity.correct - session.correct;
-    const priorTotal = entity.attempts - session.total;
-    if (priorTotal <= 0) continue;
-
-    const prevPct = Math.round((priorCorrect / priorTotal) * 100);
-    const currPct = Math.round((session.correct / session.total) * 100);
-
-    if (currPct - prevPct >= 10) {
-      const letter = getLetter(id);
-      if (!letter) continue;
-
-      return {
-        type: 'trend',
-        message: `You're getting stronger with ${letter.name} (${prevPct}% \u2192 ${currPct}%)`,
-      };
-    }
+  let message: string;
+  if (accuracy >= 0.8) {
+    message = ENCOURAGEMENT_HIGH[Math.floor(Math.random() * ENCOURAGEMENT_HIGH.length)];
+  } else if (accuracy >= 0.5) {
+    message = ENCOURAGEMENT_MID[Math.floor(Math.random() * ENCOURAGEMENT_MID.length)];
+  } else {
+    message = ENCOURAGEMENT_LOW;
   }
-  return null;
+
+  return { type: 'encouragement', message };
+}
+
+function calculateSessionAccuracy(
+  sessionResults: Map<number, { correct: number; total: number }>
+): number {
+  let totalCorrect = 0;
+  let totalAttempts = 0;
+  for (const result of sessionResults.values()) {
+    totalCorrect += result.correct;
+    totalAttempts += result.total;
+  }
+  if (totalAttempts === 0) return 0;
+  return totalCorrect / totalAttempts;
 }
 
 // ── Progress Tab: Review Grouping ──

@@ -141,9 +141,10 @@ describe('generatePostLessonInsights', () => {
 
   // D-09: Encouragement fallback
   it('shows encouraging message when no confusions and accuracy >= 80% (D-09)', () => {
+    // Entity has < 3 attempts = "introduced" state, so no mastery insight fires
     const mastery = {
       entities: {
-        'letter:1': { correct: 3, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+        'letter:1': { correct: 1, attempts: 2, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
       },
       confusions: {},
     };
@@ -160,9 +161,10 @@ describe('generatePostLessonInsights', () => {
   });
 
   it('shows encouragement even for moderate accuracy (50-79%)', () => {
+    // Entity has < 3 attempts = "introduced" state, so no mastery insight fires
     const mastery = {
       entities: {
-        'letter:1': { correct: 3, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
+        'letter:1': { correct: 1, attempts: 2, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
       },
       confusions: {},
     };
@@ -178,6 +180,7 @@ describe('generatePostLessonInsights', () => {
   });
 
   it('shows encouragement for low accuracy (< 50%)', () => {
+    // Entity has unstable state (low accuracy), but no mastery insight for unstable
     const mastery = {
       entities: {
         'letter:1': { correct: 1, attempts: 4, nextReview: null, intervalDays: 1, lastSeen: '2026-04-01', sessionStreak: 1, lastLatencyMs: null },
