@@ -62,7 +62,7 @@ export function LetterReveal() {
         {/* Alif — large, appears after stillness beat */}
         <Animated.Text
           entering={FadeIn.delay(alifDelay).duration(1000)}
-          style={[styles.letterBig, { color: colors.primaryDark }]}
+          style={[styles.letterBig, { color: colors.primary }]}
         >
           {"\u0627"}
         </Animated.Text>
