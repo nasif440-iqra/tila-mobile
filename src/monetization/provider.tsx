@@ -73,80 +73,18 @@ export const SubscriptionContext = createContext<SubscriptionState>(defaultState
 // ── Provider ──
 
 export function SubscriptionProvider({ children }: { children: React.ReactNode }) {
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null);
-  const prevStageRef = useRef<SubscriptionStage>("unknown");
-
-  const updateFromInfo = useCallback((info: CustomerInfo) => {
-    const newStage = deriveStage(info);
-    const oldStage = prevStageRef.current;
-
-    if (oldStage !== "unknown" && oldStage !== newStage) {
-      trackEntitlementChanged({ old_stage: oldStage, new_stage: newStage });
-    }
-    prevStageRef.current = newStage;
-
-    setCustomerInfo(info);
-    setLastSyncedAt(new Date());
-    setLoading(false);
-  }, []);
-
-  useEffect(() => {
-    let mounted = true;
-
-    Purchases.getCustomerInfo()
-      .then((info) => {
-        if (mounted) updateFromInfo(info);
-      })
-      .catch(() => {
-        if (mounted) setLoading(false);
-      });
-
-    const onUpdate = (info: CustomerInfo) => {
-      if (mounted) updateFromInfo(info);
-    };
-    Purchases.addCustomerInfoUpdateListener(onUpdate);
-
-    return () => {
-      mounted = false;
-      Purchases.removeCustomerInfoUpdateListener(onUpdate);
-    };
-  }, [updateFromInfo]);
-
-  const refresh = useCallback(async () => {
-    try {
-      const info = await Purchases.getCustomerInfo();
-      updateFromInfo(info);
-    } catch {
-      // Offline — keep current state
-    }
-  }, [updateFromInfo]);
-
-  const showPaywallFn = useCallback(
-    async (trigger: PaywallTrigger): Promise<PaywallOutcome> => {
-      const outcome = await presentPaywall(trigger);
-      if (outcome.accessGranted) {
-        await refresh();
-      }
-      return outcome;
-    },
-    [refresh]
-  );
-
-  const stage = deriveStage(customerInfo);
-  const isPremiumActive = stage === "trial" || stage === "paid";
-
+  // RevenueCat disabled for beta — all users get free access.
+  // All consumers see isPremiumActive: true so no content is locked.
   const value: SubscriptionState = {
-    customerInfo,
-    isPremiumActive,
-    stage,
-    trialDaysRemaining: deriveTrialDays(customerInfo),
-    managementURL: customerInfo?.managementURL ?? null,
-    lastSyncedAt,
-    loading,
-    showPaywall: showPaywallFn,
-    refresh,
+    customerInfo: null,
+    isPremiumActive: true,
+    stage: "free",
+    trialDaysRemaining: null,
+    managementURL: null,
+    lastSyncedAt: null,
+    loading: false,
+    showPaywall: async () => ({ result: "not_presented" as const, accessGranted: false }),
+    refresh: async () => {},
   };
 
   return (
