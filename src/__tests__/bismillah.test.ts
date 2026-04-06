@@ -1,19 +1,51 @@
 import { describe, it, expect } from "vitest";
+import * as fs from "fs";
+import * as path from "path";
+
+const componentPath = path.resolve(
+  __dirname,
+  "../components/onboarding/steps/BismillahMoment.tsx"
+);
+const componentSource = fs.readFileSync(componentPath, "utf-8");
 
 describe("BismillahMoment", () => {
-  describe("MIND-01: Renders with correct text and auto-advances", () => {
-    it.todo("renders Bismillah Arabic text");
-    it.todo("calls hapticSelection on mount");
-    it.todo("auto-advances after BISMILLAH_DISPLAY_DURATION");
-    it.todo("has no button or skip mechanism");
+  it("uses PhraseReveal component", () => {
+    expect(componentSource).toContain("PhraseReveal");
   });
-});
 
-describe("BismillahOverlay", () => {
-  describe("MIND-02: Session detection works correctly", () => {
-    it.todo("shouldShowBismillah returns true on first call");
-    it.todo("shouldShowBismillah returns false after markBismillahShown");
-    it.todo("overlay auto-fades after 2500ms with 500ms fade duration");
-    it.todo("BismillahOverlay renders with bgWarm background at 0.97 opacity");
+  it("defines BISMILLAH_WORDS with 4 words", () => {
+    expect(componentSource).toContain("BISMILLAH_WORDS");
+    // Count PhraseWord entries (arabic fields)
+    const arabicMatches = componentSource.match(/arabic:\s*"/g);
+    expect(arabicMatches).not.toBeNull();
+    expect(arabicMatches!.length).toBe(4);
+  });
+
+  it("uses vertical layout", () => {
+    expect(componentSource).toContain('layout="vertical"');
+  });
+
+  it("has Continue CTA button (no auto-advance)", () => {
+    expect(componentSource).toContain("Continue");
+    expect(componentSource).toContain("<Button");
+    // Should NOT have auto-advance timer
+    expect(componentSource).not.toContain("BISMILLAH_HOLD");
+    expect(componentSource).not.toMatch(/setTimeout\s*\(\s*onNext/);
+  });
+
+  it("shows CTA only after reveal completes", () => {
+    expect(componentSource).toContain("revealComplete");
+    expect(componentSource).toContain("onComplete");
+  });
+
+  it("has meaning field on each word", () => {
+    expect(componentSource).toContain("meaning:");
+    const meaningMatches = componentSource.match(/meaning:\s*"/g);
+    expect(meaningMatches).not.toBeNull();
+    expect(meaningMatches!.length).toBe(4);
+  });
+
+  it("imports PhraseWord type", () => {
+    expect(componentSource).toContain("PhraseWord");
   });
 });
