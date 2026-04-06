@@ -17,7 +17,7 @@ describe("OnboardingFlow AtmosphereBackground wrapping", () => {
     expect(flowSource).toMatch(/AtmosphereBackground[\s\S]*onboarding/);
   });
 
-  it("does not import FloatingLettersLayer", () => {
+  it("does not import FloatingLettersLayer directly", () => {
     expect(flowSource).not.toMatch(
       /import\s*\{[^}]*FloatingLettersLayer[^}]*\}\s*from/
     );

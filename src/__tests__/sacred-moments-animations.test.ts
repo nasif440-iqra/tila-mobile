@@ -31,4 +31,14 @@ describe("Sacred moments animation tokens", () => {
     expect(animationsSource).toContain("normal");
     expect(animationsSource).toContain("slow");
   });
+
+  it("has breathing animation constants", () => {
+    expect(animationsSource).toContain("breathing");
+    expect(animationsSource).toContain("inhale");
+    expect(animationsSource).toContain("exhale");
+  });
+
+  it("has contentReveal easing", () => {
+    expect(animationsSource).toContain("contentReveal");
+  });
 });

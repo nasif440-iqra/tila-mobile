@@ -16,4 +16,12 @@ describe("PhraseReveal barrel export", () => {
   it("exports from PhraseReveal file", () => {
     expect(barrelSource).toContain("./PhraseReveal");
   });
+
+  it("exports PhraseWord type", () => {
+    expect(barrelSource).toContain("PhraseWord");
+  });
+
+  it("exports PhraseRevealProps type", () => {
+    expect(barrelSource).toContain("PhraseRevealProps");
+  });
 });
