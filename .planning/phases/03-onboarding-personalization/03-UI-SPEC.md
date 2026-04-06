@@ -35,12 +35,14 @@ Declared values from `src/design/tokens.ts` (8px base rhythm):
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline padding |
 | sm | 8px | Compact element spacing, divider margins |
-| md | 12px | Intra-group spacing (Arabic-to-transliteration gap) |
+| md | 12px | Pre-existing token. Intra-group spacing (Arabic-to-transliteration gap) |
 | lg | 16px | Section padding, inter-element spacing |
 | xl | 24px | Section breaks, vertical rhythm between content groups |
 | xxl | 32px | Layout gaps, major content separation |
 | xxxl | 48px | Page-level breathing room |
 | xxxxl | 64px | Top/bottom page margins |
+
+Pre-existing token justification: `md: 12px` is defined in `src/design/tokens.ts` line 166 and used across the existing codebase. It is not a new value introduced by this phase. Changing it would require a cross-app refactor outside this phase's scope.
 
 Exceptions:
 - PhraseReveal vertical word units use `xl` (24px) between units in vertical layout for meditative spacing
@@ -54,14 +56,25 @@ Source: `src/design/tokens.ts` spacing object (pre-existing)
 
 ## Typography
 
+This phase uses exactly 4 English font sizes and 2 font weights.
+
 ### English Typography
 
 | Role | Font | Size | Weight | Line Height |
 |------|------|------|--------|-------------|
-| Body | Inter | 15px | 400 (Regular) | 22px (1.47) |
-| Body Large | Inter | 17px | 500 (Medium) | 24px (1.41) |
-| Heading 2 | Lora | 20px | 600 (SemiBold) | 28px (1.4) |
-| Heading 1 / Display | Lora | 28px | 700 (Bold) | 36px (1.29) |
+| Small / Label | Inter | 12px | 400 (Regular) | 16px (1.33) |
+| Body / Transliteration | Inter or Lora | 15px | 400 (Regular) | 22px (1.47) |
+| Heading | Lora | 20px | 700 (Bold) | 28px (1.4) |
+| Display / Headline | Lora | 28px | 700 (Bold) | 36px (1.29) |
+
+**Weight collapse mapping (from previous spec):**
+- 500 (Medium) replaced by 400 (Regular)
+- 600 (SemiBold) replaced by 700 (Bold)
+
+**Size collapse mapping (from previous spec):**
+- 10px (Hadith source) collapsed to 12px
+- 13px (Word meaning) collapsed to 12px
+- 17px (Body Large, Hadith translation) collapsed to 15px
 
 ### Arabic Typography
 
@@ -71,17 +84,19 @@ Source: `src/design/tokens.ts` spacing object (pre-existing)
 | arabicLarge | Amiri 400 | 36px | 72px (2.0x) | PhraseReveal Arabic words (Bismillah, Hadith) |
 | arabicBody | Amiri 400 | 24px | 48px (2.0x) | Not used this phase |
 
-### Phase-Specific Typography Additions
+Note: Arabic sizes are governed by the existing `typography` object in `tokens.ts` and are not counted in the 4-size English scale. Tilawah uses a custom 56px Arabic override (existing screen behavior).
+
+### Phase-Specific Typography Assignments
 
 | Role | Font | Size | Weight | Line Height | Usage |
 |------|------|------|--------|-------------|-------|
 | Transliteration | Inter | 15px | 400 (Regular) | 22px | Beneath each Arabic word in PhraseReveal |
-| Word Meaning | Lora | 13px | 400 (Regular Italic) | 18px | Per-word English meaning in Bismillah only |
+| Word Meaning | Lora | 12px | 400 (Regular Italic) | 16px | Per-word English meaning in Bismillah only |
 | Post-Reveal Translation | Lora | 15px | 400 (Regular Italic) | 22px | Full English translation after Tilawah/Hadith reveal completes |
-| Hadith Headline | Lora | 28px | 600 (SemiBold Italic) | 36px | "Struggling is not failing" (existing) |
+| Hadith Headline | Lora | 28px | 700 (Bold Italic) | 36px | "Struggling is not failing" (existing) |
 | Finish Headline | Lora | 28px | 700 (Bold) | 36px | "You've already begun" (existing) |
-| Hadith Source | Inter | 10px | 400 (Regular) | 14px | "SAHIH AL-BUKHARI 4937" uppercase, letter-spacing 1.2 (existing) |
-| Sacred Motto | Inter | 12px | 400 (Regular) | 16px | "Recite. Reflect. Return." letter-spacing 1.8 (existing) |
+| Hadith Source | Inter | 12px | 400 (Regular) | 16px | "SAHIH AL-BUKHARI 4937" uppercase, letter-spacing 1.2 (existing, was 10px) |
+| Sacred Motto | Inter | 12px | 400 (Regular) | 16px | "Recite. Reflect. Return." letter-spacing 1.8 (existing, was 12px -- no change) |
 
 Source: `src/design/tokens.ts` typography object, existing screen styles
 
@@ -236,7 +251,7 @@ Source: CONTEXT.md decisions, existing screen implementations
 **Background:** AtmosphereBackground 'onboarding' (from flow wrapper)
 **Content structure (top to bottom, centered):**
 1. PhraseReveal (vertical layout) -- 4 word units stacked:
-   - Each unit: Arabic (Amiri 36px, color `primaryDark`) / transliteration (Inter 15px, color `textMuted`) / meaning (Lora 13px italic, color `textSoft`)
+   - Each unit: Arabic (Amiri 36px, color `primaryDark`) / transliteration (Inter 15px, color `textMuted`) / meaning (Lora 12px italic, color `textSoft`)
    - `xl` (24px) vertical gap between units
    - `xs` (4px) gap Arabic-to-transliteration
    - `sm` (8px) gap transliteration-to-meaning
@@ -250,10 +265,10 @@ Source: CONTEXT.md decisions, existing screen implementations
 **Layout:** `OnboardingStepLayout variant="splash"`
 **Background:** AtmosphereBackground 'onboarding' (from flow wrapper)
 **Content structure (top to bottom, centered):**
-1. PhraseReveal (single word): Arabic `تِلاوَة` (Amiri 56px, custom override, color `primaryDark`) / transliteration "Tilawah" (Inter 15px, color `textMuted`)
+1. PhraseReveal (single word): Arabic (Amiri 56px, custom override, color `primaryDark`) / transliteration "Tilawah" (Inter 15px, color `textMuted`)
 2. `lg` (16px) spacer
-3. Headline: "To recite the Quran beautifully is Tilawah" -- "Tilawah" rendered in Lora Italic 26px, accent color (static, no shimmer)
-4. `md` (12px) spacer
+3. Headline: "To recite the Quran beautifully is Tilawah" -- "Tilawah" rendered in Lora Italic 20px, accent color (static, no shimmer)
+4. `sm` (8px) spacer
 5. Motto: "Recite. Reflect. Return." (Inter 12px, letter-spacing 1.8, color `textMuted`)
 6. Footer: "Begin" Button
 **Removed:** ShimmerWord component (withRepeat opacity animation)
@@ -266,15 +281,15 @@ Source: CONTEXT.md decisions, existing screen implementations
 - WarmGlow (size 340, animated, pulseMin 0.08, pulseMax 0.18) -- existing
 - ArchOutline (accent color, 12% opacity) -- existing
 **Content structure (top to bottom, centered):**
-1. Headline: "Struggling is not failing" (Lora 28px SemiBold Italic, color `brown`) -- existing stagger entrance
+1. Headline: "Struggling is not failing" (Lora 28px Bold Italic, color `brown`) -- existing stagger entrance
 2. Gold diamond separator (6x6px, 45deg rotation, 60% opacity, color `accent`) -- existing
 3. `lg` (16px) spacer
 4. PhraseReveal (horizontal layout): Arabic hadith words with transliteration beneath each
 5. `lg` (16px) spacer
-6. English translation: "The one who struggles with the Qur'an receives a double reward." -- appears after PhraseReveal completes (400ms FadeIn, Lora 17px italic, color `textSoft`)
+6. English translation: "The one who struggles with the Qur'an receives a double reward." -- appears after PhraseReveal completes (400ms FadeIn, Lora 15px italic, color `textSoft`)
 7. `lg` (16px) spacer
 8. Divider line (28px wide, 1px, accent at 40% opacity) -- existing
-9. Source: "SAHIH AL-BUKHARI 4937" -- existing
+9. Source: "SAHIH AL-BUKHARI 4937" (Inter 12px, letter-spacing 1.2, uppercase) -- existing
 10. Footer: "Continue Journey" Button
 
 ### Finish Screen (SACR-06)
@@ -286,7 +301,7 @@ Source: CONTEXT.md decisions, existing screen implementations
 2. Checkmark circle (72px, `accentLight` bg, accent border) -- gentle scale settle (0.98 to 1.02 to 1.0) + fade-in, NOT bouncy spring
 3. `xl` (24px) spacer
 4. Headline: "You've already begun" (Lora 28px Bold, color `brown`, letter-spacing -0.5)
-5. `md` (12px) spacer
+5. `sm` (8px) spacer
 6. Body: "Now let's take your first real lesson." (Inter 15px, color `textSoft`, max-width 300)
 7. Footer: "Start Lesson 1" Button (or "Try Again" on error)
 
