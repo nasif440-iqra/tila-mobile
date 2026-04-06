@@ -1,49 +1,48 @@
-# Phase 3: Sacred Moments - Context
+# Phase 3: Onboarding & Personalization - Context
 
-**Gathered:** 2026-04-06
+**Gathered:** 2026-04-01
 **Status:** Ready for planning
 
 <domain>
 ## Phase Boundary
 
-Onboarding and Bismillah feel like spiritual thresholds, not static content — text unfolds word-by-word instead of appearing all at once, creating genuine moments of revelation. This phase builds a shared PhraseReveal primitive and applies it to Bismillah (as a micro-lesson), Tilawah, and Hadith screens. All onboarding screens get AtmosphereBackground. Finish screen gains gravity.
+Add a combined name + motivation step to onboarding, personalize the home screen greeting with name and motivation-specific messaging, and explain the wird concept on first streak badge appearance.
 
 </domain>
 
 <decisions>
 ## Implementation Decisions
 
-### Phrase Reveal Primitive (SACR-01)
-- **D-01:** Build a shared `PhraseReveal` component that takes Arabic words + transliterations as data. Used by Bismillah, Tilawah, and Hadith screens.
-- **D-02:** Auto-timed reveal — words appear automatically with staggered timing (600-800ms per word, 300-400ms stagger). Tap anywhere to skip ahead.
-- **D-03:** Transliteration fades in beneath each Arabic word after it reveals — creates a two-line pair per word. Clear connection between Arabic and pronunciation.
-- **D-04:** English meaning appears per-word ONLY in Bismillah (teaching moment). Tilawah and Hadith show full English translation after the reveal completes.
+### Combined Name + Motivation Step (CONV-01)
+- **D-01:** Add ONE new onboarding step that combines name input (optional text field) and motivation picker (4 options from existing schema: read_quran, pray_confidently, connect_heritage, teach_children, personal_growth)
+- **D-02:** Place this step BEFORE Finish — after the learning preview steps (LetterReveal, LetterAudio, LetterQuiz), before the completion step. Current step 8 (Finish) becomes step 9.
+- **D-03:** Name input is OPTIONAL — user can skip without entering a name. Motivation picker should have a default or "skip" option.
+- **D-04:** Requires a DB migration to add `name` column to `user_profile` table. The `motivation` column already exists in the schema.
+- **D-05:** Follow the existing draft state pattern — add `userName` and `motivation` to `OnboardingDraft`, save via `updateProfile()` in handleFinish.
 
-### Bismillah Micro-Lesson (SACR-02)
-- **D-05:** Break Bismillah into 4 semantic units: Bismi / Allahi / Ar-Rahmani / Ar-Raheem. Each unit shows Arabic word, transliteration, and English meaning.
-- **D-06:** All 4 units auto-reveal sequentially using the PhraseReveal primitive. The current 4-second auto-advance timer is removed.
-- **D-07:** After all 4 units reveal, show a CTA button (e.g., "Continue"). User absorbs at their own pace — no auto-advance on sacred content.
-- **D-08:** Stacked vertical layout — each unit on its own row: Arabic word on top, transliteration below, meaning below that. Clean, spacious, meditative.
+### Home Screen Greeting (CONV-04)
+- **D-06:** Greeting format WITH name: "ASSALAMU ALAIKUM, [NAME]" on first line, motivation subtitle on second line
+- **D-07:** Greeting format WITHOUT name (skipped): "ASSALAMU ALAIKUM" on first line, motivation subtitle on second line
+- **D-08:** Greeting format WITHOUT motivation (edge case): "ASSALAMU ALAIKUM" with current dynamic subtitle ("5 letters down", "Begin your journey", etc.)
+- **D-09:** Motivation-to-subtitle mapping:
+  - read_quran → "Reading toward the Quran"
+  - pray_confidently → "Building toward confident salah"
+  - connect_heritage → "Connecting to your heritage"
+  - teach_children → "Learning to teach your children"
+  - personal_growth → "Growing in your faith"
+- **D-10:** Location: `app/(tabs)/index.tsx` lines 473-478 (current hardcoded greeting)
 
-### Onboarding Atmosphere (SACR-03, SACR-04, SACR-05)
-- **D-09:** Wrap the entire onboarding flow in AtmosphereBackground 'onboarding' preset. Every step feels like one continuous inhabited space.
-- **D-10:** Welcome screen: AtmosphereBackground only. Keep existing staggered fade-in animations and BrandedLogo. The atmosphere IS the upgrade.
-- **D-11:** Tilawah screen: Replace static Arabic block with word-by-word PhraseReveal. Remove ShimmerWord animation (replaced by reveal). Keep headline and motto text.
-- **D-12:** Hadith screen: Keep ArchOutline and WarmGlow (they add atmosphere). Replace static quote with word-by-word PhraseReveal. Keep source attribution.
-
-### Finish Screen Gravity (SACR-06)
-- **D-13:** Replace bouncy spring checkmark with gentle fade-in + subtle scale settle (1.02→1.0). Checkmark appears quietly — gravity, not celebration.
-- **D-14:** Keep the ambient Alif watermark (200px, 8% opacity). It's subtle and ties back to "you're about to learn your first letter."
-- **D-15:** Keep CTA text as "Start Lesson 1" — direct, clear, grounding after emotional buildup.
+### Wird Explanation (CONV-02)
+- **D-11:** Auto tooltip that appears the FIRST TIME the streak badge is shown on the home screen
+- **D-12:** Dismisses on tap. One-time only — tracked via a new flag in `user_profile` (e.g., `wird_explanation_seen`)
+- **D-13:** Tooltip content: "In Islamic tradition, a wird is a daily practice — a small, consistent effort. Your learning wird builds day by day."
+- **D-14:** Visual style: small card/tooltip positioned near the AnimatedStreakBadge, matching the app's design system (warm cream background, dark green text, subtle shadow)
 
 ### Claude's Discretion
-- PhraseReveal animation easing curves and exact timing values within the 600-800ms/300-400ms ranges
-- Reduce Motion fallback for PhraseReveal (likely: show all words at once with simple fade)
-- Where to place AtmosphereBackground wrapper (OnboardingFlow level vs per-screen)
-- Exact scale settle curve for Finish checkmark
-- Whether Bismillah CTA says "Continue" or something else
-- Typography sizing for transliteration text in PhraseReveal
-- Whether PhraseReveal lives in `src/design/components/` or `src/components/shared/`
+- Exact visual design of the tooltip (card shape, arrow, animation)
+- Whether the name + motivation step uses cards, a form layout, or a split-screen design
+- DB migration version number
+- Test approach
 
 </decisions>
 
@@ -52,32 +51,24 @@ Onboarding and Bismillah feel like spiritual thresholds, not static content — 
 
 **Downstream agents MUST read these before planning or implementing.**
 
-### Onboarding Screens (modify these)
-- `src/components/onboarding/steps/BismillahMoment.tsx` — Current Bismillah screen (replace with micro-lesson using PhraseReveal)
-- `src/components/onboarding/steps/Tilawat.tsx` — Current Tilawah screen (replace static Arabic with PhraseReveal, remove ShimmerWord)
-- `src/components/onboarding/steps/Hadith.tsx` — Current Hadith screen (replace static quote with PhraseReveal, keep ArchOutline + WarmGlow)
-- `src/components/onboarding/steps/Welcome.tsx` — Welcome screen (atmosphere only, no content changes)
-- `src/components/onboarding/steps/Finish.tsx` — Finish screen (replace bouncy spring with gentle settle)
-- `src/components/onboarding/OnboardingStepLayout.tsx` — Layout wrapper with splash/centered/card variants
-- `src/components/onboarding/OnboardingFlow.tsx` — Flow orchestrator (may need AtmosphereBackground wrapper)
+### Onboarding Flow
+- `app/onboarding.tsx` — Onboarding screen entry point
+- `src/components/onboarding/OnboardingFlow.tsx` — Flow orchestrator with draft state pattern (lines 56, 101-106)
+- `src/components/onboarding/steps/` — All 9 existing step components (pattern to follow)
+- `src/components/onboarding/steps/StartingPoint.tsx` — Example of a data-collecting step with radio cards
 
-### Atmosphere System (reference, built in Phase 1)
-- `src/design/atmosphere/AtmosphereBackground.tsx` — Ambient background with presets (use 'onboarding' and 'sacred')
-- `src/design/atmosphere/WarmGlow.tsx` — SVG RadialGradient with breathing animation (used in Hadith)
-- `src/design/atmosphere/FloatingLettersLayer.tsx` — Drifting Arabic letters (optional for onboarding)
+### User Profile & DB
+- `src/db/schema.ts` — user_profile table definition (lines 10-24, includes motivation column)
+- `src/engine/progress.ts` — `saveUserProfile()` function (lines 303-355), `loadProgress()` 
+- `src/types/onboarding.ts` — OnboardingDraft type definition
 
-### Design System (extend these)
-- `src/design/tokens.ts` — Typography tiers, colors, spacing
-- `src/design/animations.ts` — Animation tokens (breathing, drift, settle from Phase 1)
-- `src/design/components/ArabicText.tsx` — Arabic text component with size tiers
-- `src/design/haptics.ts` — hapticSelection (used in BismillahMoment)
+### Home Screen
+- `app/(tabs)/index.tsx` — Greeting at lines 473-478, `getGreetingSubtitle` at lines 133-138
+- `src/components/home/AnimatedStreakBadge.tsx` — Streak badge component (wird explanation target)
 
-### Audio
-- `src/audio/player.ts` — playSacredMoment() function (used in BismillahMoment, keep)
-
-### Project Context
-- `.planning/PROJECT.md` — Emotional Design Contract, constraints
-- `.planning/REQUIREMENTS.md` — SACR-01 through SACR-06
+### Design System
+- `src/design/tokens.ts` — Colors, typography, spacing
+- `src/design/theme.ts` — useColors() hook
 
 </canonical_refs>
 
@@ -85,37 +76,29 @@ Onboarding and Bismillah feel like spiritual thresholds, not static content — 
 ## Existing Code Insights
 
 ### Reusable Assets
-- `AtmosphereBackground` (Phase 1): Has 'onboarding' and 'sacred' presets ready to use
-- `WarmGlow` (Phase 1): SVG RadialGradient with breathing, useReducedMotion — already used in Hadith
-- `OnboardingStepLayout`: 3 variants (splash/centered/card), handles safe area + footer — all screens use this
-- `ArabicText`: Size tier component with display/large/body/quizHero/quizOption — use for PhraseReveal Arabic
-- `playSacredMoment()`: Audio cue for Bismillah — keep in micro-lesson
-- `hapticSelection()`: Subtle haptic for Bismillah entrance — keep
-- `springs.bouncy`: Currently used in Finish checkmark — replace with gentle ease
+- `OnboardingDraft` type and draft state pattern — extend with `userName` and `motivation` fields
+- `StartingPoint.tsx` — radio card pattern reusable for motivation picker
+- `AnimatedStreakBadge.tsx` — target for wird tooltip attachment
+- `user_profile` table already has `motivation` column — no migration needed for that field
 
 ### Established Patterns
-- Onboarding steps receive `onNext` prop, render content, call `onNext()` to advance
-- Stagger animations use `SPLASH_STAGGER_BASE` and `SPLASH_STAGGER_DURATION` constants from `src/components/onboarding/animations.ts`
-- AtmosphereBackground wraps content and provides ambient visuals behind children
-- Reduce Motion handled via `useReducedMotion()` from Reanimated — all new animations must respect this
+- Onboarding steps follow a consistent pattern: receive `onNext` prop, render content, call `onNext()` to advance
+- Profile flags stored as integers in `user_profile` (e.g., `wird_intro_seen`, `post_lesson_onboard_seen`)
+- DB migrations use PRAGMA table_info checks for column existence
 
 ### Integration Points
-- `OnboardingFlow.tsx` — wrap in AtmosphereBackground at the flow level (all steps inherit atmosphere)
-- `BismillahMoment.tsx` — remove 4s setTimeout, add CTA button, use PhraseReveal for 4 semantic units
-- `Tilawat.tsx` — remove ShimmerWord component, use PhraseReveal for Arabic word-by-word
-- `Hadith.tsx` — keep WarmGlow + ArchOutline, use PhraseReveal for quote
-- `Finish.tsx` — replace `withSpring(1.0, springs.bouncy)` with gentle fade-in + scale settle
+- `handleFinish()` in OnboardingFlow.tsx calls `updateProfile()` — add name + motivation to this call
+- `loadProgress()` returns profile data including motivation — home screen can read from here
+- `TOTAL_STEPS` constant needs updating from 9 to 10
 
 </code_context>
 
 <specifics>
 ## Specific Ideas
 
-- The PhraseReveal should feel like calligraphy being written — words appearing as if drawn by an invisible hand, not flipping through cards
-- Bismillah is both a spiritual threshold AND a first teaching moment — "This is sacred, and you're about to be able to read it yourself"
-- The stacked vertical layout for Bismillah should feel meditative and spacious — no information density
-- AtmosphereBackground on the entire onboarding flow creates one continuous inhabited space — "like entering a quiet room"
-- The Finish screen checkmark settling quietly says "this is real" — no party, just arrival
+- The reviewer noted the onboarding tone is "exactly right" — the new name step should match this warm, sacred tone. Not "What's your name?" but something like "What should we call you?" with a note that it's optional.
+- The motivation options should feel aspirational, not clinical. Use the subtitle phrasing from D-09 as the option labels.
+- The wird tooltip should feel like a gentle teaching moment, not an interruption.
 
 </specifics>
 
@@ -128,5 +111,5 @@ None — discussion stayed within phase scope
 
 ---
 
-*Phase: 03-sacred-moments*
-*Context gathered: 2026-04-06*
+*Phase: 03-onboarding-personalization*
+*Context gathered: 2026-04-01*
