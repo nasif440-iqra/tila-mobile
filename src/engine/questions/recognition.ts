@@ -37,8 +37,10 @@ export function generateRecognitionQs(lesson: Lesson): Question[] {
         : [t, ...getDistractors(t.id, allPool, 3)];
       qs.push({ type: "name_to_letter", prompt: `Which is ${t.name}?`, targetId: t.id, options: makeOpts(optLetters, t.id) });
     }
-    const ltnLetter = shuffle([...teach])[0];
-    qs.push({ type: "letter_to_name", prompt: ltnLetter.letter, promptSubtext: "What is this letter?", targetId: ltnLetter.id, options: makeNameOpts([ltnLetter, ...getDistractors(ltnLetter.id, allPool, 3)], ltnLetter.id) });
+    const ltnLetters = shuffle([...teach]).slice(0, 2);
+    for (const t of ltnLetters) {
+      qs.push({ type: "letter_to_name", prompt: t.letter, promptSubtext: "What is this letter?", targetId: t.id, options: makeNameOpts([t, ...getDistractors(t.id, allPool, 3)], t.id) });
+    }
   }
   if (lesson.reviewIds?.length > 0) {
     const rid = shuffle(lesson.reviewIds)[0];

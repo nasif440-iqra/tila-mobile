@@ -1215,6 +1215,62 @@ describe("4-option enforcement", () => {
 });
 
 // ---------------------------------------------------------------------------
+// Recognition type balance (05-01 Task 2)
+// ---------------------------------------------------------------------------
+
+describe("recognition type balance", () => {
+  it("multi-teach lesson produces roughly equal rule, name_to_letter, letter_to_name counts", () => {
+    const lesson = findLesson(l => l.lessonMode === "recognition" && (l.teachIds?.length || 0) >= 2);
+    const counts = { rule: 0, name_to_letter: 0, letter_to_name: 0 };
+    const RUNS = 50;
+    for (let run = 0; run < RUNS; run++) {
+      const qs = generateRecognitionQs(lesson);
+      for (const q of qs) {
+        if (q.type in counts) counts[q.type]++;
+      }
+    }
+    // Over 50 runs, each type should appear at least 30% of the total of the three
+    const total = counts.rule + counts.name_to_letter + counts.letter_to_name;
+    expect(counts.rule / total).toBeGreaterThan(0.2);
+    expect(counts.name_to_letter / total).toBeGreaterThan(0.2);
+    expect(counts.letter_to_name / total).toBeGreaterThan(0.2);
+  });
+
+  it("letter_to_name questions show Arabic letter as prompt with English name options", () => {
+    const lesson = findLesson(l => l.lessonMode === "recognition" && (l.teachIds?.length || 0) >= 2);
+    for (let run = 0; run < 20; run++) {
+      const qs = generateRecognitionQs(lesson);
+      const ltnQs = qs.filter(q => q.type === "letter_to_name");
+      for (const q of ltnQs) {
+        // prompt should be an Arabic letter (single char or short)
+        expect(q.promptSubtext).toBe("What is this letter?");
+        // options should be English names, not Arabic letters
+        for (const opt of q.options) {
+          // English names are multi-character ASCII strings
+          expect(opt.label.length).toBeGreaterThan(1);
+        }
+      }
+    }
+  });
+
+  it("single-teach lessons produce at least one of each type (rule, name_to_letter, letter_to_name)", () => {
+    const lesson = findLesson(l => l.lessonMode === "recognition" && l.teachIds?.length === 1);
+    const qs = generateRecognitionQs(lesson);
+    const types = qs.map(q => q.type);
+    expect(types).toContain("rule");
+    expect(types).toContain("name_to_letter");
+    expect(types).toContain("letter_to_name");
+  });
+
+  it("multi-teach lesson produces at least 2 letter_to_name questions", () => {
+    const lesson = findLesson(l => l.lessonMode === "recognition" && (l.teachIds?.length || 0) >= 2);
+    const qs = generateRecognitionQs(lesson);
+    const ltnCount = qs.filter(q => q.type === "letter_to_name").length;
+    expect(ltnCount).toBeGreaterThanOrEqual(2);
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Stress tests: 100 runs on failure-prone generators
 // ---------------------------------------------------------------------------
 
