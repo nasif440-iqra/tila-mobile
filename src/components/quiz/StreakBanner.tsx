@@ -27,7 +27,27 @@ export function StreakBanner({ streak }: StreakBannerProps) {
   const insets = useSafeAreaInsets();
 
   const isTier3 = streak >= 7;
-  const isTier2 = streak === 5;
+  const isTier2 = streak >= 5 && streak < 7;
+
+  // ── Varied messaging pools ──
+  const BANNER_MESSAGES_SMALL = [
+    `${streak} in a row`,
+    `${streak} straight`,
+    `Streak: ${streak}`,
+  ];
+  const BANNER_MESSAGES_MEDIUM = [
+    `${streak} in a row  \u00B7  Sharp focus.`,
+    `${streak} straight  \u00B7  In the zone.`,
+    `${streak}!  \u00B7  Keep this up.`,
+  ];
+  const BANNER_ARABIC_PHRASES = [
+    { arabic: "\u0645\u0627\u0634\u0627\u0621 \u0627\u0644\u0644\u0647", english: "What Allah wills" },
+    { arabic: "\u0628\u0627\u0631\u0643 \u0627\u0644\u0644\u0647", english: "Allah has blessed" },
+  ];
+  const pickRandom = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const smallMsg = pickRandom(BANNER_MESSAGES_SMALL);
+  const mediumMsg = pickRandom(BANNER_MESSAGES_MEDIUM);
+  const arabicPhrase = pickRandom(BANNER_ARABIC_PHRASES);
 
   // Wrapper: spring enter from -48 → 0 (web uses -64 but mobile has less viewport)
   const wrapperY = useSharedValue(-48);
@@ -88,10 +108,10 @@ export function StreakBanner({ streak }: StreakBannerProps) {
             <View style={[styles.tier3Divider, { backgroundColor: "rgba(196,164,100,0.3)" }]} />
             <View style={styles.tier3TextCol}>
               <Text style={[styles.tier3Arabic, { color: colors.accent }]}>
-                {"\u0645\u0627\u0634\u0627\u0621 \u0627\u0644\u0644\u0647"}
+                {arabicPhrase.arabic}
               </Text>
               <Text style={styles.tier3English}>
-                What Allah wills
+                {arabicPhrase.english}
               </Text>
             </View>
           </Animated.View>
@@ -101,7 +121,7 @@ export function StreakBanner({ streak }: StreakBannerProps) {
               {"\u2726\u2726"}
             </Text>
             <Text style={[styles.tierText, { color: colors.accent }]}>
-              5 in a row  {"\u00B7"}  Sharp focus.
+              {mediumMsg}
             </Text>
           </Animated.View>
         ) : (
@@ -110,7 +130,7 @@ export function StreakBanner({ streak }: StreakBannerProps) {
               {"\u2726"}
             </Text>
             <Text style={[styles.tierText, { color: colors.accent }]}>
-              3 in a row
+              {smallMsg}
             </Text>
           </Animated.View>
         )}
