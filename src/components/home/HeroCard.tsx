@@ -121,7 +121,7 @@ export default function HeroCard({
             pulseMax={0.35}
           />
           <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-            <ArabicText size="display" color={colors.primary} style={{ marginTop: 6 }}>
+            <ArabicText size="display" color={colors.primary} style={{ marginTop: -8 }}>
               {heroLetter ? heroLetter.letter : "?"}
             </ArabicText>
           </View>

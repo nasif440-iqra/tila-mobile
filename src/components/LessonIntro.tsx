@@ -123,7 +123,7 @@ function LetterCard({
           <ArabicText
             size={isSmall ? "large" : "display"}
             color={colors.primary}
-            style={{ marginTop: isSmall ? 2 : 4 }}
+            style={{ marginTop: isSmall ? -4 : -8 }}
           >
             {letter.letter}
           </ArabicText>

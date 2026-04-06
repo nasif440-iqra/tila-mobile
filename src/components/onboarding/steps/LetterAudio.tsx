@@ -248,7 +248,7 @@ export function LetterAudio({
               <ArabicText
                 size="display"
                 color={colors.primary}
-                style={{ marginTop: 6 }}
+                style={{ marginTop: -8 }}
               >
                 {"\u0627"}
               </ArabicText>
