@@ -413,7 +413,7 @@ function StepMeaning({ onNext, colors }: { onNext: () => void; colors: any }) {
         <Text style={[styles.meaningText, { color: colors.textSoft }]}>
           A{" "}
           <Text style={{ fontFamily: fontFamilies.bodyBold, color: colors.accent }}>Wird</Text>{" "}
-          is a daily spiritual practice {"\u2014"} a portion of worship you return to each day,
+          is a daily spiritual practice — a portion of worship you return to each day,
           no matter how small.
         </Text>
       </RevealSlot>
@@ -422,7 +422,7 @@ function StepMeaning({ onNext, colors }: { onNext: () => void; colors: any }) {
       <RevealSlot visible={phase >= 2}>
         <Text style={[styles.meaningText, { color: colors.textSoft, marginTop: 14 }]}>
           In Tila, your Wird is your daily streak. Each day you practice, your Wird grows. It
-          {"\u2019"}s not about perfection {"\u2014"} it{"\u2019"}s about showing up.
+          it's not about perfection — it's about showing up.
         </Text>
       </RevealSlot>
 
@@ -555,13 +555,13 @@ function StepFirstWird({ onComplete, colors }: { onComplete: () => void; colors:
           And whoever holds firmly to Allah has been guided to a straight path.
         </Text>
         <Text style={[styles.quranRef, { color: colors.textMuted }]}>
-          {"\u2014"} Quran 3:101
+          — Quran 3:101
         </Text>
       </RevealSlot>
 
       {/* Button — always mounted */}
       <RevealSlot visible={phase >= 5} translateY={14} style={styles.buttonWrap}>
-        <Button title="I\u2019m in" onPress={onComplete} />
+        <Button title="I'm in" onPress={onComplete} />
       </RevealSlot>
     </View>
   );

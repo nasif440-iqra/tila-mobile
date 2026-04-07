@@ -45,7 +45,6 @@ import { hapticTap } from "../../src/design/haptics";
 import {
   getGreetingLine1,
   getMotivationSubtitle,
-  MOTIVATION_SUBTITLES,
 } from "../../src/utils/greetingHelpers";
 import Svg, { Circle, Path } from "react-native-svg";
 
@@ -488,8 +487,8 @@ export default function HomeScreen() {
               <TrialCountdownBadge daysLeft={trialDaysRemaining} />
             )}
             {currentWird > 0 && <AnimatedStreakBadge count={currentWird} enterDelay={200} />}
-            <WirdTooltip visible={showWirdTooltip} onDismiss={handleWirdTooltipDismiss} />
           </Animated.View>
+          <WirdTooltip visible={showWirdTooltip} onDismiss={handleWirdTooltipDismiss} />
         </View>
 
         {/* ── Greeting ── */}

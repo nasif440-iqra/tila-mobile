@@ -50,20 +50,27 @@ function RevealWord({
 }) {
   const colors = useColors();
   const opacity = useSharedValue(showImmediately ? 1 : 0);
+  const translateY = useSharedValue(showImmediately ? 0 : 8);
 
   useEffect(() => {
     if (showImmediately) {
       opacity.value = 1;
+      translateY.value = 0;
       return;
     }
     opacity.value = withDelay(
       delay,
       withTiming(1, { duration, easing: Easing.out(Easing.cubic) })
     );
-  }, [delay, duration, showImmediately, opacity]);
+    translateY.value = withDelay(
+      delay,
+      withTiming(0, { duration, easing: Easing.out(Easing.cubic) })
+    );
+  }, [delay, duration, showImmediately, opacity, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     opacity: opacity.value,
+    transform: [{ translateY: translateY.value }],
   }));
 
   return (

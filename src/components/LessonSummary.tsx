@@ -683,10 +683,7 @@ export function LessonSummary({
           </Animated.View>
         )}
 
-        {/* ── 3b. Post-lesson insights (value communication) ── */}
-        {insights && insights.length > 0 && (
-          <LessonInsights insights={insights} />
-        )}
+        {/* Post-lesson insights removed for beta — was showing wrong mastery letters */}
 
         {/* ── 4. "Up Next" card ── */}
         {nextLesson && (

@@ -26,7 +26,6 @@ import {
 } from "@expo-google-fonts/lora";
 import { ThemeContext, resolveColors, useColors } from "../src/design/theme";
 import { DatabaseProvider } from "../src/db/provider";
-import { initRevenueCat } from "../src/monetization/revenuecat";
 import { SubscriptionProvider } from "../src/monetization/provider";
 import { AuthProvider } from "../src/auth/provider";
 import { SyncProvider } from "../src/sync/provider";
@@ -105,10 +104,6 @@ export default function RootLayout() {
     Lora_700Bold,
     Lora_400Regular_Italic,
   });
-
-  useEffect(() => {
-    initRevenueCat();
-  }, []);
 
   useEffect(() => {
     if (fontsLoaded || fontError) {

@@ -47,7 +47,7 @@ export function WirdTooltip({ visible, onDismiss }: WirdTooltipProps) {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: 48,
+    top: 40,
     right: 0,
     width: 240,
     borderRadius: radii.md,

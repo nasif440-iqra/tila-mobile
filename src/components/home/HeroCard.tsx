@@ -15,6 +15,26 @@ import { WarmGlow } from "../onboarding/WarmGlow";
 import { getLetter } from "../../data/letters";
 import type { Lesson } from "../../types/lesson";
 
+// ── Per-letter vertical offset to center glyphs in the circle ──
+// Arabic letters have different vertical extents:
+// - Descenders (ج ح خ ع غ): bowl drops below baseline, need to shift UP
+// - Tall letters (ا ل ك): extend high, need to shift DOWN slightly
+// - Baseline letters (ب ت ث etc): roughly centered already
+const LETTER_VERTICAL_OFFSET: Record<number, number> = {
+  1: 6,    // Alif ا — tall, shift down
+  5: -6,   // Jeem ج — descender
+  6: -6,   // Haa ح — descender
+  7: -6,   // Khaa خ — descender
+  18: -6,  // Ain ع — descender
+  19: -6,  // Ghain غ — descender
+  20: 4,   // Fa ف — tall loop
+  21: 4,   // Qaf ق — small descender
+  22: 4,   // Kaf ك — tall
+  23: 4,   // Lam ل — tall
+  27: 4,   // Waw و — descender
+  28: -2,  // Ya ي — slight descender
+};
+
 // ── Props ──
 
 export interface HeroCardProps {
@@ -121,7 +141,14 @@ export default function HeroCard({
             pulseMax={0.35}
           />
           <View style={[styles.letterCircle, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-            <ArabicText size="display" color={colors.primary} style={{ marginTop: -8 }}>
+            <ArabicText
+              size="display"
+              color={colors.primary}
+              style={{
+                lineHeight: 100,
+                marginTop: heroLetter ? (LETTER_VERTICAL_OFFSET[heroLetter.id] ?? 0) : 0,
+              }}
+            >
               {heroLetter ? heroLetter.letter : "?"}
             </ArabicText>
           </View>

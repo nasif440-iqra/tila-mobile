@@ -243,12 +243,8 @@ export default function LessonScreen() {
           }
         }
 
-        if (newlyMastered.length > 0) {
-          setMasteredLetters(newlyMastered);
-          setQuizResults({ ...results, accuracy, passed });
-          setStage("mastery-celebration");
-          return;
-        }
+        // Mastery celebration disabled for beta — was showing wrong letters
+        // and feels premature at this stage of the learning journey
       } catch (err) {
         Sentry.captureException(err, { extra: { lessonId: lesson!.id, accuracy, passed } });
       }
