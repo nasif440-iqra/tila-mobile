@@ -12,6 +12,7 @@ import { useColors } from "../design/theme";
 import { typography, spacing, radii } from "../design/tokens";
 import useLessonHybrid, { type Stage } from "../hooks/useLessonHybrid";
 import { springs, durations } from "../design/animations";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Exercise components
 import { ComprehensionExercise } from "./exercises/ComprehensionExercise";
@@ -77,6 +78,7 @@ function CloseButton({
 
 export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
   const colors = useColors();
+  const insets = useSafeAreaInsets();
   const hybrid = useLessonHybrid(lesson);
   const advanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -203,7 +205,7 @@ export function LessonHybrid({ lesson, onComplete }: LessonHybridProps) {
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {/* Top bar: close + progress + counter */}
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: insets.top + spacing.sm }]}>
         <CloseButton onPress={handleBack} colors={colors} />
 
         <View
@@ -267,7 +269,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: spacing.md,
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.md,
     paddingBottom: spacing.sm,
   },
   closeButton: {

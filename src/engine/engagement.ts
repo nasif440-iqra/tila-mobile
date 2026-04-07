@@ -282,6 +282,20 @@ export function getSummaryMessaging(
       : band === "partial"
       ? `You're getting familiar with how ${names} sound${teachLetters.length > 1 ? "" : "s"}.`
       : `You started hearing ${names} — keep listening to build recognition.`;
+  } else if (mode === "connected-forms") {
+    const names = teachLetters.map(l => l.name).join(", ");
+    recap = band === "strong"
+      ? `You learned the connected forms of ${names}.`
+      : band === "partial"
+      ? `You're getting familiar with how ${names} connect${teachLetters.length > 1 ? "" : "s"} in words.`
+      : `You started learning how ${names} look${teachLetters.length > 1 ? "" : "s"} in connected writing.`;
+  } else if (mode === "connected-reading") {
+    const names = teachLetters.map(l => l.name).join(", ");
+    recap = band === "strong"
+      ? `You practiced reading ${names} together.`
+      : band === "partial"
+      ? `You're building fluency reading ${names} in combination.`
+      : `You started reading ${names} together — keep practicing to build fluency.`;
   } else {
     // recognition
     const names = teachLetters.map(l => l.name).join(", ");

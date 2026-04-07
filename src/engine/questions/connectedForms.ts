@@ -182,7 +182,7 @@ function buildFreeIdentification(letterId: number, teachIds: number[]): Connecte
   // Get distractors from OTHER families
   const allOtherIds = Array.from({ length: 28 }, (_, i) => i + 1)
     .filter(id => id !== letterId && !teachIds.includes(id));
-  const distractors = shuffle(allOtherIds).slice(0, 2);
+  const distractors = shuffle(allOtherIds).slice(0, 3);
   const options = shuffle([
     { id: letterId, label: letter.name, isCorrect: true },
     ...distractors.map(id => {
@@ -203,7 +203,7 @@ function buildSoundReviewQuestion(letterId: number): ConnectedFormExercise | nul
   const letter = getLetter(letterId);
   if (!letter) return null;
   const allLetters = ARABIC_LETTERS.filter((l: ArabicLetter) => l.id !== letterId);
-  const distractors = shuffle(allLetters).slice(0, 2);
+  const distractors = shuffle(allLetters).slice(0, 3);
   return {
     type: "comprehension",
     prompt: `Review: What sound does ${letter.name} make?`,
@@ -228,6 +228,9 @@ function buildHarakatReviewQuestion(letterId: number): ConnectedFormExercise | n
   const display = letter.letter + target.mark;
   const correctSound = letter.transliteration + target.sound;
   const wrongVowels = vowels.filter(v => v.name !== target.name);
+  // Pick a random other letter to create a 4th distractor with the same vowel
+  const otherLetters = ARABIC_LETTERS.filter((l: ArabicLetter) => l.id !== letterId);
+  const decoy = pickRandom(otherLetters)!;
   return {
     type: "comprehension",
     prompt: "Review: What sound does this make?",
@@ -236,6 +239,7 @@ function buildHarakatReviewQuestion(letterId: number): ConnectedFormExercise | n
     options: shuffle([
       { id: target.name, label: `"${correctSound}"`, isCorrect: true },
       ...wrongVowels.map(v => ({ id: v.name, label: `"${letter.transliteration + v.sound}"`, isCorrect: false })),
+      { id: "decoy", label: `"${decoy.transliteration + target.sound}"`, isCorrect: false },
     ]),
   };
 }
@@ -327,7 +331,7 @@ function generateMixedRetrievalExercises(lesson: Lesson): ConnectedFormExercise[
     const displayForm = cf.forms[pos];
     const pool = shuffle(
       Array.from({ length: 28 }, (_, i) => i + 1).filter(id => id !== letterId)
-    ).slice(0, 2);
+    ).slice(0, 3);
     const options = shuffle([
       { id: letterId, label: letter.name, isCorrect: true },
       ...pool.map(id => {
@@ -356,7 +360,7 @@ function generateMasteryCheckExercises(): ConnectedFormExercise[] {
     const positions = getAvailablePositions(letterId);
     const pos = pickRandom(positions)!;
     const displayForm = cf.forms[pos];
-    const pool = shuffle(allIds.filter(id => id !== letterId)).slice(0, 2);
+    const pool = shuffle(allIds.filter(id => id !== letterId)).slice(0, 3);
     const options = shuffle([
       { id: letterId, label: letter.name, isCorrect: true },
       ...pool.map(id => {

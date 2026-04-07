@@ -193,7 +193,7 @@ export function TapInOrder({ exercise, onComplete }: Props) {
                     },
                 ]}
               >
-                <ArabicText size="body" color={isTapped ? colors.white : colors.text}>
+                <ArabicText size="large" color={isTapped ? colors.white : colors.text}>
                   {letter.arabic}
                 </ArabicText>
               </Pressable>
@@ -267,8 +267,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   letterBox: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: radii.md,
     borderWidth: 2,
     alignItems: "center",

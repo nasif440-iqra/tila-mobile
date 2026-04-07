@@ -30,6 +30,7 @@ import { WarmGlow } from "./onboarding/WarmGlow";
 import { hapticMilestone, hapticSuccess, hapticTap } from "../design/haptics";
 import { playLessonComplete, playLessonCompletePerfect } from "../audio/player";
 import { getLetter } from "../data/letters";
+import { getCombo } from "../data/harakat";
 import { LESSONS } from "../data/lessons";
 import type { LessonInsight } from "../engine/insights";
 import { LessonInsights } from "./insights/LessonInsights";
@@ -303,7 +304,10 @@ export function LessonSummary({
     () => (lesson.teachIds || []).map((id: number) => getLetter(id)).filter(Boolean),
     [lesson.teachIds]
   );
-  const lessonCombos = lesson.teachCombos || [];
+  const lessonCombos = useMemo(
+    () => (lesson.teachCombos || []).map((id: string) => getCombo(id)).filter(Boolean),
+    [lesson.teachCombos]
+  );
 
   // Next lesson
   const nextLesson = useMemo(

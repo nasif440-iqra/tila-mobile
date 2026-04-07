@@ -110,10 +110,10 @@ function buildComprehension(buildupExercise: BuildupExercise, allBuildup: Buildu
   const distractors = allBuildup
     .filter(e => e.fullWord.transliteration !== correct)
     .map(e => e.fullWord.transliteration);
-  const uniqueDistractors = [...new Set(distractors)].slice(0, 2);
+  const uniqueDistractors = [...new Set(distractors)].slice(0, 3);
 
   // Pad with simple fallbacks if not enough distractors
-  while (uniqueDistractors.length < 2) {
+  while (uniqueDistractors.length < 3) {
     const fallback = "ba-" + Object.values(VOWEL_SOUNDS)[uniqueDistractors.length];
     if (fallback !== correct && !uniqueDistractors.includes(fallback)) {
       uniqueDistractors.push(fallback);
