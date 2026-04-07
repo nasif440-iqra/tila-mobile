@@ -33,6 +33,8 @@ export interface JourneyNodeProps {
   enterDelay?: number;
   onPress: (lessonId: number) => void;
   premiumLocked?: boolean;
+  /** When true, a "locked" node is still tappable (e.g. beta / all-unlocked). */
+  accessible?: boolean;
 }
 
 // ── Icons ──
@@ -68,6 +70,7 @@ export function JourneyNode({
   enterDelay = 0,
   onPress,
   premiumLocked = false,
+  accessible = false,
 }: JourneyNodeProps) {
   const colors = useColors();
 
@@ -288,7 +291,7 @@ export function JourneyNode({
     { transform: [{ translateX: offset }], opacity: rowOpacity },
   ];
 
-  if (state === "locked" && !premiumLocked) {
+  if (state === "locked" && !premiumLocked && !accessible) {
     return (
       <Animated.View style={entranceStyle}>
         <View style={rowStyle}>

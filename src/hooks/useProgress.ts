@@ -107,9 +107,26 @@ export function useProgress() {
   const updateProfile = useCallback(
     async (profile: UserProfileUpdate) => {
       await saveUserProfile(db, profile);
-      await refresh();
+      // Optimistically patch local state instead of full DB re-read.
+      // UserProfileUpdate keys map to ProgressState fields.
+      setState((prev) => {
+        if (!prev) return prev;
+        const patched = { ...prev };
+        if (profile.onboarded !== undefined) patched.onboarded = profile.onboarded;
+        if (profile.onboardingVersion !== undefined) patched.onboardingVersion = profile.onboardingVersion;
+        if (profile.startingPoint !== undefined) patched.onboardingStartingPoint = profile.startingPoint;
+        if (profile.motivation !== undefined) patched.onboardingMotivation = profile.motivation;
+        if (profile.name !== undefined) patched.userName = profile.name;
+        if (profile.dailyGoal !== undefined) patched.onboardingDailyGoal = profile.dailyGoal;
+        if (profile.commitmentComplete !== undefined) patched.onboardingCommitmentComplete = profile.commitmentComplete;
+        if (profile.wirdIntroSeen !== undefined) patched.wirdIntroSeen = profile.wirdIntroSeen;
+        if (profile.postLessonOnboardSeen !== undefined) patched.postLessonOnboardSeen = profile.postLessonOnboardSeen;
+        if (profile.returnHadithLastShown !== undefined) patched.returnHadithLastShown = profile.returnHadithLastShown;
+        if (profile.analyticsConsent !== undefined) patched.analyticsConsent = profile.analyticsConsent;
+        return patched;
+      });
     },
-    [db, refresh]
+    [db]
   );
 
   return {

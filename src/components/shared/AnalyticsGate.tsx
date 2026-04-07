@@ -1,19 +1,20 @@
 import { useEffect, useState } from "react";
-import { useProgress } from "../../hooks/useProgress";
+import { useAppState } from "../../state/hooks";
 import { initAnalytics, enablePostHog, track } from "../../analytics";
 import * as SecureStore from "expo-secure-store";
 import { AnalyticsConsentModal } from "./AnalyticsConsentModal";
 
 export function AnalyticsGate({ children }: { children: React.ReactNode }) {
-  const progress = useProgress();
+  const appState = useAppState();
   const [analyticsReady, setAnalyticsReady] = useState(false);
+
+  const consent = appState.progress?.analyticsConsent ?? null;
 
   // Initialize analytics with consent status once progress loads
   useEffect(() => {
-    if (progress.loading) return;
+    if (appState.loading) return;
     if (analyticsReady) return;
 
-    const consent = progress.analyticsConsent ?? null;
     initAnalytics(consent);
 
     // Track app_opened if consent given
@@ -33,22 +34,22 @@ export function AnalyticsGate({ children }: { children: React.ReactNode }) {
     })();
 
     setAnalyticsReady(true);
-  }, [progress.loading, progress.analyticsConsent, analyticsReady]);
+  }, [appState.loading, consent, analyticsReady]);
 
   // Show consent modal: user is onboarded but hasn't been asked yet
   const showModal =
     analyticsReady &&
-    !progress.loading &&
-    progress.onboarded === true &&
-    progress.analyticsConsent === null;
+    !appState.loading &&
+    appState.progress?.onboarded === true &&
+    consent === null;
 
   async function handleAccept() {
-    await progress.updateProfile({ analyticsConsent: true });
+    await appState.updateProfile({ analyticsConsent: true });
     enablePostHog();
   }
 
   async function handleDecline() {
-    await progress.updateProfile({ analyticsConsent: false });
+    await appState.updateProfile({ analyticsConsent: false });
   }
 
   return (

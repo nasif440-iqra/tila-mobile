@@ -18,7 +18,8 @@ export function getLastCompletedLesson(completedLessonIds: number[]): Lesson | n
 }
 
 export function getCurrentLesson(completedLessonIds: number[]): Lesson {
-  return LESSONS.find(l => !completedLessonIds.includes(l.id)) || LESSONS[LESSONS.length - 1];
+  const done = new Set(completedLessonIds);
+  return LESSONS.find(l => !done.has(l.id)) || LESSONS[LESSONS.length - 1];
 }
 
 /** Returns the first lesson that is not completed AND actually unlocked. */
@@ -27,9 +28,10 @@ export function getCurrentUnlockedLesson(
   entities: Record<string, EntityState> | undefined,
   today: string
 ): Lesson {
+  const done = new Set(completedLessonIds);
   for (let i = 0; i < LESSONS.length; i++) {
     const l = LESSONS[i];
-    if (completedLessonIds.includes(l.id)) continue;
+    if (done.has(l.id)) continue;
     if (isLessonUnlocked(i, completedLessonIds, entities, today)) return l;
   }
   // All done or nothing unlocked — fall back to last lesson
@@ -37,8 +39,9 @@ export function getCurrentUnlockedLesson(
 }
 
 export function getLearnedLetterIds(completedLessonIds: number[]): number[] {
+  const done = new Set(completedLessonIds);
   return [...new Set(
-    LESSONS.filter(l => completedLessonIds.includes(l.id)).flatMap(l => l.teachIds || [])
+    LESSONS.filter(l => done.has(l.id)).flatMap(l => l.teachIds || [])
   )];
 }
 
@@ -54,15 +57,16 @@ export interface PhaseCounts {
 }
 
 export function getPhaseCounts(completedLessonIds: number[]): PhaseCounts {
+  const done = new Set(completedLessonIds);
   const p1 = LESSONS.filter(l => l.phase === 1);
   const p2 = LESSONS.filter(l => l.phase === 2);
   const p3 = LESSONS.filter(l => l.phase === 3);
   const p4 = LESSONS.filter(l => l.phase === 4);
   return {
-    p1Done: p1.filter(l => completedLessonIds.includes(l.id)).length,
-    p2Done: p2.filter(l => completedLessonIds.includes(l.id)).length,
-    p3Done: p3.filter(l => completedLessonIds.includes(l.id)).length,
-    p4Done: p4.filter(l => completedLessonIds.includes(l.id)).length,
+    p1Done: p1.filter(l => done.has(l.id)).length,
+    p2Done: p2.filter(l => done.has(l.id)).length,
+    p3Done: p3.filter(l => done.has(l.id)).length,
+    p4Done: p4.filter(l => done.has(l.id)).length,
     p1Total: p1.length,
     p2Total: p2.length,
     p3Total: p3.length,

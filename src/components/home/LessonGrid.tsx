@@ -197,6 +197,9 @@ export default function LessonGrid({
     opacity: sectionOpacity.value,
   }));
 
+  // Memoize Set for O(1) lookups instead of repeated .includes()
+  const completedSet = useMemo(() => new Set(completedLessonIds), [completedLessonIds]);
+
   // ── Group lessons by phase ──
   const phaseGroups = useMemo(() => {
     const groups: PhaseGroup[] = [];
@@ -215,7 +218,7 @@ export default function LessonGrid({
       }
       currentGroup.lessons.push(lesson);
       currentGroup.totalCount++;
-      if (completedLessonIds.includes(lesson.id)) {
+      if (completedSet.has(lesson.id)) {
         currentGroup.completedCount++;
       }
       if (lesson.id === nextLessonId) {
@@ -223,7 +226,7 @@ export default function LessonGrid({
       }
     }
     return groups;
-  }, [completedLessonIds, nextLessonId]);
+  }, [completedSet, nextLessonId]);
 
   // ── Expanded state: current phase + phases with incomplete lessons ──
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(() => {
@@ -277,9 +280,14 @@ export default function LessonGrid({
                 />
 
                 {group.lessons.map((lesson: any, i: number) => {
-                  const complete = completedLessonIds.includes(lesson.id);
-                  // Beta: all lessons unlocked
-                  const state = complete ? "complete" : "current";
+                  const complete = completedSet.has(lesson.id);
+                  // Only the true next lesson gets "current" (breathing animation).
+                  // Completed = "complete", everything else = "locked" (static).
+                  const state = complete
+                    ? "complete"
+                    : lesson.id === nextLessonId
+                      ? "current"
+                      : "locked";
                   const offset = OFFSETS[i % OFFSETS.length];
 
                   return (
@@ -291,6 +299,7 @@ export default function LessonGrid({
                       enterDelay={i < 6 ? 50 + i * staggers.fast.delay : 0}
                       onPress={onStartLesson}
                       premiumLocked={false}
+                      accessible={state === "locked"}
                     />
                   );
                 })}

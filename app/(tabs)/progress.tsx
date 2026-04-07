@@ -22,7 +22,7 @@ import { typography, spacing } from "../../src/design/tokens";
 import { durations, easings, staggers } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import Purchases from "react-native-purchases";
-import { useProgress } from "../../src/hooks/useProgress";
+import { useAppState } from "../../src/state/hooks";
 import { useDatabase } from "../../src/db/provider";
 import { useSubscription } from "../../src/monetization/hooks";
 import { trackRestoreCompleted, trackRestoreFailed } from "../../src/monetization/analytics";
@@ -63,7 +63,7 @@ export default function ProgressScreen() {
   const colors = useColors();
   const router = useRouter();
   const db = useDatabase();
-  const progress = useProgress();
+  const appState = useAppState();
   const { isAnonymous } = useAuth();
 
   const handleResetProgress = useCallback(() => {
@@ -113,8 +113,8 @@ export default function ProgressScreen() {
     }
   }, [refresh]);
 
-  const completedLessonIds = progress.completedLessonIds ?? [];
-  const mastery = progress.mastery ?? { entities: {}, skills: {}, confusions: {} };
+  const completedLessonIds = appState.progress?.completedLessonIds ?? [];
+  const mastery = appState.progress?.mastery ?? { entities: {}, skills: {}, confusions: {} };
   const today = getTodayDateString();
 
   // Derived data
@@ -230,7 +230,7 @@ export default function ProgressScreen() {
     transform: [{ translateY: masteryTranslateY.value }],
   }));
 
-  if (progress.loading) {
+  if (appState.loading) {
     return (
       <SafeAreaView
         edges={["top"]}

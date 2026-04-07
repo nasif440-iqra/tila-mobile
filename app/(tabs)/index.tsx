@@ -23,8 +23,7 @@ import { spacing, typography, fontFamilies, radii } from "../../src/design/token
 import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
 import { CrescentIcon } from "../../src/design/CrescentIcon";
-import { useProgress } from "../../src/hooks/useProgress";
-import { useHabit } from "../../src/hooks/useHabit";
+import { useAppState } from "../../src/state/hooks";
 import { useSubscription, FREE_LESSON_CUTOFF, usePremiumReviewRights } from "../../src/monetization/hooks";
 import { loadPremiumLessonGrants } from "../../src/engine/progress";
 import { useDatabase } from "../../src/db/provider";
@@ -292,15 +291,20 @@ function MomentumBanner({
 export default function HomeScreen() {
   const colors = useColors();
   const db = useDatabase();
-  const progress = useProgress();
-  const { updateProfile } = progress;
-  const { habit } = useHabit();
+  const appState = useAppState();
+  const { updateProfile } = appState;
+  const progress = appState.progress;
+  const habit = appState.habit;
+  const loading = appState.loading;
   const { isPremiumActive, stage, trialDaysRemaining, showPaywall, loading: subLoading } = useSubscription();
   const [today] = useState(() => getTodayDateString());
 
+  // Beta: skip premium_lesson_grants load when all lessons are free
   const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
 
   useEffect(() => {
+    if (FREE_LESSON_CUTOFF >= 999) return; // Beta: all lessons unlocked, skip DB read
+
     let cancelled = false;
 
     async function loadGrants() {
@@ -313,10 +317,10 @@ export default function HomeScreen() {
       }
     }
 
-    if (!progress.loading) loadGrants();
+    if (!loading) loadGrants();
 
     return () => { cancelled = true; };
-  }, [db, progress.loading]);
+  }, [db, loading]);
 
   const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);
 
@@ -349,11 +353,11 @@ export default function HomeScreen() {
   }));
 
   // Redirect to onboarding if user hasn't completed it yet
-  const onboarded = progress.onboarded ?? false;
-  const returnHadithLastShown = progress.returnHadithLastShown ?? null;
+  const onboarded = progress?.onboarded ?? false;
+  const returnHadithLastShown = progress?.returnHadithLastShown ?? null;
 
   useEffect(() => {
-    if (progress.loading) return;
+    if (loading) return;
 
     if (!onboarded) {
       router.replace("/onboarding");
@@ -368,11 +372,11 @@ export default function HomeScreen() {
         return;
       }
     }
-  }, [progress.loading, onboarded, habit?.lastPracticeDate, today, returnHadithLastShown]);
+  }, [loading, onboarded, habit?.lastPracticeDate, today, returnHadithLastShown]);
 
-  const completedLessonIds = progress.completedLessonIds ?? [];
-  const mastery = progress.mastery;
-  const dailyGoal = useMemo(() => goalMinutesToLessons(progress.onboardingDailyGoal ?? null), [progress.onboardingDailyGoal]);
+  const completedLessonIds = progress?.completedLessonIds ?? [];
+  const mastery = progress?.mastery;
+  const dailyGoal = useMemo(() => goalMinutesToLessons(progress?.onboardingDailyGoal ?? null), [progress?.onboardingDailyGoal]);
 
   // Memoize expensive selector computations
   const lessonsCompleted = useMemo(() => getLessonsCompletedCount(completedLessonIds), [completedLessonIds]);
@@ -415,8 +419,8 @@ export default function HomeScreen() {
   const momentum = useMemo(() => getMomentumCopy(completedLessonIds, currentPhase), [completedLessonIds, currentPhase]);
 
   // Personalized greeting
-  const userName = progress.userName ?? null;
-  const motivation = progress.onboardingMotivation ?? null;
+  const userName = progress?.userName ?? null;
+  const motivation = progress?.onboardingMotivation ?? null;
 
   const greetingLine1 = useMemo(() => getGreetingLine1(userName), [userName]);
   const greetingLine2 = useMemo(
@@ -428,10 +432,10 @@ export default function HomeScreen() {
   const [showWirdTooltip, setShowWirdTooltip] = useState(false);
 
   useEffect(() => {
-    if (currentWird > 0 && !progress.wirdIntroSeen) {
+    if (currentWird > 0 && !progress?.wirdIntroSeen) {
       setShowWirdTooltip(true);
     }
-  }, [currentWird, progress.wirdIntroSeen]);
+  }, [currentWird, progress?.wirdIntroSeen]);
 
   const handleWirdTooltipDismiss = useCallback(async () => {
     setShowWirdTooltip(false);
@@ -439,7 +443,7 @@ export default function HomeScreen() {
   }, [updateProfile]);
 
   // Loading state
-  if (progress.loading) {
+  if (loading) {
     return (
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={styles.loadingContainer}>

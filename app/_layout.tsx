@@ -69,21 +69,21 @@ function AppNavigator() {
         headerShown: false,
         contentStyle: { backgroundColor: colors.bg },
         animation: "fade",
-        animationDuration: 300,
+        animationDuration: 200,
       }}
     >
       <Stack.Screen
         name="lesson/[id]"
         options={{
           animation: "slide_from_bottom",
-          animationDuration: 400,
+          animationDuration: 280,
         }}
       />
       <Stack.Screen
         name="lesson/review"
         options={{
           animation: "slide_from_bottom",
-          animationDuration: 400,
+          animationDuration: 280,
         }}
       />
     </Stack>

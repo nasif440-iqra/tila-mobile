@@ -77,10 +77,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     }
   }, [db, user, isAnonymous]);
 
-  // Trigger sync on mount (if authenticated) and on app foreground
+  // Defer initial sync so it doesn't compete with first-paint DB reads.
+  // Resume sync fires immediately on foreground (AppState 'active').
   useEffect(() => {
-    // Initial sync on mount
-    triggerSync();
+    const timer = setTimeout(() => triggerSync(), 2000);
 
     const subscription = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
@@ -89,6 +89,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
+      clearTimeout(timer);
       subscription.remove();
     };
   }, [triggerSync]);

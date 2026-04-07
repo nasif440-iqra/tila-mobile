@@ -7,7 +7,7 @@ export const AppStateContext = createContext<AppStateContextValue | null>(null);
 
 export function AppStateProvider({ children }: { children: ReactNode }) {
   const progressHook = useProgress();
-  const { habit, refresh: refreshHabit } = useHabit();
+  const { habit, recordPractice, refresh: refreshHabit } = useHabit();
 
   // SubscriptionState comes from SubscriptionProvider above us in the tree.
   // We don't duplicate it -- consumers use useSubscription() directly.
@@ -49,7 +49,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     subscription: null, // Accessed via useSubscription() directly
     loading: progressHook.loading,
     refreshAll,
-  }), [progress, habit, progressHook.loading, refreshAll]);
+    updateProfile: progressHook.updateProfile,
+    completeLesson: progressHook.completeLesson,
+    saveMasteryOnly: progressHook.saveMasteryOnly,
+    recordPractice,
+    refresh: progressHook.refresh,
+  }), [progress, habit, progressHook.loading, refreshAll,
+       progressHook.updateProfile, progressHook.completeLesson,
+       progressHook.saveMasteryOnly, recordPractice, progressHook.refresh]);
 
   return (
     <AppStateContext.Provider value={value}>
