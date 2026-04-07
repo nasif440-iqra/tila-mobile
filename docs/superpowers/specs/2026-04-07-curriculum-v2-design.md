@@ -163,7 +163,7 @@ interface PhaseV2 {
 1. Every entity in `teachEntityIds` and `reviewEntityIds` must resolve to a registered entry
 2. Every `exercisePlan` step's `target` must be compatible with at least one referenced entity type
 3. `check` steps must have a non-empty `assessmentProfile` that resolves to a registered profile
-4. `decodePassRequired` cannot exceed total count of `read` + `check` steps
+4. `decodePassRequired` cannot exceed total count of generated decode-capable *items* (sum of `count` across `read` + `check` steps), not the number of steps
 5. Checkpoint lessons must include at least one `read` or `check` step
 6. `source: { from: "explicit" }` must have non-empty `entityIds`, all resolvable
 7. `renderOverride` on a step cannot be less complex than the lesson's `renderProfile`
@@ -277,11 +277,17 @@ interface AssessmentProfile {
 
 ```typescript
 // src/engine/v2/entityRegistry.ts
+
+// Async: loads/resolves entities from registries
 function resolveEntity(id: string): Promise<EntityBase | undefined>;
-function hasCapability(id: string, cap: EntityCapability): boolean;
 function resolveAll(ids: string[]): Promise<EntityBase[]>;
-function filterByCapability(ids: string[], cap: EntityCapability): string[];
+
+// Sync: operates on already-resolved entities (call after resolveEntity/resolveAll)
+function hasCapability(entity: EntityBase, cap: EntityCapability): boolean;
+function filterByCapability(entities: EntityBase[], cap: EntityCapability): EntityBase[];
 ```
+
+Note: `resolveEntity`/`resolveAll` are async because registries may be loaded lazily. `hasCapability`/`filterByCapability` are sync because they operate on already-resolved in-memory entities, not on raw IDs. This is intentional — resolve first, then query capabilities on the result.
 
 ### Authoring Boundary Guide
 
@@ -472,7 +478,7 @@ Bucket weakness thresholds come from the `AssessmentProfile.bucketThresholds`, n
 **State machine:** `not_started -> introduced -> unstable -> accurate -> retained`
 
 **Transitions:**
-- `not_started -> introduced`: entity appears in a passed lesson's `teachEntityIds`
+- `not_started -> introduced`: entity appears in a passed lesson's `teachEntityIds`. Note: failed attempts on not-yet-introduced entities still record attempt counts and confusion pairs in a pre-introduction evidence buffer, but the entity does not promote to `introduced` until the lesson passes. This reconciles "all attempts update evidence" with introduction being a promotion gate.
 - `introduced -> unstable`: correct in 2+ exercises across 1+ lessons
 - `unstable -> accurate`: >= 80% correct over last 8 attempts, no confusion-pair failures
 - `accurate -> retained`: correct in spaced review at 7+ day interval
@@ -501,6 +507,8 @@ interface EntityMastery {
 ```
 
 Mastery tracks all entity types (letters, combos, chunks, words, rules, patterns, orthography), not just letters.
+
+**Review eligibility by state:** Introduced entities are eligible for same-day and next-day micro review if they were missed during their introducing lesson. This ensures weak new entities get immediate reinforcement rather than waiting for the standard review schedule to kick in at the `unstable` level.
 
 ### 4.4 Review Scheduling
 
@@ -624,7 +632,7 @@ A lesson is either v1 or v2, never mixed. V2 lessons never use v1 scoring, v1 ma
 | Step | What | Gate |
 |------|------|------|
 | 1 | Add v2 data registries | All registries compile |
-| 2 | Add entity resolution + validation | All 62 lessons pass validation |
+| 2 | Add entity resolution + validation | Schema compiles, vertical-slice lessons (5 sample + checkpoint) pass validation |
 | 3 | Add v2 database tables + migration | Tables created on startup |
 | 4 | Add v2 generators + dispatcher | Valid ExerciseItem[] for sample lessons |
 | 5 | Add v2 scoring engine | Correct LessonResult for sample runs |
