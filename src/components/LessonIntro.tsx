@@ -107,7 +107,7 @@ function LetterCard({
     <Animated.View style={[styles.letterItem, scaleStyle]}>
       <View style={{ alignItems: "center", justifyContent: "center" }}>
         <WarmGlow
-          size={isSmall ? 140 : 200}
+          size={isSmall ? 110 : 200}
           animated
           color="rgba(196,164,100,0.3)"
           pulseMin={0.10}
@@ -158,6 +158,7 @@ export function LessonIntro({ lesson, onStart, onBack }: LessonIntroProps) {
 
   const letterIds: number[] = lesson.teachIds ?? lesson.letterIds ?? [];
   const isSmall = letterIds.length > 2;
+  const isCrowded = letterIds.length >= 4;
 
   // Audio type
   const isSound =
@@ -221,7 +222,7 @@ export function LessonIntro({ lesson, onStart, onBack }: LessonIntroProps) {
 
         {/* Letter cards */}
         {letterIds.length > 0 && (
-          <View style={styles.lettersRow}>
+          <View style={[styles.lettersRow, isCrowded && styles.lettersRowCrowded]}>
             {letterIds.map((id: number, idx: number) => (
               <LetterCard
                 key={id}
@@ -313,7 +314,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingBottom: spacing.xxxl,
+    paddingBottom: spacing.lg,
   },
 
   // Lesson mode pill
@@ -335,6 +336,9 @@ const styles = StyleSheet.create({
     gap: spacing.xxl,
     marginBottom: spacing.xl,
   },
+  lettersRowCrowded: {
+    gap: spacing.md,
+  },
   letterItem: {
     alignItems: "center",
   },
@@ -352,9 +356,9 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   letterCircleSmall: {
-    width: 88,
-    height: 88,
-    borderRadius: 44,
+    width: 72,
+    height: 72,
+    borderRadius: 36,
   },
   letterName: {
     fontSize: 14,

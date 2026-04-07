@@ -52,6 +52,10 @@ export function ComprehensionExercise({ exercise, onComplete }: Props) {
 
   const { prompt, displayArabic, options = [], targetId } = exercise;
 
+  // Use 2x2 grid when all options are Arabic glyphs (e.g. connected form positions)
+  const allArabic = options.length > 0 && options.every((o) => isArabicText(o.label));
+  const useGrid = allArabic && options.length >= 3;
+
   // Clean up timer on unmount handled by caller (exercises are unmounted on advance)
 
   const handleSelect = useCallback(
@@ -119,14 +123,14 @@ export function ComprehensionExercise({ exercise, onComplete }: Props) {
         {prompt}
       </Text>
 
-      <View style={styles.optionsGrid}>
+      <View style={[styles.optionsGrid, useGrid && styles.optionsGridArabic]}>
         {options.map((option, index) => {
           const optionIsArabic = isArabicText(option.label);
           return (
             <Animated.View
               key={option.id}
               entering={FadeInDown.delay(index * 70).springify()}
-              style={styles.optionWrapper}
+              style={[styles.optionWrapper, useGrid && styles.optionWrapperGrid]}
             >
               <QuizOption
                 label={option.label}
@@ -174,8 +178,16 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: spacing.md,
   },
+  optionsGridArabic: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
   optionWrapper: {
     width: "100%",
+  },
+  optionWrapperGrid: {
+    width: "47%",
   },
   feedbackPanel: {
     width: "100%",
