@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 Phase: 02 (Quiz Experience) — EXECUTING
 Plan: 1 of 3
 Status: Executing Phase 02
-Last activity: 2026-04-05 -- Phase 02 execution started
+Last activity: 2026-04-07 - Completed quick task 260407-g1r: Fix 5 later-lesson UI bugs
 
 Progress: [███░░░░░░░] 33%
 
@@ -69,6 +69,12 @@ None yet.
 ### Blockers/Concerns
 
 - [Research] Profile Reanimated 4.2.1 + New Architecture on mid-range Android before Phase 2. If regression is severe, reduce per-screen shared value budget below 15.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260407-g1r | Fix 5 later-lesson UI bugs: quiz options always 4, connected forms layout, quiz styling, reading order size, undefined in summary | 2026-04-07 | e2e7ad7 | [260407-g1r](./quick/260407-g1r-fix-5-later-lesson-ui-bugs-quiz-options-/) |
 
 ## Session Continuity
 
