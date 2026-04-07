@@ -424,9 +424,10 @@ export function LessonSummary({
     ? ""
     : (COMPLETION_SUBLINES as Record<string, string>)[tier] ?? "";
 
-  // Score detail text
-  const letterNames = teachLetters.map((l: any) => l.name).join(" \u00B7 ");
-  const scoreDetail = `${letterNames} \u2014 ${results.correct}/${results.total} correct`;
+  // Score detail text — keep concise for lessons with many letters
+  const scoreDetail = teachLetters.length <= 4
+    ? `${teachLetters.map((l: any) => l.name).join(" \u00B7 ")} \u2014 ${results.correct}/${results.total} correct`
+    : `${teachLetters.length} letters \u2014 ${results.correct}/${results.total} correct`;
 
   // Next lesson hint
   const nextHint = useMemo(() => {

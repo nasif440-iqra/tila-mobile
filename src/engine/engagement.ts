@@ -253,6 +253,12 @@ export function getSummaryMessaging(
     : band === "partial" ? "What you practiced"
     : "Keep reviewing";
 
+  // Helper: concise letter list — avoids listing all 28 letters
+  function letterList(letters: LetterData[], maxShow: number = 4): string {
+    if (letters.length <= maxShow) return letters.map(l => l.name).join(", ");
+    return `${letters.slice(0, 3).map(l => l.name).join(", ")} and ${letters.length - 3} more`;
+  }
+
   // Recap text — honest about performance
   let recap: string;
   if (mode === "harakat-intro") {
@@ -276,21 +282,21 @@ export function getSummaryMessaging(
       ? `You're improving at telling ${names} apart.`
       : `You began practicing ${names} — the difference will click with more practice.`;
   } else if (mode === "sound") {
-    const names = teachLetters.map(l => l.name).join(", ");
+    const names = letterList(teachLetters);
     recap = band === "strong"
       ? `You connected ${names} to ${teachLetters.length === 1 ? "its" : "their"} sound${teachLetters.length > 1 ? "s" : ""}.`
       : band === "partial"
       ? `You're getting familiar with how ${names} sound${teachLetters.length > 1 ? "" : "s"}.`
       : `You started hearing ${names} — keep listening to build recognition.`;
   } else if (mode === "connected-forms") {
-    const names = teachLetters.map(l => l.name).join(", ");
+    const names = letterList(teachLetters);
     recap = band === "strong"
       ? `You learned the connected forms of ${names}.`
       : band === "partial"
-      ? `You're getting familiar with how ${names} connect${teachLetters.length > 1 ? "" : "s"} in words.`
-      : `You started learning how ${names} look${teachLetters.length > 1 ? "" : "s"} in connected writing.`;
+      ? `You're getting familiar with how ${names} connect in words.`
+      : `You started learning how ${names} look in connected writing.`;
   } else if (mode === "connected-reading") {
-    const names = teachLetters.map(l => l.name).join(", ");
+    const names = letterList(teachLetters);
     recap = band === "strong"
       ? `You practiced reading ${names} together.`
       : band === "partial"
@@ -298,7 +304,7 @@ export function getSummaryMessaging(
       : `You started reading ${names} together — keep practicing to build fluency.`;
   } else {
     // recognition
-    const names = teachLetters.map(l => l.name).join(", ");
+    const names = letterList(teachLetters);
     recap = band === "strong"
       ? `You learned to recognize ${names}.`
       : band === "partial"
