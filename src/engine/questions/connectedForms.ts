@@ -478,7 +478,7 @@ export function generateConnectedFormExercises(lesson: Lesson): ConnectedFormExe
       const pos = pickRandom(positions)!;
       const outsiders = shuffle(
         Array.from({ length: 28 }, (_, i) => i + 1).filter(id => id !== letterId)
-      ).slice(0, 2);
+      ).slice(0, 3);
       exercises.push({
         type: "comprehension",
         prompt: "Which letter is this?",

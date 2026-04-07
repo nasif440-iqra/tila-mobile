@@ -109,7 +109,7 @@ export function generateHarakatQs(lesson: HarakatLesson): Question[] {
           // Pick target first, then build options that INCLUDE the target
           const target = pickRandom(sameMark)!;
           const others = sameMark.filter(c => c.id !== target.id);
-          const opts = [target, ...shuffle(others).slice(0, 2)];
+          const opts = [target, ...shuffle(others).slice(0, 3)];
           phaseC.push({ type: "tap", prompt: `Which letter says \u201C${target.sound}\u201D?`, targetId: target.id, isHarakat: true, hasAudio: true, options: shuffle(opts.map(c => ({ id: c.id, label: c.display, isCorrect: c.id === target.id }))) });
         }
       }
