@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, ActivityIndicator } from "react-native";
 import { ArabicText } from "@/src/design/components/ArabicText";
-import { QuizOption } from "@/src/design/components/QuizOption";
+import { CompactOption } from "./CompactOption";
 import { useColors } from "@/src/design/theme";
 import { typography, spacing, radii } from "@/src/design/tokens";
 import { resolveAudio } from "@/src/audio/audioResolverV2";
@@ -48,19 +48,18 @@ export function HearExercise({ item, onAnswer }: Props) {
           <Text style={[styles.playIcon, { color: colors.white }]}>▶</Text>
         </Pressable>
       ) : (
-        <ArabicText size="display" style={styles.arabicFallback}>
+        <ArabicText size="quizHero" style={styles.arabicFallback}>
           {item.prompt.arabicDisplay}
         </ArabicText>
       )}
 
       <View style={styles.options}>
         {(item.options ?? []).map((option) => (
-          <QuizOption
+          <CompactOption
             key={option.id}
             label={option.displayArabic ?? option.displayText ?? ""}
             isArabic={Boolean(option.displayArabic)}
             onPress={() => onAnswer(option.isCorrect, option.id)}
-            style={styles.option}
           />
         ))}
       </View>
@@ -71,10 +70,10 @@ export function HearExercise({ item, onAnswer }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
+    gap: spacing.md,
   },
   instruction: {
     ...typography.bodyLarge,
@@ -95,7 +94,7 @@ const styles = StyleSheet.create({
   },
   options: {
     width: "100%",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   option: {
     width: "100%",

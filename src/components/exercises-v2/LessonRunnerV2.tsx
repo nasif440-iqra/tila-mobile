@@ -18,15 +18,32 @@ interface Props {
 
 export function LessonRunnerV2({ lesson, onExit }: Props) {
   const colors = useColors();
+  const [retryKey, setRetryKey] = useState(0);
+
+  return (
+    <LessonRunnerInner
+      key={retryKey}
+      lesson={lesson}
+      onExit={onExit}
+      onRetry={() => setRetryKey((k) => k + 1)}
+      colors={colors}
+    />
+  );
+}
+
+function LessonRunnerInner({
+  lesson,
+  onExit,
+  onRetry,
+  colors,
+}: Props & { onRetry: () => void; colors: ReturnType<typeof useColors> }) {
   const progress = useProgressV2();
   const mastery = useMasteryV2();
   const quiz = useLessonQuizV2(lesson, progress, mastery);
 
-  // Retry: remount by incrementing a key (caller handles this via onExit + re-navigation,
-  // but we expose a local retry that calls onExit for simplicity)
   const handleRetry = useCallback(() => {
-    onExit();
-  }, [onExit]);
+    onRetry();
+  }, [onRetry]);
 
   // ── Loading / generating ──
   if (quiz.phase === "generating" || quiz.phase === "scoring") {

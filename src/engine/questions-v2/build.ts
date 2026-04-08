@@ -5,6 +5,7 @@ import {
   filterToCapability,
   shuffle,
   deriveAudioKey,
+  TARGET_TO_PREFIX,
 } from "./shared";
 
 // ── Build Generator — Tile bank assembly from teachingBreakdownIds ──
@@ -14,12 +15,14 @@ export function generateBuildItems(input: GeneratorInput): ExerciseItem[] {
 
   if (step.type !== "build") return [];
 
-  // 1. Pick source entities, filter to buildable
+  // 1. Pick source entities pre-filtered to step target type, then to buildable
+  const prefix = TARGET_TO_PREFIX[step.target];
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
+    prefix,
   );
   const capable = filterToCapability(sourceEntities, "buildable");
   if (capable.length === 0) return [];

@@ -6,7 +6,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
-  filterToStepTarget,
+  TARGET_TO_PREFIX,
 } from "./shared";
 
 // ── Choose Generator — Tight discrimination, always 4 options ──
@@ -75,17 +75,18 @@ export function generateChooseItems(input: GeneratorInput): ExerciseItem[] {
 
   if (step.type !== "choose") return [];
 
-  // 1. Pick source entities
+  // 1. Pick source entities pre-filtered to step target type
+  const prefix = TARGET_TO_PREFIX[step.target];
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
+    prefix,
   );
 
-  // 2. Filter to entities matching step target type, then to tappable
-  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
-  const capable = filterToCapability(targetFiltered, "tappable");
+  // 2. Filter to tappable
+  const capable = filterToCapability(sourceEntities, "tappable");
   if (capable.length === 0) return [];
 
   // 3. Generate items — always 1 correct + 3 distractors

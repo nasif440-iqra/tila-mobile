@@ -53,9 +53,29 @@ export function useLessonQuizV2(
 
     async function generate() {
       try {
-        // Resolve all unlocked entities from teach + review IDs
-        const allEntityIds = [...lesson.teachEntityIds, ...lesson.reviewEntityIds];
-        const allUnlockedEntities = await resolveAll(allEntityIds);
+        // Resolve teach + review entities for the lesson
+        const lessonEntityIds = [...lesson.teachEntityIds, ...lesson.reviewEntityIds];
+        const lessonEntities = await resolveAll(lessonEntityIds);
+
+        // Build a broader pool for distractors so generators always have 3+ same-type options.
+        // Letters: all 28
+        const allLetterIds = Array.from({ length: 28 }, (_, i) => `letter:${i + 1}`);
+        const allLetters = await resolveAll(allLetterIds);
+
+        // Combos: generate fatha/kasra/damma combos for common letters
+        // This gives the read generator enough combo distractors
+        const comboSlugs = ["ba", "ta", "tha", "jeem", "daal", "ra", "seen", "sheen", "ma", "la", "noon", "ha", "ya", "kaf", "fa"];
+        const harakatNames = ["fatha", "kasra", "damma"];
+        const comboIds = comboSlugs.flatMap((slug) =>
+          harakatNames.map((h) => `combo:${slug}-${h}`)
+        );
+        const allCombos = await resolveAll(comboIds);
+
+        const allUnlockedEntities = [
+          ...allLetters,
+          ...allCombos,
+          ...lessonEntities.filter((e) => !e.id.startsWith("letter:") && !e.id.startsWith("combo:")),
+        ];
 
         const generated = await generateV2Exercises(
           lesson,

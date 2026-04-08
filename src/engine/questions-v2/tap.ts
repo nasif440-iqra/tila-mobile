@@ -4,7 +4,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
-  filterToStepTarget,
+  TARGET_TO_PREFIX,
 } from "./shared";
 
 // ── Tap Generator — Fast visual recognition ──
@@ -14,17 +14,18 @@ export function generateTapItems(input: GeneratorInput): ExerciseItem[] {
 
   if (step.type !== "tap") return [];
 
-  // 1. Pick source entities
+  // 1. Pick source entities pre-filtered to step target type
+  const prefix = TARGET_TO_PREFIX[step.target];
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
+    prefix,
   );
 
-  // 2. Filter to entities matching the step target type, then to tappable
-  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
-  const capable = filterToCapability(targetFiltered, "tappable");
+  // 2. Filter to tappable
+  const capable = filterToCapability(sourceEntities, "tappable");
   if (capable.length === 0) return [];
 
   const distractorCount = step.distractorCount ?? 3;

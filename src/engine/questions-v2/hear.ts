@@ -4,7 +4,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
-  filterToStepTarget,
+  TARGET_TO_PREFIX,
   deriveAudioKey,
 } from "./shared";
 
@@ -17,17 +17,18 @@ export function generateHearItems(input: GeneratorInput): ExerciseItem[] {
 
   const direction = step.direction;
 
-  // 1. Pick source entities
+  // 1. Pick source entities pre-filtered to step target type
+  const prefix = TARGET_TO_PREFIX[step.target];
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
+    prefix,
   );
 
-  // 2. Filter to entities matching step target type, then to hearable
-  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
-  const capable = filterToCapability(targetFiltered, "hearable");
+  // 2. Filter to hearable
+  const capable = filterToCapability(sourceEntities, "hearable");
   if (capable.length === 0) return [];
 
   const distractorCount = 3;

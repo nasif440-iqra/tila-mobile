@@ -4,7 +4,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
-  filterToStepTarget,
+  TARGET_TO_PREFIX,
   deriveAudioKey,
 } from "./shared";
 
@@ -15,16 +15,17 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
 
   if (step.type !== "read") return [];
 
-  // 1. Pick source entities, filter to readable
+  // 1. Pick source entities pre-filtered to step target type, then to readable
+  const prefix = TARGET_TO_PREFIX[step.target];
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
+    prefix,
   );
 
-  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
-  const capable = filterToCapability(targetFiltered, "readable");
+  const capable = filterToCapability(sourceEntities, "readable");
   if (capable.length === 0) return [];
 
   // 2. Determine answerMode using graduated phase progression:

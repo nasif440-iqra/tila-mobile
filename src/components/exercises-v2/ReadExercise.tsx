@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { ArabicText } from "@/src/design/components/ArabicText";
-import { QuizOption } from "@/src/design/components/QuizOption";
+import { CompactOption } from "./CompactOption";
 import { useColors } from "@/src/design/theme";
 import { typography, spacing } from "@/src/design/tokens";
 import type { ExerciseItem } from "@/src/types/exercise";
@@ -19,7 +19,7 @@ export function ReadExercise({ item, onAnswer }: Props) {
       {item.prompt.text ? (
         <Text style={[styles.instruction, { color: colors.textSoft }]}>{item.prompt.text}</Text>
       ) : null}
-      <ArabicText size="display" style={styles.arabicPrompt}>
+      <ArabicText size="quizHero" style={styles.arabicPrompt}>
         {item.prompt.arabicDisplay}
       </ArabicText>
       {item.prompt.hintText ? (
@@ -27,13 +27,11 @@ export function ReadExercise({ item, onAnswer }: Props) {
       ) : null}
       <View style={styles.options}>
         {(item.options ?? []).map((option) => (
-          <QuizOption
+          <CompactOption
             key={option.id}
             label={option.displayArabic ?? option.displayText ?? ""}
             isArabic={Boolean(option.displayArabic)}
-            isSound={!option.displayArabic && Boolean(option.displayText)}
             onPress={() => onAnswer(option.isCorrect, option.id)}
-            style={styles.option}
           />
         ))}
       </View>
@@ -44,10 +42,10 @@ export function ReadExercise({ item, onAnswer }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
     alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.xl,
+    gap: spacing.md,
   },
   instruction: {
     ...typography.bodyLarge,
@@ -62,7 +60,7 @@ const styles = StyleSheet.create({
   },
   options: {
     width: "100%",
-    gap: spacing.md,
+    gap: spacing.sm,
   },
   option: {
     width: "100%",

@@ -565,11 +565,17 @@ export default function HomeScreen() {
 
         {/* ── Hero Card ── */}
         <HeroCard
-          lesson={nextLesson ?? null}
-          allDone={allDone}
-          completedLessonIds={completedLessonIds}
-          lessonsCompleted={lessonsCompleted}
-          currentPhase={currentPhase}
+          lesson={curriculumVersion === "v2"
+            ? (LESSONS_V2.find(l => !progressV2.completedLessonIds.includes(l.id)) ?? null)
+            : (nextLesson ?? null)}
+          allDone={curriculumVersion === "v2"
+            ? progressV2.completedLessonIds.length >= LESSONS_V2.length
+            : allDone}
+          completedLessonIds={curriculumVersion === "v2" ? progressV2.completedLessonIds : completedLessonIds}
+          lessonsCompleted={curriculumVersion === "v2" ? progressV2.completedLessonIds.length : lessonsCompleted}
+          currentPhase={curriculumVersion === "v2"
+            ? (LESSONS_V2.find(l => !progressV2.completedLessonIds.includes(l.id))?.phase ?? 1)
+            : currentPhase}
           onStartLesson={handleStartLesson}
           enterDelay={80}
         />
@@ -610,7 +616,9 @@ export default function HomeScreen() {
         {/* ── Journey Path ── */}
         <LessonGrid
           currentPhase={currentPhase}
-          nextLessonId={nextLesson?.id ?? null}
+          nextLessonId={curriculumVersion === "v2"
+            ? (LESSONS_V2.find(l => !progressV2.completedLessonIds.includes(l.id))?.id ?? null)
+            : (nextLesson?.id ?? null)}
           completedLessonIds={curriculumVersion === "v2" ? progressV2.completedLessonIds : completedLessonIds}
           onStartLesson={handleStartLesson}
           enterDelay={160}

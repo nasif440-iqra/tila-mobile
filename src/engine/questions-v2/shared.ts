@@ -8,28 +8,31 @@ export function pickEntitiesBySource(
   teachEntities: AnyEntity[],
   reviewEntities: AnyEntity[],
   allUnlockedEntities: AnyEntity[],
+  targetPrefix?: string,
 ): AnyEntity[] {
+  // Pre-filter to target type if specified (e.g., "combo:" for combo steps)
+  // This ensures mixed slicing doesn't accidentally exclude the target type
+  const teach = targetPrefix ? teachEntities.filter((e) => e.id.startsWith(targetPrefix)) : teachEntities;
+  const review = targetPrefix ? reviewEntities.filter((e) => e.id.startsWith(targetPrefix)) : reviewEntities;
+  const all = targetPrefix ? allUnlockedEntities.filter((e) => e.id.startsWith(targetPrefix)) : allUnlockedEntities;
+
   switch (source.from) {
     case "teach":
-      return teachEntities;
+      return teach;
     case "review":
-      return reviewEntities;
+      return review;
     case "mixed": {
-      if (!source.mix) return [...teachEntities, ...reviewEntities];
-      // Weighted selection: shuffle each pool first so we don't always take the
-      // same first-N entities when the pool is larger than the requested count.
-      const shuffledTeach = shuffle(teachEntities);
-      const shuffledReview = shuffle(reviewEntities);
+      if (!source.mix) return [...teach, ...review];
+      const shuffledTeach = shuffle(teach);
+      const shuffledReview = shuffle(review);
       const teachSlice = shuffledTeach.slice(0, source.mix.teach);
       const reviewSlice = shuffledReview.slice(0, source.mix.review);
       return [...teachSlice, ...reviewSlice];
     }
     case "all":
-      return allUnlockedEntities;
+      return all;
     case "explicit":
-      // Explicit entities should already be resolved by the dispatcher
-      // Return allUnlocked filtered to the explicit IDs
-      return allUnlockedEntities.filter((e) =>
+      return all.filter((e) =>
         source.entityIds.includes(e.id)
       );
   }
@@ -86,7 +89,7 @@ export function filterToCapability(
 // Maps step target names to entity ID prefixes.
 // When a step says target: "letter", only letter:* entities should be picked.
 
-const TARGET_TO_PREFIX: Record<string, string> = {
+export const TARGET_TO_PREFIX: Record<string, string> = {
   letter: "letter:",
   form: "letter:",
   mark: "rule:",
