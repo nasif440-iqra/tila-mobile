@@ -6,6 +6,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
+  filterToStepTarget,
 } from "./shared";
 
 // ── Choose Generator — Tight discrimination, always 4 options ──
@@ -82,8 +83,9 @@ export function generateChooseItems(input: GeneratorInput): ExerciseItem[] {
     allUnlockedEntities,
   );
 
-  // 2. Filter to tappable entities (choose uses visual Arabic options)
-  const capable = filterToCapability(sourceEntities, "tappable");
+  // 2. Filter to entities matching step target type, then to tappable
+  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
+  const capable = filterToCapability(targetFiltered, "tappable");
   if (capable.length === 0) return [];
 
   // 3. Generate items — always 1 correct + 3 distractors

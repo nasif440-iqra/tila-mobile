@@ -4,6 +4,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
+  filterToStepTarget,
   deriveAudioKey,
 } from "./shared";
 
@@ -24,8 +25,9 @@ export function generateHearItems(input: GeneratorInput): ExerciseItem[] {
     allUnlockedEntities,
   );
 
-  // 2. Filter to hearable entities
-  const capable = filterToCapability(sourceEntities, "hearable");
+  // 2. Filter to entities matching step target type, then to hearable
+  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
+  const capable = filterToCapability(targetFiltered, "hearable");
   if (capable.length === 0) return [];
 
   const distractorCount = 3;

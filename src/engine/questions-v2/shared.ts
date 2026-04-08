@@ -43,8 +43,11 @@ export function pickDistractors(
   count: number,
   confusionPairs: Map<string, string[]>,
 ): AnyEntity[] {
-  // Filter out the target itself
-  const candidates = pool.filter((e) => e.id !== target.id);
+  // Extract the entity type prefix (e.g., "letter:" from "letter:2")
+  const targetPrefix = target.id.split(":")[0] + ":";
+
+  // Filter to same entity type and exclude the target itself
+  const candidates = pool.filter((e) => e.id !== target.id && e.id.startsWith(targetPrefix));
   if (candidates.length === 0) return [];
 
   // Prefer confusion pairs
@@ -77,6 +80,32 @@ export function filterToCapability(
   cap: EntityCapability,
 ): AnyEntity[] {
   return entities.filter((e) => e.capabilities.includes(cap));
+}
+
+// ── Filter by step target type ──
+// Maps step target names to entity ID prefixes.
+// When a step says target: "letter", only letter:* entities should be picked.
+
+const TARGET_TO_PREFIX: Record<string, string> = {
+  letter: "letter:",
+  form: "letter:",
+  mark: "rule:",
+  combo: "combo:",
+  chunk: "chunk:",
+  word: "word:",
+  phrase: "word:",
+  verse: "word:",
+  rule: "rule:",
+  mixed: "",  // no filtering for mixed (checkpoints)
+};
+
+export function filterToStepTarget(
+  entities: AnyEntity[],
+  target: string,
+): AnyEntity[] {
+  const prefix = TARGET_TO_PREFIX[target];
+  if (!prefix) return entities; // "mixed" or unknown — no filtering
+  return entities.filter((e) => e.id.startsWith(prefix));
 }
 
 // ── Shuffle (Fisher-Yates) ──

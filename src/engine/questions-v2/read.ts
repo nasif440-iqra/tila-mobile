@@ -4,6 +4,7 @@ import {
   pickDistractors,
   shuffle,
   filterToCapability,
+  filterToStepTarget,
   deriveAudioKey,
 } from "./shared";
 
@@ -22,7 +23,8 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
     allUnlockedEntities,
   );
 
-  const capable = filterToCapability(sourceEntities, "readable");
+  const targetFiltered = filterToStepTarget(sourceEntities, step.target);
+  const capable = filterToCapability(targetFiltered, "readable");
   if (capable.length === 0) return [];
 
   // 2. Determine answerMode using graduated phase progression:

@@ -17,28 +17,16 @@ interface Props {
 
 export function CurriculumProvider({ children, fallback }: Props) {
   const db = useDatabase();
-  // Default to v1 immediately so the app tree never unmounts.
-  // The async resolution updates this in-place if v2 is configured.
-  const [version, setVersion] = useState<CurriculumVersion>("v1");
 
+  // TEMPORARY FORCE V2: bypass all resolution logic for testing
+  // TODO: revert to async resolution before merging
+  const version: CurriculumVersion = "v2";
+
+  // Still run migration in background so v2 tables exist
   useEffect(() => {
-    let cancelled = false;
-
-    async function init() {
-      // Run v2 migration (idempotent — creates tables + column if missing)
-      await migrateV2(db);
-
-      // Resolve which curriculum to use
-      const v = await resolveCurriculumVersion(db);
-      if (!cancelled) setVersion(v);
-    }
-
-    init().catch((err) => {
-      console.error("CurriculumProvider init failed:", err);
-      // Already defaulted to v1, no action needed
+    migrateV2(db).catch((err) => {
+      console.error("[CurriculumProvider] migrateV2 failed:", err);
     });
-
-    return () => { cancelled = true; };
   }, [db]);
 
   return (

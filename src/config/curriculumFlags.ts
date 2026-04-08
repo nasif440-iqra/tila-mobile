@@ -2,7 +2,9 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 export type CurriculumVersion = "v1" | "v2";
 
-const PRODUCTION_DEFAULT: CurriculumVersion = "v1";
+// TEMPORARY: hardcoded to v2 for vertical-slice testing
+// TODO: revert to "v1" before merging to main
+const PRODUCTION_DEFAULT: CurriculumVersion = "v2";
 
 let resolvedVersion: CurriculumVersion | null = null;
 
