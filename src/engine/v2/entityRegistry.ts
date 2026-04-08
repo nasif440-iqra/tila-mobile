@@ -1,10 +1,16 @@
-import type { AnyEntity, EntityCapability } from "@/src/types/entity";
+import type { AnyEntity, EntityCapability, LetterEntity, ComboEntity } from "@/src/types/entity";
 import { ARABIC_LETTERS } from "@/src/data/letters";
 import { CHUNKS, RULES, PATTERNS, WORDS, ORTHOGRAPHY } from "@/src/data/curriculum-v2";
 
-// ── Letter → AnyEntity adapter ──
+// ── Letter → LetterEntity adapter ──
 
-function letterToEntity(letter: typeof ARABIC_LETTERS[number]): AnyEntity {
+// Letters are adapted from ARABIC_LETTERS (src/data/letters.js) at resolution time.
+// The adapted entity includes id, displayArabic, transliteration, and capabilities,
+// but does NOT include subtype-specific fields like audioKey or teachingBreakdownIds.
+// Downstream code that needs letter audio should look up ARABIC_LETTERS directly
+// by letter ID, not rely on the entity's audioKey field.
+// TODO(Plan 2+): Consider enriching LetterEntity with audioKey from letters.js data.
+function letterToEntity(letter: typeof ARABIC_LETTERS[number]): LetterEntity {
   return {
     id: `letter:${letter.id}`,
     displayArabic: letter.letter,
@@ -13,7 +19,7 @@ function letterToEntity(letter: typeof ARABIC_LETTERS[number]): AnyEntity {
   };
 }
 
-// ── Combo → AnyEntity adapter ──
+// ── Combo → ComboEntity adapter ──
 
 const HARAKAT_MAP: Record<string, { mark: string; sound: string }> = {
   fatha: { mark: "\u064E", sound: "a" },
@@ -32,7 +38,14 @@ const COMBO_SLUG_TO_LETTER_ID: Record<string, number> = {
   lam: 23, meem: 24, nun: 25,
 };
 
-function resolveCombo(id: string): AnyEntity | undefined {
+// Combos are synthetic entities derived from letter + harakat at resolution time.
+// They are NOT stored in any registry — they are generated dynamically.
+// The returned entity includes id, displayArabic, transliteration, and capabilities,
+// but does NOT include audioKey or teachingBreakdownIds.
+// Downstream generators that need combo audio must derive the audio key from the
+// combo ID convention (e.g., "combo:ba-fatha" → audio key "combo_ba-fatha").
+// TODO(Plan 2+): Consider adding audioKey to ComboEntity if generators need it.
+function resolveCombo(id: string): ComboEntity | undefined {
   const comboKey = id.replace("combo:", "");
   const lastDash = comboKey.lastIndexOf("-");
   if (lastDash === -1) return undefined;

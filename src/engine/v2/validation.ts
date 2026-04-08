@@ -116,7 +116,18 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
     }
   }
 
-  // Rule 9: no transliteration answer mode past Phase 2
+  // Rule 9: transliteration answer mode rejected past Phase 2.
+  // KNOWN LIMITATION: answerMode is a runtime property of ExerciseItem (generated
+  // by the read.ts generator), not an authored field on ExerciseStep. At validation
+  // time, we can only check for a tags-based convention: lessons that allow
+  // transliteration must declare it via tags: ["answerMode:transliteration"].
+  // This is a weak proxy — a lesson author could forget the tag. The real enforcement
+  // happens at two additional layers:
+  //   1. The read generator checks lesson.phase and refuses to emit transliteration
+  //      answer mode past Phase 2 (Plan 2 implementation)
+  //   2. The ReadExercise UI component refuses to render transliteration options
+  //      if answerMode doesn't match (defense in depth, Plan 3 implementation)
+  // This tag-based check is the build-time layer of a three-layer guard.
   if (lesson.phase > 2) {
     const hasReadSteps = lesson.exercisePlan.some((s) => s.type === "read");
     const hasTransliterationTag = lesson.tags?.some((t) => t.includes("transliteration"));
