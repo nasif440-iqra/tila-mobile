@@ -19,7 +19,7 @@
 ## Guards
 
 1. Plan 1 + Plan 2 must be landed (290+ tests passing)
-2. All v1 files are READ-ONLY. V2 integration adds new files and modifies only: `app/_layout.tsx` (add provider), `app/lesson/[id].tsx` (add v2 branch), `src/db/client.ts` (add v2 migration call)
+2. All v1 files are READ-ONLY except: `app/_layout.tsx` (add provider), `app/lesson/[id].tsx` (add v2 branch), home screen lesson grid (add v2 branch). Do NOT modify `src/db/client.ts` — the `curriculum_version` column is added via `migrate-v2.ts` as a pre-step.
 3. V2 progress uses v2 tables exclusively — no reads/writes to v1 tables
 4. The feature flag defaults to v1 — v2 only activates via env override or profile flag
 
@@ -85,7 +85,9 @@ These come in a future polish plan after the vertical slice proves the system wo
 - Create: `src/config/curriculumFlags.ts`
 - Create: `src/providers/CurriculumProvider.tsx`
 - Modify: `app/_layout.tsx` — add CurriculumProvider inside DatabaseProvider
-- Modify: `src/db/client.ts` — add v2 migration call
+- Modify: `src/db/migrate-v2.ts` — add `curriculum_version` column to user_profile as pre-step
+
+Do NOT modify `src/db/client.ts`. The `curriculum_version` column lives on the v1 `user_profile` table but is added via `migrate-v2.ts` as an idempotent pre-step (`ALTER TABLE user_profile ADD COLUMN curriculum_version TEXT` with try/catch for "duplicate column"). This runs before v2 table creation.
 
 The CurriculumProvider resolves curriculum version once at boot, runs v2 migration if needed, and exposes the version via React context. It does NOT return hook implementations — screens use the version to branch their own rendering.
 
@@ -109,7 +111,7 @@ export async function resolveCurriculumVersion(
     return resolvedVersion;
   }
 
-  // 2. User profile flag
+  // 2. User profile flag (column may not exist yet — added by migrateV2)
   try {
     const row = await db.getFirstAsync<{ curriculum_version: string | null }>(
       "SELECT curriculum_version FROM user_profile WHERE id = 1"
@@ -118,7 +120,7 @@ export async function resolveCurriculumVersion(
       resolvedVersion = "v2";
       return resolvedVersion;
     }
-  } catch { /* column may not exist yet */ }
+  } catch { /* column doesn't exist yet — fall through to default */ }
 
   // 3. Production default
   resolvedVersion = PRODUCTION_DEFAULT;
@@ -130,12 +132,18 @@ export async function resolveCurriculumVersion(
 ```typescript
 // React context that holds the resolved version
 // Wraps children only after version is resolved
-// Runs migrateV2() if version is v2
+// Runs migrateV2() on every boot (idempotent — creates v2 tables + column if missing)
+// Does NOT conditionally skip migration — v2 tables exist harmlessly even on v1
 ```
 
 **_layout.tsx change:** Insert `<CurriculumProvider>` inside `<DatabaseProvider>`, wrapping `<ThemeWrapper>`.
 
-**client.ts change:** Add `curriculum_version TEXT` column to user_profile in migrations (so the flag can be stored). Keep it nullable with no default.
+**migrate-v2.ts change:** Add as first step before table creation:
+```typescript
+// Pre-step: add curriculum_version column to user_profile (v1 table)
+// Idempotent — try/catch handles "duplicate column" on re-runs
+await db.execAsync("ALTER TABLE user_profile ADD COLUMN curriculum_version TEXT").catch(() => {});
+```
 
 **Tests:** Unit test for `resolveCurriculumVersion` logic (mock DB, test env override, test profile flag, test default).
 
@@ -193,15 +201,42 @@ Uses the engine's `recordAttempt`, `evaluatePromotion`, `applyDemotion` function
 **Files:**
 - Create: `src/hooks/useLessonQuizV2.ts`
 
-The main orchestrator hook — equivalent of v1's `useLessonQuiz` but for v2. Drives the lesson flow:
+The main orchestrator hook — equivalent of v1's `useLessonQuiz` but for v2. Drives the lesson flow.
 
-1. On mount: call `generateV2Exercises(lesson, allUnlocked, masterySnapshot)`
-2. Track current item index, scored items, exit-block state
-3. On answer: score item, advance to next
-4. On complete: call `evaluateLesson()`, update mastery for all attempted entities, save results via progress hook
-5. Return: `{ currentItem, progress, isExitBlock, handleAnswer, isComplete, result }`
+**Internal state machine:**
+```
+"generating" → "active" → "scoring" → "complete"
+```
+- `generating`: on mount, calls `generateV2Exercises()`. Shows loading state.
+- `active`: exercises generated. User answers one at a time.
+- `scoring`: all items answered. Calls `evaluateLesson()`, updates mastery, saves to DB.
+- `complete`: results ready. UI shows pass/fail.
 
-For checkpoint failures: return result with `failureReasons` — the UI layer handles remediation routing.
+**Return type:**
+```typescript
+interface UseLessonQuizV2Return {
+  // State
+  phase: "generating" | "active" | "scoring" | "complete";
+  currentItem: ExerciseItem | null;
+  itemIndex: number;
+  totalItems: number;
+  isExitBlock: boolean;              // true when in final decode items
+  isComplete: boolean;
+  result: LessonResult | null;       // available when phase === "complete"
+  error: string | null;
+
+  // Actions
+  handleAnswer: (correct: boolean, answerId: string) => void;
+}
+```
+
+**Flow:**
+1. On mount: load mastery snapshot → generate exercises → transition to "active"
+2. Each answer: create ScoredItem, advance index. If index was in exit-block range (last N decode items where N = decodePassRequired), set `isExitBlock: true`
+3. When all items answered: transition to "scoring", call `evaluateLesson()`, update mastery for each attempted entity via mastery hook, save lesson result via progress hook
+4. Transition to "complete" with result
+
+For checkpoint failures: `result.failureReasons` is non-empty — the UI layer handles remediation routing.
 
 - [ ] **Step 1:** Create useLessonQuizV2.ts
 - [ ] **Step 2:** Write tests for the orchestration logic
@@ -236,10 +271,11 @@ interface ExerciseComponentProps {
 
 The goal is: can a human tap through a lesson and have it work.
 
+**No unit tests for these components.** The project doesn't have `@testing-library/react-native` and adding it for minimal throwaway components isn't worth it. Exercise component correctness is verified by: (1) Task 9's engine integration test, (2) manual device testing on the vertical slice. Component polish and proper testing come in the UI polish plan.
+
 - [ ] **Step 1:** Create ExerciseRenderer.tsx
 - [ ] **Step 2:** Create all 6 exercise components (minimal)
-- [ ] **Step 3:** Verify they render without crashes (basic smoke test)
-- [ ] **Step 4:** Commit
+- [ ] **Step 3:** Commit
 
 ---
 
@@ -267,9 +303,12 @@ export async function resolveAudio(key: string): Promise<{ type: "bundled" | "pl
 
 This is just plumbing — the hear exercises will work for letters (which have audio) and gracefully degrade for combos/chunks (which don't yet).
 
-- [ ] **Step 1:** Create audioResolverV2.ts
-- [ ] **Step 2:** Wire into hear exercise component
-- [ ] **Step 3:** Commit
+**IMPORTANT:** Before implementing, read `src/audio/player.ts` to understand the existing audio asset structure and how letter sounds are mapped to file paths. The resolver must adapt to the existing asset convention, not invent a new one.
+
+- [ ] **Step 1:** Read `src/audio/player.ts` to understand existing audio asset mapping
+- [ ] **Step 2:** Create audioResolverV2.ts using the existing asset structure
+- [ ] **Step 3:** Wire into hear exercise component
+- [ ] **Step 4:** Commit
 
 ---
 
@@ -331,6 +370,28 @@ This is the switchpoint. V1 path is completely untouched. V2 path renders the ne
 
 ---
 
+### Task 8.5: Home Screen Lesson Grid V2 Branch
+
+**Files:**
+- Modify: home screen / lesson grid component (find via `app/(tabs)/index.tsx` or wherever the LessonGrid lives)
+
+Without this, a user on v2 sees v1's 106-lesson grid but gets v2's 6-lesson experience — confusing and unnavigable.
+
+**What to do:**
+1. Find the home screen component that renders the lesson grid. Read it to understand how it gets lesson data and completed lesson IDs.
+2. Add a v2 branch: when `curriculumVersion === "v2"`, show `LESSONS_V2` instead of `LESSONS`, and read completed IDs from `useProgressV2` instead of `useProgress`.
+3. The grid should show the 6 vertical-slice lessons with correct completion state.
+4. V1 path is completely untouched.
+
+**IMPORTANT:** Read the existing home screen code first. The implementer needs to understand how `LessonGrid` works, what props it takes, and where it gets its data before adding the v2 branch.
+
+- [ ] **Step 1:** Find and read the home screen / lesson grid component
+- [ ] **Step 2:** Add v2 branch — show LESSONS_V2 with useProgressV2 completed IDs
+- [ ] **Step 3:** Verify v1 path unchanged
+- [ ] **Step 4:** Commit
+
+---
+
 ### Task 9: End-to-End Vertical Slice Test
 
 **Files:**
@@ -348,7 +409,7 @@ Integration test that proves the full v2 loop works without the UI:
 8. Simulate passing remediation, retry checkpoint → verify pass
 9. Evaluate phase unlock for Phase 2 → verify unlocked after checkpoint pass
 
-This test uses the real engine functions end-to-end. It does NOT test UI rendering — that's manual testing on device.
+This test uses the real engine functions end-to-end. It does NOT test UI rendering or DB persistence — those are verified manually on device. The test proves the engine logic is correct; the hooks and DB layer are verified by running the app.
 
 - [ ] **Step 1:** Write the integration test
 - [ ] **Step 2:** Run and verify all assertions pass
@@ -358,18 +419,21 @@ This test uses the real engine functions end-to-end. It does NOT test UI renderi
 
 ## Plan 3 Complete — Success Criteria
 
-The vertical slice is "alive" when:
+### Automated (Vitest)
+- [ ] Integration test proves full engine loop (lesson → score → mastery → checkpoint → remediation → unlock)
+- [ ] 290+ Plan 1+2 tests still pass (no regression)
 
-- [ ] App boots with v1 by default (no regression)
+### Manual (on device)
+- [ ] App boots with v1 by default (no regression to existing experience)
 - [ ] Setting `EXPO_PUBLIC_CURRICULUM_OVERRIDE=v2` switches to v2 lesson path
+- [ ] Home screen shows 6 v2 lessons (not 106 v1 lessons) when on v2
 - [ ] Lesson 1 renders and is playable (tap + hear exercises)
 - [ ] Lesson 2 renders with all 4 exercise types (tap + hear + choose + read)
 - [ ] Lesson 7 checkpoint produces pass/fail with specific failure reasons
 - [ ] Failed checkpoint shows failure reasons on result screen
-- [ ] Passed lesson updates mastery in v2_entity_mastery table
-- [ ] Progress persists across app restarts (v2 tables)
-- [ ] Integration test proves full loop without UI
-- [ ] 290+ Plan 1+2 tests still pass (no regression)
+- [ ] Passed lesson shows as completed on lesson grid after returning to home
+- [ ] Progress persists across app restart (kill and reopen — completed lessons still show)
+- [ ] Switching back to v1 (remove env override) shows original v1 experience
 
 ## Remaining Plans
 
