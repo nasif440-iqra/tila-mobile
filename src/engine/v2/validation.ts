@@ -77,9 +77,12 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
     }
   }
 
-  // Rule 6: explicit source entityIds must resolve
+  // Rule 6: explicit source entityIds must resolve and must not be empty
   for (const step of lesson.exercisePlan) {
     if (step.source.from === "explicit") {
+      if (step.source.entityIds.length === 0) {
+        errors.push(`Lesson ${lesson.id}: explicit source has empty entityIds array`);
+      }
       for (const id of step.source.entityIds) {
         const entity = await resolveEntity(id);
         if (!entity) {
@@ -124,23 +127,56 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
     }
   }
 
-  // Rule 2: step targets must have compatible entities in scope (from teach source)
+  // Rule 5: checkpoint lessons must have at least one decode step (read or check)
+  const hasCheckStep = lesson.exercisePlan.some((s) => s.type === "check");
+  if (hasCheckStep) {
+    const hasDecodeStep = lesson.exercisePlan.some(isDecodeStep);
+    if (!hasDecodeStep) {
+      errors.push(
+        `Lesson ${lesson.id}: checkpoint lesson (has check step) must include at least one decode step (read or check)`
+      );
+    }
+  }
+
+  // Rule 2: step targets must have compatible entities in scope
   for (const step of lesson.exercisePlan) {
     const requiredCap = TARGET_TO_CAPABILITY[step.target];
-    if (requiredCap && step.source.from === "teach") {
-      let hasCompatible = false;
-      for (const id of lesson.teachEntityIds) {
-        const entity = await resolveEntity(id);
-        if (entity && entity.capabilities.includes(requiredCap)) {
-          hasCompatible = true;
-          break;
-        }
+    if (!requiredCap) continue;
+
+    const source = step.source;
+
+    if (source.from === "all") {
+      // Cannot validate statically — skip
+      continue;
+    }
+
+    if (source.from === "explicit") {
+      // Handled by Rule 6 (resolution check) — skip capability check here
+      continue;
+    }
+
+    let poolIds: string[] = [];
+    if (source.from === "teach") {
+      poolIds = lesson.teachEntityIds;
+    } else if (source.from === "review") {
+      poolIds = lesson.reviewEntityIds;
+    } else if (source.from === "mixed") {
+      poolIds = [...lesson.teachEntityIds, ...lesson.reviewEntityIds];
+    }
+
+    let hasCompatible = false;
+    for (const id of poolIds) {
+      const entity = await resolveEntity(id);
+      if (entity && entity.capabilities.includes(requiredCap)) {
+        hasCompatible = true;
+        break;
       }
-      if (!hasCompatible) {
-        errors.push(
-          `Lesson ${lesson.id}: step target "${step.target}" has no compatible entities in teachEntityIds`
-        );
-      }
+    }
+    if (!hasCompatible) {
+      const sourceName = source.from;
+      errors.push(
+        `Lesson ${lesson.id}: step target "${step.target}" has no compatible entities in ${sourceName} source`
+      );
     }
   }
 

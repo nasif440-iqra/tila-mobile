@@ -11,6 +11,14 @@ describe("schema-v2", () => {
     expect(V2_CREATE_TABLES).toContain("profile_id TEXT NOT NULL");
   });
 
+  it("v2_lesson_attempts has LessonResult columns", () => {
+    expect(V2_CREATE_TABLES).toContain("bucket_scores TEXT");
+    expect(V2_CREATE_TABLES).toContain("total_items INTEGER NOT NULL");
+    expect(V2_CREATE_TABLES).toContain("correct_items INTEGER NOT NULL");
+    expect(V2_CREATE_TABLES).toContain("decode_items INTEGER NOT NULL");
+    expect(V2_CREATE_TABLES).toContain("decode_correct INTEGER NOT NULL");
+  });
+
   it("creates v2_entity_mastery table", () => {
     expect(V2_CREATE_TABLES).toContain("v2_entity_mastery");
     expect(V2_CREATE_TABLES).toContain("entity_id TEXT");

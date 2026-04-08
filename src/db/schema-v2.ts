@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS v2_lesson_attempts (
   decode_percent REAL CHECK (decode_percent >= 0.0 AND decode_percent <= 1.0),
   final_decode_streak INTEGER CHECK (final_decode_streak >= 0),
   failure_reasons TEXT,
+  bucket_scores TEXT,
+  total_items INTEGER NOT NULL,
+  correct_items INTEGER NOT NULL,
+  decode_items INTEGER NOT NULL,
+  decode_correct INTEGER NOT NULL,
   completed_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE INDEX IF NOT EXISTS idx_v2_la_lesson ON v2_lesson_attempts(lesson_id);
