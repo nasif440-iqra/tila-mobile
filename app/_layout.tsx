@@ -26,6 +26,7 @@ import {
 } from "@expo-google-fonts/lora";
 import { ThemeContext, resolveColors, useColors } from "../src/design/theme";
 import { DatabaseProvider } from "../src/db/provider";
+import { CurriculumProvider } from "../src/providers/CurriculumProvider";
 import { SubscriptionProvider } from "../src/monetization/provider";
 import { AuthProvider } from "../src/auth/provider";
 import { SyncProvider } from "../src/sync/provider";
@@ -120,21 +121,23 @@ export default function RootLayout() {
       <ErrorFallback onRetry={resetError} />
     )}>
       <DatabaseProvider fallback={<AppLoadingScreen />}>
-        <ThemeWrapper>
-          <AuthProvider>
-            <SyncProvider>
-              <SubscriptionProvider>
-                <AppStateProvider>
-                  <SocialProvider>
-                  <AnalyticsGate>
-                    <AppNavigator />
-                  </AnalyticsGate>
-                  </SocialProvider>
-                </AppStateProvider>
-              </SubscriptionProvider>
-            </SyncProvider>
-          </AuthProvider>
-        </ThemeWrapper>
+        <CurriculumProvider>
+          <ThemeWrapper>
+            <AuthProvider>
+              <SyncProvider>
+                <SubscriptionProvider>
+                  <AppStateProvider>
+                    <SocialProvider>
+                    <AnalyticsGate>
+                      <AppNavigator />
+                    </AnalyticsGate>
+                    </SocialProvider>
+                  </AppStateProvider>
+                </SubscriptionProvider>
+              </SyncProvider>
+            </AuthProvider>
+          </ThemeWrapper>
+        </CurriculumProvider>
       </DatabaseProvider>
     </Sentry.ErrorBoundary>
   );
