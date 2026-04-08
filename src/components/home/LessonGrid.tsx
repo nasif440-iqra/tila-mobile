@@ -169,6 +169,8 @@ export interface LessonGridProps {
   isPremiumActive?: boolean;
   subscriptionLoading?: boolean;
   onLockedLessonPress?: (lessonId: number) => void;
+  /** Override the lesson list (e.g. LESSONS_V2). Defaults to the v1 LESSONS array. */
+  lessons?: Array<{ id: number; phase: number; title: string; teachIds?: number[] }>;
 }
 
 // ── Component ──
@@ -181,7 +183,9 @@ export default function LessonGrid({
   isPremiumActive,
   subscriptionLoading,
   onLockedLessonPress,
+  lessons: lessonsProp,
 }: LessonGridProps) {
+  const lessonList = lessonsProp ?? LESSONS;
   const colors = useColors();
 
   const sectionOpacity = useSharedValue(0);
@@ -205,7 +209,7 @@ export default function LessonGrid({
     const groups: PhaseGroup[] = [];
     let currentGroup: PhaseGroup | null = null;
 
-    for (const lesson of LESSONS) {
+    for (const lesson of lessonList) {
       if (!currentGroup || currentGroup.phase !== lesson.phase) {
         currentGroup = {
           phase: lesson.phase,
@@ -226,7 +230,7 @@ export default function LessonGrid({
       }
     }
     return groups;
-  }, [completedSet, nextLessonId]);
+  }, [completedSet, nextLessonId, lessonList]);
 
   // ── Expanded state: current phase + phases with incomplete lessons ──
   const [expandedPhases, setExpandedPhases] = useState<Set<number>>(() => {

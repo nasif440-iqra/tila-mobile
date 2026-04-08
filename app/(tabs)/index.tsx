@@ -28,6 +28,9 @@ import { useSubscription, FREE_LESSON_CUTOFF, usePremiumReviewRights } from "../
 import { loadPremiumLessonGrants } from "../../src/engine/progress";
 import { useDatabase } from "../../src/db/provider";
 import { LESSONS } from "../../src/data/lessons";
+import { useCurriculumVersion } from "../../src/providers/CurriculumProvider";
+import { LESSONS_V2 } from "../../src/data/curriculum-v2";
+import { useProgressV2 } from "../../src/hooks/useProgressV2";
 import {
   getCurrentLesson,
   getLessonsCompletedCount,
@@ -291,6 +294,8 @@ function MomentumBanner({
 export default function HomeScreen() {
   const colors = useColors();
   const db = useDatabase();
+  const curriculumVersion = useCurriculumVersion();
+  const progressV2 = useProgressV2();
   const appState = useAppState();
   const { updateProfile } = appState;
   const progress = appState.progress;
@@ -606,11 +611,12 @@ export default function HomeScreen() {
         <LessonGrid
           currentPhase={currentPhase}
           nextLessonId={nextLesson?.id ?? null}
-          completedLessonIds={completedLessonIds}
+          completedLessonIds={curriculumVersion === "v2" ? progressV2.completedLessonIds : completedLessonIds}
           onStartLesson={handleStartLesson}
           enterDelay={160}
           isPremiumActive={isPremiumActive}
           subscriptionLoading={subLoading}
+          lessons={curriculumVersion === "v2" ? LESSONS_V2 : undefined}
           onLockedLessonPress={async (lessonId: number) => {
             const outcome = await showPaywall("lesson_locked");
             if (outcome.accessGranted) {
