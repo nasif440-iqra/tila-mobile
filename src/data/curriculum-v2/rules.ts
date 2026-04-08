@@ -20,4 +20,15 @@ export const RULES: RuleEntity[] = [
     appliesTo: ["chunk", "word"],
     exampleEntityIds: ["chunk:ba-ma"],
   },
+  {
+    id: "rule:kasra",
+    displayArabic: "\u0650",
+    transliteration: "kasra",
+    capabilities: ["tappable", "hearable", "readable", "fixable"],
+    ruleType: "mark",
+    description: "A small diagonal stroke below a letter — produces a short 'i' sound",
+    appliesTo: ["combo", "chunk", "word"],
+    exampleEntityIds: ["combo:ba-kasra", "combo:ma-kasra"],
+    prerequisiteRuleIds: ["rule:fatha"],
+  },
 ];
