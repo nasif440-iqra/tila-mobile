@@ -25,19 +25,18 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
   const capable = filterToCapability(sourceEntities, "readable");
   if (capable.length === 0) return [];
 
-  // 2. Determine answerMode based on lesson phase
-  //    Phase 1: transliteration
-  //    Phase 2+: audio
-  let answerMode: ExerciseItem["answerMode"] =
-    lesson.phase === 1 ? "transliteration" : "audio";
+  // 2. Determine answerMode using graduated phase progression:
+  //    Phase 1 (lessons 1-8):  transliteration — learner needs visual scaffolding
+  //    Phase 2 early (9-14):   audio — aggressively phase out transliteration
+  //    Phase 2 late (15-18):   audio only
+  //    Phase 3+:               audio (anti-transliteration guard enforced)
+  //
+  //    NOTE: The spec allows Phase 2 early to alternate between modes, but we default
+  //    to audio throughout Phase 2 as the stricter / safer choice. This ensures
+  //    learners are pushed off transliteration as early as Phase 2.
+  const answerMode: ExerciseItem["answerMode"] = determineAnswerMode(lesson.phase, lesson.id);
 
-  // 3. ANTI-TRANSLITERATION GUARD: Phase 3+ NEVER emits transliteration
-  //    This is the generator-level layer of the three-layer guard.
-  if (lesson.phase > 2) {
-    answerMode = "audio";
-  }
-
-  // 4. Apply renderOverride from step if set, else use lesson renderProfile
+  // 3. Apply renderOverride from step if set, else use lesson renderProfile
   const resolvedRenderProfile = step.renderOverride ?? renderProfile;
 
   const items: ExerciseItem[] = [];
@@ -114,6 +113,25 @@ function buildOption(
     displayArabic,
     isCorrect,
   };
+}
+
+// ── Answer Mode — Graduated phase progression ──
+//
+// Phase 1 (lessons 1-8):   transliteration (scaffold for absolute beginners)
+// Phase 2 (lessons 9-18):  audio (aggressively phases out transliteration)
+// Phase 3+:                audio (anti-transliteration guard — enforced at generator level)
+//
+// The spec allows Phase 2 early (9-14) to alternate between modes, but we use audio
+// throughout Phase 2 as the stricter choice. Transliteration is a crutch; removing it
+// in Phase 2 forces the learner to develop sound-symbol mapping earlier.
+
+function determineAnswerMode(phase: number, _lessonId: number): ExerciseItem["answerMode"] {
+  // Phase 3+: NEVER transliteration (anti-transliteration guard)
+  if (phase > 2) return "audio";
+  // Phase 2 (early and late): audio only — phase out transliteration immediately
+  if (phase === 2) return "audio";
+  // Phase 1: transliteration scaffold
+  return "transliteration";
 }
 
 // ── Option Padding (ensure exactly 4 options) ──

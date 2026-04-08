@@ -39,9 +39,9 @@ const chunkBM: ChunkEntity = {
 
 const allEntities = [letterA, letterB, letterM, letterN, comboBA, comboMA, chunkBM];
 
-function makeLesson(phase: number): LessonV2 {
+function makeLesson(phase: number, lessonId?: number): LessonV2 {
   return {
-    id: phase * 10,
+    id: lessonId ?? phase * 10,
     phase,
     module: "test",
     title: `Phase ${phase} Lesson`,
@@ -53,7 +53,7 @@ function makeLesson(phase: number): LessonV2 {
   };
 }
 
-function makeInput(phase: number, overrides: Partial<GeneratorInput> = {}): GeneratorInput {
+function makeInput(phase: number, overrides: Partial<GeneratorInput> = {}, lessonId?: number): GeneratorInput {
   return {
     step: {
       type: "read",
@@ -61,7 +61,7 @@ function makeInput(phase: number, overrides: Partial<GeneratorInput> = {}): Gene
       target: "combo",
       source: { from: "teach" },
     },
-    lesson: makeLesson(phase),
+    lesson: makeLesson(phase, lessonId),
     teachEntities: [letterA, letterB, letterM, letterN],
     reviewEntities: [comboBA, comboMA],
     allUnlockedEntities: allEntities,
@@ -211,5 +211,56 @@ describe("generateReadItems", () => {
       },
     }));
     expect(items).toHaveLength(2);
+  });
+
+  it("Phase 2 early (lesson 9): answerMode is 'audio' — transliteration phased out aggressively", () => {
+    const items = generateReadItems(makeInput(2, {}, 9));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.answerMode).toBe("audio");
+      expect(item.answerMode).not.toBe("transliteration");
+    }
+  });
+
+  it("Phase 2 early (lesson 14): answerMode is 'audio'", () => {
+    const items = generateReadItems(makeInput(2, {}, 14));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.answerMode).toBe("audio");
+    }
+  });
+
+  it("Phase 2 late (lesson 15): answerMode is 'audio'", () => {
+    const items = generateReadItems(makeInput(2, {}, 15));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.answerMode).toBe("audio");
+    }
+  });
+
+  it("Phase 2 late (lesson 18): answerMode is 'audio'", () => {
+    const items = generateReadItems(makeInput(2, {}, 18));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.answerMode).toBe("audio");
+    }
+  });
+
+  it("Phase 1 still gets transliteration regardless of lesson ID", () => {
+    for (const lessonId of [1, 4, 8]) {
+      const items = generateReadItems(makeInput(1, {}, lessonId));
+      expect(items.length).toBeGreaterThan(0);
+      for (const item of items) {
+        expect(item.answerMode).toBe("transliteration");
+      }
+    }
+  });
+
+  it("Phase 4 guard: never produces transliteration", () => {
+    const items = generateReadItems(makeInput(4, {}, 40));
+    expect(items.length).toBeGreaterThan(0);
+    for (const item of items) {
+      expect(item.answerMode).not.toBe("transliteration");
+    }
   });
 });

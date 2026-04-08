@@ -62,13 +62,32 @@ describe("pickEntitiesBySource", () => {
     expect(result).toEqual([...teach, ...review]);
   });
 
-  it("respects teach/review ratio for 'mixed' with mix", () => {
+  it("respects teach/review ratio for 'mixed' with mix — correct count and pool membership", () => {
     const result = pickEntitiesBySource(
       { from: "mixed", mix: { teach: 1, review: 1 } }, teach, review, all
     );
+    // Total length must match requested teach + review count
     expect(result).toHaveLength(2);
-    expect(result[0]).toEqual(letterA);
-    expect(result[1]).toEqual(letterM);
+    // The first entity must come from the teach pool
+    expect(teach).toContainEqual(result[0]);
+    // The second entity must come from the review pool
+    expect(review).toContainEqual(result[1]);
+  });
+
+  it("'mixed' with ratio — shuffles before slicing so variety is possible", () => {
+    // With a larger teach pool, repeated calls should eventually produce different first elements
+    const largeteach = [letterA, letterB, letterM, comboBA, comboMA];
+    const seen = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      const result = pickEntitiesBySource(
+        { from: "mixed", mix: { teach: 1, review: 0 } }, largeteach, [], all
+      );
+      expect(result).toHaveLength(1);
+      expect(largeteach).toContainEqual(result[0]);
+      seen.add(result[0].id);
+    }
+    // After 20 draws from a 5-entity pool, we should see more than 1 unique entity
+    expect(seen.size).toBeGreaterThan(1);
   });
 
   it("returns filtered entities for 'explicit' source", () => {

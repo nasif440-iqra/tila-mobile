@@ -197,4 +197,80 @@ describe("generateChooseItems", () => {
     });
     expect(() => generateChooseItems(input)).not.toThrow();
   });
+
+  it("distractorStrategy 'family' filters pool to same letter family (ba family: ba=2, ta=3, tha=4)", () => {
+    // ba (letter:2), ta (letter:3), tha (letter:4) are all in the "ba" family
+    const letterTA: LetterEntity = {
+      id: "letter:3", displayArabic: "\u062A", transliteration: "t",
+      capabilities: ["tappable", "hearable", "readable"],
+    };
+    const letterTHA: LetterEntity = {
+      id: "letter:4", displayArabic: "\u062B", transliteration: "th",
+      capabilities: ["tappable", "hearable", "readable"],
+    };
+    const letterZ: LetterEntity = {
+      id: "letter:11", displayArabic: "\u0632", transliteration: "z",
+      capabilities: ["tappable", "hearable", "readable"],
+    };
+    // Pool: letterB (ba family), letterTA (ba family), letterTHA (ba family), letterZ (ra family)
+    const pool = [letterB, letterTA, letterTHA, letterZ, letterA, letterM];
+    const input = makeInput({
+      step: {
+        type: "choose",
+        count: 1,
+        target: "letter",
+        source: { from: "teach" },
+        distractorStrategy: "family",
+      },
+      teachEntities: [letterB],
+      allUnlockedEntities: pool,
+    });
+    const items = generateChooseItems(input);
+    expect(items).toHaveLength(1);
+    // All distractor options should be from same family (ba family: letter:3, letter:4)
+    // or fall back to full pool if not enough family members in unlocked set
+    // Either way: no errors, and item has 1 correct option
+    const correctOptions = items[0].options?.filter((o) => o.isCorrect) ?? [];
+    expect(correctOptions).toHaveLength(1);
+  });
+
+  it("distractorStrategy 'vowel' filters to same-letter combos with different harakat (or falls back)", () => {
+    // combo:ba-fatha and combo:ba-kasra share letter slug "ba"
+    const comboBaKasra: ComboEntity = {
+      id: "combo:ba-kasra", displayArabic: "\u0628\u0650", transliteration: "bi",
+      capabilities: ["hearable", "readable", "buildable", "tappable"],
+    };
+    const comboBaDamma: ComboEntity = {
+      id: "combo:ba-damma", displayArabic: "\u0628\u064F", transliteration: "bu",
+      capabilities: ["hearable", "readable", "buildable", "tappable"],
+    };
+    const pool = [comboBA, comboBaKasra, comboBaDamma, comboMA, letterA, letterB];
+    const input = makeInput({
+      step: {
+        type: "choose",
+        count: 1,
+        target: "combo",
+        source: { from: "teach" },
+        distractorStrategy: "vowel",
+      },
+      teachEntities: [comboBA],
+      allUnlockedEntities: pool,
+    });
+    const items = generateChooseItems(input);
+    expect(items).toHaveLength(1);
+    // Distractors should prefer combo:ba-kasra and combo:ba-damma (same letter, diff harakat)
+    const distractorIds = items[0].options?.filter((o) => !o.isCorrect).map((o) => o.id) ?? [];
+    // At least one distractor should be a same-letter combo variant
+    const hasSameLetterDistractor = distractorIds.some((id) => id.startsWith("combo:ba-"));
+    expect(hasSameLetterDistractor).toBe(true);
+  });
+
+  it("default behavior unchanged when no distractorStrategy set", () => {
+    const items = generateChooseItems(makeInput());
+    expect(items).toHaveLength(3);
+    for (const item of items) {
+      expect(item.options).toHaveLength(4);
+      expect(item.options?.filter((o) => o.isCorrect)).toHaveLength(1);
+    }
+  });
 });

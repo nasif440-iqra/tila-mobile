@@ -24,7 +24,7 @@ const SUB_GENERATORS: Partial<Record<ExerciseStep["type"], SubGenerator>> = {
 // ── Check Generator — Assessment-profile-driven mixed generation ──
 
 export function generateCheckItems(input: GeneratorInput): ExerciseItem[] {
-  const { step } = input;
+  const { step, allUnlockedEntities } = input;
 
   if (step.type !== "check") return [];
 
@@ -84,7 +84,8 @@ export function generateCheckItems(input: GeneratorInput): ExerciseItem[] {
     if (!generator) continue;
 
     // Build a sub-step with the correct type and allocated count
-    const subStep = buildSubStep(alloc.type, alloc.count, step);
+    // Pass allUnlockedEntities so targets can be inferred from the actual pool
+    const subStep = buildSubStep(alloc.type, alloc.count, step, allUnlockedEntities);
     if (!subStep) continue;
 
     const subInput: GeneratorInput = {
@@ -110,27 +111,81 @@ export function generateCheckItems(input: GeneratorInput): ExerciseItem[] {
   return allItems;
 }
 
+// ── Target Inference ──
+// Infers the most appropriate target type from the available entity pool,
+// rather than hardcoding defaults. This allows check steps to work correctly
+// when lessons contain only chunks, words, or other non-letter entity types.
+
+type EntityPrefix = "letter:" | "combo:" | "chunk:" | "word:";
+
+const PREFIX_TO_TARGET: Record<EntityPrefix, string> = {
+  "letter:": "letter",
+  "combo:":  "combo",
+  "chunk:":  "chunk",
+  "word:":   "word",
+};
+
+function inferTarget(
+  entities: import("@/src/types/entity").AnyEntity[],
+  fallback: string,
+): string {
+  for (const entity of entities) {
+    for (const [prefix, target] of Object.entries(PREFIX_TO_TARGET) as [EntityPrefix, string][]) {
+      if (entity.id.startsWith(prefix)) return target;
+    }
+  }
+  return fallback;
+}
+
 // ── Sub-step builder ──
 // Constructs a typed ExerciseStep for each sub-generator call.
+// Targets are inferred from the available entity pool rather than hardcoded.
 
 function buildSubStep(
   type: ExerciseStep["type"],
   count: number,
   originalStep: Extract<ExerciseStep, { type: "check" }>,
+  allEntities: import("@/src/types/entity").AnyEntity[],
 ): ExerciseStep | null {
   const source = originalStep.source;
 
   switch (type) {
     case "tap":
-      return { type: "tap", count, target: "letter", source };
+      return {
+        type: "tap",
+        count,
+        target: inferTarget(allEntities, "letter") as "letter" | "form" | "mark",
+        source,
+      };
     case "hear":
-      return { type: "hear", count, target: "letter", source, direction: "audio-to-script" };
+      return {
+        type: "hear",
+        count,
+        target: inferTarget(allEntities, "letter") as "letter" | "combo" | "chunk" | "word",
+        source,
+        direction: "audio-to-script",
+      };
     case "choose":
-      return { type: "choose", count, target: "letter", source };
+      return {
+        type: "choose",
+        count,
+        target: inferTarget(allEntities, "letter") as "letter" | "combo" | "rule" | "word",
+        source,
+      };
     case "build":
-      return { type: "build", count, target: "combo", source };
+      return {
+        type: "build",
+        count,
+        target: inferTarget(allEntities, "combo") as "combo" | "chunk" | "word" | "phrase",
+        source,
+      };
     case "read":
-      return { type: "read", count, target: "combo", source };
+      return {
+        type: "read",
+        count,
+        target: inferTarget(allEntities, "combo") as "combo" | "chunk" | "word" | "phrase" | "verse",
+        source,
+      };
     case "fix":
       return { type: "fix", count, target: "vowel", source };
     default:

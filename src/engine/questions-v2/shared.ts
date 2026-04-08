@@ -16,9 +16,12 @@ export function pickEntitiesBySource(
       return reviewEntities;
     case "mixed": {
       if (!source.mix) return [...teachEntities, ...reviewEntities];
-      // Weighted selection: take `teach` count from teach, `review` count from review
-      const teachSlice = teachEntities.slice(0, source.mix.teach);
-      const reviewSlice = reviewEntities.slice(0, source.mix.review);
+      // Weighted selection: shuffle each pool first so we don't always take the
+      // same first-N entities when the pool is larger than the requested count.
+      const shuffledTeach = shuffle(teachEntities);
+      const shuffledReview = shuffle(reviewEntities);
+      const teachSlice = shuffledTeach.slice(0, source.mix.teach);
+      const reviewSlice = shuffledReview.slice(0, source.mix.review);
       return [...teachSlice, ...reviewSlice];
     }
     case "all":

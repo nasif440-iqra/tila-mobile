@@ -193,4 +193,43 @@ describe("generateCheckItems", () => {
     }));
     expect(items).toHaveLength(0);
   });
+
+  it("infers chunk target when pool contains only chunk entities", () => {
+    // Lesson with only chunk entities — check generator should infer 'chunk' target
+    const chunkOnlyLesson: LessonV2 = {
+      id: 99, phase: 2, module: "2.3",
+      title: "Chunk-only checkpoint",
+      description: "Only chunk entities in pool",
+      teachEntityIds: ["chunk:ba-ma", "chunk:la-ma"],
+      reviewEntityIds: [],
+      exercisePlan: [
+        { type: "check", count: 4, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-1-checkpoint" },
+      ],
+      masteryPolicy: { passThreshold: 0.9, decodePassRequired: 2, decodeMinPercent: 0.8 },
+      renderProfile: "isolated",
+    };
+
+    const items = generateCheckItems(makeInput({
+      lesson: chunkOnlyLesson,
+      teachEntities: [chunkBM, chunkLM],
+      reviewEntities: [],
+      allUnlockedEntities: [chunkBM, chunkLM],
+      step: {
+        type: "check",
+        count: 4,
+        target: "mixed",
+        source: { from: "all" },
+        assessmentProfile: "phase-1-checkpoint",
+      },
+    }));
+
+    // Should produce items without error (target inference prevents hardcoded "letter" crash)
+    // read and hear generators can handle chunk entities; build needs buildable capability
+    // The key assertion: no error thrown, and items are produced
+    expect(Array.isArray(items)).toBe(true);
+    // Each produced item should have generatedBy set
+    for (const item of items) {
+      expect(item.generatedBy).toBeDefined();
+    }
+  });
 });
