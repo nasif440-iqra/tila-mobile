@@ -51,3 +51,4 @@ coverage/
 
 # Testing screenshots
 testing photos/
+.worktrees/
