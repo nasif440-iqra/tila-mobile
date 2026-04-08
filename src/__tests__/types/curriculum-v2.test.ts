@@ -6,6 +6,16 @@ import type {
   PhaseV2,
   MasteryPolicy,
 } from "@/src/types/curriculum-v2";
+import type {
+  EntityBase,
+  EntityCapability,
+  ChunkEntity,
+  WordEntity,
+  PatternEntity,
+  RuleEntity,
+  OrthographyEntity,
+} from "@/src/types/entity";
+import type { AssessmentProfile } from "@/src/types/assessment";
 
 describe("curriculum-v2 types", () => {
   it("accepts a valid LessonV2 with exercisePlan", () => {
@@ -105,5 +115,72 @@ describe("curriculum-v2 types", () => {
       },
     };
     expect(phase.unlockPolicy.reviewQueuePolicy?.maxOverdueCritical).toBe(3);
+  });
+});
+
+describe("entity types", () => {
+  it("accepts a ChunkEntity", () => {
+    const chunk: ChunkEntity = {
+      id: "chunk:bama",
+      displayArabic: "\u0628\u064E\u0645\u064E",
+      transliteration: "bama",
+      capabilities: ["hearable", "readable", "buildable"],
+      teachingBreakdownIds: ["combo:ba-fatha", "combo:ma-fatha"],
+      breakdownType: "teaching",
+      syllableCount: 2,
+      audioKey: "chunk_bama",
+    };
+    expect(chunk.capabilities).toContain("readable");
+  });
+
+  it("accepts a WordEntity", () => {
+    const word: WordEntity = {
+      id: "word:allah",
+      displayArabic: "\u0627\u0644\u0644\u0647",
+      displayArabicAlt: "\u0671\u0644\u0644\u0651\u064E\u0647\u0650",
+      transliteration: "allah",
+      capabilities: ["hearable", "readable", "buildable", "quran-renderable"],
+      teachingBreakdownIds: ["combo:alif-laam", "rule:shaddah", "combo:la-fatha", "combo:ha-kasra"],
+      breakdownType: "teaching",
+      connectedForm: "\u0627\u0644\u0644\u0647",
+      quranScriptForm: "\u0671\u0644\u0644\u0651\u064E\u0647\u0650",
+      frequency: "high",
+      teachingPriority: "core",
+      surahReferences: ["1:1", "1:2"],
+      audioKey: "word_allah",
+    };
+    expect(word.frequency).toBe("high");
+  });
+
+  it("accepts a RuleEntity", () => {
+    const rule: RuleEntity = {
+      id: "rule:shaddah",
+      displayArabic: "\u0651",
+      capabilities: ["hearable", "readable", "fixable"],
+      ruleType: "mark",
+      description: "Doubles the consonant it sits on",
+      appliesTo: ["combo", "word"],
+      exampleEntityIds: ["word:allah"],
+    };
+    expect(rule.ruleType).toBe("mark");
+  });
+
+  it("accepts an AssessmentProfile", () => {
+    const profile: AssessmentProfile = {
+      id: "phase-1-checkpoint",
+      description: "Confirm decoding of tiny unseen items",
+      targetCapabilities: ["readable", "hearable"],
+      exerciseWeights: [
+        { type: "read", weight: 0.5 },
+        { type: "choose", weight: 0.2 },
+        { type: "hear", weight: 0.2 },
+        { type: "build", weight: 0.1 },
+      ],
+      minimumReadPercent: 0.4,
+      scaffoldingLevel: "none",
+      diagnosticTags: ["vowel-confusion", "letter-confusion", "audio-mapping"],
+      bucketThresholds: { "vowel-confusion": 0.6, "letter-confusion": 0.6 },
+    };
+    expect(profile.scaffoldingLevel).toBe("none");
   });
 });
