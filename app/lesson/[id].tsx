@@ -10,6 +10,9 @@ import { ScreenErrorFallback } from "../../src/components/feedback/ScreenErrorFa
 import { typography, spacing } from "../../src/design/tokens";
 import { Button } from "../../src/design/components";
 import { LESSONS } from "../../src/data/lessons";
+import { useCurriculumVersion } from "../../src/providers/CurriculumProvider";
+import { LESSONS_V2 } from "../../src/data/curriculum-v2";
+import { LessonRunnerV2 } from "../../src/components/exercises-v2/LessonRunnerV2";
 import { LessonIntro } from "../../src/components/LessonIntro";
 import { LessonQuiz } from "../../src/components/LessonQuiz";
 import { LessonHybrid } from "../../src/components/LessonHybrid";
@@ -57,6 +60,8 @@ export default function LessonScreen() {
   const { id } = useLocalSearchParams();
   const lessonId = parseInt(id as string, 10);
   const lesson = LESSONS.find((l: any) => l.id === lessonId);
+
+  const curriculumVersion = useCurriculumVersion();
 
   const db = useDatabase();
   const progress = useProgress();
@@ -293,6 +298,35 @@ export default function LessonScreen() {
     setSkipIntro(true); // skip intro on retry per spec
     setStage("quiz");
   }, []);
+
+  // ── V2 path ──
+
+  if (curriculumVersion === "v2") {
+    const lessonV2 = LESSONS_V2.find((l) => l.id === lessonId);
+    if (!lessonV2) {
+      return (
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+          <View style={styles.errorContent}>
+            <Text style={[typography.heading2, { color: colors.text, textAlign: "center" }]}>
+              Lesson not found
+            </Text>
+            <Text
+              style={[
+                typography.body,
+                { color: colors.textMuted, textAlign: "center", marginTop: spacing.md },
+              ]}
+            >
+              Could not find v2 lesson with ID {id}.
+            </Text>
+            <View style={{ marginTop: spacing.xl }}>
+              <Button title="Go Home" onPress={() => router.replace("/(tabs)")} />
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    return <LessonRunnerV2 lesson={lessonV2} onExit={() => router.replace("/(tabs)")} />;
+  }
 
   // ── Error: lesson not found ──
 
