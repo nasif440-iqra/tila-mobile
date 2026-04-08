@@ -12,6 +12,20 @@
 
 **Depends on:** Plan 1 (complete) — types in `src/types/`, registries in `src/data/curriculum-v2/`, entity registry in `src/engine/v2/entityRegistry.ts`.
 
+**Branch:** `feature/curriculum-v2` worktree. Do NOT run this plan against `main`. Plan 1 must be landed first.
+
+---
+
+## Guards
+
+1. **This plan runs on the `feature/curriculum-v2` branch only**, where Plan 1's 63 tests are already passing. If the branch is missing `src/types/curriculum-v2.ts`, `src/types/entity.ts`, `src/types/exercise.ts`, `src/data/curriculum-v2/`, or `src/engine/v2/entityRegistry.ts`, stop and land Plan 1 first.
+
+2. **All v2 types are parallel to v1.** Do not modify `src/types/lesson.ts`, `src/types/question.ts`, `src/types/quiz.ts`, or any other v1 type file. V2 types live in `src/types/curriculum-v2.ts`, `src/types/entity.ts`, `src/types/exercise.ts`, `src/types/assessment.ts`.
+
+3. **All v2 engine code is parallel to v1.** Do not modify `src/engine/mastery.ts`, `src/engine/progress.ts`, `src/engine/selectors.ts`, `src/engine/questions/shared.ts`, or any other v1 engine file. V2 engine code lives under `src/engine/v2/` and `src/engine/questions-v2/`. The v1 files are useful as reference for patterns (shuffle, distractor selection) but must not be imported or mutated.
+
+4. **V1 hooks are untouched.** `useLessonQuiz.ts`, `useLessonHybrid.ts`, `useProgress.ts`, `useMastery.ts` are frozen. V2 hooks come in Plan 4.
+
 ---
 
 ## File Structure
