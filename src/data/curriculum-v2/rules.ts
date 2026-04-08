@@ -32,6 +32,17 @@ export const RULES: RuleEntity[] = [
     prerequisiteRuleIds: ["rule:fatha"],
   },
   {
+    id: "rule:damma",
+    displayArabic: "\u064F",
+    transliteration: "damma",
+    capabilities: ["tappable", "hearable", "readable", "fixable"],
+    ruleType: "mark",
+    description: "A small curl above a letter — produces a short 'u' sound",
+    appliesTo: ["combo", "chunk", "word"],
+    exampleEntityIds: ["combo:ba-damma", "combo:ma-damma"],
+    prerequisiteRuleIds: ["rule:fatha", "rule:kasra"],
+  },
+  {
     id: "rule:sukun",
     displayArabic: "\u0652",
     transliteration: "sukun",
