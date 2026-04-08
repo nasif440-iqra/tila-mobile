@@ -53,6 +53,20 @@ function makeLesson(phase: number, lessonId?: number): LessonV2 {
   };
 }
 
+// Extra combo entities so pickDistractors (which filters to same prefix as target)
+// can find 3 distractors when target is a combo entity.
+const comboLA: ComboEntity = {
+  id: "combo:la-fatha", displayArabic: "\u0644\u064E", transliteration: "la",
+  capabilities: ["hearable", "readable", "buildable", "tappable"],
+};
+const comboNA: ComboEntity = {
+  id: "combo:na-fatha", displayArabic: "\u0646\u064E", transliteration: "na",
+  capabilities: ["hearable", "readable", "buildable", "tappable"],
+};
+
+// allEntities expanded with extra combos for distractor pool coverage
+const allEntitiesExpanded = [...allEntities, comboLA, comboNA];
+
 function makeInput(phase: number, overrides: Partial<GeneratorInput> = {}, lessonId?: number): GeneratorInput {
   return {
     step: {
@@ -62,9 +76,11 @@ function makeInput(phase: number, overrides: Partial<GeneratorInput> = {}, lesso
       source: { from: "teach" },
     },
     lesson: makeLesson(phase, lessonId),
-    teachEntities: [letterA, letterB, letterM, letterN],
-    reviewEntities: [comboBA, comboMA],
-    allUnlockedEntities: allEntities,
+    // teachEntities must be combo entities when step.target is "combo" —
+    // filterToStepTarget filters by prefix so letter entities are excluded.
+    teachEntities: [comboBA, comboMA, comboLA],
+    reviewEntities: [letterA, letterB, letterM, letterN],
+    allUnlockedEntities: allEntitiesExpanded,
     masterySnapshot: {
       entityStates: new Map(),
       confusionPairs: new Map(),

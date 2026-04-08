@@ -33,7 +33,18 @@ const chunkBM: ChunkEntity = {
   breakdownType: "teaching", syllableCount: 2, audioKey: "chunk_ba-ma",
 };
 
-const allEntities = [letterA, letterB, letterM, comboBA, comboMA, chunkBM];
+// Extra letter entities so pickDistractors (which filters to same prefix as target)
+// can find 3 distractors when target is a letter entity.
+const letterTA: LetterEntity = {
+  id: "letter:3", displayArabic: "\u062A", transliteration: "t",
+  capabilities: ["tappable", "hearable", "readable"],
+};
+const letterTHA: LetterEntity = {
+  id: "letter:4", displayArabic: "\u062B", transliteration: "th",
+  capabilities: ["tappable", "hearable", "readable"],
+};
+
+const allEntities = [letterA, letterB, letterM, letterTA, letterTHA, comboBA, comboMA, chunkBM];
 
 const baselesson: LessonV2 = {
   id: 1,

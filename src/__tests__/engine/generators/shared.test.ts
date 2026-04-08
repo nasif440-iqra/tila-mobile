@@ -100,7 +100,18 @@ describe("pickEntitiesBySource", () => {
 });
 
 describe("pickDistractors", () => {
-  const pool = [letterA, letterB, letterM, comboBA, comboMA];
+  // Pool must contain enough same-prefix entities as the target for distractor count.
+  // pickDistractors now filters to same entity-type prefix before picking.
+  const letterC: LetterEntity = {
+    id: "letter:3", displayArabic: "\u062A", transliteration: "t",
+    capabilities: ["tappable", "hearable", "readable"],
+  };
+  const letterD: LetterEntity = {
+    id: "letter:4", displayArabic: "\u062B", transliteration: "th",
+    capabilities: ["tappable", "hearable", "readable"],
+  };
+  // 5 letter entities so we have 4 candidates after excluding the target
+  const pool = [letterA, letterB, letterM, letterC, letterD];
   const emptyConfusions = new Map<string, string[]>();
 
   it("returns requested number of distractors", () => {
