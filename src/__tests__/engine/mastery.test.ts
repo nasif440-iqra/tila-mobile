@@ -232,6 +232,14 @@ describe("applyDemotion", () => {
     const result = applyDemotion(m);
     expect(result.intervalDays).toBe(1);
   });
+
+  it("retained entity stays retained after applyDemotion — interval-only demotion", () => {
+    // DESIGN DECISION: demotion never regresses state, only shortens interval
+    const m = { ...masteryInState("retained"), intervalDays: 14 };
+    const result = applyDemotion(m);
+    expect(result.state).toBe("retained");
+    expect(result.intervalDays).toBeLessThan(14);
+  });
 });
 
 // ── recentAttempts cap ──

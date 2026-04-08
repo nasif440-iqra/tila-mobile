@@ -205,4 +205,12 @@ describe("stepBackInterval", () => {
     // INTERVAL_LEVELS = [0, 1, 3, 7, 14, 30]: index 5 → two back → index 3 = 7
     expect(updated.intervalDays).toBe(7);
   });
+
+  it("retained entity stays retained after stepBackInterval — interval-only demotion", () => {
+    // DESIGN DECISION: demotion never regresses state, only shortens interval
+    const m = makeEntity("letter:1", "retained", 14, `${TODAY}T00:00:00.000Z`);
+    const updated = stepBackInterval(m);
+    expect(updated.state).toBe("retained");
+    expect(updated.intervalDays).toBeLessThan(14);
+  });
 });

@@ -1,11 +1,9 @@
 import type { ExerciseStep } from "@/src/types/curriculum-v2";
+import { INTERVAL_LEVELS, hasTwoConsecutiveFailures, stepBack } from "./intervals";
 
 // ── Constants ──
 
 const RECENT_ATTEMPTS_MAX = 8;
-
-/** Spaced repetition interval levels in days */
-const INTERVAL_LEVELS = [0, 1, 3, 7, 14, 30] as const;
 
 // ── Types ──
 
@@ -35,20 +33,6 @@ export interface EntityMastery {
 }
 
 // ── Helpers ──
-
-function stepIntervalBack(intervalDays: number, steps: number): number {
-  const idx = INTERVAL_LEVELS.indexOf(intervalDays as (typeof INTERVAL_LEVELS)[number]);
-  if (idx <= 0) return 1;
-  const newIdx = Math.max(0, idx - steps);
-  return INTERVAL_LEVELS[newIdx];
-}
-
-function hasTwoConsecutiveFailures(attempts: RecentAttempt[]): boolean {
-  if (attempts.length < 2) return false;
-  const last = attempts[attempts.length - 1];
-  const secondLast = attempts[attempts.length - 2];
-  return !last.correct && !secondLast.correct;
-}
 
 function computeNextReview(intervalDays: number, from?: string): string {
   const base = from ? new Date(from) : new Date();
@@ -163,6 +147,14 @@ export function recordAttempt(
   return { ...updated, state: newState };
 }
 
+// DESIGN DECISION: Demotion is interval-only, NOT state demotion.
+// A "retained" entity that fails a review does NOT drop to "accurate".
+// It stays retained but gets a shorter review interval (reviewed sooner).
+// The state ladder (not_started → introduced → unstable → accurate → retained)
+// only moves forward through promotion. Demotion shortens the review schedule
+// to force more practice, but does not erase proven competence.
+// This matches the spec Section 4.3: "Demotion on failure" refers to interval
+// changes, not state regression. The state transitions are explicitly one-directional.
 /**
  * Apply demotion on review failure.
  * - introduced/unstable: reset intervalDays to 1
@@ -190,11 +182,11 @@ export function applyDemotion(mastery: EntityMastery): EntityMastery {
       break;
 
     case "accurate":
-      intervalDays = stepIntervalBack(mastery.intervalDays, 1);
+      intervalDays = stepBack(mastery.intervalDays, 1);
       break;
 
     case "retained":
-      intervalDays = stepIntervalBack(mastery.intervalDays, 2);
+      intervalDays = stepBack(mastery.intervalDays, 2);
       break;
   }
 

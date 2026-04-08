@@ -1,8 +1,5 @@
 import type { EntityMastery } from "./mastery";
-
-// ── Constants ──
-
-const INTERVAL_LEVELS = [0, 1, 3, 7, 14, 30] as const;
+import { INTERVAL_LEVELS, hasTwoConsecutiveFailures } from "./intervals";
 
 // ── Helpers ──
 
@@ -25,13 +22,6 @@ function stateWeakness(state: EntityMastery["state"]): number {
     case "retained":   return 3;
     default:           return 4;
   }
-}
-
-function hasTwoConsecutiveFailures(attempts: EntityMastery["recentAttempts"]): boolean {
-  if (attempts.length < 2) return false;
-  const last = attempts[attempts.length - 1];
-  const secondLast = attempts[attempts.length - 2];
-  return !last.correct && !secondLast.correct;
 }
 
 // ── Public API ──
@@ -104,6 +94,14 @@ export function advanceInterval(mastery: EntityMastery): EntityMastery {
   };
 }
 
+// DESIGN DECISION: Demotion is interval-only, NOT state demotion.
+// A "retained" entity that fails a review does NOT drop to "accurate".
+// It stays retained but gets a shorter review interval (reviewed sooner).
+// The state ladder (not_started → introduced → unstable → accurate → retained)
+// only moves forward through promotion. Demotion shortens the review schedule
+// to force more practice, but does not erase proven competence.
+// This matches the spec Section 4.3: "Demotion on failure" refers to interval
+// changes, not state regression. The state transitions are explicitly one-directional.
 /**
  * Step back interval after incorrect review answer (graduated reset).
  * - introduced/unstable: reset to 1

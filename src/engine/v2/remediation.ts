@@ -73,7 +73,7 @@ export function generateRemediation(
       // Direct entity ID match (bucket IS the entity ID)
       if (m.entityId === bucket) return true;
     }
-    return true; // If no prefix mapping, include all weak-state entities
+    return false; // Only include entities that match a weak bucket by prefix
   });
 
   // 3. Sort by state weakness (weakest first), then by confusion pairs desc

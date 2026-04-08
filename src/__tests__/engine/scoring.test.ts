@@ -280,4 +280,61 @@ describe("evaluateLesson", () => {
     const result = evaluateLesson(42, [], BASE_POLICY);
     expect(result.lessonId).toBe(42);
   });
+
+  // ── bucket-weakness failure reasons ──
+
+  it("detects bucket weakness when score is below threshold", () => {
+    const items = [
+      makeItem(true, false, "vowels"),
+      makeItem(false, false, "vowels"),
+      makeItem(false, false, "vowels"),  // 1/3 = 33%
+    ];
+    const result = evaluateLesson(1, items, { passThreshold: 0.0 }, { vowels: 0.7 });
+    const bw = result.failureReasons.find((r) => r.reason === "bucket-weakness");
+    expect(bw).toBeDefined();
+    if (bw?.reason === "bucket-weakness") {
+      expect(bw.bucket).toBe("vowels");
+      expect(bw.score).toBeCloseTo(1 / 3);
+    }
+  });
+
+  it("does NOT trigger bucket weakness when score is at or above threshold", () => {
+    const items = [
+      makeItem(true, false, "vowels"),
+      makeItem(true, false, "vowels"),
+      makeItem(false, false, "vowels"),  // 2/3 ≈ 67%
+    ];
+    const result = evaluateLesson(1, items, { passThreshold: 0.0 }, { vowels: 0.6 });
+    const bw = result.failureReasons.find((r) => r.reason === "bucket-weakness");
+    expect(bw).toBeUndefined();
+  });
+
+  it("collects multiple bucket weaknesses when several buckets are below threshold", () => {
+    const items = [
+      makeItem(false, false, "vowels"),   // 0/1 = 0%
+      makeItem(false, false, "letters"),  // 0/1 = 0%
+    ];
+    const result = evaluateLesson(
+      1,
+      items,
+      { passThreshold: 0.0 },
+      { vowels: 0.5, letters: 0.5 },
+    );
+    const bws = result.failureReasons.filter((r) => r.reason === "bucket-weakness");
+    expect(bws).toHaveLength(2);
+    const buckets = bws.map((r) => (r.reason === "bucket-weakness" ? r.bucket : ""));
+    expect(buckets).toContain("vowels");
+    expect(buckets).toContain("letters");
+  });
+
+  it("does not add bucket-weakness when no bucketThresholds provided", () => {
+    const items = [
+      makeItem(false, false, "vowels"),
+      makeItem(false, false, "vowels"),
+    ];
+    // No bucketThresholds argument
+    const result = evaluateLesson(1, items, { passThreshold: 0.0 });
+    const bw = result.failureReasons.find((r) => r.reason === "bucket-weakness");
+    expect(bw).toBeUndefined();
+  });
 });

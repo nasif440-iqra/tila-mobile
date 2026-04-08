@@ -29,6 +29,7 @@ export function evaluateLesson(
   lessonId: number,
   scoredItems: ScoredItem[],
   policy: MasteryPolicy,
+  bucketThresholds?: Record<string, number>,
 ): LessonResult {
   // ── Overall counts ──
   const totalItems = scoredItems.length;
@@ -90,6 +91,17 @@ export function evaluateLesson(
         actual: decodePercent,
         required: policy.decodeMinPercent,
       });
+    }
+  }
+
+  if (bucketThresholds !== undefined) {
+    for (const [bucket, threshold] of Object.entries(bucketThresholds)) {
+      const bucketScore = bucketScores[bucket];
+      if (!bucketScore || bucketScore.total === 0) continue;
+      const score = bucketScore.correct / bucketScore.total;
+      if (score < threshold) {
+        failureReasons.push({ reason: "bucket-weakness", bucket, score });
+      }
     }
   }
 

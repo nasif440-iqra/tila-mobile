@@ -121,4 +121,20 @@ describe("generateRemediation", () => {
     expect(plan.entityIds[0]).toBe("letter:2"); // introduced first
     expect(plan.entityIds[1]).toBe("letter:3"); // unstable second
   });
+
+  it("does NOT include all entities when bucket name has no prefix match — fallback is false", () => {
+    // Bucket "audio-mapping" does not match any entityId prefix like "audio-mapping:"
+    // so no entities should be included despite them being in weak states
+    const failedResult = makeLessonResult({
+      "audio-mapping": { correct: 0, total: 5 }, // very weak bucket
+    });
+    const allMastery: EntityMastery[] = [
+      makeEntity("letter:1", "unstable"),
+      makeEntity("letter:2", "introduced"),
+      makeEntity("combo:ba-fatha", "accurate"),
+    ];
+    const plan = generateRemediation(failedResult, allMastery, 10);
+    // None of the entity IDs start with "audio-mapping:" so none should be included
+    expect(plan.entityIds).toHaveLength(0);
+  });
 });
