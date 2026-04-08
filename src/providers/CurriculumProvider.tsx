@@ -17,13 +17,15 @@ interface Props {
 
 export function CurriculumProvider({ children, fallback }: Props) {
   const db = useDatabase();
-  const [version, setVersion] = useState<CurriculumVersion | null>(null);
+  // Default to v1 immediately so the app tree never unmounts.
+  // The async resolution updates this in-place if v2 is configured.
+  const [version, setVersion] = useState<CurriculumVersion>("v1");
 
   useEffect(() => {
     let cancelled = false;
 
     async function init() {
-      // Always run v2 migration (idempotent — creates tables + column if missing)
+      // Run v2 migration (idempotent — creates tables + column if missing)
       await migrateV2(db);
 
       // Resolve which curriculum to use
@@ -33,13 +35,11 @@ export function CurriculumProvider({ children, fallback }: Props) {
 
     init().catch((err) => {
       console.error("CurriculumProvider init failed:", err);
-      if (!cancelled) setVersion("v1"); // safe fallback
+      // Already defaulted to v1, no action needed
     });
 
     return () => { cancelled = true; };
   }, [db]);
-
-  if (version === null) return <>{fallback ?? null}</>;
 
   return (
     <CurriculumContext.Provider value={version}>
