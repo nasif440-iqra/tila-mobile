@@ -552,6 +552,113 @@ RuleEntity, OrthographyEntity, AssessmentProfile."
 
 ---
 
+### Task 2.5: Exercise Types
+
+**Files:**
+- Create: `src/types/exercise.ts`
+
+The spec's file structure lists `src/types/exercise.ts` for `ExerciseItem`, `CorrectAnswer`, `FixSegment`, and `ExercisePrompt`. These are needed by Plan 2 generators but should exist now so the type system is complete.
+
+- [ ] **Step 1: Write exercise type definitions**
+
+```typescript
+// src/types/exercise.ts
+
+import type { ExerciseStep, RenderProfile } from "./curriculum-v2";
+import type { EntityCapability } from "./entity";
+
+// ── Correct Answer (typed per exercise kind) ──
+
+export type CorrectAnswer =
+  | { kind: "single"; value: string }
+  | { kind: "sequence"; values: string[] }
+  | { kind: "fix"; location: string; replacement: string };
+
+// ── Fix Segment (generator-provided hit zones) ──
+
+export interface FixSegment {
+  segmentId: string;
+  displayText: string;
+  isErrorLocation: boolean;
+  boundingGroup: "letter" | "mark" | "join" | "word";
+}
+
+// ── Exercise Prompt (render-ready display payload) ──
+
+export interface ExercisePrompt {
+  text?: string;                     // instructional text ("Which letter is this?")
+  arabicDisplay: string;             // primary Arabic content
+  arabicDisplayAlt?: string;         // alternate rendering (Uthmani)
+  audioKey?: string;                 // audio for the prompt
+  hintText?: string;                 // scaffolding hint (only at full/light)
+}
+
+// ── Exercise Option ──
+
+export interface ExerciseOption {
+  id: string;
+  displayArabic?: string;
+  displayText?: string;              // for transliteration options (Phase 1 only)
+  audioKey?: string;                 // for audio options
+  isCorrect: boolean;
+}
+
+// ── Build Tile ──
+
+export interface BuildTile {
+  id: string;
+  displayArabic: string;
+  entityId: string;                  // which entity this tile represents
+  isDistractor: boolean;
+}
+
+// ── Exercise Item (one screen the learner interacts with) ──
+
+export interface ExerciseItem {
+  type: ExerciseStep["type"];
+  prompt: ExercisePrompt;
+  options?: ExerciseOption[];
+  tiles?: BuildTile[];
+  correctAnswer: CorrectAnswer;
+  targetEntityId: string;
+  isDecodeItem: boolean;
+  diagnosticTags?: string[];
+  answerMode: "transliteration" | "audio" | "arabic" | "build" | "fix-locate";
+  preloadHint?: { audioKeys: string[]; entityIds: string[] };
+  fixSegments?: FixSegment[];
+  generatedBy?: ExerciseStep["type"];
+  assessmentBucket?: string;
+}
+
+// ── Scored Item ──
+
+export interface ScoredItem {
+  item: ExerciseItem;
+  correct: boolean;
+  responseTimeMs: number;
+  generatedBy: ExerciseStep["type"];
+  assessmentBucket?: string;
+  answerMode: string;
+}
+```
+
+- [ ] **Step 2: Run typecheck**
+
+Run: `npm run typecheck`
+Expected: No errors
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add src/types/exercise.ts
+git commit -m "feat(v2): add exercise types — ExerciseItem, CorrectAnswer, FixSegment, ScoredItem
+
+Render-ready types for Plan 2 generators. Includes typed CorrectAnswer union,
+generator-provided FixSegment hit zones, and ScoredItem for scoring layer."
+```
+
+---
+
 ### Task 3: Content Registries — Vertical Slice Data
 
 **Files:**
@@ -668,14 +775,14 @@ export const CHUNKS: ChunkEntity[] = [
     audioKey: "chunk_la-ma",
   },
   {
-    id: "chunk:na-ma",
-    displayArabic: "\u0646\u064E\u0645\u064E",
-    transliteration: "nama",
+    id: "chunk:ba-la",
+    displayArabic: "\u0628\u064E\u0644\u064E",
+    transliteration: "bala",
     capabilities: ["hearable", "readable", "buildable"],
-    teachingBreakdownIds: ["combo:na-fatha", "combo:ma-fatha"],
+    teachingBreakdownIds: ["combo:ba-fatha", "combo:la-fatha"],
     breakdownType: "teaching",
     syllableCount: 2,
-    audioKey: "chunk_na-ma",
+    audioKey: "chunk_ba-la",
   },
 ];
 ```
@@ -990,7 +1097,7 @@ export const LESSONS_V2: LessonV2[] = [
     module: "1.1",
     title: "First Decoding Sprint",
     description: "No new symbols \u2014 decode short CV chunks using known letters only",
-    teachEntityIds: ["chunk:ba-ma", "chunk:la-ma", "chunk:na-ma"],
+    teachEntityIds: ["chunk:ba-ma", "chunk:la-ma", "chunk:ba-la"],
     reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha"],
     exercisePlan: [
       { type: "hear", count: 2, target: "chunk", source: { from: "teach" }, direction: "audio-to-script" },
@@ -1224,13 +1331,13 @@ Expected: FAIL — cannot find module
 
 ```typescript
 // src/engine/v2/entityRegistry.ts
-import type { EntityBase, EntityCapability } from "@/src/types/entity";
+import type { AnyEntity, EntityBase, EntityCapability } from "@/src/types/entity";
 import { ARABIC_LETTERS } from "@/src/data/letters";
 import { CHUNKS, RULES, PATTERNS, WORDS, ORTHOGRAPHY } from "@/src/data/curriculum-v2";
 
-// ── Letter → EntityBase adapter ──
+// ── Letter → AnyEntity adapter ──
 
-function letterToEntity(letter: typeof ARABIC_LETTERS[number]): EntityBase {
+function letterToEntity(letter: typeof ARABIC_LETTERS[number]): AnyEntity {
   return {
     id: `letter:${letter.id}`,
     displayArabic: letter.letter,
@@ -1239,9 +1346,10 @@ function letterToEntity(letter: typeof ARABIC_LETTERS[number]): EntityBase {
   };
 }
 
-// ── Combo → EntityBase adapter ──
+// ── Combo → AnyEntity adapter ──
 // Combos are derived from letters + harakat at resolution time.
-// Format: "combo:{letterName}-{harakatName}" e.g. "combo:ba-fatha"
+// Format: "combo:{slug}-{harakatName}" e.g. "combo:ba-fatha"
+// Slug mapping is stable and independent of ARABIC_LETTERS.name casing.
 
 const HARAKAT_MAP: Record<string, { mark: string; sound: string }> = {
   fatha: { mark: "\u064E", sound: "a" },
@@ -1249,18 +1357,30 @@ const HARAKAT_MAP: Record<string, { mark: string; sound: string }> = {
   damma: { mark: "\u064F", sound: "u" },
 };
 
-function resolveCombo(id: string): EntityBase | undefined {
-  // combo:ba-fatha → letterName=ba, harakatName=fatha
+// Stable slug → letter ID mapping. Slug is the combo key prefix.
+// Keyed by lowercase slug used in combo IDs, NOT by ARABIC_LETTERS.name.
+const COMBO_SLUG_TO_LETTER_ID: Record<string, number> = {
+  alif: 1, ba: 2, ta: 3, tha: 4, jeem: 5, haa: 6, khaa: 7,
+  daal: 8, dhaal: 9, ra: 10, zay: 11, seen: 12, sheen: 13,
+  saad: 14, daad: 15, taa: 16, dhaa: 17, ain: 18, ghain: 19,
+  fa: 20, qaf: 21, kaf: 22, la: 23, ma: 24, noon: 25,
+  ha: 26, waw: 27, ya: 28,
+  // Aliases for common short forms used in combo IDs
+  lam: 23, meem: 24, nun: 25,
+};
+
+function resolveCombo(id: string): AnyEntity | undefined {
   const comboKey = id.replace("combo:", "");
   const lastDash = comboKey.lastIndexOf("-");
   if (lastDash === -1) return undefined;
 
-  const letterName = comboKey.substring(0, lastDash);
+  const slug = comboKey.substring(0, lastDash);
   const harakatName = comboKey.substring(lastDash + 1);
 
-  const letter = ARABIC_LETTERS.find(
-    (l) => l.name.toLowerCase() === letterName.toLowerCase()
-  );
+  const letterId = COMBO_SLUG_TO_LETTER_ID[slug];
+  const letter = letterId != null
+    ? ARABIC_LETTERS.find((l) => l.id === letterId)
+    : undefined;
   const harakat = HARAKAT_MAP[harakatName];
 
   if (!letter || !harakat) return undefined;
@@ -1275,10 +1395,10 @@ function resolveCombo(id: string): EntityBase | undefined {
 
 // ── Registry lookup tables (built lazily) ──
 
-let letterMap: Map<string, EntityBase> | null = null;
-let registryMap: Map<string, EntityBase> | null = null;
+let letterMap: Map<string, AnyEntity> | null = null;
+let registryMap: Map<string, AnyEntity> | null = null;
 
-function getLetterMap(): Map<string, EntityBase> {
+function getLetterMap(): Map<string, AnyEntity> {
   if (!letterMap) {
     letterMap = new Map();
     for (const letter of ARABIC_LETTERS) {
@@ -1289,7 +1409,7 @@ function getLetterMap(): Map<string, EntityBase> {
   return letterMap;
 }
 
-function getRegistryMap(): Map<string, EntityBase> {
+function getRegistryMap(): Map<string, AnyEntity> {
   if (!registryMap) {
     registryMap = new Map();
     for (const entity of [...CHUNKS, ...RULES, ...PATTERNS, ...WORDS, ...ORTHOGRAPHY]) {
@@ -1300,8 +1420,9 @@ function getRegistryMap(): Map<string, EntityBase> {
 }
 
 // ── Public API ──
+// Returns AnyEntity so callers get subtype fields (audioKey, teachingBreakdownIds, etc.)
 
-export async function resolveEntity(id: string): Promise<EntityBase | undefined> {
+export async function resolveEntity(id: string): Promise<AnyEntity | undefined> {
   if (id.startsWith("letter:")) {
     return getLetterMap().get(id);
   }
@@ -1313,8 +1434,8 @@ export async function resolveEntity(id: string): Promise<EntityBase | undefined>
   return getRegistryMap().get(id);
 }
 
-export async function resolveAll(ids: string[]): Promise<EntityBase[]> {
-  const results: EntityBase[] = [];
+export async function resolveAll(ids: string[]): Promise<AnyEntity[]> {
+  const results: AnyEntity[] = [];
   for (const id of ids) {
     const entity = await resolveEntity(id);
     if (entity) results.push(entity);
@@ -1322,11 +1443,12 @@ export async function resolveAll(ids: string[]): Promise<EntityBase[]> {
   return results;
 }
 
-export function hasCapability(entity: EntityBase, cap: EntityCapability): boolean {
+// Sync: operates on already-resolved entities
+export function hasCapability(entity: AnyEntity, cap: EntityCapability): boolean {
   return entity.capabilities.includes(cap);
 }
 
-export function filterByCapability(entities: EntityBase[], cap: EntityCapability): EntityBase[] {
+export function filterByCapability(entities: AnyEntity[], cap: EntityCapability): AnyEntity[] {
   return entities.filter((e) => e.capabilities.includes(cap));
 }
 ```
@@ -1448,6 +1570,54 @@ describe("validation", () => {
       expect(result.valid).toBe(false);
       expect(result.errors.some((e) => e.includes("letter:999"))).toBe(true);
     });
+
+    // Rule 2: target/entity compatibility
+    it("fails when step target has no compatible entities", async () => {
+      const bad: LessonV2 = {
+        ...LESSONS_V2[0],
+        teachEntityIds: ["rule:fatha"],  // rule is not tappable as "letter"
+        exercisePlan: [
+          { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
+        ],
+        masteryPolicy: { passThreshold: 0.85 },
+      };
+      const result = await validateLesson(bad);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("target") && e.includes("compatible"))).toBe(true);
+    });
+
+    // Rule 7: renderOverride complexity
+    it("fails when step renderOverride is less complex than lesson renderProfile", async () => {
+      const bad: LessonV2 = {
+        ...LESSONS_V2[0],
+        renderProfile: "quran-script",
+        exercisePlan: [
+          { type: "read", count: 3, target: "combo", source: { from: "teach" }, connected: false, renderOverride: "connected" },
+        ],
+        masteryPolicy: { passThreshold: 0.85 },
+      };
+      const result = await validateLesson(bad);
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("renderOverride") || e.includes("render"))).toBe(true);
+    });
+
+    // Rule 9: no transliteration past Phase 2
+    it("fails when read step in Phase 3+ would allow transliteration", async () => {
+      const bad: LessonV2 = {
+        ...LESSONS_V2[0],
+        phase: 3,
+        exercisePlan: [
+          { type: "read", count: 3, target: "combo", source: { from: "teach" }, connected: false },
+        ],
+        masteryPolicy: { passThreshold: 0.85 },
+        tags: ["answerMode:transliteration"],  // hypothetical — validation checks phase
+      };
+      const result = await validateLesson(bad);
+      // Phase 3+ read steps should be flagged if they could produce transliteration
+      // The validator checks phase number against read steps
+      expect(result.valid).toBe(false);
+      expect(result.errors.some((e) => e.includes("transliteration") || e.includes("Phase"))).toBe(true);
+    });
   });
 
   describe("validateAllLessons", () => {
@@ -1472,6 +1642,7 @@ Expected: FAIL — cannot find module
 ```typescript
 // src/engine/v2/validation.ts
 import type { LessonV2, ExerciseStep } from "@/src/types/curriculum-v2";
+import type { EntityCapability } from "@/src/types/entity";
 import { resolveEntity } from "./entityRegistry";
 import { ASSESSMENT_PROFILES } from "@/src/data/curriculum-v2/assessmentProfiles";
 
@@ -1546,6 +1717,22 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
     }
   }
 
+  // Rule 7: renderOverride cannot be less complex than lesson renderProfile
+  const RENDER_COMPLEXITY: Record<string, number> = {
+    isolated: 0, connected: 1, "quran-script": 2, mushaf: 3,
+  };
+  const lessonComplexity = RENDER_COMPLEXITY[lesson.renderProfile ?? "isolated"] ?? 0;
+  for (const step of lesson.exercisePlan) {
+    if (step.type === "read" && step.renderOverride) {
+      const stepComplexity = RENDER_COMPLEXITY[step.renderOverride] ?? 0;
+      if (stepComplexity < lessonComplexity) {
+        errors.push(
+          `Lesson ${lesson.id}: read step renderOverride "${step.renderOverride}" is less complex than lesson renderProfile "${lesson.renderProfile}"`
+        );
+      }
+    }
+  }
+
   // Rule 8: exit-block — lessons with decodePassRequired must end with decode steps
   if (lesson.masteryPolicy.decodePassRequired) {
     const plan = lesson.exercisePlan;
@@ -1554,6 +1741,43 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
       errors.push(
         `Lesson ${lesson.id}: decodePassRequired set but exercisePlan does not end with decode steps (exit-block violated)`
       );
+    }
+  }
+
+  // Rule 9: no transliteration answer mode past Phase 2
+  if (lesson.phase > 2) {
+    const hasReadSteps = lesson.exercisePlan.some((s) => s.type === "read");
+    const hasTransliterationTag = lesson.tags?.some((t) => t.includes("transliteration"));
+    if (hasReadSteps && hasTransliterationTag) {
+      errors.push(
+        `Lesson ${lesson.id}: Phase ${lesson.phase} read steps cannot use transliteration answer mode`
+      );
+    }
+  }
+
+  // Rule 2: step targets must have compatible entities in scope
+  for (const step of lesson.exercisePlan) {
+    const targetToCapability: Record<string, EntityCapability> = {
+      letter: "tappable", form: "tappable", mark: "tappable",
+      combo: "readable", chunk: "readable", word: "readable",
+      phrase: "readable", verse: "readable",
+    };
+    const requiredCap = targetToCapability[step.target];
+    if (requiredCap && step.source.from === "teach") {
+      // Check that at least one teach entity has the required capability
+      let hasCompatible = false;
+      for (const id of lesson.teachEntityIds) {
+        const entity = await resolveEntity(id);
+        if (entity && entity.capabilities.includes(requiredCap)) {
+          hasCompatible = true;
+          break;
+        }
+      }
+      if (!hasCompatible) {
+        errors.push(
+          `Lesson ${lesson.id}: step target "${step.target}" has no compatible entities in teachEntityIds`
+        );
+      }
     }
   }
 
@@ -1766,16 +1990,19 @@ account switching. Fully isolated from v1 tables."
 
 ## Plan 1 Complete — Summary
 
+**Gate:** Plan 1 validates the vertical-slice dataset (6 sample lessons) and proves the type system, registries, entity resolution, and validation rules work. It does NOT validate all 62 lessons — that is Plan 5's gate after full content population.
+
 | Task | What it produces | Test count |
 |------|-----------------|------------|
 | 1 | `LessonV2`, `ExerciseStep`, `PhaseV2` types | 5 |
 | 2 | Entity types + `AssessmentProfile` | 4 |
+| 2.5 | Exercise types (`ExerciseItem`, `CorrectAnswer`, `FixSegment`, `ScoredItem`) | 0 (type-only) |
 | 3 | Content registries (chunks, patterns, rules, assessment profiles) | 8 |
 | 4 | Vertical-slice lesson data (6 lessons) + phase definitions | 10 |
-| 5 | Entity registry (resolve, capabilities) | 9 |
-| 6 | Build-time validation (9 rules) | 8 |
+| 5 | Entity registry (resolve, capabilities) — returns `AnyEntity` | 9 |
+| 6 | Build-time validation (all 9 spec rules) | 11 |
 | 7 | V2 database tables + migration | 7 |
-| **Total** | | **~51 tests** |
+| **Total** | | **~54 tests** |
 
 ## Remaining Plans
 
