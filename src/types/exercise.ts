@@ -1,5 +1,5 @@
-import type { ExerciseStep, RenderProfile } from "./curriculum-v2";
-import type { EntityCapability } from "./entity";
+import type { ExerciseSource, ExerciseStep, LessonV2, RenderProfile } from "./curriculum-v2";
+import type { AnyEntity, EntityCapability } from "./entity";
 
 // ── Correct Answer (typed per exercise kind) ──
 
@@ -73,4 +73,27 @@ export interface ScoredItem {
   generatedBy: ExerciseStep["type"];
   assessmentBucket?: string;
   answerMode: string;
+}
+
+// ── Generator Input ──
+
+export interface EntityMasteryState {
+  state: "not_started" | "introduced" | "unstable" | "accurate" | "retained";
+  correctCount: number;
+  attemptCount: number;
+}
+
+export interface MasterySnapshot {
+  entityStates: Map<string, EntityMasteryState>;
+  confusionPairs: Map<string, string[]>;
+}
+
+export interface GeneratorInput {
+  step: ExerciseStep;
+  lesson: LessonV2;
+  teachEntities: AnyEntity[];
+  reviewEntities: AnyEntity[];
+  allUnlockedEntities: AnyEntity[];
+  masterySnapshot: MasterySnapshot;
+  renderProfile: RenderProfile;
 }
