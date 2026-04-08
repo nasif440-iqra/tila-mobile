@@ -25,6 +25,7 @@ const HARAKAT_MAP: Record<string, { mark: string; sound: string }> = {
   fatha: { mark: "\u064E", sound: "a" },
   kasra: { mark: "\u0650", sound: "i" },
   damma: { mark: "\u064F", sound: "u" },
+  sukun: { mark: "\u0652", sound: "" },
 };
 
 // Stable slug → letter ID mapping. Keyed by lowercase slug used in combo IDs.

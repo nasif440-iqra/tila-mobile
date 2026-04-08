@@ -31,4 +31,15 @@ export const RULES: RuleEntity[] = [
     exampleEntityIds: ["combo:ba-kasra", "combo:ma-kasra"],
     prerequisiteRuleIds: ["rule:fatha"],
   },
+  {
+    id: "rule:sukun",
+    displayArabic: "\u0652",
+    transliteration: "sukun",
+    capabilities: ["tappable", "hearable", "readable", "fixable"],
+    ruleType: "mark",
+    description: "A small circle above a letter — the consonant stops with no vowel sound",
+    appliesTo: ["combo", "chunk", "word"],
+    exampleEntityIds: ["combo:seen-sukun", "combo:noon-sukun", "combo:ma-sukun"],
+    prerequisiteRuleIds: ["rule:fatha", "rule:kasra"],
+  },
 ];

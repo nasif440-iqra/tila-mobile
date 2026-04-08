@@ -120,4 +120,28 @@ export const LESSONS_V2: LessonV2[] = [
     masteryPolicy: { passThreshold: 0.9, decodePassRequired: 2, decodeMinPercent: 0.8 },
     renderProfile: "isolated",
   },
+
+  // ── Phase 2: Three Short Vowels and Early Connected Forms ──
+
+  {
+    id: 17, phase: 2, module: "2.3",
+    title: "Sukun Arrives",
+    description: "Introduce consonant stopping so the learner can read more Quran-like chunks",
+    teachEntityIds: ["rule:sukun", "combo:seen-sukun", "combo:noon-sukun", "combo:ma-sukun", "chunk:bas", "chunk:min", "chunk:lam"],
+    reviewEntityIds: ["combo:ba-fatha", "combo:ma-kasra", "combo:la-fatha", "combo:seen-fatha", "combo:noon-fatha"],
+    exercisePlan: [
+      // Hear the difference: sukun stops the sound
+      { type: "hear", count: 2, target: "combo", source: { from: "teach" }, direction: "audio-to-script" },
+      // Discriminate sukun vs voweled combos
+      { type: "choose", count: 3, target: "combo", source: { from: "mixed", mix: { teach: 2, review: 1 } }, distractorStrategy: "vowel" },
+      // Build CVC chunks with sukun
+      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+      // Fix: spot wrong mark (sukun vs fatha/kasra/damma)
+      { type: "fix", count: 2, target: "vowel", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
+      // Decode chunks — exit block (decodePassRequired: 2)
+      { type: "read", count: 3, target: "chunk", source: { from: "teach" }, connected: false },
+    ],
+    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "isolated",
+  },
 ];
