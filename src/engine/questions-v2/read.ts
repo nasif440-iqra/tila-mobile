@@ -1,0 +1,148 @@
+import type { GeneratorInput, ExerciseItem, ExerciseOption } from "@/src/types/exercise";
+import {
+  pickEntitiesBySource,
+  pickDistractors,
+  shuffle,
+  filterToCapability,
+  deriveAudioKey,
+} from "./shared";
+
+// ── Read Generator — Real decoding exercises ──
+
+export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
+  const { step, teachEntities, reviewEntities, allUnlockedEntities, masterySnapshot, lesson, renderProfile } = input;
+
+  if (step.type !== "read") return [];
+
+  // 1. Pick source entities, filter to readable
+  const sourceEntities = pickEntitiesBySource(
+    step.source,
+    teachEntities,
+    reviewEntities,
+    allUnlockedEntities,
+  );
+
+  const capable = filterToCapability(sourceEntities, "readable");
+  if (capable.length === 0) return [];
+
+  // 2. Determine answerMode based on lesson phase
+  //    Phase 1: transliteration
+  //    Phase 2+: audio
+  let answerMode: ExerciseItem["answerMode"] =
+    lesson.phase === 1 ? "transliteration" : "audio";
+
+  // 3. ANTI-TRANSLITERATION GUARD: Phase 3+ NEVER emits transliteration
+  //    This is the generator-level layer of the three-layer guard.
+  if (lesson.phase > 2) {
+    answerMode = "audio";
+  }
+
+  // 4. Apply renderOverride from step if set, else use lesson renderProfile
+  const resolvedRenderProfile = step.renderOverride ?? renderProfile;
+
+  const items: ExerciseItem[] = [];
+
+  for (let i = 0; i < step.count; i++) {
+    const target = capable[i % capable.length];
+
+    const distractors = pickDistractors(
+      target,
+      allUnlockedEntities,
+      3,
+      masterySnapshot.confusionPairs,
+    );
+
+    // 5. Build options based on answerMode
+    const options: ExerciseOption[] = shuffle([
+      buildOption(target.id, target.transliteration, deriveAudioKey(target), target.displayArabic, answerMode, true),
+      ...distractors.map((d) =>
+        buildOption(d.id, d.transliteration, deriveAudioKey(d), d.displayArabic, answerMode, false)
+      ),
+    ]);
+
+    // Ensure exactly 4 options (1 correct + 3 distractors); pad if pool was small
+    const finalOptions = padOptions(options, target.id, capable, answerMode);
+
+    items.push({
+      type: "read",
+      prompt: {
+        text: "What does this say?",
+        arabicDisplay: target.displayArabic,
+        // Pass connected rendering hint through metadata
+        ...(step.connected === true ? { hintText: resolvedRenderProfile } : {}),
+      },
+      options: finalOptions,
+      correctAnswer: { kind: "single", value: target.id },
+      targetEntityId: target.id,
+      isDecodeItem: true,
+      answerMode,
+    });
+  }
+
+  return items;
+}
+
+// ── Option Builder ──
+
+function buildOption(
+  id: string,
+  transliteration: string | undefined,
+  audioKey: string,
+  displayArabic: string,
+  answerMode: ExerciseItem["answerMode"],
+  isCorrect: boolean,
+): ExerciseOption {
+  if (answerMode === "transliteration") {
+    return {
+      id,
+      displayText: transliteration ?? id,
+      isCorrect,
+    };
+  }
+
+  if (answerMode === "audio") {
+    return {
+      id,
+      audioKey,
+      isCorrect,
+    };
+  }
+
+  // arabic mode fallback
+  return {
+    id,
+    displayArabic,
+    isCorrect,
+  };
+}
+
+// ── Option Padding (ensure exactly 4 options) ──
+// If the distractor pool was too small, fill with synthetic fallbacks.
+
+function padOptions(
+  options: ExerciseOption[],
+  correctId: string,
+  pool: ReturnType<typeof filterToCapability>,
+  answerMode: ExerciseItem["answerMode"],
+): ExerciseOption[] {
+  if (options.length >= 4) return options.slice(0, 4);
+
+  const result = [...options];
+  const usedIds = new Set(result.map((o) => o.id));
+
+  for (const entity of pool) {
+    if (result.length >= 4) break;
+    if (usedIds.has(entity.id)) continue;
+    result.push(buildOption(
+      entity.id,
+      entity.transliteration,
+      deriveAudioKey(entity),
+      entity.displayArabic,
+      answerMode,
+      entity.id === correctId,
+    ));
+    usedIds.add(entity.id);
+  }
+
+  return result;
+}
