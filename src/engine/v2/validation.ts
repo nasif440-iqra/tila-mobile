@@ -43,11 +43,21 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
   const errors: string[] = [];
 
   // Rule 1: All entity IDs in teachEntityIds and reviewEntityIds must resolve
+  const SUPPORTED_HARAKAT = ["fatha", "kasra", "damma", "sukun"];
   const allEntityIds = [...lesson.teachEntityIds, ...lesson.reviewEntityIds];
   for (const id of allEntityIds) {
     const entity = await resolveEntity(id);
     if (!entity) {
-      errors.push(`Entity "${id}" in lesson ${lesson.id} does not resolve to any registry`);
+      // Give a specific error for combo IDs with unsupported harakat
+      const comboMatch = id.match(/^combo:([^-]+)-(.+)$/);
+      if (comboMatch && !SUPPORTED_HARAKAT.includes(comboMatch[2])) {
+        errors.push(
+          `Lesson ${lesson.id}: combo "${id}" uses harakat "${comboMatch[2]}" which is not supported by combo resolution. ` +
+          `Supported: ${SUPPORTED_HARAKAT.join(", ")}. Add it to HARAKAT_MAP in entityRegistry.ts if this is a new harakat.`
+        );
+      } else {
+        errors.push(`Entity "${id}" in lesson ${lesson.id} does not resolve to any registry`);
+      }
     }
   }
 
