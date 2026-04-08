@@ -18,9 +18,7 @@ describe("resolveCurriculumVersion", () => {
     delete process.env.EXPO_PUBLIC_CURRICULUM_OVERRIDE;
   });
 
-  // TODO: re-enable once PRODUCTION_DEFAULT is reverted back to "v1"
-  // PRODUCTION_DEFAULT is temporarily hardcoded to "v2" for vertical-slice testing.
-  it.skip("returns v1 as production default", async () => {
+  it("returns v1 as production default", async () => {
     const db = mockDb(null);
     const result = await resolveCurriculumVersion(db);
     expect(result).toBe("v1");
@@ -32,15 +30,13 @@ describe("resolveCurriculumVersion", () => {
     expect(result).toBe("v2");
   });
 
-  // TODO: re-enable once PRODUCTION_DEFAULT is reverted back to "v1"
-  it.skip("returns v1 when profile has null curriculum_version", async () => {
+  it("returns v1 when profile has null curriculum_version", async () => {
     const db = mockDb({ curriculum_version: null });
     const result = await resolveCurriculumVersion(db);
     expect(result).toBe("v1");
   });
 
-  // TODO: re-enable once PRODUCTION_DEFAULT is reverted back to "v1"
-  it.skip("returns v1 when column query throws (column doesn't exist)", async () => {
+  it("returns v1 when column query throws (column doesn't exist)", async () => {
     const db = mockDb(null, true);
     const result = await resolveCurriculumVersion(db);
     expect(result).toBe("v1");

@@ -66,6 +66,8 @@ function resolveCombo(id: string): ComboEntity | undefined {
     displayArabic: `${letter.letter}${harakat.mark}`,
     transliteration: `${letter.transliteration}${harakat.sound}`,
     capabilities: ["hearable", "readable", "buildable", "tappable"],
+    teachingBreakdownIds: [`letter:${letter.id}`],
+    breakdownType: "teaching" as const,
   };
 }
 

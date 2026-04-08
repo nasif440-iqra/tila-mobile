@@ -2,9 +2,7 @@ import type { SQLiteDatabase } from "expo-sqlite";
 
 export type CurriculumVersion = "v1" | "v2";
 
-// TEMPORARY: hardcoded to v2 for vertical-slice testing
-// TODO: revert to "v1" before merging to main
-const PRODUCTION_DEFAULT: CurriculumVersion = "v2";
+const PRODUCTION_DEFAULT: CurriculumVersion = "v1";
 
 let resolvedVersion: CurriculumVersion | null = null;
 
@@ -13,9 +11,10 @@ export async function resolveCurriculumVersion(
 ): Promise<CurriculumVersion> {
   if (resolvedVersion) return resolvedVersion;
 
-  // 1. Dev override via env
-  if (typeof __DEV__ !== "undefined" && __DEV__ && process.env.EXPO_PUBLIC_CURRICULUM_OVERRIDE) {
-    resolvedVersion = process.env.EXPO_PUBLIC_CURRICULUM_OVERRIDE as CurriculumVersion;
+  // 1. Dev override via env (Expo inlines EXPO_PUBLIC_* at build time)
+  const envOverride = process.env.EXPO_PUBLIC_CURRICULUM_OVERRIDE;
+  if (envOverride === "v1" || envOverride === "v2") {
+    resolvedVersion = envOverride;
     return resolvedVersion;
   }
 

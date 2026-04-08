@@ -17,16 +17,23 @@ interface Props {
 
 export function CurriculumProvider({ children, fallback }: Props) {
   const db = useDatabase();
+  const [version, setVersion] = useState<CurriculumVersion>("v1");
 
-  // TEMPORARY FORCE V2: bypass all resolution logic for testing
-  // TODO: revert to async resolution before merging
-  const version: CurriculumVersion = "v2";
-
-  // Still run migration in background so v2 tables exist
   useEffect(() => {
-    migrateV2(db).catch((err) => {
-      console.error("[CurriculumProvider] migrateV2 failed:", err);
-    });
+    let cancelled = false;
+
+    async function init() {
+      // Run migration so v2 tables exist regardless of version
+      await migrateV2(db).catch((err) => {
+        console.error("[CurriculumProvider] migrateV2 failed:", err);
+      });
+
+      const resolved = await resolveCurriculumVersion(db);
+      if (!cancelled) setVersion(resolved);
+    }
+
+    init();
+    return () => { cancelled = true; };
   }, [db]);
 
   return (

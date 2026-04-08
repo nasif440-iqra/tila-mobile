@@ -120,6 +120,7 @@ function PhaseHeader({
   expanded,
   onToggle,
   colors,
+  phaseTitleOverride,
 }: {
   phase: number;
   completedCount: number;
@@ -127,9 +128,10 @@ function PhaseHeader({
   expanded: boolean;
   onToggle: () => void;
   colors: any;
+  phaseTitleOverride?: string;
 }) {
   const allDone = completedCount === totalCount;
-  const label = PHASE_LABELS[phase] ?? `Phase ${phase}`;
+  const label = phaseTitleOverride ?? PHASE_LABELS[phase] ?? `Phase ${phase}`;
 
   return (
     <Pressable onPress={onToggle} style={[styles.phaseHeader, { borderColor: colors.border }]}>
@@ -171,6 +173,8 @@ export interface LessonGridProps {
   onLockedLessonPress?: (lessonId: number) => void;
   /** Override the lesson list (e.g. LESSONS_V2). Defaults to the v1 LESSONS array. */
   lessons?: Array<{ id: number; phase: number; title: string; teachIds?: number[] }>;
+  /** Override phase title labels (e.g. from PHASES_V2). Maps phase number → title string. */
+  phaseTitles?: Record<number, string>;
 }
 
 // ── Component ──
@@ -184,6 +188,7 @@ export default function LessonGrid({
   subscriptionLoading,
   onLockedLessonPress,
   lessons: lessonsProp,
+  phaseTitles,
 }: LessonGridProps) {
   const lessonList = lessonsProp ?? LESSONS;
   const colors = useColors();
@@ -273,6 +278,7 @@ export default function LessonGrid({
               expanded={expanded}
               onToggle={() => togglePhase(group.phase)}
               colors={colors}
+              phaseTitleOverride={phaseTitles?.[group.phase]}
             />
 
             {expanded && (

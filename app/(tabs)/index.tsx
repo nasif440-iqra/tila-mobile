@@ -29,7 +29,7 @@ import { loadPremiumLessonGrants } from "../../src/engine/progress";
 import { useDatabase } from "../../src/db/provider";
 import { LESSONS } from "../../src/data/lessons";
 import { useCurriculumVersion } from "../../src/providers/CurriculumProvider";
-import { LESSONS_V2 } from "../../src/data/curriculum-v2";
+import { LESSONS_V2, PHASES_V2 } from "../../src/data/curriculum-v2";
 import { useProgressV2 } from "../../src/hooks/useProgressV2";
 import {
   getCurrentLesson,
@@ -625,6 +625,9 @@ export default function HomeScreen() {
           isPremiumActive={isPremiumActive}
           subscriptionLoading={subLoading}
           lessons={curriculumVersion === "v2" ? LESSONS_V2 : undefined}
+          phaseTitles={curriculumVersion === "v2"
+            ? Object.fromEntries(PHASES_V2.map(p => [p.phase, p.title]))
+            : undefined}
           onLockedLessonPress={async (lessonId: number) => {
             const outcome = await showPaywall("lesson_locked");
             if (outcome.accessGranted) {
