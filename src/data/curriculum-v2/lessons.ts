@@ -193,6 +193,47 @@ export const LESSONS_V2: LessonV2[] = [
   },
 
   {
+    id: 13, phase: 2, module: "2.2",
+    title: "Known Letters in Connected Form",
+    description: "Show the already-known letters joined in real connected strings",
+    teachEntityIds: ["chunk:bml", "chunk:nml", "chunk:slm"],
+    reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "combo:noon-fatha", "combo:seen-fatha"],
+    exercisePlan: [
+      // Tap: recognize familiar letters in their connected shapes
+      { type: "tap", count: 2, target: "letter", source: { from: "review" } },
+      // Choose: pick the correct connected chunk from similar options
+      { type: "choose", count: 3, target: "chunk", source: { from: "teach" } },
+      // Build: assemble connected chunks from combo tiles
+      { type: "build", count: 3, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+      // Read: decode connected strings — the real shift
+      { type: "read", count: 4, target: "chunk", source: { from: "teach" }, connected: true },
+    ],
+    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "connected",
+  },
+  {
+    id: 14, phase: 2, module: "2.2",
+    title: "Alif Breaks the Chain",
+    description: "Teach non-connecting behavior through reading, not typography trivia",
+    teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:dal"],
+    reviewEntityIds: ["chunk:bml", "chunk:slm", "combo:alif-fatha", "combo:daal-fatha"],
+    exercisePlan: [
+      // Tap: recognize alif and daal as non-connectors
+      { type: "tap", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1", "letter:8"] } },
+      // Choose: pick chunks where the chain breaks correctly
+      { type: "choose", count: 2, target: "chunk", source: { from: "teach" } },
+      // Build: assemble chunks with chain-breakers — learner sees the gap
+      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+      // Fix: spot incorrect joins (chain should break but doesn't, or vice versa)
+      { type: "fix", count: 2, target: "join", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
+      // Read: decode connected strings with chain-breakers — exit block
+      { type: "read", count: 4, target: "chunk", source: { from: "mixed", mix: { teach: 2, review: 2 } }, connected: true },
+    ],
+    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "connected",
+  },
+
+  {
     id: 17, phase: 2, module: "2.3",
     title: "Sukun Arrives",
     description: "Introduce consonant stopping so the learner can read more Quran-like chunks",
