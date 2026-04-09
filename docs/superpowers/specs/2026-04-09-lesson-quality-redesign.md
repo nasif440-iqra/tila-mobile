@@ -104,7 +104,7 @@ The existing lesson validator (`src/data/curriculum-v2/` validation) must be ext
   - Authored `read` items in `exitSequence` must have `isDecodeItem: true`
   - `present` items must have `isDecodeItem: false` and are excluded from scoring/mastery
   - `exitSequence` items must not include `present` type (exit is always scored)
-  - Every authored item must have a stable unique ID (e.g., `"L2-present-ba"`, `"L13-tap-find-ba"`). Every option and tile within authored items must also have a stable unique key. No duplicate IDs within a lesson. This prevents the duplicate-key runtime bugs seen in earlier v2 device testing.
+  - Every authored item must have a stable unique ID (e.g., `"L2-present-ba"`, `"L13-tap-find-ba"`). Every option and tile within authored items must also have a stable unique key. No duplicate IDs within a lesson. IDs use the `L{N}-` prefix convention (e.g., `L2-tap-opt-ba`), which makes them globally unique across lessons by construction — but the validator only enforces uniqueness within a single lesson. This prevents the duplicate-key runtime bugs seen in earlier v2 device testing.
 
 ### Runner sequencing update
 
