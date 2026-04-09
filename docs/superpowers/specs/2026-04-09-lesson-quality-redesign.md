@@ -58,6 +58,70 @@ Teaching sequence items that are `present` type do not count toward scoring and 
 
 Generators must respect the learner's known inventory at the time of each lesson. No unseen letters or combos as distractors. The pool is derived from the union of the lesson's `teachEntityIds` + `reviewEntityIds` + all entities from completed prior lessons.
 
+## Schema Delta from Current V2 Spec
+
+The current approved v2 schema (`src/types/curriculum-v2.ts`) has: `teachEntityIds`, `reviewEntityIds`, an ordered `exercisePlan`, `masteryPolicy`, and `renderProfile`. This redesign adds new fields and types.
+
+### LessonV2 additions
+
+```typescript
+interface LessonV2 {
+  // ... all existing fields unchanged
+  teachingSequence?: AuthoredExerciseItem[];  // hand-authored intro/teaching items
+  exitSequence?: AuthoredExerciseItem[];      // hand-authored decode gate items
+}
+```
+
+- `teachingSequence` plays before `exercisePlan`. Contains `present`, `tap`, `hear`, `choose`, `read` items — all hand-authored.
+- `exitSequence` plays after `exercisePlan`. Contains hand-authored decode gate items. Must be the final items in the lesson — nothing follows them.
+- Both are optional. Checkpoint lessons may have only `exitSequence` (decode gate) with no `teachingSequence`. Sprint lessons may have both.
+
+### ExerciseStep addition: `present`
+
+```typescript
+| {
+    type: "present";
+    count: 1;  // always 1 — each present is a unique authored screen
+    target: "letter" | "combo" | "chunk" | "rule" | "mark";
+    source: ExerciseSource;
+  }
+```
+
+The `present` type is used exclusively in `teachingSequence`. It is non-interactive (no scoring, no mastery effect). The generator dispatcher passes it through unchanged — the `PresentExercise` UI component handles rendering.
+
+### AuthoredExerciseItem type
+
+```typescript
+interface AuthoredExerciseItem extends ExerciseItem {
+  // Same shape as ExerciseItem, but all fields are explicitly provided.
+  // No generator inference. No randomization.
+  // The dispatcher concatenates these directly into the item array.
+}
+```
+
+### Validator responsibilities
+
+The existing lesson validator (`src/data/curriculum-v2/` validation) must be extended:
+
+- **Authored item validation:**
+  - Required display fields present (`prompt.arabicDisplay` non-empty for non-present items)
+  - No empty `options` arrays on quiz items (tap, hear, choose, read)
+  - No raw entity IDs on learner-visible surfaces (`displayArabic` and `displayText` must be human-readable)
+  - `correctAnswer` matches an actual option ID or tile entity ID
+  - Authored `read` items in `exitSequence` must have `isDecodeItem: true`
+  - `present` items must have `isDecodeItem: false` and are excluded from scoring/mastery
+  - `exitSequence` items must not include `present` type (exit is always scored)
+
+### Runner sequencing update
+
+`LessonRunnerV2` and `useLessonQuizV2` must concatenate items as:
+
+```
+[...teachingSequence, ...generatedFromExercisePlan, ...exitSequence]
+```
+
+Progress bar and item counter include all items. Scoring excludes `present` items.
+
 ## Template Definitions
 
 ### Template 0A: Orientation (L1 only)
@@ -197,9 +261,11 @@ The bridge reveal is the most important screen in the entire curriculum. It must
 
 | Phase | Type | Source | Details |
 |-------|------|--------|---------|
-| Confidence opener | authored item | authored | 1 easy but honest decode/discrimination item. Not a fake freebie. |
-| Diagnostic core | check | generated | Assessment-profile-driven. Only exercise types that diagnose the target skill. |
-| Decode gate | read | authored | 2-3 fixed-order read items. No randomness. Directly aligned to the phase gate. Subtle transition ("Final reading check"). |
+| Confidence opener | authored item | authored | 1 easy but honest decode/discrimination item. Not a fake freebie. Lives in `teachingSequence`. |
+| Diagnostic core | check | generated | A single `check` step in `exercisePlan`. Assessment-profile-driven. Only exercise types that diagnose the target skill. The check generator handles the mixed-type allocation internally — do not split it into separate generated steps. |
+| Decode gate | read | authored | 2-3 fixed-order read items in `exitSequence`. No randomness. Directly aligned to the phase gate. Subtle transition ("Final reading check"). |
+
+The confidence opener and decode gate are authored items outside the check generator. They live in `teachingSequence` and `exitSequence` respectively. The diagnostic core remains a single generated `check` step — do not embed opener/gate logic inside the check generator itself.
 
 L7: mostly choose/read/hear in diagnostic. Decode gate: one combo, one chunk.
 L18: read/choose/hear/fix in diagnostic. Decode gate: one connected chunk, one chain-break, one sukun chunk.
@@ -219,7 +285,7 @@ Pass threshold: 90%. Decode-specific minimums enforced.
 ## Constraints
 
 - No changes to business logic (engine algorithms, mastery, scoring, analytics)
-- Existing generated exercise types (tap, hear, choose, build, read, fix, check) keep working as-is
+- Existing exercise components (tap, hear, choose, build, read, fix, check) remain in use, but generators may be refined to respect known-inventory constraints and hybrid lesson sequencing
 - Hand-authored items use the same ExerciseItem type that generators produce
 - Present items are not scored and do not affect mastery
 - All distractors come from known inventory only — no unseen entities
