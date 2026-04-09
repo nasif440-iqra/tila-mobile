@@ -1,0 +1,253 @@
+# Lesson Quality Redesign: Hybrid Teach/Practice Model
+
+**Date:** 2026-04-09
+**Status:** Approved (pending implementation plan)
+**Branch:** feature/curriculum-v2
+
+## Problem
+
+The first 18 lessons use fully generic exercise generators. Every exercise is a quiz — there's no teaching moment before testing. Distractors are random, prompts are generic, and the learner is tested on concepts before being properly introduced to them. The result: lessons feel like quizzes, not teaching.
+
+## Solution: Hybrid Model
+
+Hand-author the critical teaching moments. Keep generators for practice, review, and checkpoints.
+
+- **Teach items** = hand-authored: first exposure, contrast moments, first decode, first connected reading, chain-breaking, checkpoint-critical prep
+- **Practice items** = generated: repetition, review, lightweight drills, checkpoint pools, remediation
+
+Each lesson follows a progression: **introduce → contrast → guided practice → decode/practice**.
+
+## System Changes Required
+
+### 1. New `present` exercise type
+
+A non-interactive item that shows information. The learner taps Continue to proceed. No scoring.
+
+- Large Arabic display
+- One audio play (auto or tap-to-play)
+- One plain line of meaning/context
+- Continue button
+
+Requires: new `ExerciseStep` variant in the type union, a `PresentExercise` UI component, pass-through in the generator dispatcher.
+
+### 2. Hand-authored item format
+
+Lessons gain a `teachingSequence` array containing fully-specified `ExerciseItem` objects. These are hand-authored in the lesson data file and played exactly as written — no generation, no randomization.
+
+```typescript
+interface LessonV2 {
+  // ... existing fields
+  teachingSequence?: AuthoredExerciseItem[];  // hand-authored teaching moments
+  exitSequence?: AuthoredExerciseItem[];      // hand-authored decode gate items
+  exercisePlan: ExerciseStep[];               // generated practice items
+}
+```
+
+The `AuthoredExerciseItem` type mirrors `ExerciseItem` but all fields are required (no generator inference needed).
+
+### 3. Lesson runner sequencing
+
+The runner plays items in this order:
+1. `teachingSequence` (hand-authored intro/teaching)
+2. `exercisePlan` (generated practice)
+3. `exitSequence` (hand-authored decode gate)
+
+Teaching sequence items that are `present` type do not count toward scoring and do not affect mastery state. All other items — whether hand-authored or generated, whether in `teachingSequence`, `exercisePlan`, or `exitSequence` — count toward scoring and mastery. The scoring engine treats hand-authored quiz items identically to generated ones.
+
+### 4. Inventory-aware distractor pools
+
+Generators must respect the learner's known inventory at the time of each lesson. No unseen letters or combos as distractors. The pool is derived from the union of the lesson's `teachEntityIds` + `reviewEntityIds` + all entities from completed prior lessons.
+
+## Template Definitions
+
+### Template 0A: Orientation (L1 only)
+
+**Purpose:** Orient to Arabic script and de-risk the first experience.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Present letter 1 | present | authored | Show alif large + sound |
+| Present letter 2 | present | authored | Show ba large + sound |
+| Guided tap | tap | authored | "Find Ba" — 2 options (alif vs ba) |
+| Guided hear | hear | authored | Play ba sound, pick from alif/ba |
+
+No build, no choose, no read. 4-5 items max. Shortest lesson in the curriculum.
+
+### Template 1A: Early New-Letter (L2, L3, L4, L6)
+
+**Purpose:** Introduce a new letter and its fatha combo with strong scaffolding.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Present letter | present | authored | Show new letter large + sound |
+| Present combo | present | authored | Show letter+fatha combo + sound |
+| Guided tap | tap | authored | "Find [letter]" — 2 options, both from known inventory |
+| Guided hear | hear | authored | Play combo sound, pick from 2-3 known options |
+| Shape contrast | choose | generated | Shape-strategy distractors, pool limited to known inventory |
+| Build (optional) | build | generated | Only when enough known combos exist (L3+) |
+| Decode exit | read | authored | 2-3 tightly controlled items, explicit ramp |
+
+Early lessons: more protection, fewer items (7-9), smaller distractor pools.
+
+### Template 1B: Later New-Letter (L11, L12, L15)
+
+**Purpose:** Introduce a new letter when the learner has a larger known inventory.
+
+Same structure as 1A with these differences:
+- Guided tap uses 3 options (larger known pool)
+- Choose uses full known inventory for distractors
+- Build is standard (enough material exists)
+- Decode exit includes all three vowels on the new letter
+- 8-9 items total
+
+### Template 1B+4B: Later New-Letter with Chain-Break (L16 only)
+
+**Purpose:** Introduce daal as both a new letter and a chain-breaker.
+
+Same as 1B plus:
+- At least one hand-authored present or read item showing daal's non-connecting behavior in connected context
+- Decode exit renders in connected form
+- At least one contrast item comparing daal chain-break vs fully-connected chunk
+
+### Template 2A: Short-Vowel (L8, L9)
+
+**Purpose:** Introduce a new vowel mark on already-known letters. Core skill: hearing and distinguishing marks.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Present mark | present | authored | Show vowel mark large + sound + one-line meaning |
+| Present on known letter | present | authored | Show familiar letter + new mark + sound |
+| Minimal-pair contrast | choose | authored | Same letter, two vowels, 2 options. Audio plays. Core teaching moment. |
+| Wider discrimination | choose | generated | Vowel strategy, audio mode. 3-4 options across known vowels. |
+| Fix the vowel | fix | generated | Spot wrong harakat. Comes after contrast is established. |
+| Controlled decode exit | read | authored | 3 items: easy win, contrast item, mixed review. Hand-authored. |
+
+L8 (kasra): contrasts with fatha only (2 known vowels).
+L9 (damma): contrasts with fatha and kasra (3 known vowels).
+
+### Template 2B: Sukun (L17 only)
+
+**Purpose:** Teach consonant stopping — absence of vowel. Different cognitive task from adding a new vowel sound.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Present mark | present | authored | Show sukun. "This circle means stop. No vowel sound." |
+| Sound vs stop contrast | present | authored | Show سَ vs سْ — hear the difference: sound continues vs stops. |
+| Minimal-pair contrast | choose | authored | سَ vs سْ — "Which one stops?" Audio essential. |
+| CVC chunk introduction | present | authored | Show بَسْ — "Ba says 'ba', seen stops: 'bas'." |
+| Build CVC | build | generated | Assemble chunks (bas, min, lam) from combo tiles |
+| Fix | fix | generated | Sukun vs vowel confusion. 2 items. |
+| Decode exit (with connected bridge) | read | authored | 3 items. At least one renders in connected form to bridge toward L18. |
+
+### Template 3A: Decoding Sprint (L5 only)
+
+**Purpose:** No new concepts. Prove you can decode what you've learned.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Warm-up hear | hear | generated | 2 easy audio items from known combos |
+| Targeted contrast | choose | authored | 2-3 items targeting specific confusions (ba/meem/laam shapes in combo context) |
+| Build fluency | build | generated | Assemble known chunks from combo tiles |
+| Decode ramp | read | authored + generated | 1-2 hand-authored (set floor/ceiling) + generated middle. Explicit ramp: easy → medium → hard. |
+
+Should feel like a victory lap, not a surprise test. 8-10 items.
+
+### Template 3B: Contrast Drill (L10 only)
+
+**Purpose:** Vowel discrimination boot camp. No new concepts.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Warm-up hear | hear | generated | 2 audio items from review pool |
+| Targeted minimal pairs | choose | authored | 3-4 same-letter minimal-pair items. Audio mode. Core skill test. |
+| Fix (optional) | fix | generated | Only if it adds diagnostic signal |
+| Decode ramp | read | authored | 4-5 items. Explicit ramp. No build. |
+
+### Template 4A: First Connected Bridge (L13 only)
+
+**Purpose:** Bridge the cognitive shift from isolated symbols to connected Arabic script.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Bridge reveal 1 | present | authored | Show isolated بَ مَ لَ → connected بَمَلَ. "Same letters, same sounds, new shape." Highly visual, minimal text. |
+| Bridge reveal 2 | present | authored | Second example: نَ مَ لَ → نَمَلَ. Reinforces the pattern. |
+| Guided recognition | tap | authored | "Find Ba inside بَمَلَ" — 2 options. Extremely clear UI. |
+| Connected→isolated decomposition | choose | authored | "Which letters make up بَمَلَ?" — fully hand-authored, no generation. Core bridge work. |
+| Build connected | build | generated | Assemble connected chunks from combo tiles |
+| Decode connected | read | authored | 3-4 items. Connected rendering. Explicit ramp. |
+
+The bridge reveal is the most important screen in the entire curriculum. It must be highly visual and low-text: see it, hear it, compare it, continue.
+
+### Template 4B: Chain-Break (L14 only)
+
+**Purpose:** Teach that some letters (alif) don't connect forward, creating a visible gap.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Bridge reveal | present | authored | Show بَمَلَ (fully connected) next to بَابَ (broken chain). "Most letters hold hands. Alif lets go." |
+| Second bridge | present | authored | Show هَابَ — another chain-break. Different letters, same gap. |
+| Gap contrast | choose | authored | "Which word has a gap?" — بَابَ vs بَمَلَ. 2 options. |
+| Wider contrast | choose | authored | 3-4 options mixing chain-break and fully-connected chunks. |
+| Build | build | generated | Assemble chain-break chunks — learner sees the gap form. |
+| Decode connected | read | authored | 4-5 items. Connected rendering. Mix of chain-break and fully-connected. Heavier read block. |
+
+### Template 5: Checkpoint (L7, L18)
+
+**Purpose:** Pure assessment. No teaching. Gate progression to next phase.
+
+| Phase | Type | Source | Details |
+|-------|------|--------|---------|
+| Confidence opener | authored item | authored | 1 easy but honest decode/discrimination item. Not a fake freebie. |
+| Diagnostic core | check | generated | Assessment-profile-driven. Only exercise types that diagnose the target skill. |
+| Decode gate | read | authored | 2-3 fixed-order read items. No randomness. Directly aligned to the phase gate. Subtle transition ("Final reading check"). |
+
+L7: mostly choose/read/hear in diagnostic. Decode gate: one combo, one chunk.
+L18: read/choose/hear/fix in diagnostic. Decode gate: one connected chunk, one chain-break, one sukun chunk.
+
+Pass threshold: 90%. Decode-specific minimums enforced.
+
+## Implementation Order
+
+1. L1 (orientation — smallest, proves the `present` type works)
+2. L2 (first real teaching lesson — proves the hybrid model)
+3. L13 (connected bridge — hardest teaching moment)
+4. L14 (chain-break — validates 4B variant)
+5. L17 (sukun with connected bridge — validates 2B)
+6. L18 (checkpoint — validates exit gate pattern)
+7. Fill remaining: L3, L4, L5, L6, L7, L8, L9, L10, L11, L12, L15, L16
+
+## Constraints
+
+- No changes to business logic (engine algorithms, mastery, scoring, analytics)
+- Existing generated exercise types (tap, hear, choose, build, read, fix, check) keep working as-is
+- Hand-authored items use the same ExerciseItem type that generators produce
+- Present items are not scored and do not affect mastery
+- All distractors come from known inventory only — no unseen entities
+- Connected rendering uses existing Amiri font auto-joining (no new font work)
+- Audio assets: letters have bundled audio. Combos/chunks use derived audio keys. Missing audio falls back to Arabic display (existing behavior).
+
+## Item Count Summary
+
+| Lesson | Template | Hand-authored | Generated | Total |
+|--------|----------|:------------:|:---------:|:-----:|
+| L1 | 0A | 4 | 0 | 4-5 |
+| L2 | 1A | 6 | 3 | 8-9 |
+| L3 | 1A | 5 | 3-4 | 8-9 |
+| L4 | 1A | 4 | 4 | 8 |
+| L5 | 3A | 3 | 5-6 | 8-10 |
+| L6 | 1A | 4 | 4 | 8 |
+| L7 | 5 | 3 | 7-8 | 10 |
+| L8 | 2A | 5 | 5 | 10 |
+| L9 | 2A | 5 | 5 | 10 |
+| L10 | 3B | 4 | 4-5 | 8-10 |
+| L11 | 1B | 3 | 5-6 | 8-9 |
+| L12 | 1B | 3 | 5-6 | 8-9 |
+| L13 | 4A | 6 | 4-5 | 10-11 |
+| L14 | 4B | 6 | 5-6 | 11-12 |
+| L15 | 1B | 3 | 5-6 | 8-9 |
+| L16 | 1B+4B | 4 | 5-6 | 9-10 |
+| L17 | 2B | 6 | 4 | 10 |
+| L18 | 5 | 4 | 8-9 | 12 |
+| **Total** | | **~78** | **~90** | **~168** |
+
+~47% hand-authored, ~53% generated.
