@@ -6,14 +6,18 @@ import { ChooseExercise } from "./ChooseExercise";
 import { BuildExercise } from "./BuildExercise";
 import { ReadExercise } from "./ReadExercise";
 import { FixExercise } from "./FixExercise";
+import { PresentExercise } from "./PresentExercise";
 
 interface ExerciseRendererProps {
   item: ExerciseItem;
   onAnswer: (correct: boolean, answerId: string) => void;
+  onPresentContinue?: () => void;
 }
 
-export function ExerciseRenderer({ item, onAnswer }: ExerciseRendererProps) {
+export function ExerciseRenderer({ item, onAnswer, onPresentContinue }: ExerciseRendererProps) {
   switch (item.type) {
+    case "present":
+      return <PresentExercise item={item} onContinue={onPresentContinue ?? (() => {})} />;
     case "tap":
       return <TapExercise item={item} onAnswer={onAnswer} />;
     case "hear":

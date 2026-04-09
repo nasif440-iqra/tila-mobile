@@ -1,3 +1,5 @@
+import type { ExerciseItem } from "./exercise";
+
 // ── Exercise Source ──
 
 export type ExerciseSource =
@@ -88,6 +90,8 @@ export interface LessonV2 {
   renderProfile?: RenderProfile;
   hintRuleId?: string;
   tags?: string[];
+  teachingSequence?: ExerciseItem[];
+  exitSequence?: ExerciseItem[];
 }
 
 // ── Phase V2 ──

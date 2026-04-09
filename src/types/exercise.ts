@@ -49,7 +49,7 @@ export interface BuildTile {
 // ── Exercise Item ──
 
 export interface ExerciseItem {
-  type: ExerciseStep["type"];
+  type: ExerciseStep["type"] | "present";
   prompt: ExercisePrompt;
   options?: ExerciseOption[];
   tiles?: BuildTile[];
