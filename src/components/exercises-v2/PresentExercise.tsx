@@ -42,13 +42,6 @@ export function PresentExercise({ item, onContinue }: Props) {
     }
   }, [item.prompt.hintText]);
 
-  // Auto-play primary audio on mount
-  useEffect(() => {
-    if (primaryAudio?.type === "bundled" && primaryAudio.play) {
-      primaryAudio.play();
-    }
-  }, [primaryAudio]);
-
   const handlePlaySound = useCallback(async () => {
     if (primaryAudio?.type === "bundled" && primaryAudio.play) {
       await primaryAudio.play();
