@@ -29,7 +29,7 @@ const HARAKAT_MAP: Record<string, { mark: string; sound: string }> = {
 };
 
 // Stable slug → letter ID mapping. Keyed by lowercase slug used in combo IDs.
-const COMBO_SLUG_TO_LETTER_ID: Record<string, number> = {
+export const COMBO_SLUG_TO_LETTER_ID: Record<string, number> = {
   alif: 1, ba: 2, ta: 3, tha: 4, jeem: 5, haa: 6, khaa: 7,
   daal: 8, dhaal: 9, ra: 10, zay: 11, seen: 12, sheen: 13,
   saad: 14, daad: 15, taa: 16, dhaa: 17, ain: 18, ghain: 19,

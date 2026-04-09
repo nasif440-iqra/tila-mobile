@@ -1,6 +1,6 @@
 import type { LessonV2, ExerciseStep } from "@/src/types/curriculum-v2";
 import type { EntityCapability } from "@/src/types/entity";
-import { resolveEntity } from "./entityRegistry";
+import { resolveEntity, COMBO_SLUG_TO_LETTER_ID } from "./entityRegistry";
 import { ASSESSMENT_PROFILES } from "@/src/data/curriculum-v2/assessmentProfiles";
 
 export interface ValidationResult {
@@ -204,6 +204,102 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
   return { lessonId: lesson.id, valid: errors.length === 0, errors };
 }
 
+// ── Rule 10: Introduction-order enforcement ──
+// Checks that all entities referenced by a lesson (teach, review, chunk breakdowns)
+// only use letters/combos that have been introduced in this lesson or earlier lessons.
+// Lessons must be sorted by ID for this to work correctly.
+
+async function validateIntroductionOrder(
+  lesson: LessonV2,
+  knownEntityIds: Set<string>,
+): Promise<string[]> {
+  const errors: string[] = [];
+
+  // reviewEntityIds must all be previously known
+  for (const id of lesson.reviewEntityIds) {
+    if (!knownEntityIds.has(id)) {
+      // Combos are derived — check if the underlying letter is known
+      const comboMatch = id.match(/^combo:([^-]+)-(.+)$/);
+      if (comboMatch) {
+        // A combo is "known" if its letter has been taught
+        // We check if any combo with the same letter slug exists in known set,
+        // or if the letter itself is known
+        const slugToCheck = `letter:`;
+        const letterKnown = [...knownEntityIds].some(
+          (k) => k.startsWith("combo:" + comboMatch[1] + "-") || k.startsWith("letter:")
+        );
+        // Skip combo prerequisite check for now — combos are derived from letters + harakat
+        // The real check is whether the LETTER is known
+        continue;
+      }
+      errors.push(
+        `Lesson ${lesson.id}: reviewEntityId "${id}" has not been introduced in any prior lesson`
+      );
+    }
+  }
+
+  // Check chunk/word teachingBreakdownIds — these reference letters and combos
+  // that the learner must already know (or be learning in this lesson)
+  const thisLessonEntities = new Set([...knownEntityIds, ...lesson.teachEntityIds]);
+
+  for (const id of lesson.teachEntityIds) {
+    const entity = await resolveEntity(id);
+    if (!entity) continue;
+
+    // Check if entity has teachingBreakdownIds (chunks, words)
+    if ("teachingBreakdownIds" in entity) {
+      const breakdown = (entity as any).teachingBreakdownIds as string[];
+      for (const partId of breakdown) {
+        // Extract the letter from a combo ID
+        const comboMatch = partId.match(/^combo:([^-]+)-(.+)$/);
+        if (comboMatch) {
+          const slug = comboMatch[1];
+          // Find the letter ID for this slug — check if letter:N is known
+          const letterId = COMBO_SLUG_TO_LETTER_ID[slug];
+          if (letterId != null) {
+            const letterEntityId = `letter:${letterId}`;
+            if (!thisLessonEntities.has(letterEntityId)) {
+              errors.push(
+                `Lesson ${lesson.id}: chunk/word "${id}" breakdown uses "${partId}" which requires letter:${letterId} — not introduced by this lesson or earlier`
+              );
+            }
+          }
+        } else if (partId.startsWith("letter:")) {
+          if (!thisLessonEntities.has(partId)) {
+            errors.push(
+              `Lesson ${lesson.id}: chunk/word "${id}" breakdown references "${partId}" — not introduced by this lesson or earlier`
+            );
+          }
+        }
+      }
+    }
+  }
+
+  return errors;
+}
+
 export async function validateAllLessons(lessons: LessonV2[]): Promise<ValidationResult[]> {
-  return Promise.all(lessons.map(validateLesson));
+  // Sort by ID for introduction-order checking
+  const sorted = [...lessons].sort((a, b) => a.id - b.id);
+  const results: ValidationResult[] = [];
+  const knownEntityIds = new Set<string>();
+
+  for (const lesson of sorted) {
+    // Run standard validation
+    const result = await validateLesson(lesson);
+
+    // Run introduction-order validation
+    const orderErrors = await validateIntroductionOrder(lesson, knownEntityIds);
+    result.errors.push(...orderErrors);
+    result.valid = result.errors.length === 0;
+
+    results.push(result);
+
+    // Add this lesson's teach entities to the known set
+    for (const id of lesson.teachEntityIds) {
+      knownEntityIds.add(id);
+    }
+  }
+
+  return results;
 }

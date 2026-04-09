@@ -196,8 +196,8 @@ export const LESSONS_V2: LessonV2[] = [
     id: 13, phase: 2, module: "2.2",
     title: "Known Letters in Connected Form",
     description: "Show the already-known letters joined in real connected strings",
-    teachEntityIds: ["chunk:bml", "chunk:nml", "chunk:slm"],
-    reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "combo:noon-fatha", "combo:seen-fatha"],
+    teachEntityIds: ["chunk:bml", "chunk:nml", "chunk:yml"],
+    reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "combo:noon-fatha", "combo:ya-fatha"],
     exercisePlan: [
       // Tap: recognize familiar letters in their connected shapes
       { type: "tap", count: 2, target: "letter", source: { from: "review" } },
@@ -215,11 +215,11 @@ export const LESSONS_V2: LessonV2[] = [
     id: 14, phase: 2, module: "2.2",
     title: "Alif Breaks the Chain",
     description: "Teach non-connecting behavior through reading, not typography trivia",
-    teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:dal"],
-    reviewEntityIds: ["chunk:bml", "chunk:slm", "combo:alif-fatha", "combo:daal-fatha"],
+    teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:hab"],
+    reviewEntityIds: ["chunk:bml", "chunk:yml", "combo:alif-fatha", "combo:ha-fatha"],
     exercisePlan: [
-      // Tap: recognize alif and daal as non-connectors
-      { type: "tap", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1", "letter:8"] } },
+      // Tap: recognize alif as the non-connector the learner already knows
+      { type: "tap", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1", "letter:26"] } },
       // Choose: pick chunks where the chain breaks correctly
       { type: "choose", count: 2, target: "chunk", source: { from: "teach" } },
       // Build: assemble chunks with chain-breakers — learner sees the gap
