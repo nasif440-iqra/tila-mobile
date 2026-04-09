@@ -119,14 +119,22 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
     }
   }
 
-  // Rule 8: exit-block — lessons with decodePassRequired must end with decode steps
+  // Rule 8: exit-block — lessons with decodePassRequired must end with decode steps.
+  // If exitSequence exists with decode items, that satisfies the requirement
+  // (exitSequence plays after exercisePlan, so it IS the exit block).
   if (lesson.masteryPolicy.decodePassRequired !== undefined) {
-    const plan = lesson.exercisePlan;
-    const lastStep = plan[plan.length - 1];
-    if (lastStep && !isDecodeStep(lastStep)) {
-      errors.push(
-        `Lesson ${lesson.id}: decodePassRequired set but exercisePlan does not end with decode steps (exit-block violated)`
-      );
+    const exitHasDecode = (lesson.exitSequence ?? []).some(
+      (item) => item.type === "read" || item.type === "check",
+    );
+    if (!exitHasDecode) {
+      // Fall back to checking exercisePlan
+      const plan = lesson.exercisePlan;
+      const lastStep = plan[plan.length - 1];
+      if (!lastStep || !isDecodeStep(lastStep)) {
+        errors.push(
+          `Lesson ${lesson.id}: decodePassRequired set but neither exitSequence nor exercisePlan ends with decode steps (exit-block violated)`
+        );
+      }
     }
   }
 
