@@ -79,8 +79,11 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
   }
 
   // Rule 4: decodePassRequired cannot exceed total decode items
+  // Count decode items from both exercisePlan and exitSequence (authored decode gates)
   if (lesson.masteryPolicy.decodePassRequired !== undefined) {
-    const decodeCount = totalDecodeItems(lesson.exercisePlan);
+    const planDecodeCount = totalDecodeItems(lesson.exercisePlan);
+    const exitDecodeCount = (lesson.exitSequence ?? []).filter((item) => item.isDecodeItem).length;
+    const decodeCount = planDecodeCount + exitDecodeCount;
     if (lesson.masteryPolicy.decodePassRequired > decodeCount) {
       errors.push(
         `Lesson ${lesson.id}: decodePassRequired (${lesson.masteryPolicy.decodePassRequired}) exceeds total decode items (${decodeCount})`

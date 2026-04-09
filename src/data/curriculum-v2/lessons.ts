@@ -4,27 +4,169 @@ export const LESSONS_V2: LessonV2[] = [
   {
     id: 1, phase: 1, module: "1.1", moduleTitle: "First Real Decoding Wins",
     title: "Arabic Starts Here",
-    description: "Orient to right-to-left reading, shape change in words, and the idea that a letter plus a mark makes a sound",
-    teachEntityIds: ["letter:1", "letter:2", "rule:rtl-reading"],
+    description: "Orient to right-to-left reading and meet your first two letters",
+    teachEntityIds: ["letter:1", "letter:2"],
     reviewEntityIds: [],
-    exercisePlan: [
-      { type: "tap", count: 3, target: "letter", source: { from: "teach" } },
-      { type: "hear", count: 3, target: "letter", source: { from: "teach" }, direction: "audio-to-script" },
+    teachingSequence: [
+      // Present: Meet Alif
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0627",
+          text: "This is Alif \u2014 the first letter of Arabic",
+          audioKey: "letter_1",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Meet Ba
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628",
+          text: "This is Ba",
+          audioKey: "letter_2",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:2",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided tap: Find Ba
+      {
+        type: "tap",
+        prompt: {
+          arabicDisplay: "\u0628",
+          text: "Find Ba",
+        },
+        options: [
+          { id: "L1-tap-opt-alif", displayArabic: "\u0627", isCorrect: false },
+          { id: "L1-tap-opt-ba", displayArabic: "\u0628", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L1-tap-opt-ba" },
+        targetEntityId: "letter:2",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided hear: Listen for Ba
+      {
+        type: "hear",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "letter_2",
+          text: "Listen \u2014 which one is it?",
+        },
+        options: [
+          { id: "L1-hear-opt-alif", displayArabic: "\u0627", isCorrect: false },
+          { id: "L1-hear-opt-ba", displayArabic: "\u0628", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L1-hear-opt-ba" },
+        targetEntityId: "letter:2",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
     ],
-    masteryPolicy: { passThreshold: 0.85 },
+    exercisePlan: [],
+    masteryPolicy: { passThreshold: 0.5 },
     renderProfile: "isolated",
   },
   {
     id: 2, phase: 1, module: "1.1",
     title: "Meet Alif + Ba with Fatha",
-    description: "Learn \u0627 and \u0628 with fatha and read the first real syllable: \u0628\u064E",
+    description: "Learn \u0627 and \u0628 with fatha and read the first real syllable",
     teachEntityIds: ["letter:1", "letter:2", "combo:ba-fatha", "rule:fatha"],
     reviewEntityIds: [],
+    teachingSequence: [
+      // Present: Fatha mark
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u064E",
+          text: "This mark makes an \u2018a\u2019 sound",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "rule:fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Ba + Fatha combo
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628\u064E",
+          text: "Ba with fatha makes \u2018ba\u2019",
+          audioKey: "combo_ba-fatha",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided tap: Find Ba
+      {
+        type: "tap",
+        prompt: { arabicDisplay: "\u0628", text: "Find Ba" },
+        options: [
+          { id: "L2-tap-opt-alif", displayArabic: "\u0627", isCorrect: false },
+          { id: "L2-tap-opt-ba", displayArabic: "\u0628", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L2-tap-opt-ba" },
+        targetEntityId: "letter:2",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided hear: Ba-fatha sound
+      {
+        type: "hear",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "combo_ba-fatha",
+          text: "Listen \u2014 which one is it?",
+        },
+        options: [
+          { id: "L2-hear-opt-alif", displayArabic: "\u0627\u064E", isCorrect: false },
+          { id: "L2-hear-opt-ba", displayArabic: "\u0628\u064E", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L2-hear-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+    ],
     exercisePlan: [
-      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
-      { type: "hear", count: 2, target: "letter", source: { from: "teach" }, direction: "audio-to-script" },
-      { type: "choose", count: 3, target: "letter", source: { from: "teach" }, distractorStrategy: "shape" },
-      { type: "read", count: 3, target: "combo", source: { from: "teach" }, connected: false },
+      { type: "choose", count: 2, target: "letter", source: { from: "teach" }, distractorStrategy: "shape" },
+      { type: "read", count: 1, target: "combo", source: { from: "teach" }, connected: false },
+    ],
+    exitSequence: [
+      // Decode exit: read ba-fatha
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L2-exit-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L2-exit-opt-ma", displayText: "ma", isCorrect: false },
+          { id: "L2-exit-opt-la", displayText: "la", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-exit-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode exit: read alif-fatha
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0627\u064E", text: "What does this say?" },
+        options: [
+          { id: "L2-exit2-opt-a", displayText: "a", isCorrect: true },
+          { id: "L2-exit2-opt-ba", displayText: "ba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-exit2-opt-a" },
+        targetEntityId: "letter:1",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",

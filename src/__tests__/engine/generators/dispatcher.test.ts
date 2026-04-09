@@ -173,22 +173,22 @@ describe("generateV2Exercises", () => {
     expect(items.length).toBeGreaterThan(0);
   });
 
-  it("works with vertical-slice lesson 2 (tap+hear+choose+read) from LESSONS_V2", async () => {
+  it("works with vertical-slice lesson 2 (choose+read) from LESSONS_V2", async () => {
     const lesson2 = LESSONS_V2.find((l) => l.id === 2);
     expect(lesson2).toBeDefined();
     if (!lesson2) return;
 
-    // lesson2 has tap:2 + hear:2 + choose:3 + read:3 = 10
+    // lesson2 has choose:2 + read:1 = 3 (teaching/exit sequences are authored, not generated)
     const expectedTotal = lesson2.exercisePlan.reduce((sum, s) => sum + s.count, 0);
 
     const items = await generateV2Exercises(lesson2, allEntities, emptyMastery);
     expect(items).toHaveLength(expectedTotal);
 
-    // Verify ordering: tap items come before read items
-    const tapIdx = items.findIndex((i) => i.type === "tap");
+    // Verify ordering: choose items come before read items
+    const chooseIdx = items.findIndex((i) => i.type === "choose");
     const readIdx = items.findIndex((i) => i.type === "read");
-    expect(tapIdx).toBeGreaterThanOrEqual(0);
-    expect(readIdx).toBeGreaterThan(tapIdx);
+    expect(chooseIdx).toBeGreaterThanOrEqual(0);
+    expect(readIdx).toBeGreaterThan(chooseIdx);
   });
 
   it("works with checkpoint lesson 7 from LESSONS_V2", async () => {
