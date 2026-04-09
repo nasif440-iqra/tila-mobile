@@ -62,7 +62,7 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // ── Quiz 1: Tap Alif (text-only prompt, no Arabic shown) ──
+      // ── Quiz 1: Tap Alif (name → shape) ──
       {
         type: "tap",
         prompt: {
@@ -78,7 +78,7 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // ── Quiz 2: Tap Ba ──
+      // ── Quiz 2: Tap Ba (name → shape) ──
       {
         type: "tap",
         prompt: {
@@ -94,7 +94,7 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // ── Quiz 3: Listen — which letter is this? (Ba sound) ──
+      // ── Quiz 3: Listen for Ba (sound → shape) ──
       {
         type: "hear",
         prompt: {
@@ -111,7 +111,7 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "audio",
       },
-      // ── Quiz 4: Listen — which letter is this? (Alif sound) ──
+      // ── Quiz 4: Listen for Alif (sound → shape) ──
       {
         type: "hear",
         prompt: {
@@ -128,71 +128,37 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "audio",
       },
-      // ── Quiz 5: Tap Alif again (repetition) ──
+      // ── Quiz 5: What letter is this? (shape → name) — Alif ──
       {
-        type: "tap",
+        type: "choose",
         prompt: {
-          arabicDisplay: "",
-          text: "Which one is Alif?",
+          arabicDisplay: "\u0627",
+          text: "What letter is this?",
         },
         options: [
-          { id: "L1-q5-opt-alif", displayArabic: "\u0627", isCorrect: true },
-          { id: "L1-q5-opt-ba", displayArabic: "\u0628", isCorrect: false },
+          { id: "L1-q5-opt-alif", displayText: "Alif", isCorrect: true },
+          { id: "L1-q5-opt-ba", displayText: "Ba", isCorrect: false },
         ],
         correctAnswer: { kind: "single", value: "L1-q5-opt-alif" },
         targetEntityId: "letter:1",
         isDecodeItem: false,
-        answerMode: "arabic",
+        answerMode: "transliteration",
       },
-      // ── Quiz 6: Tap Ba again (repetition) ──
+      // ── Quiz 6: What letter is this? (shape → name) — Ba ──
       {
-        type: "tap",
+        type: "choose",
         prompt: {
-          arabicDisplay: "",
-          text: "Which one is Ba?",
+          arabicDisplay: "\u0628",
+          text: "What letter is this?",
         },
         options: [
-          { id: "L1-q6-opt-ba", displayArabic: "\u0628", isCorrect: true },
-          { id: "L1-q6-opt-alif", displayArabic: "\u0627", isCorrect: false },
+          { id: "L1-q6-opt-ba", displayText: "Ba", isCorrect: true },
+          { id: "L1-q6-opt-alif", displayText: "Alif", isCorrect: false },
         ],
         correctAnswer: { kind: "single", value: "L1-q6-opt-ba" },
         targetEntityId: "letter:2",
         isDecodeItem: false,
-        answerMode: "arabic",
-      },
-      // ── Quiz 7: Listen for Ba again ──
-      {
-        type: "hear",
-        prompt: {
-          arabicDisplay: "",
-          audioKey: "letter_2",
-          text: "Which letter makes this sound?",
-        },
-        options: [
-          { id: "L1-q7-opt-alif", displayArabic: "\u0627", isCorrect: false },
-          { id: "L1-q7-opt-ba", displayArabic: "\u0628", isCorrect: true },
-        ],
-        correctAnswer: { kind: "single", value: "L1-q7-opt-ba" },
-        targetEntityId: "letter:2",
-        isDecodeItem: false,
-        answerMode: "audio",
-      },
-      // ── Quiz 8: Listen for Alif again ──
-      {
-        type: "hear",
-        prompt: {
-          arabicDisplay: "",
-          audioKey: "letter_1",
-          text: "Which letter makes this sound?",
-        },
-        options: [
-          { id: "L1-q8-opt-ba", displayArabic: "\u0628", isCorrect: false },
-          { id: "L1-q8-opt-alif", displayArabic: "\u0627", isCorrect: true },
-        ],
-        correctAnswer: { kind: "single", value: "L1-q8-opt-alif" },
-        targetEntityId: "letter:1",
-        isDecodeItem: false,
-        answerMode: "audio",
+        answerMode: "transliteration",
       },
     ],
     exercisePlan: [],
