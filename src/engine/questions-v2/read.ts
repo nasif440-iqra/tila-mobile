@@ -10,6 +10,21 @@ import {
 
 // ── Read Generator — Real decoding exercises ──
 
+const READ_CHUNK_PROMPTS = ["Read this connected word", "Sound out these letters", "What does this say?"];
+const READ_COMBO_PROMPTS = ["Read this sound", "What does this say?", "Sound this out"];
+const READ_LETTER_PROMPTS = ["What letter is this?", "Read this letter"];
+const READ_DEFAULT_PROMPTS = ["Read this aloud", "What does this say?", "Sound this out"];
+
+function pickReadPrompt(targetId: string, resolvedRenderProfile: string | undefined, index: number): string {
+  if (resolvedRenderProfile === "connected") {
+    return READ_CHUNK_PROMPTS[index % READ_CHUNK_PROMPTS.length];
+  }
+  if (targetId.startsWith("chunk:")) return READ_CHUNK_PROMPTS[index % READ_CHUNK_PROMPTS.length];
+  if (targetId.startsWith("combo:")) return READ_COMBO_PROMPTS[index % READ_COMBO_PROMPTS.length];
+  if (targetId.startsWith("letter:")) return READ_LETTER_PROMPTS[index % READ_LETTER_PROMPTS.length];
+  return READ_DEFAULT_PROMPTS[index % READ_DEFAULT_PROMPTS.length];
+}
+
 export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
   const { step, teachEntities, reviewEntities, allUnlockedEntities, masterySnapshot, lesson, renderProfile } = input;
 
@@ -68,7 +83,7 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
     items.push({
       type: "read",
       prompt: {
-        text: "Read this aloud",
+        text: pickReadPrompt(target.id, resolvedRenderProfile, i),
         arabicDisplay: target.displayArabic,
       },
       options: finalOptions,

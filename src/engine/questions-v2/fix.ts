@@ -11,6 +11,8 @@ const HARAKAT = [FATHA, KASRA, DAMMA];
 
 // ── Fix Generator — error correction with explicit FixSegment hit zones ──
 
+const FIX_PROMPTS = ["Find and fix the error", "Something is wrong here", "Spot the mistake", "Fix what's wrong"];
+
 export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
   const { step, teachEntities, reviewEntities, allUnlockedEntities } = input;
 
@@ -88,7 +90,7 @@ export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
       items.push({
         type: "fix",
         prompt: {
-          text: "Find and fix the error",
+          text: FIX_PROMPTS[i % FIX_PROMPTS.length],
           arabicDisplay: corruptedDisplay,
         },
         options,
@@ -150,7 +152,7 @@ export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
       items.push({
         type: "fix",
         prompt: {
-          text: "Find and fix the error",
+          text: FIX_PROMPTS[i % FIX_PROMPTS.length],
           arabicDisplay: wrongDisplay,
         },
         options,

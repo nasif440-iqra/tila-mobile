@@ -9,6 +9,16 @@ import {
 
 // ── Tap Generator — Fast visual recognition ──
 
+const LETTER_PROMPTS = ["Which letter is this?", "Find this letter", "Tap the matching letter", "Which one matches?"];
+const COMBO_PROMPTS = ["Which sound is this?", "Find this combination", "Tap the matching sound"];
+const DEFAULT_TAP_PROMPTS = ["Which one is this?", "Find this one", "Tap the match"];
+
+function pickTapPrompt(targetId: string, index: number): string {
+  if (targetId.startsWith("letter:")) return LETTER_PROMPTS[index % LETTER_PROMPTS.length];
+  if (targetId.startsWith("combo:")) return COMBO_PROMPTS[index % COMBO_PROMPTS.length];
+  return DEFAULT_TAP_PROMPTS[index % DEFAULT_TAP_PROMPTS.length];
+}
+
 export function generateTapItems(input: GeneratorInput): ExerciseItem[] {
   const { step, teachEntities, reviewEntities, allUnlockedEntities, masterySnapshot } = input;
 
@@ -59,7 +69,7 @@ export function generateTapItems(input: GeneratorInput): ExerciseItem[] {
     items.push({
       type: "tap",
       prompt: {
-        text: "Which letter is this?",
+        text: pickTapPrompt(target.id, i),
         arabicDisplay: target.displayArabic,
       },
       options,

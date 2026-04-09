@@ -10,6 +10,9 @@ import {
 
 // ── Hear Generator — Audio-to-script or script-to-audio ──
 
+const AUDIO_TO_SCRIPT_PROMPTS = ["Listen — which one is it?", "What do you hear?", "Listen and choose", "Which one sounds like this?"];
+const SCRIPT_TO_AUDIO_PROMPTS = ["How does this sound?", "Listen for this one", "Find the matching sound", "Which sound matches?"];
+
 export function generateHearItems(input: GeneratorInput): ExerciseItem[] {
   const { step, teachEntities, reviewEntities, allUnlockedEntities, masterySnapshot } = input;
 
@@ -67,6 +70,7 @@ export function generateHearItems(input: GeneratorInput): ExerciseItem[] {
       items.push({
         type: "hear",
         prompt: {
+          text: AUDIO_TO_SCRIPT_PROMPTS[i % AUDIO_TO_SCRIPT_PROMPTS.length],
           arabicDisplay: "",
           audioKey: targetAudioKey,
         },
@@ -94,6 +98,7 @@ export function generateHearItems(input: GeneratorInput): ExerciseItem[] {
       items.push({
         type: "hear",
         prompt: {
+          text: SCRIPT_TO_AUDIO_PROMPTS[i % SCRIPT_TO_AUDIO_PROMPTS.length],
           arabicDisplay: target.displayArabic,
         },
         options,

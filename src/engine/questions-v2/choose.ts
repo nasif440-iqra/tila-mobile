@@ -7,11 +7,22 @@ import {
   shuffle,
   filterToCapability,
   TARGET_TO_PREFIX,
+  deriveAudioKey,
 } from "./shared";
 
 // ── Choose Generator — Tight discrimination, always 4 options ──
 
 const CHOOSE_DISTRACTOR_COUNT = 3;
+
+const CHOOSE_LETTER_PROMPTS = ["Which letter is this?", "Find this letter", "Which one matches?"];
+const CHOOSE_COMBO_PROMPTS = ["Which sound is this?", "Find this combination", "Which one is correct?"];
+const CHOOSE_DEFAULT_PROMPTS = ["Which one is this?", "Pick the right one", "Which one matches?"];
+
+function pickChoosePrompt(targetId: string, index: number): string {
+  if (targetId.startsWith("letter:")) return CHOOSE_LETTER_PROMPTS[index % CHOOSE_LETTER_PROMPTS.length];
+  if (targetId.startsWith("combo:")) return CHOOSE_COMBO_PROMPTS[index % CHOOSE_COMBO_PROMPTS.length];
+  return CHOOSE_DEFAULT_PROMPTS[index % CHOOSE_DEFAULT_PROMPTS.length];
+}
 
 // ── Distractor Pool Filtering by Strategy ──
 //
@@ -107,15 +118,20 @@ export function generateChooseItems(input: GeneratorInput): ExerciseItem[] {
       masterySnapshot.confusionPairs,
     );
 
+    // Vowel strategy: use audio mode so learner must listen, not visually match
+    const isVowelStrategy = step.distractorStrategy === "vowel";
+
     const options: ExerciseOption[] = shuffle([
       {
         id: target.id,
-        displayArabic: target.displayArabic,
+        displayArabic: isVowelStrategy ? undefined : target.displayArabic,
+        audioKey: isVowelStrategy ? deriveAudioKey(target) : undefined,
         isCorrect: true,
       },
       ...distractors.map((d) => ({
         id: d.id,
-        displayArabic: d.displayArabic,
+        displayArabic: isVowelStrategy ? undefined : d.displayArabic,
+        audioKey: isVowelStrategy ? deriveAudioKey(d) : undefined,
         isCorrect: false,
       })),
     ]);
@@ -123,14 +139,14 @@ export function generateChooseItems(input: GeneratorInput): ExerciseItem[] {
     items.push({
       type: "choose",
       prompt: {
-        text: `Which one says ${target.transliteration ?? target.displayArabic}?`,
-        arabicDisplay: target.displayArabic,
+        text: pickChoosePrompt(target.id, i),
+        arabicDisplay: isVowelStrategy ? "" : target.displayArabic,
       },
       options,
       correctAnswer: { kind: "single", value: target.id },
       targetEntityId: target.id,
       isDecodeItem: false,
-      answerMode: "arabic",
+      answerMode: isVowelStrategy ? "audio" : "arabic",
     });
   }
 

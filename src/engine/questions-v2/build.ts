@@ -10,6 +10,8 @@ import {
 
 // ── Build Generator — Tile bank assembly from teachingBreakdownIds ──
 
+const BUILD_PROMPTS = ["Build this word", "Put it together", "Arrange the parts", "Spell this out"];
+
 export function generateBuildItems(input: GeneratorInput): ExerciseItem[] {
   const { step, teachEntities, reviewEntities, allUnlockedEntities } = input;
 
@@ -92,7 +94,7 @@ export function generateBuildItems(input: GeneratorInput): ExerciseItem[] {
     items.push({
       type: "build",
       prompt: {
-        text: "Build this word",
+        text: BUILD_PROMPTS[i % BUILD_PROMPTS.length],
         arabicDisplay: target.displayArabic,
         audioKey: deriveAudioKey(target),
       },
