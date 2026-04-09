@@ -31,21 +31,24 @@ export function evaluateLesson(
   policy: MasteryPolicy,
   bucketThresholds?: Record<string, number>,
 ): LessonResult {
+  // Filter out present items — they are not scored
+  const scorableItems = scoredItems.filter((s) => s.item.type !== "present");
+
   // ── Overall counts ──
-  const totalItems = scoredItems.length;
-  const correctItems = scoredItems.filter((s) => s.correct).length;
+  const totalItems = scorableItems.length;
+  const correctItems = scorableItems.filter((s) => s.correct).length;
   const overallPercent = totalItems === 0 ? 0 : correctItems / totalItems;
 
   // ── Decode counts ──
-  const decodeOnly = scoredItems.filter((s) => s.item.isDecodeItem);
+  const decodeOnly = scorableItems.filter((s) => s.item.isDecodeItem);
   const decodeItems = decodeOnly.length;
   const decodeCorrect = decodeOnly.filter((s) => s.correct).length;
   const decodePercent = decodeItems === 0 ? 0 : decodeCorrect / decodeItems;
 
-  // ── Final decode streak (walk backwards through ALL items, counting consecutive correct decode items) ──
+  // ── Final decode streak (walk backwards through ALL scorable items, counting consecutive correct decode items) ──
   let finalDecodeStreak = 0;
-  for (let i = scoredItems.length - 1; i >= 0; i--) {
-    const s = scoredItems[i];
+  for (let i = scorableItems.length - 1; i >= 0; i--) {
+    const s = scorableItems[i];
     if (!s.item.isDecodeItem) continue; // skip non-decode items
     if (!s.correct) break; // incorrect decode item ends the streak
     finalDecodeStreak++;
@@ -53,7 +56,7 @@ export function evaluateLesson(
 
   // ── Bucket scores (items with an assessmentBucket only) ──
   const bucketScores: Record<string, { correct: number; total: number }> = {};
-  for (const s of scoredItems) {
+  for (const s of scorableItems) {
     const bucket = s.assessmentBucket ?? s.item.assessmentBucket;
     if (!bucket) continue;
     if (!bucketScores[bucket]) {

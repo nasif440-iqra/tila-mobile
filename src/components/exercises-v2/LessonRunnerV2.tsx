@@ -104,7 +104,11 @@ function LessonRunnerInner({
         </Text>
 
         {/* Exercise */}
-        <ExerciseRenderer item={quiz.currentItem} onAnswer={quiz.handleAnswer} />
+        <ExerciseRenderer
+          item={quiz.currentItem}
+          onAnswer={quiz.handleAnswer}
+          onPresentContinue={() => quiz.handleAnswer(true, "present-continue")}
+        />
       </SafeAreaView>
     );
   }

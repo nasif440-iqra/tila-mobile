@@ -98,14 +98,18 @@ export function useLessonQuizV2(
           masteryHook.snapshot,
         );
 
-        if (!generated || generated.length === 0) {
+        const teachingItems = lesson.teachingSequence ?? [];
+        const exitItems = lesson.exitSequence ?? [];
+        const allItems = [...teachingItems, ...generated, ...exitItems];
+
+        if (!allItems || allItems.length === 0) {
           setError(
             "No exercises could be generated for this lesson. Please try a different lesson or contact support.",
           );
           return;
         }
 
-        setItems(generated);
+        setItems(allItems);
         itemStartRef.current = Date.now();
         setPhase("active");
       } catch (err) {
@@ -173,6 +177,17 @@ export function useLessonQuizV2(
     (correct: boolean, answerId: string) => {
       const currentItem = items[itemIndex];
       if (!currentItem || phase !== "active") return;
+
+      // Present items are not scored — just advance
+      if (currentItem.type === "present") {
+        const nextIndex = itemIndex + 1;
+        if (nextIndex >= items.length) {
+          setPhase("scoring");
+        } else {
+          setItemIndex(nextIndex);
+        }
+        return;
+      }
 
       const responseTimeMs = Date.now() - itemStartRef.current;
       itemStartRef.current = Date.now();
