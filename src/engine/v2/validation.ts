@@ -1,5 +1,6 @@
 import type { LessonV2, ExerciseStep } from "@/src/types/curriculum-v2";
 import type { EntityCapability } from "@/src/types/entity";
+import type { ExerciseItem } from "@/src/types/exercise";
 import { resolveEntity, COMBO_SLUG_TO_LETTER_ID } from "./entityRegistry";
 import { ASSESSMENT_PROFILES } from "@/src/data/curriculum-v2/assessmentProfiles";
 
@@ -198,6 +199,76 @@ export async function validateLesson(lesson: LessonV2): Promise<ValidationResult
       errors.push(
         `Lesson ${lesson.id}: step target "${step.target}" has no compatible entities in ${sourceName} source`
       );
+    }
+  }
+
+  // ── Authored item validation ──
+
+  const allAuthoredItems: ExerciseItem[] = [
+    ...(lesson.teachingSequence ?? []),
+    ...(lesson.exitSequence ?? []),
+  ];
+
+  // Rule A1: exitSequence must not contain present items
+  for (const item of (lesson.exitSequence ?? [])) {
+    if (item.type === "present") {
+      errors.push(
+        `Lesson ${lesson.id}: exitSequence contains a "present" item — exit items must be scored`
+      );
+    }
+  }
+
+  // Rule A2: exitSequence read items must have isDecodeItem: true
+  for (const item of (lesson.exitSequence ?? [])) {
+    if (item.type === "read" && !item.isDecodeItem) {
+      errors.push(
+        `Lesson ${lesson.id}: exitSequence read item must have isDecodeItem: true`
+      );
+    }
+  }
+
+  // Rule A3: quiz items must have non-empty options
+  for (const item of allAuthoredItems) {
+    const quizTypes = ["tap", "hear", "choose", "read"];
+    if (quizTypes.includes(item.type) && (!item.options || item.options.length === 0)) {
+      errors.push(
+        `Lesson ${lesson.id}: authored ${item.type} item has empty options array`
+      );
+    }
+  }
+
+  // Rule A4: correctAnswer must match an option or tile
+  for (const item of allAuthoredItems) {
+    if (item.type === "present") continue;
+    if (item.correctAnswer.kind === "single" && item.options) {
+      const correctId = item.correctAnswer.value;
+      const optionIds = item.options.map((o) => o.id);
+      if (!optionIds.includes(correctId)) {
+        errors.push(
+          `Lesson ${lesson.id}: authored item correctAnswer "${correctId}" does not match any option ID`
+        );
+      }
+    }
+  }
+
+  // Rule A5: stable unique IDs — check for duplicate option/tile IDs across all authored items
+  const seenOptionIds = new Set<string>();
+  for (const item of allAuthoredItems) {
+    for (const opt of (item.options ?? [])) {
+      if (seenOptionIds.has(opt.id)) {
+        errors.push(
+          `Lesson ${lesson.id}: duplicate option ID "${opt.id}" in authored items`
+        );
+      }
+      seenOptionIds.add(opt.id);
+    }
+    for (const tile of (item.tiles ?? [])) {
+      if (seenOptionIds.has(tile.id)) {
+        errors.push(
+          `Lesson ${lesson.id}: duplicate tile ID "${tile.id}" in authored items`
+        );
+      }
+      seenOptionIds.add(tile.id);
     }
   }
 
