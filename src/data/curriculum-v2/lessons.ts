@@ -177,12 +177,95 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Add \u0645 and read \u0645\u064E / \u0628\u064E without guessing",
     teachEntityIds: ["letter:24", "combo:ma-fatha"],
     reviewEntityIds: ["letter:1", "letter:2", "combo:ba-fatha"],
+    teachingSequence: [
+      // Present: Meet Meem
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0645",
+          text: "This is Meem",
+          audioKey: "letter_24",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:24",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Meem + Fatha combo
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0645\u064E",
+          text: "Meem with fatha makes \u2018ma\u2019",
+          audioKey: "combo_ma-fatha",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "combo:ma-fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided tap: Find Meem
+      {
+        type: "tap",
+        prompt: { arabicDisplay: "\u0645", text: "Find Meem" },
+        options: [
+          { id: "L3-tap-opt-meem", displayArabic: "\u0645", isCorrect: true },
+          { id: "L3-tap-opt-ba", displayArabic: "\u0628", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L3-tap-opt-meem" },
+        targetEntityId: "letter:24",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided hear: ma-fatha sound
+      {
+        type: "hear",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "combo_ma-fatha",
+          text: "Listen \u2014 which one is it?",
+        },
+        options: [
+          { id: "L3-hear-opt-ma", displayArabic: "\u0645\u064E", isCorrect: true },
+          { id: "L3-hear-opt-ba", displayArabic: "\u0628\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L3-hear-opt-ma" },
+        targetEntityId: "combo:ma-fatha",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+    ],
     exercisePlan: [
-      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
-      { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
       { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
       { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
-      { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: false },
+    ],
+    exitSequence: [
+      // Decode exit: read ma-fatha (easy — new letter)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0645\u064E", text: "What does this say?" },
+        options: [
+          { id: "L3-exit1-opt-ma", displayText: "ma", isCorrect: true },
+          { id: "L3-exit1-opt-ba", displayText: "ba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L3-exit1-opt-ma" },
+        targetEntityId: "combo:ma-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode exit: read ba-fatha (review)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L3-exit2-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L3-exit2-opt-ma", displayText: "ma", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L3-exit2-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",
@@ -193,12 +276,97 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Add \u0644 and expand the first readable set of symbols",
     teachEntityIds: ["letter:23", "combo:la-fatha"],
     reviewEntityIds: ["letter:2", "letter:24", "combo:ba-fatha", "combo:ma-fatha"],
+    teachingSequence: [
+      // Present: Meet Laam
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0644",
+          text: "This is Laam",
+          audioKey: "letter_23",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:23",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Laam + Fatha combo
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0644\u064E",
+          text: "Laam with fatha makes \u2018la\u2019",
+          audioKey: "combo_la-fatha",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "combo:la-fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided tap: Find Laam
+      {
+        type: "tap",
+        prompt: { arabicDisplay: "\u0644", text: "Find Laam" },
+        options: [
+          { id: "L4-tap-opt-laam", displayArabic: "\u0644", isCorrect: true },
+          { id: "L4-tap-opt-meem", displayArabic: "\u0645", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L4-tap-opt-laam" },
+        targetEntityId: "letter:23",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided hear: la-fatha sound (3 options)
+      {
+        type: "hear",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "combo_la-fatha",
+          text: "Listen \u2014 which one is it?",
+        },
+        options: [
+          { id: "L4-hear-opt-la", displayArabic: "\u0644\u064E", isCorrect: true },
+          { id: "L4-hear-opt-ma", displayArabic: "\u0645\u064E", isCorrect: false },
+          { id: "L4-hear-opt-ba", displayArabic: "\u0628\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L4-hear-opt-la" },
+        targetEntityId: "combo:la-fatha",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+    ],
     exercisePlan: [
-      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
-      { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
       { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
       { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
-      { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: false },
+    ],
+    exitSequence: [
+      // Decode exit: read la-fatha (easy — new letter)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L4-exit1-opt-la", displayText: "la", isCorrect: true },
+          { id: "L4-exit1-opt-ma", displayText: "ma", isCorrect: false },
+          { id: "L4-exit1-opt-ba", displayText: "ba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L4-exit1-opt-la" },
+        targetEntityId: "combo:la-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode exit: read ma-fatha (review)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0645\u064E", text: "What does this say?" },
+        options: [
+          { id: "L4-exit2-opt-ma", displayText: "ma", isCorrect: true },
+          { id: "L4-exit2-opt-la", displayText: "la", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L4-exit2-opt-ma" },
+        targetEntityId: "combo:ma-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",
@@ -209,11 +377,76 @@ export const LESSONS_V2: LessonV2[] = [
     description: "No new symbols \u2014 decode short CV chunks using known letters only",
     teachEntityIds: ["chunk:ba-ma", "chunk:la-ma", "chunk:ba-la"],
     reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha"],
+    teachingSequence: [
+      // Choose: Which combination is بَمَ?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0645\u064E",
+          text: "Which combination is this?",
+        },
+        options: [
+          { id: "L5-teach1-opt-bama", displayArabic: "\u0628\u064E\u0645\u064E", isCorrect: true },
+          { id: "L5-teach1-opt-lama", displayArabic: "\u0644\u064E\u0645\u064E", isCorrect: false },
+          { id: "L5-teach1-opt-bala", displayArabic: "\u0628\u064E\u0644\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L5-teach1-opt-bama" },
+        targetEntityId: "chunk:ba-ma",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Choose: Which combination is لَمَ?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0644\u064E\u0645\u064E",
+          text: "Which combination is this?",
+        },
+        options: [
+          { id: "L5-teach2-opt-lama", displayArabic: "\u0644\u064E\u0645\u064E", isCorrect: true },
+          { id: "L5-teach2-opt-bama", displayArabic: "\u0628\u064E\u0645\u064E", isCorrect: false },
+          { id: "L5-teach2-opt-bala", displayArabic: "\u0628\u064E\u0644\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L5-teach2-opt-lama" },
+        targetEntityId: "chunk:la-ma",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+    ],
     exercisePlan: [
-      { type: "hear", count: 2, target: "chunk", source: { from: "teach" }, direction: "audio-to-script" },
-      { type: "choose", count: 2, target: "combo", source: { from: "review" }, distractorStrategy: "vowel" },
-      { type: "build", count: 3, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      { type: "read", count: 3, target: "chunk", source: { from: "mixed", mix: { teach: 2, review: 1 } }, connected: false },
+      { type: "hear", count: 2, target: "combo", source: { from: "review" }, direction: "audio-to-script" },
+      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+      { type: "read", count: 2, target: "chunk", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: false },
+    ],
+    exitSequence: [
+      // Decode exit: بَمَ (easy chunk)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0645\u064E", text: "What does this say?" },
+        options: [
+          { id: "L5-exit1-opt-bama", displayText: "bama", isCorrect: true },
+          { id: "L5-exit1-opt-lama", displayText: "lama", isCorrect: false },
+          { id: "L5-exit1-opt-bala", displayText: "bala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L5-exit1-opt-bama" },
+        targetEntityId: "chunk:ba-ma",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode exit: بَلَ (harder chunk)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L5-exit2-opt-bala", displayText: "bala", isCorrect: true },
+          { id: "L5-exit2-opt-bama", displayText: "bama", isCorrect: false },
+          { id: "L5-exit2-opt-lama", displayText: "lama", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L5-exit2-opt-bala" },
+        targetEntityId: "chunk:ba-la",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",
@@ -224,14 +457,159 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Add \u0646 and push the learner to hold a 5-letter working set",
     teachEntityIds: ["letter:25", "combo:noon-fatha"],
     reviewEntityIds: ["letter:2", "letter:24", "letter:23", "combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha"],
+    teachingSequence: [
+      // Present: Meet Noon
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0646",
+          text: "This is Noon",
+          audioKey: "letter_25",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:25",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Noon + Fatha combo
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0646\u064E",
+          text: "Noon with fatha makes \u2018na\u2019",
+          audioKey: "combo_noon-fatha",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "combo:noon-fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided tap: Find Noon (dot-family confusion target vs ba)
+      {
+        type: "tap",
+        prompt: { arabicDisplay: "\u0646", text: "Find Noon" },
+        options: [
+          { id: "L6-tap-opt-noon", displayArabic: "\u0646", isCorrect: true },
+          { id: "L6-tap-opt-ba", displayArabic: "\u0628", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L6-tap-opt-noon" },
+        targetEntityId: "letter:25",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided hear: noon-fatha sound (3 options)
+      {
+        type: "hear",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "combo_noon-fatha",
+          text: "Listen \u2014 which one is it?",
+        },
+        options: [
+          { id: "L6-hear-opt-na", displayArabic: "\u0646\u064E", isCorrect: true },
+          { id: "L6-hear-opt-ba", displayArabic: "\u0628\u064E", isCorrect: false },
+          { id: "L6-hear-opt-ma", displayArabic: "\u0645\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L6-hear-opt-na" },
+        targetEntityId: "combo:noon-fatha",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+    ],
     exercisePlan: [
-      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
-      { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
-      { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
+      { type: "choose", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "shape" },
       { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
-      { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: false },
+    ],
+    exitSequence: [
+      // Decode exit: read noon-fatha (easy — new letter)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0646\u064E", text: "What does this say?" },
+        options: [
+          { id: "L6-exit1-opt-na", displayText: "na", isCorrect: true },
+          { id: "L6-exit1-opt-ba", displayText: "ba", isCorrect: false },
+          { id: "L6-exit1-opt-ma", displayText: "ma", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L6-exit1-opt-na" },
+        targetEntityId: "combo:noon-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode exit: read la-fatha (review)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L6-exit2-opt-la", displayText: "la", isCorrect: true },
+          { id: "L6-exit2-opt-na", displayText: "na", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L6-exit2-opt-la" },
+        targetEntityId: "combo:la-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "isolated",
+  },
+  {
+    id: 7, phase: 1, module: "1.1",
+    title: "Checkpoint 1: Tiny Chunks",
+    description: "Confirm the learner can decode short unseen items, not merely tap familiar letters",
+    // Checkpoint teaches nothing new — assesses Phase 1 accumulated inventory
+    teachEntityIds: [],
+    reviewEntityIds: ["letter:1", "letter:2", "letter:24", "letter:23", "combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "chunk:ba-ma", "chunk:la-ma"],
+    teachingSequence: [
+      // Confidence opener — scored item, not a present
+      {
+        type: "choose",
+        prompt: { arabicDisplay: "\u0628\u064E", text: "You know this one" },
+        options: [
+          { id: "L7-opener-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L7-opener-opt-ma", displayText: "ma", isCorrect: false },
+          { id: "L7-opener-opt-la", displayText: "la", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L7-opener-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: false,
+        answerMode: "transliteration",
+      },
+    ],
+    exercisePlan: [
+      { type: "check", count: 7, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-1-checkpoint" },
+    ],
+    exitSequence: [
+      // Decode gate 1: بَ (combo, easy)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L7-exit1-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L7-exit1-opt-ma", displayText: "ma", isCorrect: false },
+          { id: "L7-exit1-opt-la", displayText: "la", isCorrect: false },
+          { id: "L7-exit1-opt-na", displayText: "na", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L7-exit1-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // Decode gate 2: بَمَ (chunk ba-ma)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0645\u064E", text: "What does this say?" },
+        options: [
+          { id: "L7-exit2-opt-bama", displayText: "bama", isCorrect: true },
+          { id: "L7-exit2-opt-lama", displayText: "lama", isCorrect: false },
+          { id: "L7-exit2-opt-bala", displayText: "bala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L7-exit2-opt-bama" },
+        targetEntityId: "chunk:ba-ma",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+    ],
+    masteryPolicy: { passThreshold: 0.9, decodePassRequired: 2, decodeMinPercent: 0.8 },
     renderProfile: "isolated",
   },
   {
@@ -248,19 +626,6 @@ export const LESSONS_V2: LessonV2[] = [
       { type: "read", count: 3, target: "combo", source: { from: "mixed", mix: { teach: 2, review: 1 } }, connected: false },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
-    renderProfile: "isolated",
-  },
-  {
-    id: 7, phase: 1, module: "1.1",
-    title: "Checkpoint 1: Tiny Chunks",
-    description: "Confirm the learner can decode short unseen items, not merely tap familiar letters",
-    // Checkpoint teaches nothing new — assesses Phase 1 accumulated inventory
-    teachEntityIds: [],
-    reviewEntityIds: ["letter:1", "letter:2", "letter:24", "letter:23", "combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "chunk:ba-ma", "chunk:la-ma"],
-    exercisePlan: [
-      { type: "check", count: 10, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-1-checkpoint" },
-    ],
-    masteryPolicy: { passThreshold: 0.9, decodePassRequired: 2, decodeMinPercent: 0.8 },
     renderProfile: "isolated",
   },
 

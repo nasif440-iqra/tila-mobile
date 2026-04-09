@@ -197,8 +197,8 @@ describe("generateV2Exercises", () => {
     if (!lesson7) return;
 
     const items = await generateV2Exercises(lesson7, allEntities, emptyMastery);
-    // lesson7 has check: count=10
-    expect(items).toHaveLength(10);
+    // lesson7 has check: count=7 (reduced to account for opener + 2 exit items)
+    expect(items).toHaveLength(7);
   });
 
   it("returns empty array for a lesson with no exercise steps", async () => {
