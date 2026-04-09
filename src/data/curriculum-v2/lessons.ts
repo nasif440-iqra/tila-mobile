@@ -171,87 +171,194 @@ export const LESSONS_V2: LessonV2[] = [
   },
   {
     id: 2, phase: 1, module: "1.1",
-    title: "Meet Alif + Ba with Fatha",
-    description: "Learn \u0627 and \u0628 with fatha and read the first real syllable",
+    title: "Your First Sound",
+    description: "Learn how small marks give letters their sound, and read your first syllable",
     teachEntityIds: ["letter:1", "letter:2", "combo:ba-fatha", "rule:fatha"],
     reviewEntityIds: [],
     teachingSequence: [
-      // Present: Fatha mark
+      // ── Screen 1: Introduce the concept of harakat ──
       {
         type: "present",
         prompt: {
-          arabicDisplay: "\u064E",
-          text: "This mark makes an \u2018a\u2019 sound",
+          arabicDisplay: "\u0628\u064E",
+          text: "In Arabic, letters don\u2019t make sounds on their own.\n\nSmall marks above or below a letter tell you what sound to make. These marks are called harakat.",
         },
         correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "rule:fatha",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Present: Ba + Fatha combo
+      // ── Screen 2: Introduce fatha specifically ──
       {
         type: "present",
         prompt: {
           arabicDisplay: "\u0628\u064E",
-          text: "Ba with fatha makes \u2018ba\u2019",
-          audioKey: "combo_ba-fatha",
+          text: "See the small line above the letter?\n\nThat mark is called fatha. When you see fatha above any letter, add an \u201Ca\u201D sound after it.",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "rule:fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Screen 3: Ba + fatha = "ba" ──
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628\u064E",
+          text: "This is Ba with a fatha on top.\n\nBa makes a \u201Cb\u201D sound. Fatha adds \u201Ca.\u201D Together they say \u201Cba\u201D \u2014 like the start of \u201Cball.\u201D",
+          audioKey: "letter_2",
+          hintText: "audio:letter_name_2",
         },
         correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "combo:ba-fatha",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Guided tap: Find Ba
+      // ── Screen 4: Alif + fatha = "a" ──
       {
-        type: "tap",
-        prompt: { arabicDisplay: "\u0628", text: "Find Ba" },
-        options: [
-          { id: "L2-tap-opt-alif", displayArabic: "\u0627", isCorrect: false },
-          { id: "L2-tap-opt-ba", displayArabic: "\u0628", isCorrect: true },
-        ],
-        correctAnswer: { kind: "single", value: "L2-tap-opt-ba" },
-        targetEntityId: "letter:2",
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0627\u064E",
+          text: "This is Alif with a fatha.\n\nAlif is already an \u201Ca\u201D sound, so with fatha it simply says \u201Ca\u201D \u2014 a short, open sound.",
+          audioKey: "letter_1",
+          hintText: "audio:letter_name_1",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:1",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Guided hear: Ba-fatha sound
+      // ── Screen 5: Side by side comparison ──
       {
-        type: "hear",
+        type: "present",
         prompt: {
-          arabicDisplay: "",
-          audioKey: "combo_ba-fatha",
-          text: "Listen \u2014 which one is it?",
+          arabicDisplay: "\u0627\u064E    \u0628\u064E",
+          text: "Both letters now have fatha.\n\nThe one on the right says \u201Ca.\u201D The one on the left says \u201Cba.\u201D Tap to hear each one.",
         },
         options: [
-          { id: "L2-hear-opt-alif", displayArabic: "\u0627\u064E", isCorrect: false },
-          { id: "L2-hear-opt-ba", displayArabic: "\u0628\u064E", isCorrect: true },
+          { id: "L2-side-alif-sound", audioKey: "letter_1", displayText: "Alif Sound", isCorrect: false },
+          { id: "L2-side-ba-sound", audioKey: "letter_2", displayText: "Ba Sound", isCorrect: false },
         ],
-        correctAnswer: { kind: "single", value: "L2-hear-opt-ba" },
+        correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "combo:ba-fatha",
         isDecodeItem: false,
-        answerMode: "audio",
+        answerMode: "arabic",
       },
-    ],
-    exercisePlan: [
-      { type: "choose", count: 2, target: "letter", source: { from: "teach" }, distractorStrategy: "shape" },
-      { type: "read", count: 1, target: "combo", source: { from: "teach" }, connected: false },
-    ],
-    exitSequence: [
-      // Decode exit: read ba-fatha
+      // ── Quiz 1: Which one has fatha? (both do — trick awareness) ──
+      // Actually, better: which letter is this showing?
+      // ── Quiz 1: What sound does this make? (بَ → "ba") ──
       {
-        type: "read",
-        prompt: { arabicDisplay: "\u0628\u064E", text: "What does this say?" },
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0628\u064E",
+          text: "What sound does this make?",
+        },
         options: [
-          { id: "L2-exit-opt-ba", displayText: "ba", isCorrect: true },
-          { id: "L2-exit-opt-ma", displayText: "ma", isCorrect: false },
-          { id: "L2-exit-opt-la", displayText: "la", isCorrect: false },
+          { id: "L2-q1-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L2-q1-opt-a", displayText: "a", isCorrect: false },
         ],
-        correctAnswer: { kind: "single", value: "L2-exit-opt-ba" },
+        correctAnswer: { kind: "single", value: "L2-q1-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: false,
+        answerMode: "transliteration",
+      },
+      // ── Quiz 2: What sound does this make? (اَ → "a") ──
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0627\u064E",
+          text: "What sound does this make?",
+        },
+        options: [
+          { id: "L2-q2-opt-a", displayText: "a", isCorrect: true },
+          { id: "L2-q2-opt-ba", displayText: "ba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-q2-opt-a" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "transliteration",
+      },
+      // ── Quiz 3: Tap the one that says "ba" ──
+      {
+        type: "tap",
+        prompt: {
+          arabicDisplay: "",
+          text: "Tap the one that says \u201Cba\u201D",
+        },
+        options: [
+          { id: "L2-q3-opt-alif", displayArabic: "\u0627\u064E", isCorrect: false },
+          { id: "L2-q3-opt-ba", displayArabic: "\u0628\u064E", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L2-q3-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Quiz 4: Tap the one that says "a" ──
+      {
+        type: "tap",
+        prompt: {
+          arabicDisplay: "",
+          text: "Tap the one that says \u201Ca\u201D",
+        },
+        options: [
+          { id: "L2-q4-opt-ba", displayArabic: "\u0628\u064E", isCorrect: false },
+          { id: "L2-q4-opt-alif", displayArabic: "\u0627\u064E", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L2-q4-opt-alif" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Quiz 5: What sound does this make? (بَ again, reinforcement) ──
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0628\u064E",
+          text: "Read this \u2014 what sound does it make?",
+        },
+        options: [
+          { id: "L2-q5-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L2-q5-opt-a", displayText: "a", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-q5-opt-ba" },
         targetEntityId: "combo:ba-fatha",
         isDecodeItem: true,
         answerMode: "transliteration",
       },
-      // Decode exit: read alif-fatha
+      // ── Quiz 6: What sound does this make? (اَ again, reinforcement) ──
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0627\u064E",
+          text: "Read this \u2014 what sound does it make?",
+        },
+        options: [
+          { id: "L2-q6-opt-a", displayText: "a", isCorrect: true },
+          { id: "L2-q6-opt-ba", displayText: "ba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-q6-opt-a" },
+        targetEntityId: "letter:1",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+    ],
+    exercisePlan: [],
+    exitSequence: [
+      // ── Decode gate 1: Read بَ ──
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L2-exit1-opt-ba", displayText: "ba", isCorrect: true },
+          { id: "L2-exit1-opt-a", displayText: "a", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L2-exit1-opt-ba" },
+        targetEntityId: "combo:ba-fatha",
+        isDecodeItem: true,
+        answerMode: "transliteration",
+      },
+      // ── Decode gate 2: Read اَ ──
       {
         type: "read",
         prompt: { arabicDisplay: "\u0627\u064E", text: "What does this say?" },
@@ -265,7 +372,7 @@ export const LESSONS_V2: LessonV2[] = [
         answerMode: "transliteration",
       },
     ],
-    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    masteryPolicy: { passThreshold: 0.75, decodePassRequired: 2 },
     renderProfile: "isolated",
   },
   {

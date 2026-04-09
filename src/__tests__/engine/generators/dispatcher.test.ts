@@ -173,22 +173,20 @@ describe("generateV2Exercises", () => {
     expect(items.length).toBeGreaterThan(0);
   });
 
-  it("works with vertical-slice lesson 2 (choose+read) from LESSONS_V2", async () => {
+  it("works with vertical-slice lesson 2 (fully authored) from LESSONS_V2", async () => {
     const lesson2 = LESSONS_V2.find((l) => l.id === 2);
     expect(lesson2).toBeDefined();
     if (!lesson2) return;
 
-    // lesson2 has choose:2 + read:1 = 3 (teaching/exit sequences are authored, not generated)
-    const expectedTotal = lesson2.exercisePlan.reduce((sum, s) => sum + s.count, 0);
-
+    // L2 is now fully authored — empty exercisePlan, all items in teachingSequence + exitSequence
     const items = await generateV2Exercises(lesson2, allEntities, emptyMastery);
-    expect(items).toHaveLength(expectedTotal);
+    expect(items).toHaveLength(0); // no generated items
 
-    // Verify ordering: choose items come before read items
-    const chooseIdx = items.findIndex((i) => i.type === "choose");
-    const readIdx = items.findIndex((i) => i.type === "read");
-    expect(chooseIdx).toBeGreaterThanOrEqual(0);
-    expect(readIdx).toBeGreaterThan(chooseIdx);
+    // The full lesson flow comes from authored sequences
+    const teachingItems = lesson2.teachingSequence ?? [];
+    const exitItems = lesson2.exitSequence ?? [];
+    const totalItems = teachingItems.length + exitItems.length;
+    expect(totalItems).toBeGreaterThan(0);
   });
 
   it("works with checkpoint lesson 7 from LESSONS_V2", async () => {
