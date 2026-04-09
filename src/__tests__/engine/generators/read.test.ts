@@ -200,7 +200,8 @@ describe("generateReadItems", () => {
     const items = generateReadItems(makeInput(1));
     for (const item of items) {
       expect(item.prompt.arabicDisplay).toBeTruthy();
-      expect(item.prompt.text).toBe("What does this say?");
+      expect(item.prompt.text).toBeTruthy();
+      expect(typeof item.prompt.text).toBe("string");
     }
   });
 

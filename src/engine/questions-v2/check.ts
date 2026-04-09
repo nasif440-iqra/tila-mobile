@@ -35,19 +35,31 @@ export function generateCheckItems(input: GeneratorInput): ExerciseItem[] {
   const totalCount = step.count;
 
   // 2. Distribute totalCount across exercise types per exerciseWeights
-  //    Use Math.round for each weight, then adjust last to hit exact total.
+  //    Use largest-remainder method to guarantee allocations sum exactly to totalCount.
   const weights = profile.exerciseWeights;
-  const allocations: { type: ExerciseStep["type"]; count: number }[] = weights.map((w) => ({
+  const rawAllocations = weights.map((w) => ({
     type: w.type,
-    count: Math.round(totalCount * w.weight),
+    floor: Math.floor(totalCount * w.weight),
+    fractional: (totalCount * w.weight) - Math.floor(totalCount * w.weight),
   }));
 
-  // Adjust for rounding drift: add/subtract from highest-weight type
-  const roundedTotal = allocations.reduce((sum, a) => sum + a.count, 0);
-  const drift = totalCount - roundedTotal;
-  if (drift !== 0 && allocations.length > 0) {
-    // Apply drift to the first (highest-weight) allocation
-    allocations[0].count += drift;
+  const floorSum = rawAllocations.reduce((sum, a) => sum + a.floor, 0);
+  let remainder = totalCount - floorSum;
+
+  // Sort indices by fractional part descending — give +1 to those closest to rounding up
+  const sortedIndices = rawAllocations
+    .map((_, idx) => idx)
+    .sort((a, b) => rawAllocations[b].fractional - rawAllocations[a].fractional);
+
+  const allocations: { type: ExerciseStep["type"]; count: number }[] = rawAllocations.map((a) => ({
+    type: a.type,
+    count: a.floor,
+  }));
+
+  for (const idx of sortedIndices) {
+    if (remainder <= 0) break;
+    allocations[idx].count += 1;
+    remainder -= 1;
   }
 
   // 3. Enforce minimumReadPercent: ensure read items >= floor(minimumReadPercent * totalCount)
@@ -106,6 +118,36 @@ export function generateCheckItems(input: GeneratorInput): ExerciseItem[] {
     }
 
     allItems.push(...subItems);
+  }
+
+  // 6. Redistribute shortfall if sub-generators returned fewer items than allocated
+  //    (e.g., build can't produce items when entities lack teachingBreakdownIds)
+  if (allItems.length < totalCount) {
+    const fallbackTypes: ExerciseStep["type"][] = ["read", "choose", "hear"];
+
+    for (const fbType of fallbackTypes) {
+      if (allItems.length >= totalCount) break;
+
+      const fbGenerator = SUB_GENERATORS[fbType];
+      if (!fbGenerator) continue;
+
+      const fbCount = totalCount - allItems.length;
+      const fbSubStep = buildSubStep(fbType, fbCount, step, allUnlockedEntities);
+      if (!fbSubStep) continue;
+
+      const fbInput: GeneratorInput = { ...input, step: fbSubStep };
+      const fbItems = fbGenerator(fbInput);
+
+      for (let i = 0; i < fbItems.length && allItems.length < totalCount; i++) {
+        const bucket = diagnosticTags[(allItems.length) % diagnosticTags.length];
+        fbItems[i] = {
+          ...fbItems[i],
+          generatedBy: fbType,
+          assessmentBucket: bucket,
+        };
+        allItems.push(fbItems[i]);
+      }
+    }
   }
 
   return allItems;
