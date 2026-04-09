@@ -341,15 +341,114 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Show the already-known letters joined in real connected strings",
     teachEntityIds: ["chunk:bml", "chunk:nml", "chunk:yml"],
     reviewEntityIds: ["combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "combo:noon-fatha", "combo:ya-fatha"],
+    teachingSequence: [
+      // Present: Bridge reveal 1 — connected بَمَلَ with spaced isolated alt
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E",
+          arabicDisplayAlt: "\u0628\u064E  \u0645\u064E  \u0644\u064E",
+          text: "Same letters, same sounds, new shape",
+          audioKey: "chunk_bml",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "chunk:bml",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Bridge reveal 2 — connected نَمَلَ with spaced isolated alt
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0646\u064E\u0645\u064E\u0644\u064E",
+          arabicDisplayAlt: "\u0646\u064E  \u0645\u064E  \u0644\u064E",
+          text: "Same letters, same sounds, new shape",
+          audioKey: "chunk_nml",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "chunk:nml",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Guided recognition: Find Ba inside connected بَمَلَ
+      {
+        type: "tap",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E",
+          text: "Find Ba inside this word",
+        },
+        options: [
+          { id: "L13-tap-opt-ba", displayArabic: "\u0628", isCorrect: true },
+          { id: "L13-tap-opt-meem", displayArabic: "\u0645", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L13-tap-opt-ba" },
+        targetEntityId: "letter:2",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Connected→isolated decomposition: Which letters make up بَمَلَ?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E",
+          text: "Which letters make up this word?",
+        },
+        options: [
+          { id: "L13-decomp-opt-bml", displayText: "\u0628\u064E \u0645\u064E \u0644\u064E", isCorrect: true },
+          { id: "L13-decomp-opt-nml", displayText: "\u0646\u064E \u0645\u064E \u0644\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L13-decomp-opt-bml" },
+        targetEntityId: "chunk:bml",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+    ],
     exercisePlan: [
-      // Tap: recognize familiar letters in their connected shapes
-      { type: "tap", count: 2, target: "letter", source: { from: "review" } },
-      // Choose: pick the correct connected chunk from similar options
-      { type: "choose", count: 3, target: "chunk", source: { from: "teach" } },
-      // Build: assemble connected chunks from combo tiles
-      { type: "build", count: 3, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      // Read: decode connected strings — the real shift
-      { type: "read", count: 4, target: "chunk", source: { from: "teach" }, connected: true },
+      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+    ],
+    exitSequence: [
+      // Exit 1: بَمَلَ (easy — just saw it in bridge)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L13-exit1-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: true },
+          { id: "L13-exit1-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: false },
+          { id: "L13-exit1-opt-yml", audioKey: "chunk_yml", displayText: "yamala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L13-exit1-opt-bml" },
+        targetEntityId: "chunk:bml",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 2: نَمَلَ (medium — second bridge chunk)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0646\u064E\u0645\u064E\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L13-exit2-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: true },
+          { id: "L13-exit2-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: false },
+          { id: "L13-exit2-opt-yml", audioKey: "chunk_yml", displayText: "yamala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L13-exit2-opt-nml" },
+        targetEntityId: "chunk:nml",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 3: يَمَلَ (hard — new combination)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u064A\u064E\u0645\u064E\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L13-exit3-opt-yml", audioKey: "chunk_yml", displayText: "yamala", isCorrect: true },
+          { id: "L13-exit3-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: false },
+          { id: "L13-exit3-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L13-exit3-opt-yml" },
+        targetEntityId: "chunk:yml",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "connected",
@@ -360,16 +459,129 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Teach non-connecting behavior through reading, not typography trivia",
     teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:hab"],
     reviewEntityIds: ["chunk:bml", "chunk:yml", "combo:alif-fatha", "combo:ha-fatha"],
+    teachingSequence: [
+      // Present: Bridge reveal — fully connected vs chain-break contrast
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E",
+          arabicDisplayAlt: "\u0628\u064E\u0627\u0628\u064E",
+          text: "Most letters hold hands. Alif lets go.",
+          audioKey: "chunk_bab",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "chunk:bab",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Second bridge — another chain-break word
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0647\u064E\u0627\u0628\u064E",
+          text: "Another word where alif breaks the chain",
+          audioKey: "chunk_hab",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "chunk:hab",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Gap contrast: Which word has a gap?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "",
+          text: "Which word has a gap?",
+        },
+        options: [
+          { id: "L14-gap-opt-bab", displayArabic: "\u0628\u064E\u0627\u0628\u064E", isCorrect: true },
+          { id: "L14-gap-opt-bml", displayArabic: "\u0628\u064E\u0645\u064E\u0644\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-gap-opt-bab" },
+        targetEntityId: "chunk:bab",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Wider contrast: Which word starts with alif?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "",
+          text: "Which word starts with alif?",
+        },
+        options: [
+          { id: "L14-wider-opt-abn", displayArabic: "\u0627\u064E\u0628\u064E\u0646\u064E", isCorrect: true },
+          { id: "L14-wider-opt-bab", displayArabic: "\u0628\u064E\u0627\u0628\u064E", isCorrect: false },
+          { id: "L14-wider-opt-bml", displayArabic: "\u0628\u064E\u0645\u064E\u0644\u064E", isCorrect: false },
+          { id: "L14-wider-opt-hab", displayArabic: "\u0647\u064E\u0627\u0628\u064E", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-wider-opt-abn" },
+        targetEntityId: "chunk:abn",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+    ],
     exercisePlan: [
-      // Choose: which chunk has alif breaking the chain? Teaches through visual comparison.
-      { type: "choose", count: 2, target: "chunk", source: { from: "teach" } },
-      // Choose: compare chain-break chunks against fully-connected review chunks
-      { type: "choose", count: 2, target: "chunk", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
-      // Build: assemble chunks with alif chain-breaker — learner sees the visual gap form
-      { type: "build", count: 3, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      // Read: decode connected strings with alif chain-breaks — exit block
-      // Heavier read block: this is where the learner proves they can handle breaks
-      { type: "read", count: 5, target: "chunk", source: { from: "mixed", mix: { teach: 3, review: 2 } }, connected: true },
+      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
+    ],
+    exitSequence: [
+      // Exit 1: بَابَ (familiar from bridge)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0627\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L14-exit1-opt-bab", audioKey: "chunk_bab", displayText: "baba", isCorrect: true },
+          { id: "L14-exit1-opt-abn", audioKey: "chunk_abn", displayText: "abana", isCorrect: false },
+          { id: "L14-exit1-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-exit1-opt-bab" },
+        targetEntityId: "chunk:bab",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 2: اَبَنَ (new chain-break combo)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0627\u064E\u0628\u064E\u0646\u064E", text: "What does this say?" },
+        options: [
+          { id: "L14-exit2-opt-abn", audioKey: "chunk_abn", displayText: "abana", isCorrect: true },
+          { id: "L14-exit2-opt-bab", audioKey: "chunk_bab", displayText: "baba", isCorrect: false },
+          { id: "L14-exit2-opt-hab", audioKey: "chunk_hab", displayText: "haba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-exit2-opt-abn" },
+        targetEntityId: "chunk:abn",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 3: هَابَ (second bridge chunk)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0647\u064E\u0627\u0628\u064E", text: "What does this say?" },
+        options: [
+          { id: "L14-exit3-opt-hab", audioKey: "chunk_hab", displayText: "haba", isCorrect: true },
+          { id: "L14-exit3-opt-bab", audioKey: "chunk_bab", displayText: "baba", isCorrect: false },
+          { id: "L14-exit3-opt-abn", audioKey: "chunk_abn", displayText: "abana", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-exit3-opt-hab" },
+        targetEntityId: "chunk:hab",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 4: بَمَلَ (fully connected review)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E", text: "What does this say?" },
+        options: [
+          { id: "L14-exit4-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: true },
+          { id: "L14-exit4-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: false },
+          { id: "L14-exit4-opt-bab", audioKey: "chunk_bab", displayText: "baba", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L14-exit4-opt-bml" },
+        targetEntityId: "chunk:bml",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "connected",
