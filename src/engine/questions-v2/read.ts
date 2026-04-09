@@ -68,7 +68,7 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
     items.push({
       type: "read",
       prompt: {
-        text: "What does this say?",
+        text: "Read this aloud",
         arabicDisplay: target.displayArabic,
       },
       options: finalOptions,

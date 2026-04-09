@@ -219,17 +219,15 @@ export const LESSONS_V2: LessonV2[] = [
     teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:hab"],
     reviewEntityIds: ["chunk:bml", "chunk:yml", "combo:alif-fatha", "combo:ha-fatha"],
     exercisePlan: [
-      // Choose: which letter breaks the chain? Alif is the only non-connector known.
-      // The learner sees connected chunks and identifies alif as the break point.
-      { type: "choose", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1"] }, distractorStrategy: "shape" },
-      // Choose: pick the chunk where the chain breaks correctly
+      // Choose: which chunk has alif breaking the chain? Teaches through visual comparison.
       { type: "choose", count: 2, target: "chunk", source: { from: "teach" } },
-      // Build: assemble chunks with alif chain-breaker — learner sees the gap
-      { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      // Fix: spot incorrect joins (chain should break at alif but doesn't)
-      { type: "fix", count: 2, target: "join", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
+      // Choose: compare chain-break chunks against fully-connected review chunks
+      { type: "choose", count: 2, target: "chunk", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
+      // Build: assemble chunks with alif chain-breaker — learner sees the visual gap form
+      { type: "build", count: 3, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
       // Read: decode connected strings with alif chain-breaks — exit block
-      { type: "read", count: 4, target: "chunk", source: { from: "mixed", mix: { teach: 2, review: 2 } }, connected: true },
+      // Heavier read block: this is where the learner proves they can handle breaks
+      { type: "read", count: 5, target: "chunk", source: { from: "mixed", mix: { teach: 3, review: 2 } }, connected: true },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "connected",
@@ -262,8 +260,9 @@ export const LESSONS_V2: LessonV2[] = [
       { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
       { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
       { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
-      // Fix: daal is a chain-breaker — learner spots join errors in connected context
-      { type: "fix", count: 2, target: "join", source: { from: "teach" } },
+      // Choose: daal combos in connected context — learner sees daal doesn't connect forward
+      { type: "choose", count: 2, target: "combo", source: { from: "teach" }, distractorStrategy: "vowel" },
+      // Read: decode daal combos in connected rendering — exit block
       { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: true },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
