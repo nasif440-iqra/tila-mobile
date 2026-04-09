@@ -290,4 +290,40 @@ export const LESSONS_V2: LessonV2[] = [
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",
   },
+
+  // ── Phase 2 Checkpoint ──
+
+  {
+    id: 18, phase: 2, module: "2.4", moduleTitle: "Phase 2 Checkpoint",
+    title: "Checkpoint 2: Early Connected Reading",
+    description: "Assess connected chunks with short vowels and early sukun — do not unlock Phase 3 until the learner can handle connected reading",
+
+    // The checkpoint draws from the FULL Phase 2 entity set.
+    // These are not "taught" here — they are the accumulated inventory being assessed.
+    teachEntityIds: [
+      // Letters known by end of Phase 2
+      "letter:1", "letter:2", "letter:24", "letter:23", "letter:25", "letter:28", "letter:26", "letter:12", "letter:8",
+      // Connected chunks (L13-14)
+      "chunk:bml", "chunk:nml", "chunk:yml", "chunk:abn", "chunk:bab", "chunk:hab",
+      // Sukun chunks (L17)
+      "chunk:bas", "chunk:min", "chunk:lam",
+      // Key combos across all three vowels + sukun
+      "combo:ba-fatha", "combo:ma-kasra", "combo:la-damma", "combo:noon-fatha",
+      "combo:seen-fatha", "combo:daal-fatha", "combo:ya-kasra", "combo:ha-damma",
+      "combo:seen-sukun", "combo:noon-sukun",
+    ],
+    reviewEntityIds: [],
+
+    exercisePlan: [
+      // Single check step — the assessment profile controls the exercise mix
+      { type: "check", count: 12, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-2-checkpoint" },
+    ],
+
+    masteryPolicy: {
+      passThreshold: 0.90,       // Stricter than normal lessons (85%)
+      decodePassRequired: 3,     // Last 3 decode items must be correct
+      decodeMinPercent: 0.80,    // 80% on read/decode items specifically
+    },
+    renderProfile: "connected",  // Assessment renders in connected script
+  },
 ];
