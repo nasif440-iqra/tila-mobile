@@ -16,14 +16,20 @@ export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
 
   if (step.type !== "fix") return [];
 
-  // 1. Pick source entities, filter to fixable
+  // 1. Pick source entities.
+  // For "vowel" errors, we need entities with explicit harakat marks → require "fixable".
+  // For structural error types (join, dot, letter, word) the error is introduced
+  // programmatically, so any readable entity works as the target.
   const sourceEntities = pickEntitiesBySource(
     step.source,
     teachEntities,
     reviewEntities,
     allUnlockedEntities,
   );
-  const capable = filterToCapability(sourceEntities, "fixable");
+  const errorType = step.target;
+  const capable = errorType === "vowel"
+    ? filterToCapability(sourceEntities, "fixable")
+    : filterToCapability(sourceEntities, "readable");
   if (capable.length === 0) return [];
 
   const items: ExerciseItem[] = [];
@@ -32,8 +38,6 @@ export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
     const target = capable[i % capable.length];
 
     // 2. Introduce one error based on step.target
-    const errorType = step.target;
-
     if (errorType === "vowel") {
       // ── Vowel error: swap harakat mark ──
 
@@ -104,7 +108,7 @@ export function generateFixItems(input: GeneratorInput): ExerciseItem[] {
       // present the original as the correct replacement (whole-unit substitution).
 
       const pool = allUnlockedEntities.filter(
-        (e) => e.id !== target.id && e.capabilities.includes("fixable"),
+        (e) => e.id !== target.id && e.capabilities.includes("readable"),
       );
       const wrong = pool.length > 0 ? pool[i % pool.length] : target;
 

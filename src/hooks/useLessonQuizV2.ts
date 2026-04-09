@@ -8,6 +8,7 @@ import { recordAttempt, createEntityMastery } from "@/src/engine/v2/mastery";
 import type { EntityMastery, RecentAttempt } from "@/src/engine/v2/mastery";
 import { generateV2Exercises } from "@/src/engine/questions-v2/index";
 import { resolveAll } from "@/src/engine/v2/entityRegistry";
+import { LESSONS_V2 } from "@/src/data/curriculum-v2/lessons";
 import type { useProgressV2 } from "./useProgressV2";
 import type { useMasteryV2 } from "./useMasteryV2";
 
@@ -58,18 +59,32 @@ export function useLessonQuizV2(
         const lessonEntities = await resolveAll(lessonEntityIds);
 
         // Build a broader pool for distractors so generators always have 3+ same-type options.
-        // Letters: all 28
-        const allLetterIds = Array.from({ length: 28 }, (_, i) => `letter:${i + 1}`);
-        const allLetters = await resolveAll(allLetterIds);
+        // Letters: only those taught in lessons up to and including the current lesson
+        const priorLessons = LESSONS_V2.filter((l) => l.id <= lesson.id);
+        const allPriorEntityIds = new Set<string>();
+        for (const l of priorLessons) {
+          l.teachEntityIds.forEach((id) => allPriorEntityIds.add(id));
+          l.reviewEntityIds.forEach((id) => allPriorEntityIds.add(id));
+        }
+        const priorLetterIds = Array.from(allPriorEntityIds).filter((id) => id.startsWith("letter:"));
+        const allLetters = await resolveAll(priorLetterIds);
 
-        // Combos: generate fatha/kasra/damma combos for common letters
-        // This gives the read generator enough combo distractors
-        const comboSlugs = ["ba", "ta", "tha", "jeem", "daal", "ra", "seen", "sheen", "ma", "la", "noon", "ha", "ya", "kaf", "fa"];
+        // Combos: generate fatha/kasra/damma combos for ALL 28 letter slugs so every
+        // possible combo entity resolves (fixes missing alif, haa, khaa, etc.)
+        const comboSlugs = [
+          "alif", "ba", "ta", "tha", "jeem", "haa", "khaa",
+          "daal", "dhaal", "ra", "zay", "seen", "sheen",
+          "saad", "daad", "taa", "dhaa", "ain", "ghain",
+          "fa", "qaf", "kaf", "la", "ma", "noon", "ha", "waw", "ya",
+        ];
         const harakatNames = ["fatha", "kasra", "damma"];
         const comboIds = comboSlugs.flatMap((slug) =>
           harakatNames.map((h) => `combo:${slug}-${h}`)
         );
-        const allCombos = await resolveAll(comboIds);
+        // Only include combos that were explicitly taught in prior lessons
+        const priorComboIds = Array.from(allPriorEntityIds).filter((id) => id.startsWith("combo:"));
+        const priorComboSet = new Set(priorComboIds);
+        const allCombos = (await resolveAll(comboIds)).filter((combo) => priorComboSet.has(combo.id));
 
         const allUnlockedEntities = [
           ...allLetters,

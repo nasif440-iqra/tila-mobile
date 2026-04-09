@@ -53,10 +53,13 @@ export function generateBuildItems(input: GeneratorInput): ExerciseItem[] {
     const breakdownIds: string[] = (target as any).teachingBreakdownIds;
 
     // 3. Build correct tiles from breakdown IDs
-    const correctTiles: BuildTile[] = breakdownIds.map((bdId) => {
+    // Use position index (j) in addition to bdId and item index (i) to ensure
+    // uniqueness when the same entity appears multiple times in a breakdown
+    // (e.g., chunk:bab = [combo:ba-fatha, combo:alif-fatha, combo:ba-fatha]).
+    const correctTiles: BuildTile[] = breakdownIds.map((bdId, j) => {
       const resolved = entityById.get(bdId);
       return {
-        id: `tile-correct-${bdId}-${i}`,
+        id: `tile-correct-${bdId}-${i}-${j}`,
         displayArabic: resolved?.displayArabic ?? bdId,
         entityId: bdId,
         isDistractor: false,

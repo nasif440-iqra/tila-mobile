@@ -70,8 +70,6 @@ export function generateReadItems(input: GeneratorInput): ExerciseItem[] {
       prompt: {
         text: "What does this say?",
         arabicDisplay: target.displayArabic,
-        // Pass connected rendering hint through metadata
-        ...(step.connected === true ? { hintText: resolvedRenderProfile } : {}),
       },
       options: finalOptions,
       correctAnswer: { kind: "single", value: target.id },
@@ -106,6 +104,9 @@ function buildOption(
     return {
       id,
       audioKey,
+      // Include transliteration as a display fallback for chunk entities that
+      // don't have audio assets yet — prevents CompactOption showing nothing.
+      displayText: transliteration,
       isCorrect,
     };
   }

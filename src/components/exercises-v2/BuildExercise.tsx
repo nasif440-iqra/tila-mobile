@@ -62,11 +62,11 @@ export function BuildExercise({ item, onAnswer }: Props) {
 
       {/* Tile bank */}
       <View style={styles.tileBank}>
-        {tiles.map((tile) => {
+        {tiles.map((tile, index) => {
           const selected = selectedTileIds.includes(tile.id);
           return (
             <Pressable
-              key={tile.id}
+              key={`${tile.id}-${index}`}
               onPress={() => handleTileTap(tile)}
               style={[
                 styles.tile,
