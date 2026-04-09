@@ -626,20 +626,113 @@ export const LESSONS_V2: LessonV2[] = [
   {
     id: 17, phase: 2, module: "2.3",
     title: "Sukun Arrives",
-    description: "Introduce consonant stopping so the learner can read more Quran-like chunks",
+    description: "Introduce consonant stopping so the learner can read CVC chunks like bas, min, lam",
     teachEntityIds: ["rule:sukun", "combo:seen-sukun", "combo:noon-sukun", "combo:ma-sukun", "chunk:bas", "chunk:min", "chunk:lam"],
     reviewEntityIds: ["combo:ba-fatha", "combo:ma-kasra", "combo:la-fatha", "combo:seen-fatha", "combo:noon-fatha"],
+    teachingSequence: [
+      // Present: Introduce the sukun mark
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0652",
+          text: "This circle means stop. No vowel sound.",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "rule:sukun",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Present: Sound vs stop contrast — seen-fatha vs seen-sukun
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0633\u064E",
+          arabicDisplayAlt: "\u0633\u0652",
+          text: "Fatha keeps the sound going. Sukun stops it.",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "combo:seen-sukun",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // Choose: Minimal-pair — which one stops?
+      {
+        type: "choose",
+        prompt: {
+          arabicDisplay: "",
+          audioKey: "combo_seen-sukun",
+          text: "Which one stops?",
+        },
+        options: [
+          { id: "L17-pair-opt-sf", displayArabic: "\u0633\u064E", audioKey: "combo_seen-fatha", isCorrect: false },
+          { id: "L17-pair-opt-ss", displayArabic: "\u0633\u0652", audioKey: "combo_seen-sukun", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L17-pair-opt-ss" },
+        targetEntityId: "combo:seen-sukun",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+      // Present: CVC introduction — bas
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0628\u064E\u0633\u0652",
+          text: "Ba says \u2018ba\u2019, seen stops: \u2018bas\u2019",
+          audioKey: "chunk_bas",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "chunk:bas",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+    ],
     exercisePlan: [
-      // Hear the difference: sukun stops the sound
-      { type: "hear", count: 2, target: "combo", source: { from: "teach" }, direction: "audio-to-script" },
-      // Discriminate sukun vs voweled combos
-      { type: "choose", count: 3, target: "combo", source: { from: "mixed", mix: { teach: 2, review: 1 } }, distractorStrategy: "vowel" },
-      // Build CVC chunks with sukun
       { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      // Fix: spot wrong mark (sukun vs fatha/kasra/damma)
       { type: "fix", count: 2, target: "vowel", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
-      // Decode chunks — exit block (decodePassRequired: 2)
-      { type: "read", count: 3, target: "chunk", source: { from: "teach" }, connected: false },
+    ],
+    exitSequence: [
+      // Exit 1: بَسْ (bas)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0633\u0652", text: "What does this say?" },
+        options: [
+          { id: "L17-exit1-opt-bas", audioKey: "chunk_bas", displayText: "bas", isCorrect: true },
+          { id: "L17-exit1-opt-min", audioKey: "chunk_min", displayText: "min", isCorrect: false },
+          { id: "L17-exit1-opt-lam", audioKey: "chunk_lam", displayText: "lam", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L17-exit1-opt-bas" },
+        targetEntityId: "chunk:bas",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 2: مِنْ (min)
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0645\u0650\u0646\u0652", text: "What does this say?" },
+        options: [
+          { id: "L17-exit2-opt-min", audioKey: "chunk_min", displayText: "min", isCorrect: true },
+          { id: "L17-exit2-opt-bas", audioKey: "chunk_bas", displayText: "bas", isCorrect: false },
+          { id: "L17-exit2-opt-lam", audioKey: "chunk_lam", displayText: "lam", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L17-exit2-opt-min" },
+        targetEntityId: "chunk:min",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Exit 3: لَمْ (lam) — connected form to bridge toward L18
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0644\u064E\u0645\u0652", text: "What does this say?" },
+        options: [
+          { id: "L17-exit3-opt-lam", audioKey: "chunk_lam", displayText: "lam", isCorrect: true },
+          { id: "L17-exit3-opt-min", audioKey: "chunk_min", displayText: "min", isCorrect: false },
+          { id: "L17-exit3-opt-bas", audioKey: "chunk_bas", displayText: "bas", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L17-exit3-opt-lam" },
+        targetEntityId: "chunk:lam",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "isolated",
@@ -653,7 +746,6 @@ export const LESSONS_V2: LessonV2[] = [
     description: "Assess connected chunks with short vowels and early sukun — do not unlock Phase 3 until the learner can handle connected reading",
 
     // Checkpoint teaches nothing new — it assesses the accumulated Phase 2 inventory.
-    // All entities go in reviewEntityIds to avoid false mastery introductions.
     teachEntityIds: [],
     reviewEntityIds: [
       // Letters known by end of Phase 2
@@ -668,16 +760,77 @@ export const LESSONS_V2: LessonV2[] = [
       "combo:seen-sukun", "combo:noon-sukun",
     ],
 
+    teachingSequence: [
+      // Confidence opener — easy connected read
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0645\u064E\u0644\u064E", text: "You know this one" },
+        options: [
+          { id: "L18-opener-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: true },
+          { id: "L18-opener-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: false },
+          { id: "L18-opener-opt-yml", audioKey: "chunk_yml", displayText: "yamala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L18-opener-opt-bml" },
+        targetEntityId: "chunk:bml",
+        isDecodeItem: false,
+        answerMode: "audio",
+      },
+    ],
+
     exercisePlan: [
-      // Single check step — the assessment profile controls the exercise mix
-      { type: "check", count: 12, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-2-checkpoint" },
+      { type: "check", count: 8, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-2-checkpoint" },
+    ],
+
+    exitSequence: [
+      // Decode gate 1: نَمَلَ (namala) — connected chunk
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0646\u064E\u0645\u064E\u0644\u064E", text: "Final reading check" },
+        options: [
+          { id: "L18-exit1-opt-nml", audioKey: "chunk_nml", displayText: "namala", isCorrect: true },
+          { id: "L18-exit1-opt-bml", audioKey: "chunk_bml", displayText: "bamala", isCorrect: false },
+          { id: "L18-exit1-opt-yml", audioKey: "chunk_yml", displayText: "yamala", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L18-exit1-opt-nml" },
+        targetEntityId: "chunk:nml",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Decode gate 2: بَابَ (baba) — chain-break
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0628\u064E\u0627\u0628\u064E", text: "Final reading check" },
+        options: [
+          { id: "L18-exit2-opt-bab", audioKey: "chunk_bab", displayText: "baba", isCorrect: true },
+          { id: "L18-exit2-opt-hab", audioKey: "chunk_hab", displayText: "haba", isCorrect: false },
+          { id: "L18-exit2-opt-abn", audioKey: "chunk_abn", displayText: "abana", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L18-exit2-opt-bab" },
+        targetEntityId: "chunk:bab",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
+      // Decode gate 3: مِنْ (min) — sukun chunk
+      {
+        type: "read",
+        prompt: { arabicDisplay: "\u0645\u0650\u0646\u0652", text: "Final reading check" },
+        options: [
+          { id: "L18-exit3-opt-min", audioKey: "chunk_min", displayText: "min", isCorrect: true },
+          { id: "L18-exit3-opt-bas", audioKey: "chunk_bas", displayText: "bas", isCorrect: false },
+          { id: "L18-exit3-opt-lam", audioKey: "chunk_lam", displayText: "lam", isCorrect: false },
+        ],
+        correctAnswer: { kind: "single", value: "L18-exit3-opt-min" },
+        targetEntityId: "chunk:min",
+        isDecodeItem: true,
+        answerMode: "audio",
+      },
     ],
 
     masteryPolicy: {
-      passThreshold: 0.90,       // Stricter than normal lessons (85%)
-      decodePassRequired: 3,     // Last 3 decode items must be correct
-      decodeMinPercent: 0.80,    // 80% on read/decode items specifically
+      passThreshold: 0.90,
+      decodePassRequired: 3,
+      decodeMinPercent: 0.80,
     },
-    renderProfile: "connected",  // Assessment renders in connected script
+    renderProfile: "connected",
   },
 ];
