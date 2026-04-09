@@ -112,8 +112,9 @@ export const LESSONS_V2: LessonV2[] = [
     id: 7, phase: 1, module: "1.1",
     title: "Checkpoint 1: Tiny Chunks",
     description: "Confirm the learner can decode short unseen items, not merely tap familiar letters",
-    teachEntityIds: ["letter:1", "letter:2", "letter:24", "letter:23", "combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "chunk:ba-ma", "chunk:la-ma"],
-    reviewEntityIds: [],
+    // Checkpoint teaches nothing new — assesses Phase 1 accumulated inventory
+    teachEntityIds: [],
+    reviewEntityIds: ["letter:1", "letter:2", "letter:24", "letter:23", "combo:ba-fatha", "combo:ma-fatha", "combo:la-fatha", "chunk:ba-ma", "chunk:la-ma"],
     exercisePlan: [
       { type: "check", count: 10, target: "mixed", source: { from: "all" }, assessmentProfile: "phase-1-checkpoint" },
     ],
@@ -298,9 +299,10 @@ export const LESSONS_V2: LessonV2[] = [
     title: "Checkpoint 2: Early Connected Reading",
     description: "Assess connected chunks with short vowels and early sukun — do not unlock Phase 3 until the learner can handle connected reading",
 
-    // The checkpoint draws from the FULL Phase 2 entity set.
-    // These are not "taught" here — they are the accumulated inventory being assessed.
-    teachEntityIds: [
+    // Checkpoint teaches nothing new — it assesses the accumulated Phase 2 inventory.
+    // All entities go in reviewEntityIds to avoid false mastery introductions.
+    teachEntityIds: [],
+    reviewEntityIds: [
       // Letters known by end of Phase 2
       "letter:1", "letter:2", "letter:24", "letter:23", "letter:25", "letter:28", "letter:26", "letter:12", "letter:8",
       // Connected chunks (L13-14)
@@ -312,7 +314,6 @@ export const LESSONS_V2: LessonV2[] = [
       "combo:seen-fatha", "combo:daal-fatha", "combo:ya-kasra", "combo:ha-damma",
       "combo:seen-sukun", "combo:noon-sukun",
     ],
-    reviewEntityIds: [],
 
     exercisePlan: [
       // Single check step — the assessment profile controls the exercise mix
