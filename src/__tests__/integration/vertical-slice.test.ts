@@ -18,32 +18,39 @@ describe("vertical slice integration", () => {
     confusionPairs: new Map(),
   };
 
-  it("generates exercises for lesson 2 (tap + hear + choose + read)", async () => {
+  it("generates exercises for lesson 2 (hybrid: teachingSequence + exercisePlan + exitSequence)", async () => {
     const lesson = LESSONS_V2.find(l => l.id === 2)!;
-    const items = await generateV2Exercises(lesson, [], emptySnapshot);
+    const generated = await generateV2Exercises(lesson, [], emptySnapshot);
+    const teachingSeq = lesson.teachingSequence ?? [];
+    const exitSeq = lesson.exitSequence ?? [];
+    const allItems = [...teachingSeq, ...generated, ...exitSeq];
 
-    expect(items.length).toBeGreaterThan(0);
-    // Lesson 2 plan: 2 tap + 2 hear + 3 choose + 3 read = 10
-    expect(items.length).toBe(10);
+    // Generated items come from exercisePlan only (2 choose + 1 read = 3)
+    expect(generated.length).toBe(3);
 
-    // Check exercise types are present
-    const types = new Set(items.map(i => i.type));
+    // Full lesson includes authored teachingSequence (4) + generated (3) + exitSequence (2) = 9
+    expect(allItems.length).toBe(9);
+
+    // Check exercise types across the full lesson flow
+    const types = new Set(allItems.map(i => i.type));
+    expect(types.has("present")).toBe(true);
     expect(types.has("tap")).toBe(true);
     expect(types.has("hear")).toBe(true);
     expect(types.has("choose")).toBe(true);
     expect(types.has("read")).toBe(true);
 
-    // Read items should be decode items
-    const readItems = items.filter(i => i.type === "read");
-    readItems.forEach(i => expect(i.isDecodeItem).toBe(true));
+    // Exit sequence read items should be decode items
+    const exitReadItems = exitSeq.filter(i => i.type === "read");
+    exitReadItems.forEach(i => expect(i.isDecodeItem).toBe(true));
   });
 
   it("scores a passing lesson correctly", async () => {
     const lesson = LESSONS_V2.find(l => l.id === 2)!;
-    const items = await generateV2Exercises(lesson, [], emptySnapshot);
+    const generated = await generateV2Exercises(lesson, [], emptySnapshot);
+    const allItems = [...(lesson.teachingSequence ?? []), ...generated, ...(lesson.exitSequence ?? [])];
 
     // Simulate all correct answers
-    const scoredItems: ScoredItem[] = items.map(item => ({
+    const scoredItems: ScoredItem[] = allItems.map(item => ({
       item,
       correct: true,
       responseTimeMs: 1500,
@@ -61,12 +68,14 @@ describe("vertical slice integration", () => {
 
   it("scores a failing lesson with specific failure reasons", async () => {
     const lesson = LESSONS_V2.find(l => l.id === 2)!;
-    const items = await generateV2Exercises(lesson, [], emptySnapshot);
+    const generated = await generateV2Exercises(lesson, [], emptySnapshot);
+    const allItems = [...(lesson.teachingSequence ?? []), ...generated, ...(lesson.exitSequence ?? [])];
 
-    // Simulate mostly wrong answers (only 3 of 10 correct = 30%)
-    const scoredItems: ScoredItem[] = items.map((item, i) => ({
+    // Simulate mostly wrong answers (only 2 of scorable items correct)
+    // present items are filtered out by evaluateLesson, so we need enough wrong scorable items
+    const scoredItems: ScoredItem[] = allItems.map((item, i) => ({
       item,
-      correct: i < 3,  // first 3 correct, rest wrong
+      correct: i < 2,  // first 2 correct, rest wrong
       responseTimeMs: 1500,
       generatedBy: item.generatedBy ?? item.type,
       assessmentBucket: item.assessmentBucket,
@@ -82,10 +91,11 @@ describe("vertical slice integration", () => {
 
   it("updates mastery after a passed lesson", async () => {
     const lesson = LESSONS_V2.find(l => l.id === 2)!;
-    const items = await generateV2Exercises(lesson, [], emptySnapshot);
+    const generated = await generateV2Exercises(lesson, [], emptySnapshot);
+    const allItems = [...(lesson.teachingSequence ?? []), ...generated, ...(lesson.exitSequence ?? [])];
 
     // All correct
-    const scoredItems: ScoredItem[] = items.map(item => ({
+    const scoredItems: ScoredItem[] = allItems.map(item => ({
       item,
       correct: true,
       responseTimeMs: 1500,
@@ -124,16 +134,22 @@ describe("vertical slice integration", () => {
     // Checkpoint uses source: { from: "all" } — resolve review entities as the unlocked pool
     // (checkpoints have empty teachEntityIds; the assessed inventory is in reviewEntityIds)
     const allUnlocked: AnyEntity[] = await resolveAll(checkpoint.reviewEntityIds);
-    const items = await generateV2Exercises(checkpoint, allUnlocked, emptySnapshot);
+    const generated = await generateV2Exercises(checkpoint, allUnlocked, emptySnapshot);
+    const teachingSeq = checkpoint.teachingSequence ?? [];
+    const exitSeq = checkpoint.exitSequence ?? [];
 
-    // Check generator distributes items by weight with rounding — may produce slightly fewer
-    expect(items.length).toBeGreaterThanOrEqual(8);
-    expect(items.length).toBeLessThanOrEqual(10);
+    // exercisePlan has 1 check step with count=7 — generator produces 7 items
+    expect(generated.length).toBe(7);
 
-    // Simulate a failing checkpoint (~70% correct, need 90%)
-    const scoredItems: ScoredItem[] = items.map((item, i) => ({
+    // Full lesson: 1 teachingSequence opener + 7 generated + 2 exitSequence decode gates = 10
+    const allItems = [...teachingSeq, ...generated, ...exitSeq];
+    expect(allItems.length).toBe(10);
+
+    // Simulate a failing checkpoint (~60% correct on scorable items, need 90%)
+    // First item is a choose (teachingSequence opener), then 7 generated, then 2 exit decode items
+    const scoredItems: ScoredItem[] = allItems.map((item, i) => ({
       item,
-      correct: i < 7,
+      correct: i < 6,  // first 6 correct, rest wrong — below 90% threshold
       responseTimeMs: 1500,
       generatedBy: item.generatedBy ?? item.type,
       assessmentBucket: item.assessmentBucket,
@@ -152,11 +168,12 @@ describe("vertical slice integration", () => {
     // Checkpoint uses source: { from: "all" } — resolve review entities as the unlocked pool
     // (checkpoints have empty teachEntityIds; the assessed inventory is in reviewEntityIds)
     const allUnlocked: AnyEntity[] = await resolveAll(checkpoint.reviewEntityIds);
-    const items = await generateV2Exercises(checkpoint, allUnlocked, emptySnapshot);
+    const generated = await generateV2Exercises(checkpoint, allUnlocked, emptySnapshot);
+    const allItems = [...(checkpoint.teachingSequence ?? []), ...generated, ...(checkpoint.exitSequence ?? [])];
 
-    const scoredItems: ScoredItem[] = items.map((item, i) => ({
+    const scoredItems: ScoredItem[] = allItems.map((item, i) => ({
       item,
-      correct: i < 7,
+      correct: i < 6,  // ~60% correct, below 90% threshold
       responseTimeMs: 1500,
       generatedBy: item.generatedBy ?? item.type,
       assessmentBucket: item.assessmentBucket,
@@ -166,7 +183,7 @@ describe("vertical slice integration", () => {
     const result = evaluateLesson(checkpoint.id, scoredItems, checkpoint.masteryPolicy);
 
     // Generate remediation
-    const allMastery = items.map(i => createEntityMastery(i.targetEntityId));
+    const allMastery = allItems.map(i => createEntityMastery(i.targetEntityId));
     const remediation = generateRemediation(result, allMastery, 5);
 
     // Remediation should produce something (may be empty if bucket prefixes don't match — that's OK for now)
@@ -221,11 +238,12 @@ describe("vertical slice integration", () => {
       const allEntityIds = [...new Set([...lesson.teachEntityIds, ...lesson.reviewEntityIds])];
       const allUnlocked: AnyEntity[] = await resolveAll(allEntityIds);
 
-      const items = await generateV2Exercises(lesson, allUnlocked, snapshot);
-      expect(items.length).toBeGreaterThan(0);
+      const generated = await generateV2Exercises(lesson, allUnlocked, snapshot);
+      const allItems = [...(lesson.teachingSequence ?? []), ...generated, ...(lesson.exitSequence ?? [])];
+      expect(allItems.length).toBeGreaterThan(0);
 
       // All correct
-      const scoredItems: ScoredItem[] = items.map(item => ({
+      const scoredItems: ScoredItem[] = allItems.map(item => ({
         item,
         correct: true,
         responseTimeMs: 1200,

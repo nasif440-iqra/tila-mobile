@@ -11,9 +11,11 @@ describe("curriculum-v2 lesson data", () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  it("all lessons have non-empty exercisePlan", () => {
+  it("all lessons have non-empty exercisePlan or non-empty teachingSequence", () => {
     LESSONS_V2.forEach((lesson) => {
-      expect(lesson.exercisePlan.length).toBeGreaterThan(0);
+      const hasExercisePlan = lesson.exercisePlan.length > 0;
+      const hasTeachingSequence = (lesson.teachingSequence?.length ?? 0) > 0;
+      expect(hasExercisePlan || hasTeachingSequence).toBe(true);
     });
   });
 
@@ -51,17 +53,29 @@ describe("curriculum-v2 lesson data", () => {
   it("lessons with decodePassRequired end with decode-capable steps", () => {
     LESSONS_V2.filter((l) => l.masteryPolicy.decodePassRequired).forEach((lesson) => {
       const required = lesson.masteryPolicy.decodePassRequired!;
-      const plan = lesson.exercisePlan;
-      let decodeItemCount = 0;
-      for (let i = plan.length - 1; i >= 0; i--) {
-        const step = plan[i];
-        if (step.type === "read" || step.type === "check") {
-          decodeItemCount += step.count;
-        } else {
-          break;
+
+      // Decode steps may live in exitSequence (hybrid model) or at the end of exercisePlan
+      const exitSeq = lesson.exitSequence ?? [];
+      if (exitSeq.length > 0) {
+        // Count decode items in exitSequence
+        const decodeItemCount = exitSeq.filter(
+          (item) => item.isDecodeItem
+        ).length;
+        expect(decodeItemCount).toBeGreaterThanOrEqual(required);
+      } else {
+        // Fall back to checking exercisePlan tail
+        const plan = lesson.exercisePlan;
+        let decodeItemCount = 0;
+        for (let i = plan.length - 1; i >= 0; i--) {
+          const step = plan[i];
+          if (step.type === "read" || step.type === "check") {
+            decodeItemCount += step.count;
+          } else {
+            break;
+          }
         }
+        expect(decodeItemCount).toBeGreaterThanOrEqual(required);
       }
-      expect(decodeItemCount).toBeGreaterThanOrEqual(required);
     });
   });
 
