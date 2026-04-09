@@ -76,18 +76,11 @@ interface LessonV2 {
 - `exitSequence` plays after `exercisePlan`. Contains hand-authored decode gate items. Must be the final items in the lesson — nothing follows them.
 - Both are optional. Checkpoint lessons may have only `exitSequence` (decode gate) with no `teachingSequence`. Sprint lessons may have both.
 
-### ExerciseStep addition: `present`
+### `present` as an authored-only item type
 
-```typescript
-| {
-    type: "present";
-    count: 1;  // always 1 — each present is a unique authored screen
-    target: "letter" | "combo" | "chunk" | "rule" | "mark";
-    source: ExerciseSource;
-  }
-```
+`present` exists only as a value for `ExerciseItem.type` inside `teachingSequence`. It is **not** added to the `ExerciseStep` union in `exercisePlan`. There is no `present` generator and the dispatcher never encounters it — it is a pure data-driven item authored directly in lesson data and concatenated into the item array unchanged.
 
-The `present` type is used exclusively in `teachingSequence`. It is non-interactive (no scoring, no mastery effect). The generator dispatcher passes it through unchanged — the `PresentExercise` UI component handles rendering.
+The `PresentExercise` UI component renders it. It is non-interactive (no scoring, no mastery effect).
 
 ### AuthoredExerciseItem type
 
@@ -111,6 +104,7 @@ The existing lesson validator (`src/data/curriculum-v2/` validation) must be ext
   - Authored `read` items in `exitSequence` must have `isDecodeItem: true`
   - `present` items must have `isDecodeItem: false` and are excluded from scoring/mastery
   - `exitSequence` items must not include `present` type (exit is always scored)
+  - Every authored item must have a stable unique ID (e.g., `"L2-present-ba"`, `"L13-tap-find-ba"`). Every option and tile within authored items must also have a stable unique key. No duplicate IDs within a lesson. This prevents the duplicate-key runtime bugs seen in earlier v2 device testing.
 
 ### Runner sequencing update
 
@@ -121,6 +115,10 @@ The existing lesson validator (`src/data/curriculum-v2/` validation) must be ext
 ```
 
 Progress bar and item counter include all items. Scoring excludes `present` items.
+
+### Scoring math
+
+Pass/fail percentages, decode thresholds, and checkpoint bucket scores are calculated from **scored items only**, not from total displayed items. A lesson with 3 `present` items and 7 scored items uses 7 as the denominator. This applies to `masteryPolicy.passThreshold`, `decodePassRequired`, `decodeMinPercent`, result screen percentages, and analytics event payloads.
 
 ## Template Definitions
 
