@@ -218,16 +218,52 @@ export const LESSONS_V2: LessonV2[] = [
     teachEntityIds: ["chunk:abn", "chunk:bab", "chunk:hab"],
     reviewEntityIds: ["chunk:bml", "chunk:yml", "combo:alif-fatha", "combo:ha-fatha"],
     exercisePlan: [
-      // Tap: recognize alif as the non-connector the learner already knows
-      { type: "tap", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1", "letter:26"] } },
-      // Choose: pick chunks where the chain breaks correctly
+      // Choose: which letter breaks the chain? Alif is the only non-connector known.
+      // The learner sees connected chunks and identifies alif as the break point.
+      { type: "choose", count: 2, target: "letter", source: { from: "explicit", entityIds: ["letter:1"] }, distractorStrategy: "shape" },
+      // Choose: pick the chunk where the chain breaks correctly
       { type: "choose", count: 2, target: "chunk", source: { from: "teach" } },
-      // Build: assemble chunks with chain-breakers — learner sees the gap
+      // Build: assemble chunks with alif chain-breaker — learner sees the gap
       { type: "build", count: 2, target: "chunk", source: { from: "teach" }, maxTiles: 5 },
-      // Fix: spot incorrect joins (chain should break but doesn't, or vice versa)
+      // Fix: spot incorrect joins (chain should break at alif but doesn't)
       { type: "fix", count: 2, target: "join", source: { from: "mixed", mix: { teach: 1, review: 1 } } },
-      // Read: decode connected strings with chain-breakers — exit block
+      // Read: decode connected strings with alif chain-breaks — exit block
       { type: "read", count: 4, target: "chunk", source: { from: "mixed", mix: { teach: 2, review: 2 } }, connected: true },
+    ],
+    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "connected",
+  },
+
+  {
+    id: 15, phase: 2, module: "2.2",
+    title: "Meet Seen",
+    description: "Add \u0633 and increase useful readable combinations quickly",
+    teachEntityIds: ["letter:12", "combo:seen-fatha", "combo:seen-kasra", "combo:seen-damma"],
+    reviewEntityIds: ["letter:28", "letter:26", "combo:ya-fatha", "combo:ha-kasra"],
+    exercisePlan: [
+      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
+      { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
+      { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
+      { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
+      { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: false },
+    ],
+    masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
+    renderProfile: "isolated",
+  },
+  {
+    id: 16, phase: 2, module: "2.2",
+    title: "Meet Daal",
+    description: "Add \u062F and teach another chain-breaker in context",
+    teachEntityIds: ["letter:8", "combo:daal-fatha", "combo:daal-kasra", "combo:daal-damma"],
+    reviewEntityIds: ["letter:12", "combo:seen-fatha", "combo:ba-damma"],
+    exercisePlan: [
+      { type: "tap", count: 2, target: "letter", source: { from: "teach" } },
+      { type: "hear", count: 2, target: "letter", source: { from: "mixed", mix: { teach: 1, review: 1 } }, direction: "audio-to-script" },
+      { type: "choose", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, distractorStrategy: "vowel" },
+      { type: "build", count: 2, target: "combo", source: { from: "teach" }, maxTiles: 4 },
+      // Fix: daal is a chain-breaker — learner spots join errors in connected context
+      { type: "fix", count: 2, target: "join", source: { from: "teach" } },
+      { type: "read", count: 2, target: "combo", source: { from: "mixed", mix: { teach: 1, review: 1 } }, connected: true },
     ],
     masteryPolicy: { passThreshold: 0.85, decodePassRequired: 2 },
     renderProfile: "connected",
