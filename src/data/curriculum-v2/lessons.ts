@@ -4,59 +4,103 @@ export const LESSONS_V2: LessonV2[] = [
   {
     id: 1, phase: 1, module: "1.1", moduleTitle: "First Real Decoding Wins",
     title: "Arabic Starts Here",
-    description: "Orient to right-to-left reading and meet your first two letters",
+    description: "Learn how Arabic reads and meet your first two letters",
     teachEntityIds: ["letter:1", "letter:2"],
     reviewEntityIds: [],
     teachingSequence: [
-      // Present: Meet Alif
+      // ── Screen 1: Arabic reads right to left ──
       {
         type: "present",
         prompt: {
-          arabicDisplay: "\u0627",
-          text: "This is Alif \u2014 the first letter of Arabic",
-          audioKey: "letter_1",
+          arabicDisplay: "\u2190",
+          text: "Arabic is read from right to left \u2014 the opposite of English. Every word, every line, starts from the right side.",
         },
         correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "letter:1",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Present: Meet Ba
+      // ── Screen 2: Meet Alif ──
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0627",
+          text: "This is Alif \u2014 the first letter of the Arabic alphabet.\n\nIt\u2019s a tall, straight line. Alif makes a long \"aa\" sound, like the \u2018a\u2019 in \u2018father.\u2019",
+          audioKey: "letter_1",
+          hintText: "audio:letter_name_1",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Screen 3: Meet Ba ──
       {
         type: "present",
         prompt: {
           arabicDisplay: "\u0628",
-          text: "This is Ba",
+          text: "This is Ba \u2014 the second letter.\n\nNotice the single dot below \u2014 that\u2019s how you know it\u2019s Ba. It makes a \"b\" sound, just like \u2018book.\u2019",
           audioKey: "letter_2",
+          hintText: "audio:letter_name_2",
         },
         correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "letter:2",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Guided tap: Find Ba
+      // ── Screen 4: Side by side ──
+      {
+        type: "present",
+        prompt: {
+          arabicDisplay: "\u0627    \u0628",
+          text: "Here they are together \u2014 Alif and Ba.\n\nAlif is the tall line. Ba is the curve with a dot below. Tap the sound buttons to hear each one again.",
+          audioKey: "letter_1",
+          hintText: "audio:letter_2",
+        },
+        correctAnswer: { kind: "single", value: "none" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Screen 5: Guided tap — Find Alif ──
+      {
+        type: "tap",
+        prompt: {
+          arabicDisplay: "\u0627",
+          text: "Which letter is Alif \u2014 the tall line?",
+        },
+        options: [
+          { id: "L1-tap1-opt-ba", displayArabic: "\u0628", isCorrect: false },
+          { id: "L1-tap1-opt-alif", displayArabic: "\u0627", isCorrect: true },
+        ],
+        correctAnswer: { kind: "single", value: "L1-tap1-opt-alif" },
+        targetEntityId: "letter:1",
+        isDecodeItem: false,
+        answerMode: "arabic",
+      },
+      // ── Screen 6: Guided tap — Find Ba ──
       {
         type: "tap",
         prompt: {
           arabicDisplay: "\u0628",
-          text: "Find Ba",
+          text: "Which letter is Ba \u2014 the one with a dot below?",
         },
         options: [
-          { id: "L1-tap-opt-alif", displayArabic: "\u0627", isCorrect: false },
-          { id: "L1-tap-opt-ba", displayArabic: "\u0628", isCorrect: true },
+          { id: "L1-tap2-opt-alif", displayArabic: "\u0627", isCorrect: false },
+          { id: "L1-tap2-opt-ba", displayArabic: "\u0628", isCorrect: true },
         ],
-        correctAnswer: { kind: "single", value: "L1-tap-opt-ba" },
+        correctAnswer: { kind: "single", value: "L1-tap2-opt-ba" },
         targetEntityId: "letter:2",
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // Guided hear: Listen for Ba
+      // ── Screen 7: Listen for Ba ──
       {
         type: "hear",
         prompt: {
           arabicDisplay: "",
           audioKey: "letter_2",
-          text: "Listen \u2014 which one is it?",
+          text: "Listen to this sound. Which letter makes it?",
         },
         options: [
           { id: "L1-hear-opt-alif", displayArabic: "\u0627", isCorrect: false },
