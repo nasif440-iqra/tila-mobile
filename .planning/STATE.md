@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-03)
 Phase: 02 (Quiz Experience) — EXECUTING
 Plan: 1 of 3
 Status: Executing Phase 02
-Last activity: 2026-04-07 - Completed quick task 260407-g1r: Fix 5 later-lesson UI bugs
+Last activity: 2026-04-09 - Completed quick task 260408-u5t: Golden path quality pass on v2 exercise generators
 
 Progress: [███░░░░░░░] 33%
 
@@ -75,9 +75,10 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260407-g1r | Fix 5 later-lesson UI bugs: quiz options always 4, connected forms layout, quiz styling, reading order size, undefined in summary | 2026-04-07 | e2e7ad7 | [260407-g1r](./quick/260407-g1r-fix-5-later-lesson-ui-bugs-quiz-options-/) |
+| 260408-u5t | Golden path quality pass: prompt variety, choose answer leak fix, vowel audio mode, read context, check rounding | 2026-04-08 | 7db515f, 01009ef | [260408-u5t](./quick/260408-u5t-golden-path-quality-pass-on-v2-exercise-/) |
 
 ## Session Continuity
 
-Last session: 2026-04-05T05:06:44.044Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-quiz-experience/02-UI-SPEC.md
+Last session: 2026-04-09T01:50:19Z
+Stopped at: Completed quick task 260408-u5t
+Resume file: .planning/quick/260408-u5t-golden-path-quality-pass-on-v2-exercise-/260408-u5t-SUMMARY.md
