@@ -48,15 +48,19 @@ export const LESSONS_V2: LessonV2[] = [
         isDecodeItem: false,
         answerMode: "arabic",
       },
-      // ── Screen 4: Side by side ──
+      // ── Screen 4: Side by side with 4 audio buttons ──
       {
         type: "present",
         prompt: {
           arabicDisplay: "\u0627    \u0628",
-          text: "Here they are together \u2014 Alif and Ba.\n\nAlif is the tall line. Ba is the curve with a dot below. Tap the sound buttons to hear each one again.",
-          audioKey: "letter_1",
-          hintText: "audio:letter_2",
+          text: "Here they are together \u2014 Alif and Ba.\n\nTap the buttons below to hear each letter\u2019s name and sound.",
         },
+        options: [
+          { id: "L1-side-alif-name", audioKey: "letter_name_1", displayText: "Alif Name", isCorrect: false },
+          { id: "L1-side-alif-sound", audioKey: "letter_1", displayText: "Alif Sound", isCorrect: false },
+          { id: "L1-side-ba-name", audioKey: "letter_name_2", displayText: "Ba Name", isCorrect: false },
+          { id: "L1-side-ba-sound", audioKey: "letter_2", displayText: "Ba Sound", isCorrect: false },
+        ],
         correctAnswer: { kind: "single", value: "none" },
         targetEntityId: "letter:1",
         isDecodeItem: false,
