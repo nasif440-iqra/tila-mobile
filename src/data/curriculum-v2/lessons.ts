@@ -52,7 +52,7 @@ export const LESSONS_V2: LessonV2[] = [
       {
         type: "present",
         prompt: {
-          arabicDisplay: "\u0627    \u0628",
+          arabicDisplay: "\u0628    \u0627",
           text: "Here they are together \u2014 Alif and Ba.\n\nTap the buttons below to hear each letter\u2019s name and sound.",
         },
         options: [
