@@ -28,7 +28,6 @@ import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import { TrialCountdownBadge } from "../../src/components/monetization/TrialCountdownBadge";
 import { WirdTooltip } from "../../src/components/home/WirdTooltip";
-import { hapticTap } from "../../src/design/haptics";
 import {
   getGreetingLine1,
   getMotivationSubtitle,
