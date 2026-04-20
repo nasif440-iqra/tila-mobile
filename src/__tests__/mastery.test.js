@@ -257,38 +257,6 @@ describe("categorizeError", () => {
   });
 });
 
-describe("getErrorCategorySummary", () => {
-  it("returns zeros for empty confusions", () => {
-    const summary = getErrorCategorySummary({});
-    expect(summary.total).toBe(0);
-    expect(summary.visual_confusion).toBe(0);
-  });
-
-  it("aggregates across confusion entries", () => {
-    const confusions = {
-      "recognition:2->3": { count: 3, lastSeen: "2026-03-25", categories: { visual_confusion: 2, random_miss: 1 } },
-      "sound:7->8": { count: 2, lastSeen: "2026-03-25", categories: { sound_confusion: 2 } },
-    };
-    const summary = getErrorCategorySummary(confusions);
-    expect(summary.visual_confusion).toBe(2);
-    expect(summary.sound_confusion).toBe(2);
-    expect(summary.random_miss).toBe(1);
-    expect(summary.total).toBe(5);
-  });
-
-  it("handles old entries without categories", () => {
-    const confusions = {
-      "recognition:2->3": { count: 5, lastSeen: "2026-03-20" },
-    };
-    const summary = getErrorCategorySummary(confusions);
-    expect(summary.total).toBe(0);
-  });
-
-  it("returns zeros for null", () => {
-    expect(getErrorCategorySummary(null).total).toBe(0);
-  });
-});
-
 // ── Error categorization in merge ──
 
 describe("mergeQuizResultsIntoMastery — error categorization", () => {

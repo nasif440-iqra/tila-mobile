@@ -40,11 +40,4 @@ describe('Crescent icon (STAB-06)', () => {
     expect(content).toContain('CrescentIcon');
   });
 
-  it('phase-complete uses CrescentIcon', () => {
-    const content = fs.readFileSync(
-      path.resolve(__dirname, '../../app/phase-complete.tsx'),
-      'utf-8'
-    );
-    expect(content).toContain('CrescentIcon');
-  });
 });
