@@ -72,20 +72,6 @@ function AppNavigator() {
         animationDuration: 200,
       }}
     >
-      <Stack.Screen
-        name="lesson/[id]"
-        options={{
-          animation: "slide_from_bottom",
-          animationDuration: 280,
-        }}
-      />
-      <Stack.Screen
-        name="lesson/review"
-        options={{
-          animation: "slide_from_bottom",
-          animationDuration: 280,
-        }}
-      />
     </Stack>
   );
 }

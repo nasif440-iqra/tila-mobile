@@ -22,24 +22,12 @@ import { ScreenErrorFallback } from "../../src/components/feedback/ScreenErrorFa
 import { spacing, typography, fontFamilies, radii } from "../../src/design/tokens";
 import { durations, easings } from "../../src/design/animations";
 import { WarmGradient } from "../../src/design/components";
-import { CrescentIcon } from "../../src/design/CrescentIcon";
 import { useAppState } from "../../src/state/hooks";
-import { useSubscription, FREE_LESSON_CUTOFF, usePremiumReviewRights } from "../../src/monetization/hooks";
-import { loadPremiumLessonGrants } from "../../src/engine/progress";
-import { useDatabase } from "../../src/db/provider";
-import { LESSONS } from "../../src/data/lessons";
-import {
-  getCurrentLesson,
-  getLessonsCompletedCount,
-  getLearnedLetterIds,
-  planReviewSession,
-} from "../../src/engine/selectors";
+import { useSubscription } from "../../src/monetization/hooks";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import { TrialCountdownBadge } from "../../src/components/monetization/TrialCountdownBadge";
 import { WirdTooltip } from "../../src/components/home/WirdTooltip";
-import HeroCard from "../../src/components/home/HeroCard";
-import LessonGrid from "../../src/components/home/LessonGrid";
 import { hapticTap } from "../../src/design/haptics";
 import {
   getGreetingLine1,
@@ -50,7 +38,6 @@ import Svg, { Circle, Path } from "react-native-svg";
 // ── Logo Mark ──
 
 function TilaLogoMark({ size = 28, color = "#163323" }: { size?: number; color?: string }) {
-  const s = size / 28; // scale factor from base 28
   return (
     <Svg width={size} height={size} viewBox="0 0 28 28" fill="none">
       {/* Crescent */}
@@ -83,56 +70,6 @@ function goalMinutesToLessons(minutes: number | null): number {
   return 3; // 10 min
 }
 
-// ── Phase labels ──
-
-const PHASE_LABELS: Record<number, string> = {
-  1: "Letter Recognition",
-  2: "Letter Sounds",
-  3: "Harakat (Vowels)",
-  4: "Connected Forms",
-};
-
-// ── Momentum copy ──
-
-function getMomentumCopy(
-  completedIds: number[],
-  currentPhase: number
-): { line1: string; line2: string } | null {
-  const phaseLabel = PHASE_LABELS[currentPhase];
-  if (!phaseLabel) return null;
-
-  const phaseLessons = LESSONS.filter((l) => l.phase === currentPhase);
-  const phaseCompleted = phaseLessons.filter((l) => completedIds.includes(l.id)).length;
-
-  if (phaseCompleted === 0) return null;
-  if (phaseCompleted >= phaseLessons.length) return null;
-
-  const ratio = phaseCompleted / phaseLessons.length;
-
-  if (ratio < 0.25) {
-    return {
-      line1: `You\u2019ve started ${phaseLabel}.`,
-      line2: "Complete a few more lessons to build momentum.",
-    };
-  }
-  if (ratio < 0.5) {
-    return {
-      line1: `You\u2019re making progress in ${phaseLabel}.`,
-      line2: "Keep going \u2014 you\u2019re building a strong foundation.",
-    };
-  }
-  if (ratio < 0.75) {
-    return {
-      line1: `Over halfway through ${phaseLabel}!`,
-      line2: "The finish line is getting closer.",
-    };
-  }
-  return {
-    line1: `Almost done with ${phaseLabel}.`,
-    line2: "Just a few more lessons to complete this phase.",
-  };
-}
-
 // ── Daily Goal Pill ──
 
 function DailyGoalPill({
@@ -155,174 +92,17 @@ function DailyGoalPill({
   );
 }
 
-// ── Review Card ──
-
-function ReviewCard({
-  totalItems,
-  isUrgent,
-  hasUnstable,
-  colors,
-  onStart,
-  enterDelay = 0,
-}: {
-  totalItems: number;
-  isUrgent: boolean;
-  hasUnstable: boolean;
-  colors: any;
-  onStart: () => void;
-  enterDelay?: number;
-}) {
-  const headline = isUrgent ? "Strengthen your letters" : "Review ready";
-  const subtitle = hasUnstable
-    ? "Some letters need more practice before you move on."
-    : totalItems >= 4
-      ? "Keep your letters solid \u2014 a few minutes will help."
-      : `${totalItems} letter${totalItems !== 1 ? "s" : ""} to revisit.`;
-
-  // Entrance animation — opacity only, no layout shift
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    opacity.value = withDelay(
-      enterDelay,
-      withTiming(1, { duration: durations.slow, easing: easings.contentReveal }),
-    );
-  }, []);
-  const entranceStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View style={entranceStyle}>
-      <View
-        style={[
-          styles.reviewCard,
-          isUrgent ? styles.reviewCardUrgent : styles.reviewCardNormal,
-          {
-            backgroundColor: isUrgent ? colors.accentLight : colors.bgCard,
-            borderColor: isUrgent ? colors.accent : colors.border,
-          },
-        ]}
-      >
-        <View style={styles.reviewRow}>
-          {/* Icon circle */}
-          <View
-            style={[
-              styles.reviewIcon,
-              { backgroundColor: isUrgent ? colors.accent : colors.primarySoft },
-            ]}
-          >
-            <CrescentIcon size={18} color={isUrgent ? colors.white : colors.primary} />
-          </View>
-
-          {/* Text */}
-          <View style={styles.reviewTextWrap}>
-            <Text style={[styles.reviewHeadline, { color: colors.text }]}>{headline}</Text>
-            <Text style={[styles.reviewSubtitle, { color: colors.textMuted }]}>{subtitle}</Text>
-          </View>
-
-          {/* Inline button (non-urgent) */}
-          {!isUrgent && (
-            <Pressable
-              onPress={() => { hapticTap(); onStart(); }}
-              style={[styles.reviewInlineBtn, { borderColor: colors.primary }]}
-            >
-              <Text style={[styles.reviewInlineBtnText, { color: colors.primary }]}>Quick review</Text>
-            </Pressable>
-          )}
-        </View>
-
-        {/* Full-width CTA (urgent) */}
-        {isUrgent && (
-          <Pressable
-            onPress={() => { hapticTap(); onStart(); }}
-            style={[styles.reviewFullBtn, { backgroundColor: colors.primary }]}
-          >
-            <Text style={[styles.reviewFullBtnText, { color: colors.white }]}>Quick review</Text>
-          </Pressable>
-        )}
-      </View>
-    </Animated.View>
-  );
-}
-
-// ── Momentum Banner ──
-
-function MomentumBanner({
-  momentum,
-  colors,
-  enterDelay = 0,
-}: {
-  momentum: { line1: string; line2: string };
-  colors: any;
-  enterDelay?: number;
-}) {
-  const opacity = useSharedValue(0);
-  useEffect(() => {
-    opacity.value = withDelay(
-      enterDelay,
-      withTiming(1, { duration: durations.slow, easing: easings.contentReveal }),
-    );
-  }, []);
-  const entranceStyle = useAnimatedStyle(() => ({ opacity: opacity.value }));
-
-  return (
-    <Animated.View style={entranceStyle}>
-      <View
-        style={[
-          styles.momentumBanner,
-          {
-            backgroundColor: colors.accentLight,
-            borderLeftColor: colors.accent,
-          },
-        ]}
-      >
-        <Text style={[styles.momentumLine1, { color: colors.textSoft }]}>
-          <Text style={{ color: colors.accent, fontSize: 12 }}>{"\u2726"} </Text>
-          {momentum.line1}
-        </Text>
-        <Text style={[styles.momentumLine2, { color: colors.textMuted }]}>
-          {momentum.line2}
-        </Text>
-      </View>
-    </Animated.View>
-  );
-}
-
 // ── Main screen ──
 
 export default function HomeScreen() {
   const colors = useColors();
-  const db = useDatabase();
   const appState = useAppState();
   const { updateProfile } = appState;
   const progress = appState.progress;
   const habit = appState.habit;
   const loading = appState.loading;
-  const { isPremiumActive, stage, trialDaysRemaining, showPaywall, loading: subLoading } = useSubscription();
+  const { stage, trialDaysRemaining, showPaywall } = useSubscription();
   const [today] = useState(() => getTodayDateString());
-
-  // Beta: skip premium_lesson_grants load when all lessons are free
-  const [grantedLessonIds, setGrantedLessonIds] = useState<number[]>([]);
-
-  useEffect(() => {
-    if (FREE_LESSON_CUTOFF >= 999) return; // Beta: all lessons unlocked, skip DB read
-
-    let cancelled = false;
-
-    async function loadGrants() {
-      try {
-        const grants = await loadPremiumLessonGrants(db);
-        if (!cancelled) setGrantedLessonIds(grants);
-      } catch (e) {
-        console.warn("Failed to load premium grants:", e);
-        if (!cancelled) setGrantedLessonIds([]);
-      }
-    }
-
-    if (!loading) loadGrants();
-
-    return () => { cancelled = true; };
-  }, [db, loading]);
-
-  const reviewableLetterIds = usePremiumReviewRights(grantedLessonIds);
 
   // Header entrance animation
   const headerOpacity = useSharedValue(0);
@@ -374,49 +154,11 @@ export default function HomeScreen() {
     }
   }, [loading, onboarded, habit?.lastPracticeDate, today, returnHadithLastShown]);
 
-  const completedLessonIds = progress?.completedLessonIds ?? [];
-  const mastery = progress?.mastery;
   const dailyGoal = useMemo(() => goalMinutesToLessons(progress?.onboardingDailyGoal ?? null), [progress?.onboardingDailyGoal]);
-
-  // Memoize expensive selector computations
-  const lessonsCompleted = useMemo(() => getLessonsCompletedCount(completedLessonIds), [completedLessonIds]);
-  const learnedLetterIds = useMemo(() => getLearnedLetterIds(completedLessonIds), [completedLessonIds]);
-  const nextLesson = useMemo(() => getCurrentLesson(completedLessonIds), [completedLessonIds]);
-  const reviewPlan = useMemo(() => {
-    if (!mastery) return null;
-    const plan = planReviewSession(mastery, today);
-
-    // If user is premium, no filtering needed
-    if (isPremiumActive) return plan;
-
-    // For free/expired users, filter review items to only reviewable letters
-    const filteredItems = plan.items.filter((key: string) => {
-      const match = key.match(/^letter:(\d+)$/);
-      if (!match) return true; // keep non-letter items (combos, etc.)
-      return reviewableLetterIds.includes(parseInt(match[1], 10));
-    });
-
-    return {
-      ...plan,
-      items: filteredItems,
-      totalItems: filteredItems.length,
-      hasReviewWork: filteredItems.length > 0,
-    };
-  }, [mastery, today, isPremiumActive, reviewableLetterIds]);
-
-  const allDone = !nextLesson || completedLessonIds.length >= LESSONS.length;
-  const currentPhase = nextLesson?.phase ?? 1;
 
   // Wird streak + daily count
   const currentWird = habit?.currentWird ?? 0;
   const todayLessonCount = habit?.todayLessonCount ?? 0;
-
-  // Review data
-  const hasReview = reviewPlan?.hasReviewWork ?? false;
-  const isReviewUrgent = reviewPlan?.isUrgent ?? false;
-
-  // Momentum
-  const momentum = useMemo(() => getMomentumCopy(completedLessonIds, currentPhase), [completedLessonIds, currentPhase]);
 
   // Personalized greeting
   const userName = progress?.userName ?? null;
@@ -424,8 +166,8 @@ export default function HomeScreen() {
 
   const greetingLine1 = useMemo(() => getGreetingLine1(userName), [userName]);
   const greetingLine2 = useMemo(
-    () => getMotivationSubtitle(motivation, lessonsCompleted, learnedLetterIds.length),
-    [motivation, lessonsCompleted, learnedLetterIds.length]
+    () => getMotivationSubtitle(motivation, 0, 0),
+    [motivation]
   );
 
   // Wird tooltip
@@ -451,14 +193,6 @@ export default function HomeScreen() {
         </View>
       </SafeAreaView>
     );
-  }
-
-  function handleStartLesson(lessonId: number) {
-    router.push({ pathname: '/lesson/[id]', params: { id: String(lessonId) } });
-  }
-
-  function handleStartReview() {
-    router.push('/lesson/review');
   }
 
   return (
@@ -521,103 +255,16 @@ export default function HomeScreen() {
             </Text>
           </Pressable>
         )}
-        {stage === "expired" && (
-          <Pressable onPress={() => showPaywall("expired_card")}>
-            <Text style={[styles.trialBadge, { color: colors.accent, backgroundColor: colors.accentLight }]}>
-              Your trial has ended.
-            </Text>
-          </Pressable>
-        )}
 
-        {/* ── Upgrade Card (expired users) ── */}
-        {stage === "expired" && (
-          <Pressable
-            onPress={() => showPaywall("expired_card")}
-            style={[styles.upgradeCard, { backgroundColor: colors.accentLight, borderColor: colors.accent }]}
-          >
-            <Text style={[styles.upgradeCardTitle, { color: colors.text }]}>
-              Upgrade to Continue
-            </Text>
-            <Text style={[styles.upgradeCardSub, { color: colors.textSoft }]}>
-              Pick up where you left off with Tila Premium.
-            </Text>
-          </Pressable>
-        )}
-
-        {/* ── Urgent Review (above hero) ── */}
-        {hasReview && isReviewUrgent && (
-          <View style={styles.sectionGap}>
-            <ReviewCard
-              totalItems={reviewPlan!.totalItems}
-              isUrgent={true}
-              hasUnstable={(reviewPlan!.unstable?.length ?? 0) > 0}
-              colors={colors}
-              onStart={handleStartReview}
-              enterDelay={100}
-            />
-          </View>
-        )}
-
-        {/* ── Hero Card ── */}
-        <HeroCard
-          lesson={nextLesson ?? null}
-          allDone={allDone}
-          completedLessonIds={completedLessonIds}
-          lessonsCompleted={lessonsCompleted}
-          currentPhase={currentPhase}
-          onStartLesson={handleStartLesson}
-          enterDelay={80}
-        />
-
-        {/* ── Non-urgent Review (below hero) ── */}
-        {hasReview && !isReviewUrgent && (
-          <View style={styles.sectionGap}>
-            <ReviewCard
-              totalItems={reviewPlan!.totalItems}
-              isUrgent={false}
-              hasUnstable={false}
-              colors={colors}
-              onStart={handleStartReview}
-              enterDelay={140}
-            />
-          </View>
-        )}
-
-        {/* ── Momentum Banner ── */}
-        {momentum && (
-          <View style={styles.sectionGapTight}>
-            <MomentumBanner momentum={momentum} colors={colors} enterDelay={150} />
-          </View>
-        )}
-
-        {/* ── Upsell Card (free users past lesson 7) ── */}
-        {stage === "free" && completedLessonIds.includes(FREE_LESSON_CUTOFF) && (
-          <Pressable
-            onPress={() => showPaywall("home_upsell")}
-            style={[styles.upsellCard, { backgroundColor: colors.primarySoft, borderColor: "rgba(22,51,35,0.1)" }]}
-          >
-            <Text style={[styles.upsellCardText, { color: colors.primary }]}>
-              Unlock all lessons &#x2192;
-            </Text>
-          </Pressable>
-        )}
-
-        {/* ── Journey Path ── */}
-        <LessonGrid
-          currentPhase={currentPhase}
-          nextLessonId={nextLesson?.id ?? null}
-          completedLessonIds={completedLessonIds}
-          onStartLesson={handleStartLesson}
-          enterDelay={160}
-          isPremiumActive={isPremiumActive}
-          subscriptionLoading={subLoading}
-          onLockedLessonPress={async (lessonId: number) => {
-            const outcome = await showPaywall("lesson_locked");
-            if (outcome.accessGranted) {
-              router.push({ pathname: "/lesson/[id]", params: { id: String(lessonId) } });
-            }
-          }}
-        />
+        {/* ── Curriculum Placeholder ── */}
+        <View style={styles.placeholderSection}>
+          <Text style={[typography.heading3, { color: colors.textMuted, textAlign: "center" }]}>
+            Curriculum coming soon
+          </Text>
+          <Text style={[typography.body, { color: colors.textMuted, marginTop: spacing.sm, textAlign: "center" }]}>
+            New lessons are in development. Your streak and progress are still saved.
+          </Text>
+        </View>
 
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
@@ -714,139 +361,10 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Section gaps — consistent vertical rhythm
-  sectionGap: {
-    marginBottom: spacing.xl,
-  },
-  sectionGapTight: {
-    marginBottom: spacing.lg,
-  },
-
-  // Review card
-  reviewCard: {
-    borderRadius: 20,
-    overflow: "hidden",
-  },
-  reviewCardNormal: {
-    padding: spacing.lg,
-    borderWidth: 1,
-    shadowColor: "#163323",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 16,
-    elevation: 3,
-  },
-  reviewCardUrgent: {
-    paddingTop: spacing.lg,
-    paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
-    borderWidth: 1.5,
-    shadowColor: "#C4A464",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  reviewRow: {
-    flexDirection: "row",
+  // Curriculum placeholder
+  placeholderSection: {
+    padding: spacing.xl,
     alignItems: "center",
-    gap: 14,
-  },
-  reviewIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-  },
-  reviewTextWrap: {
-    flex: 1,
-  },
-  reviewHeadline: {
-    fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 15,
-  },
-  reviewSubtitle: {
-    fontSize: 12,
-    fontFamily: fontFamilies.bodyRegular,
-    lineHeight: 17,
-    marginTop: 3,
-  },
-  reviewInlineBtn: {
-    borderRadius: radii.md,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderWidth: 1.5,
-  },
-  reviewInlineBtnText: {
-    fontFamily: fontFamilies.bodySemiBold,
-    fontSize: 13,
-  },
-  reviewFullBtn: {
-    borderRadius: radii.lg,
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    marginTop: 14,
-    alignItems: "center",
-  },
-  reviewFullBtnText: {
-    fontFamily: fontFamilies.bodySemiBold,
-    fontSize: 14,
-  },
-
-  // Upgrade card (expired)
-  upgradeCard: {
-    borderRadius: radii.xxl,
-    borderWidth: 1,
-    paddingVertical: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    alignItems: "center",
-    marginBottom: spacing.lg,
-  },
-  upgradeCardTitle: {
-    fontFamily: fontFamilies.headingSemiBold,
-    fontSize: 16,
-    marginBottom: spacing.xs,
-  },
-  upgradeCardSub: {
-    fontSize: 13,
-    fontFamily: fontFamilies.bodyRegular,
-  },
-
-  // Upsell card (free users past lesson 7)
-  upsellCard: {
-    borderRadius: radii.lg,
-    borderWidth: 1,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
-    alignItems: "center",
-    marginBottom: spacing.md,
-  },
-  upsellCardText: {
-    fontSize: 13,
-    fontFamily: fontFamilies.bodySemiBold,
-  },
-
-  // Momentum banner
-  momentumBanner: {
-    borderLeftWidth: 3,
-    borderRadius: 12,
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    paddingVertical: 14,
-    paddingHorizontal: spacing.lg,
-  },
-  momentumLine1: {
-    fontSize: 14,
-    fontFamily: fontFamilies.bodyRegular,
-    lineHeight: 21,
-    marginBottom: 3,
-  },
-  momentumLine2: {
-    fontSize: 13,
-    fontFamily: fontFamilies.bodyRegular,
-    lineHeight: 20,
-    paddingLeft: 18,
+    marginTop: spacing.xxl,
   },
 });
