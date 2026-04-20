@@ -1,83 +1,90 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: executing
-stopped_at: Phase 2 UI-SPEC approved
-last_updated: "2026-04-05T15:26:21.075Z"
-last_activity: 2026-04-05 -- Phase 02 execution started
+milestone: reset-2026-04-20
+milestone_name: curriculum-reset
+status: complete
+stopped_at: Reset complete, awaiting new curriculum blueprint
+last_updated: "2026-04-20T00:00:00.000Z"
+last_activity: 2026-04-20 -- Curriculum reset complete; sandbox runtime + reference lesson in place
 progress:
-  total_phases: 5
-  completed_phases: 4
-  total_plans: 10
-  completed_plans: 9
-  percent: 90
+  total_phases: 1
+  completed_phases: 1
+  total_plans: 1
+  completed_plans: 1
+  percent: 100
 ---
 
-# Project State
+# Project State — Post-Reset
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-03)
+See: `.planning/PROJECT.md`
+Reset memo: `.planning/RESET-DECISION-MEMO.md`
+Execution plan: `.planning/RESET-EXECUTION-PLAN.md`
+Pre-reset audit: `.planning/RESET-AUDIT.md`
 
-**Core value:** Every screen should feel like entering a quiet, beautiful room that was made for people who aren't sure they belong yet.
-**Current focus:** Phase 02 — Quiz Experience
+**Core value unchanged.** Current focus: awaiting curriculum blueprint from founder.
 
 ## Current Position
 
-Phase: 02 (Quiz Experience) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 02
-Last activity: 2026-04-07 - Completed quick task 260407-g1r: Fix 5 later-lesson UI bugs
+Curriculum reset complete. All v1 and v2 lesson code removed from `main`. Archive branch: `archive/curriculum-v2` (tag `curriculum-v2-final` at commit `9daf0c0`). Safety tag: `pre-reset-shippable` at `7ffa3de`.
 
-Progress: [███░░░░░░░] 33%
+Neutral infra preserved: design system, audio, Arabic reference data (`letters.js`, `harakat.js`, `connectedForms.js`), db schema, providers, analytics (trimmed of `lesson_*` events), monetization (lesson-count coupling stubbed), auth, sync, social, onboarding.
 
-## Performance Metrics
+Quarantined (files remain; writes stop until blueprint confirms formats): `src/engine/mastery.ts`, `src/engine/habit.ts`, `src/engine/progress.ts` (reduced to habit shim), `src/hooks/useProgress.ts`, `src/hooks/useHabit.ts`, `src/state/provider.tsx`, `src/auth/types.ts` (`ACCOUNT_PROMPT_LESSONS = []`), `src/monetization/hooks.ts` (`useCanAccessLesson` always-allow), `src/analytics/events.ts` (lesson events removed).
 
-**Velocity:**
+Scaffolded: `src/curriculum/runtime/LessonRunner.tsx` (shape-neutral, generic `<T>`), `src/curriculum/reference/` (hidden dev-only reference lesson about Alif), `app/sandbox-lesson.tsx` (env-flag gated dev route). `src/curriculum/README.md` documents the scaffold.
 
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+Progress: [██████████] 100% (reset milestone complete)
 
-**By Phase:**
+## Reset Commit Log
 
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| - | - | - | - |
-
-**Recent Trend:**
-
-- Last 5 plans: -
-- Trend: -
-
-*Updated after each plan completion*
+| Commit | Task | Description |
+|---|---|---|
+| `beaa0d2` | 0 | Pre-reset grep audit + disposition classification |
+| (branch ops, no commits) | 1–3 | Archive `feature/curriculum-v2`, prune 45 agent branches, remove worktree |
+| `0a38a54` | 4 | Remove obsolete v2 specs and plans |
+| `a142135`, `1d28c89` | 5 | Stub home + remove lesson routes |
+| `d51069a` | 6 | Decouple quarantine files from lesson code |
+| `6cd8cf9` | 7 | Remove v1 lesson components (19 files + 11 tests) |
+| `a71948f` | 8 | Remove v1 lesson engine (22 files + 9 tests, scope expanded to orphaned hooks/components) |
+| `57df226` | 9 | Remove `src/data/lessons.js` + orphaned progress components |
+| (orphan test cleanup) | — | 10 orphaned test files + 2 trims (crescent-icon, mastery) |
+| `71fe25f` | 10 | Add shape-neutral `LessonRunner` + pure cursor (TDD, 4/4 tests) |
+| `3021eaa` | 11 | Add hidden reference lesson + dev route |
+| `352c5f3` | 12 | Reference lesson smoke test (3/3 tests) |
+| `6a6df6a` | 13 | Scaffold README |
+| (this commit) | 14 | Update STATE.md with reset-point marker |
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- None yet.
+See `.planning/RESET-DECISION-MEMO.md` for the full record of the reset decision and its review rounds.
 
 ### Pending Todos
 
-None yet.
+- **New curriculum blueprint** — awaiting founder delivery (PDF + docx drafts already tracked at `curriculum/`).
+- **Post-blueprint work**:
+  - Define new `Screen` type(s) in `src/curriculum/` (NOT in `runtime/`)
+  - Populate `src/curriculum/lessons/`
+  - Decide paywall gating model (currently `useCanAccessLesson` always-allow, `FREE_LESSON_CUTOFF = Number.MAX_SAFE_INTEGER`)
+  - Re-wire lesson analytics events if the new curriculum wants the same funnel
+  - Restore lesson grid / tab rendering with new shape
+- **Baseline tech debt flagged during reset** (pre-existing, not caused by reset):
+  - `src/design/theme.ts:35` light/dark token type mismatch
+  - `src/sync/service.ts:218` SQLite bind params type issue
+  - `src/auth/provider.tsx` AuthEvent type issue
+  - `app.config.ts` newArchEnabled type issue
+  - `home-greeting.test.ts` + `motivation-mapping.test.ts` — `MOTIVATION_SUBTITLES` not exported from `greetingHelpers.ts` (15 failing tests)
+- **Re-enable EAS builds on `main`** — paused during reset window per memo §10; can resume once device verification of sandbox reference lesson passes.
 
 ### Blockers/Concerns
 
-- [Research] Profile Reanimated 4.2.1 + New Architecture on mid-range Android before Phase 2. If regression is severe, reduce per-screen shared value budget below 15.
-
-### Quick Tasks Completed
-
-| # | Description | Date | Commit | Directory |
-|---|-------------|------|--------|-----------|
-| 260407-g1r | Fix 5 later-lesson UI bugs: quiz options always 4, connected forms layout, quiz styling, reading order size, undefined in summary | 2026-04-07 | e2e7ad7 | [260407-g1r](./quick/260407-g1r-fix-5-later-lesson-ui-bugs-quiz-options-/) |
+- None blocking. New lesson work awaits blueprint (founder-owned).
 
 ## Session Continuity
 
-Last session: 2026-04-05T05:06:44.044Z
-Stopped at: Phase 2 UI-SPEC approved
-Resume file: .planning/phases/02-quiz-experience/02-UI-SPEC.md
+Last session: 2026-04-20 — curriculum reset executed over ~14 commits.
+Stopped at: Reset complete, awaiting blueprint.
+Next command on blueprint delivery: `/gsd-do "design the new curriculum"` — triggers a new brainstorm cycle against this reset baseline.
