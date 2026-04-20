@@ -70,7 +70,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const progress: AppState['progress'] = progressHook.loading
     ? null
     : {
-        completedLessonIds: progressHook.completedLessonIds ?? [],
+        completedLessonIds: [], // stubbed — lesson tables dormant until new curriculum
         mastery: progressHook.mastery ?? { entities: {}, skills: {}, confusions: {} },
         habit,
         onboarded: progressHook.onboarded ?? false,
@@ -93,13 +93,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     loading: progressHook.loading,
     refreshAll: progressHook.refresh,
     updateProfile: progressHook.updateProfile,
-    completeLesson: progressHook.completeLesson,
     saveMasteryOnly: progressHook.saveMasteryOnly,
     recordPractice,
     refresh: progressHook.refresh,
   }), [progress, habit, progressHook.loading, progressHook.refresh,
-       progressHook.updateProfile, progressHook.completeLesson,
-       progressHook.saveMasteryOnly, recordPractice]);
+       progressHook.updateProfile, progressHook.saveMasteryOnly, recordPractice]);
 
   return (
     <AppStateContext.Provider value={value}>

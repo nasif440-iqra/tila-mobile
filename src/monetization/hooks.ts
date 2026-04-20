@@ -1,44 +1,21 @@
-import { useContext, useMemo } from "react";
+import { useContext } from "react";
 import { SubscriptionContext, type SubscriptionState } from "./provider";
-import { LESSONS } from "../data/lessons";
 
-// Beta: all lessons unlocked. Change back to 7 when re-enabling RevenueCat.
-const FREE_LESSON_CUTOFF = 999;
+// Stubbed to max — no lesson gating until new curriculum lands.
+const FREE_LESSON_CUTOFF = Number.MAX_SAFE_INTEGER;
 
 export function useSubscription(): SubscriptionState {
   return useContext(SubscriptionContext);
 }
 
 export function useCanAccessLesson(_lessonId: number): boolean {
-  // Beta: all content unlocked
+  // Stubbed always-allow — no lessons to gate until new curriculum lands.
   return true;
 }
 
-export function usePremiumReviewRights(grantedLessonIds: number[]): number[] {
-  return useMemo(() => {
-    const letterIds = new Set<number>();
-
-    // All letters from free lessons are always reviewable
-    for (const lesson of LESSONS) {
-      if (lesson.id <= FREE_LESSON_CUTOFF) {
-        for (const id of lesson.teachIds || []) {
-          letterIds.add(id);
-        }
-      }
-    }
-
-    // Add letters from granted premium lessons
-    for (const lessonId of grantedLessonIds) {
-      const lesson = LESSONS.find((l: any) => l.id === lessonId);
-      if (lesson) {
-        for (const id of lesson.teachIds || []) {
-          letterIds.add(id);
-        }
-      }
-    }
-
-    return Array.from(letterIds);
-  }, [grantedLessonIds]);
+export function usePremiumReviewRights(_grantedLessonIds: number[]): number[] {
+  // Stubbed empty — no lessons to derive letter IDs from until new curriculum lands.
+  return [];
 }
 
 export { FREE_LESSON_CUTOFF };

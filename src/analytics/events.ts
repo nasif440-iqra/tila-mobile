@@ -17,30 +17,6 @@ export interface OnboardingCompletedProps {
   duration_seconds: number;
 }
 
-export interface LessonStartedProps {
-  lesson_id: number;
-  phase: number;
-  lesson_mode: string;
-  is_retry: boolean;
-}
-
-export interface LessonCompletedProps {
-  lesson_id: number;
-  phase: number;
-  accuracy: number;
-  duration_seconds: number;
-  total_questions: number;
-  streak_peak: number;
-}
-
-export interface LessonFailedProps {
-  lesson_id: number;
-  phase: number;
-  accuracy: number;
-  duration_seconds: number;
-  total_questions: number;
-}
-
 export interface PhaseCompletedProps {
   phase: number;
   total_lessons: number;
@@ -158,9 +134,6 @@ export interface EventMap {
   app_opened: AppOpenedProps;
   onboarding_step_viewed: OnboardingStepViewedProps;
   onboarding_completed: OnboardingCompletedProps;
-  lesson_started: LessonStartedProps;
-  lesson_completed: LessonCompletedProps;
-  lesson_failed: LessonFailedProps;
   phase_completed: PhaseCompletedProps;
   letter_audio_played: LetterAudioPlayedProps;
   mastery_state_changed: MasteryStateChangedProps;

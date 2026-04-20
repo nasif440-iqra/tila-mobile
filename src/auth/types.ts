@@ -18,5 +18,6 @@ export interface AuthContextValue extends AuthState {
   signOut: () => Promise<void>;
 }
 
-/** Lesson IDs at which we prompt anonymous users to create an account */
-export const ACCOUNT_PROMPT_LESSONS = [3, 5, 7] as const;
+/** Lesson IDs at which we prompt anonymous users to create an account.
+ *  Stubbed empty — no lessons to gate until new curriculum lands. */
+export const ACCOUNT_PROMPT_LESSONS = [] as const;

@@ -4,7 +4,7 @@ import type { AppStateContextValue } from './types';
 
 /**
  * Read-only aggregate of progress + habit state. For screens that need
- * mutation methods (completeLesson, updateProfile, recordPractice),
+ * mutation methods (updateProfile, recordPractice, saveMasteryOnly),
  * use useProgress() and useHabit() directly.
  */
 export function useAppState(): AppStateContextValue {
