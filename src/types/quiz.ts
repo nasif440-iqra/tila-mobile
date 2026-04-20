@@ -1,7 +1,7 @@
 // src/types/quiz.ts
 
 /**
- * Shape recorded by useLessonQuiz during the quiz UI.
+ * Shape recorded by the lesson runtime during the quiz UI.
  * This is the UI-layer result — NOT the DB shape.
  */
 export interface QuizResultItem {
