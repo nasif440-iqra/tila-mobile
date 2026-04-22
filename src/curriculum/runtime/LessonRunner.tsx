@@ -18,15 +18,18 @@ export type LessonRunnerProps<T> = {
  */
 export function LessonRunner<T>({ screens, onComplete, renderScreen }: LessonRunnerProps<T>) {
   const [index, setIndex] = useState(0);
+  const [isComplete, setIsComplete] = useState(false);
 
   const advance = useCallback(() => {
+    if (isComplete) return;
     const result = advanceCursor(index, screens.length);
     if (result.complete) {
+      setIsComplete(true);
       onComplete();
     } else if (result.nextIndex !== null) {
       setIndex(result.nextIndex);
     }
-  }, [index, screens.length, onComplete]);
+  }, [index, screens.length, onComplete, isComplete]);
 
   if (screens.length === 0) return null;
   return <>{renderScreen(screens[index], { advance, index, total: screens.length })}</>;

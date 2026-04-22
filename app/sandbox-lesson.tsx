@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, Redirect } from "expo-router";
 import { LessonRunner } from "../src/curriculum/runtime/LessonRunner";
 import { referenceLessonScreens } from "../src/curriculum/reference/lesson";
 import type { RefScreen } from "../src/curriculum/reference/types";
@@ -10,23 +10,19 @@ import { typography, spacing, radii } from "../src/design/tokens";
 import { Button } from "../src/design/components";
 import { useHabit } from "../src/hooks/useHabit";
 
+// Inlined at bundle time by Metro (EXPO_PUBLIC_ prefix). Safe for module scope.
+const DEV_FLAG = process.env.EXPO_PUBLIC_DEV_REFERENCE_LESSON === "true";
+
 export default function SandboxLessonScreen() {
+  if (!DEV_FLAG) return <Redirect href="/(tabs)" />;
+
   const colors = useColors();
   const { recordPractice } = useHabit();
-  const [enabled, setEnabled] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const flag = process.env.EXPO_PUBLIC_DEV_REFERENCE_LESSON === "true";
-    if (!flag) router.replace("/(tabs)");
-    setEnabled(flag);
-  }, []);
 
   const handleComplete = useCallback(async () => {
     await recordPractice();
     router.replace("/(tabs)");
   }, [recordPractice]);
-
-  if (!enabled) return null;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -47,6 +43,7 @@ export default function SandboxLessonScreen() {
   );
 }
 
+// Throwaway renderer — delete when the new curriculum lands and defines its own screen types.
 function RefScreenRenderer({
   screen,
   onAdvance,

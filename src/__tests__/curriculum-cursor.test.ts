@@ -18,4 +18,9 @@ describe("advanceCursor", () => {
   it("handles zero-screen lesson defensively", () => {
     expect(advanceCursor(0, 0)).toEqual({ nextIndex: null, complete: true });
   });
+
+  it("handles defensive inputs (negative total, negative current)", () => {
+    expect(advanceCursor(5, -3)).toEqual({ nextIndex: null, complete: true });
+    expect(advanceCursor(-1, 3)).toEqual({ nextIndex: 0, complete: false });
+  });
 });
