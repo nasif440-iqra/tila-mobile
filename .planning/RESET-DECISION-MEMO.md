@@ -104,20 +104,22 @@ The reference lesson defines its own screen types **locally** (not exported as s
 
 ## 4. DB writes during and after reset
 
-Explicit table of what persists after reset. Everything "dormant" means the table exists and keeps any existing rows, but nothing writes new rows until the blueprint specifies otherwise.
+Explicit table of what persists after reset. "Dormant" means: no normal lesson/runtime flow writes to this table. Maintenance paths (user-initiated reset, export, import) may still clear or restore these tables — they're preserved and quarantined, not fully excised, until the blueprint decides whether mastery survives in its current shape.
 
-| Table | State after reset | What may write to it |
-|---|---|---|
-| `user_profile` | Active | Onboarding, theme preference, auth flows — unchanged |
-| `habit` | Active | Sandbox reference lesson completion calls `recordPractice` (if it verifies clean) |
-| `mastery_entities` | **Dormant** | Nothing — until blueprint confirms entity-key format |
-| `mastery_skills` | Dormant | Nothing |
-| `mastery_confusions` | Dormant | Nothing |
-| `premium_lesson_grants` | Dormant | Nothing until paywall model re-confirmed against new curriculum |
-| `lesson_attempts` | Dormant | Nothing (sandbox does NOT write here — too opinionated) |
-| `question_attempts` | Dormant | Nothing |
+| Table | State after reset | Normal flow writes | Maintenance (reset/export/import) |
+|---|---|---|---|
+| `user_profile` | Active | Onboarding, theme, auth | Yes — reset/import clear/restore |
+| `habit` | Active | Sandbox `recordPractice` on reference-lesson completion | Yes — reset/import clear/restore |
+| `mastery_entities` | Dormant (quarantined) | None — blueprint must confirm entity-key format first | Yes — `resetProgress` clears; `importProgress` restores from export |
+| `mastery_skills` | Dormant (quarantined) | None | Yes — reset/import |
+| `mastery_confusions` | Dormant (quarantined) | None | Yes — reset/import |
+| `premium_lesson_grants` | Dormant | None — paywall model must re-confirm against new curriculum | No |
+| `lesson_attempts` | Dormant | None — sandbox does NOT write here (too opinionated) | No |
+| `question_attempts` | Dormant | None | No |
 
-**Sandbox reference lesson writes exactly one thing: a habit `recordPractice` call on completion (if audit confirms `recordPractice` is clean).** Everything else is inspection-only.
+**Sandbox reference lesson writes exactly one thing: a habit `recordPractice` call on completion.** Everything else from normal lesson flow is inspection-only.
+
+**Why mastery tables are "quarantined, not excised":** `useProgress` and the state provider still read mastery into app state, and `resetProgress`/`importProgress` still clear/restore those tables. This is intentional — the user owns their mastery data and data-management (reset, export, import) is distinct from learning gameplay. If the new blueprint changes entity-key format, `importProgress` will need to either migrate or refuse pre-reset exports. That decision is deferred to the blueprint.
 
 ## 5. Archive strategy
 
