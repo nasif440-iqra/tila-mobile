@@ -135,6 +135,7 @@ export interface LessonData {
     requireCorrectLastTwoDecoding: boolean;   // §10
   };
   screens: Screen[];
+  completionSubtitle?: string;   // optional per-lesson override for the completion view
 }
 ```
 
@@ -315,6 +316,7 @@ export interface LessonRunnerProps {
   renderScreen: (args: {
     screen: Screen;
     advance: (outcome?: ScreenOutcome) => void;
+    reportAttempt: (attempts: EntityAttempt[]) => void;  // entity events without advancing; used by until-correct retries
     goBack: () => void;
     canGoBack: boolean;
     index: number;
@@ -322,6 +324,8 @@ export interface LessonRunnerProps {
   }) => ReactNode;
 }
 ```
+
+**On `advance` vs `reportAttempt`:** `advance(outcome)` moves the cursor and contributes to the screen-level tally; the runner also emits `recordEntityAttempt` for each entry in `outcome.entityAttempts`. `reportAttempt(attempts)` only emits mastery events — no tally change, no cursor move. Together they support until-correct renderers (wrong taps use `reportAttempt`; the final correct tap uses `advance`) without muddling the "screen → outcome" model.
 
 ### 6.6 `CompletionStore`
 
@@ -347,7 +351,7 @@ Owns:
 
 - **Cursor movement.** `advance()` increments `index`; `goBack()` decrements. `canGoBack = index > 0 && screens[index].allowBack !== false`. `goBack` on a screen with `allowBack: false` is a defensive no-op.
 - **Outcome tallying.** `Map<screenId, ScreenOutcome>`. Latest outcome replaces prior (retry after go-back).
-- **Mastery emission.** `masteryRecorder.recordEntityAttempt` fires once per entry in `outcome.entityAttempts`, on *every* `advance(outcome)` call including retries (honest history).
+- **Mastery emission.** `masteryRecorder.recordEntityAttempt` fires once per entry on two paths: (a) every `advance(outcome)` call's `outcome.entityAttempts`, and (b) every `reportAttempt(attempts)` call. Both retries and advancing attempts are emitted (honest history).
 - **Final outcome computation** (on last-screen advance):
   - `itemsTotal` = count of screens with `scored !== false`.
   - `itemsCorrect` = count of screens whose latest `ScreenOutcome.correct = true` AND `scored !== false`.
@@ -364,8 +368,10 @@ Does not own: rendering, routing, persistence, hardware-back dialog.
 - Auto-plays `audioOnMount` once on mount if present; speaker button remains for replay.
 - Renders option cards horizontally (2 options for Lesson 1; scales to 3–4 later).
 - `retryMode === "until-correct"` (Lesson 1):
-  - Wrong tap: target card flashes soft red (~400ms), emits `advance({ correct: false, entityAttempts: [{ entityKey: tappedOption.entityKey, itemId: screen.id, correct: false }] })` — then runner *does not move forward* because it received outcome but screen-advance requires separate signal. **Correction to model:** the runner only advances on `advance()` call. Renderer in until-correct mode calls `recordAttemptOnly` vs `advance` — but we chose to keep a single `advance()` signal. So until-correct renderer calls `advance()` only on correct tap; wrong taps emit via a different path. **Implementation note:** the renderer needs a mechanism to report wrong-attempt events without advancing. See §7.2.1.
-- `retryMode === "one-shot"` (default for future): first tap locks all options, ~900ms visual feedback, then `advance(outcome)` with that first tap's result.
+  - Wrong tap: target card flashes soft red (~400ms), calls `reportAttempt([{ entityKey: tappedOption.entityKey, itemId: screen.id, correct: false }])`. Cursor does not move; options remain tappable.
+  - Correct tap: target card glows soft green, calls `advance({ screenId: screen.id, correct: true, entityAttempts: [{ entityKey: tappedOption.entityKey, itemId: screen.id, correct: true }] })` after ~900ms of feedback.
+  - Mastery stream captures both the wrong taps (via `reportAttempt`) and the final correct tap (via `advance`). Screen-level tally reflects only the advancing outcome.
+- `retryMode === "one-shot"` (default for future phases): first tap locks all options, ~900ms feedback, then `advance(outcome)` with that first tap's result. `reportAttempt` is never used in this mode.
 
 #### 7.2.1 Wrong-attempt reporting in until-correct mode
 
