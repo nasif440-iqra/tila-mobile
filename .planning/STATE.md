@@ -83,7 +83,15 @@ See `.planning/RESET-DECISION-MEMO.md` for the full record of the reset decision
 
 - None blocking. New lesson work awaits blueprint (founder-owned).
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260423-0s2 | Implementing Task 3 of the A0 Lesson 1 plan: CompletionStore + AsyncStorage impl (TDD). | 2026-04-23 | 4fd3456 | [260423-0s2-implementing-task-3-of-the-a0-lesson-1-p](./quick/260423-0s2-implementing-task-3-of-the-a0-lesson-1-p/) |
+
 ## Session Continuity
+
+Last activity: 2026-04-23 - Completed quick task 260423-0s2: Implementing Task 3 of the A0 Lesson 1 plan: CompletionStore + AsyncStorage impl (TDD).
 
 Last session: 2026-04-20 — curriculum reset executed over ~14 commits.
 Stopped at: Reset complete, awaiting blueprint.
