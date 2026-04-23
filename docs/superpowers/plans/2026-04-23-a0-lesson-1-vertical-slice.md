@@ -37,7 +37,7 @@
 | `app/lesson/[id].tsx` | Dynamic lesson route. Resolves ID → `LessonData`, mounts `LessonChrome` + `LessonRunner`, handles completion swap and routing. |
 | `src/__tests__/curriculum/mastery-recorder.test.ts` | Noop impl contract. |
 | `src/__tests__/curriculum/completion-store.test.ts` | AsyncStorage read/write, namespacing, graceful failure. |
-| `src/__tests__/curriculum/outcome.test.ts` | Pass/fail computation, decoding rule, trivial + Lesson-1-by-construction cases. |
+| `src/__tests__/curriculum/outcome.test.ts` | Pass/fail computation, decoding rule, and the degenerate no-scored-screens edge. Lesson 1 is **not** a trivial-pass case — it has 4 scored screens that all pass via `retryMode: "until-correct"`. |
 | `src/__tests__/curriculum/url-resolver.test.ts` | Numeric → canonical ID mapping. |
 | `src/__tests__/curriculum/lesson-01-shape.test.ts` | Structural validation of encoded Lesson 1 data against the type contract + markdown-vs-TS invariants. |
 
@@ -216,6 +216,14 @@ export interface LessonData {
   screens: Screen[];
   /** Optional per-lesson override for the completion view subtitle. */
   completionSubtitle?: string;
+  /**
+   * Optional override for the completion-view glyph preview.
+   * When absent, the completion view falls back to `introducedEntities`.
+   * Use this for lessons like Lesson 1 that preview letters without formally
+   * introducing them — `introducedEntities` stays authoring-accurate while
+   * the completion view still shows what the learner just met.
+   */
+  completionGlyphs?: EntityKey[];
 }
 ```
 
@@ -941,7 +949,6 @@ export interface LessonRunnerProps {
   lesson: LessonData;
   masteryRecorder: MasteryRecorder;
   onComplete: (outcome: LessonOutcome) => void;
-  onExit: () => void;
   renderScreen: (args: {
     screen: Screen;
     advance: (outcome?: ScreenOutcome) => void;
@@ -953,11 +960,14 @@ export interface LessonRunnerProps {
   }) => ReactNode;
 }
 
+// Note: the runner does NOT expose an onExit prop. Hardware-back + close-button
+// confirm/exit is a chrome+route concern (LessonChrome fires onExitRequested,
+// which the route wires to router.replace("/(tabs)"). Keeping that boundary
+// clean means the runner never handles routing.
 export function LessonRunner({
   lesson,
   masteryRecorder,
   onComplete,
-  onExit: _onExit,
   renderScreen,
 }: LessonRunnerProps) {
   const [index, setIndex] = useState(0);
@@ -1088,17 +1098,12 @@ export default function SandboxLessonScreen() {
     router.replace("/(tabs)");
   }, []);
 
-  const handleExit = useCallback(() => {
-    router.replace("/(tabs)");
-  }, []);
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
       <LessonRunner
         lesson={sandboxLesson}
         masteryRecorder={noopMasteryRecorder}
         onComplete={handleComplete}
-        onExit={handleExit}
         renderScreen={({ screen, advance, canGoBack, goBack, index, total }) => {
           if (screen.kind !== "teach") return null;
           const firstTextBlock = screen.blocks.find((b) => b.type === "text");
@@ -1210,6 +1215,9 @@ describe("lesson-01 shape", () => {
     expect(lessonOne.passCriteria.requireCorrectLastTwoDecoding).toBe(false);
     expect(lessonOne.introducedEntities).toEqual([]);
     expect(lessonOne.reviewEntities).toEqual([]);
+    // Lesson 1 previews Alif + Ba for the completion-view glyph preview
+    // even though neither is formally introduced (that's Lesson 2's job).
+    expect(lessonOne.completionGlyphs).toEqual(["letter:alif", "letter:ba"]);
   });
 
   it("every exercise option's entityKey is a known entity", () => {
@@ -1294,6 +1302,10 @@ export const lessonOne: LessonData = {
   reviewEntities: [],
   passCriteria: { threshold: 0.8, requireCorrectLastTwoDecoding: false },
   completionSubtitle: "You just met your first Arabic letters.",
+  // introducedEntities stays [] because Lesson 1 only previews Alif and Ba
+  // (formally introduced in Lesson 2). completionGlyphs gives the completion
+  // view what to show anyway — see types.ts for rationale.
+  completionGlyphs: ["letter:alif", "letter:ba"],
   screens: [
     // Part 2 — Teach
     {
@@ -2235,7 +2247,9 @@ export function LessonCompletionView({
 }: Props) {
   const colors = useColors();
 
-  const entities = lesson.introducedEntities;
+  // Prefer the explicit completionGlyphs override; fall back to introducedEntities
+  // for lessons that don't set one.
+  const entities = lesson.completionGlyphs ?? lesson.introducedEntities;
   const glyphs = entities.map(resolveGlyph).filter((g): g is string => g !== null);
   const showPreview =
     glyphs.length > 0 &&
@@ -2380,7 +2394,6 @@ export default function LessonRoute() {
         lesson={lesson}
         masteryRecorder={noopMasteryRecorder}
         onComplete={handleComplete}
-        onExit={handleExit}
         renderScreen={({ screen, advance, reportAttempt, goBack, canGoBack, index, total }) => (
           <LessonChrome
             screen={screen}
@@ -2665,7 +2678,7 @@ In the Expo dev client on a real device or simulator:
    - Chrome shows "Practice" label during the 4 exercise screens (part === "practice" and part === "mastery-check").
 4. On the Hear exercise (p-hear-alif): tap the speaker repeatedly. No scoring. Next button is always enabled.
 5. On the Tap exercise (p-tap-alif): tap the wrong option — confirm it flashes red briefly, options stay tappable. Tap the correct option — confirm it glows green briefly, auto-advances after ~900ms.
-6. Complete the full 8-screen flow. Confirm the completion view appears with "Lesson 1 complete", "4 of 4 correct", the glyph preview ("ا · ب"... actually empty since `introducedEntities` is `[]`; preview is skipped — confirm it's not rendered), the "You just met your first Arabic letters." subtitle, and a Continue button.
+6. Complete the full 8-screen flow. Confirm the completion view appears with "Lesson 1 complete", "4 of 4 correct", the glyph preview rendering as "ا · ب" (sourced from `completionGlyphs`), the "You just met your first Arabic letters." subtitle, and a Continue button.
 7. Tap Continue. Route should return to the home tab. Card should now show "Lesson 1 complete", "Replay Lesson 1" button, and disabled "Lesson 2 coming soon" tile.
 8. Close and reopen the app. Confirm the completed state persists (AsyncStorage).
 

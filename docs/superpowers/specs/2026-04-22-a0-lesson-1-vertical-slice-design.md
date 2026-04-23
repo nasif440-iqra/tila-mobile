@@ -108,7 +108,7 @@ src/__tests__/curriculum/        (NEW test suite — see §8)
 
 - `app/lesson/[id].tsx` imports from `src/curriculum/` only. It is the only place that knows about router and AsyncStorage wiring.
 - `LessonRunner` is pure: no router imports, no storage imports. Takes callbacks.
-- Exercise renderers are presentational: they receive the concrete exercise data plus `advance` and `reportAttempt` callbacks from the runner's render-props. No router, no storage, no runner-internals knowledge.
+- Exercise renderers are presentational but they do depend on the runner's render-props contract. They receive the concrete exercise data plus `advance` (commits the screen's outcome and moves the cursor) and `reportAttempt` (emits entity-level mastery events without advancing). The Tap renderer uses both: `reportAttempt` for wrong taps in `until-correct` mode, `advance` for the final correct tap. Renderers must not import the `LessonRunner` module directly, own routing, or touch storage.
 - `lesson-01.ts` imports only types from `../types`. Zero behavior.
 - `lessons/index.ts` is a static registry object: `{ "lesson-01": lessonOneData }`. Keyed by `LessonData.id`.
 
@@ -154,6 +154,10 @@ export interface LessonData {
   };
   screens: Screen[];
   completionSubtitle?: string;   // optional per-lesson override for the completion view
+  completionGlyphs?: EntityKey[]; // optional override for the completion-view glyph preview;
+                                  // falls back to introducedEntities when absent. Lessons that
+                                  // preview letters without formally introducing them (Lesson 1)
+                                  // use this so the completion view can still render the preview.
 }
 ```
 
@@ -330,7 +334,6 @@ export interface LessonRunnerProps {
   lesson: LessonData;
   masteryRecorder: MasteryRecorder;
   onComplete: (outcome: LessonOutcome) => void;
-  onExit: () => void;            // confirmed hardware-back "Leave"
   renderScreen: (args: {
     screen: Screen;
     advance: (outcome?: ScreenOutcome) => void;
@@ -429,7 +432,7 @@ The tally still uses only the `advance(outcome)` call. `reportAttempt` only feed
 - **Below header:** thin progress bar. `#ece6d4` track, `#9AB0A0` fill, 3px height. Width = `(index + 1) / total`.
 - **Body slot:** wraps whatever `renderScreen` returns.
 
-**Hardware-back flow:** Chrome (or the parent route) registers an Android hardware-back handler. Pressing it opens a modal: "Leave lesson? Your progress in this lesson won't be saved. [Stay] [Leave]". Leave calls `onExit`. Stay dismisses.
+**Hardware-back flow:** `LessonChrome` registers the Android hardware-back handler and owns the confirm modal: "Leave lesson? Your progress in this lesson won't be saved. [Stay] [Leave]". Leave fires the chrome's `onExitRequested` callback, which the parent route wires to `router.replace("/")`. The runner is not involved.
 
 ### 7.4 Completion view (`<LessonCompletionView>`)
 
@@ -464,7 +467,7 @@ State resolved by reading `completionStore.getCompletion("lesson-01")` on mount 
 | Unknown lesson ID (`/lesson/99`) | Route renders minimal "Lesson not found" with "Back to home" button. No crash. |
 | AsyncStorage write fails on `markCompleted` | In-memory state still flips (completion view renders). Home card on next open shows not-completed — graceful degradation. Log in `__DEV__`. |
 | AsyncStorage read fails on home | Treat as not-completed. Log. |
-| Android hardware back during lesson | Confirm modal: "Leave lesson? Your progress in this lesson won't be saved." Stay dismisses; Leave calls `onExit` → `router.replace("/")`. |
+| Android hardware back during lesson | Confirm modal: "Leave lesson? Your progress in this lesson won't be saved." Stay dismisses; Leave fires `LessonChrome.onExitRequested` → parent route calls `router.replace("/")`. Runner is uninvolved. |
 | Android hardware back on completion view | No confirm. Acts as Continue. |
 | App backgrounded mid-lesson | State lost (no resume). Restart at screen 0 on next open. |
 | `goBack` when `allowBack === false` or `index === 0` | No-op. `canGoBack` prevents UI exposure anyway. |
@@ -494,8 +497,8 @@ src/__tests__/curriculum/
 - `recordEntityAttempt` fires once per `EntityAttempt` entry per `advance(outcome)` call.
 - Retries after `goBack`: tally uses latest outcome, mastery stream keeps all attempts.
 - Outcome computation: `itemsTotal` counts scored-only, `itemsCorrect` counts latest correct, `decodingRuleSatisfied` respects `countsAsDecoding` and `requireCorrectLastTwoDecoding`.
-- Trivial pass when `itemsTotal === 0`.
-- `onExit` does not trigger `onComplete`.
+- Trivial pass when `itemsTotal === 0` (degenerate case — not Lesson 1, which has 4 scored screens).
+- Runner does not fire `onComplete` if the lesson is exited before the final advance.
 
 **`completion-store.test.ts`** — covers:
 - `markCompleted` writes to AsyncStorage under the namespaced key.
