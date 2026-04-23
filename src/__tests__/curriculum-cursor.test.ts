@@ -47,5 +47,6 @@ describe("retreatCursor", () => {
 
   it("refuses to retreat from an out-of-bounds current (defensive)", () => {
     expect(retreatCursor(-1, 5)).toEqual({ prevIndex: null });
+    expect(retreatCursor(5, 5)).toEqual({ prevIndex: null });
   });
 });

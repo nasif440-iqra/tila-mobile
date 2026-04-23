@@ -21,6 +21,6 @@ export type RetreatResult = { prevIndex: number | null };
 export function retreatCursor(current: number, total: number): RetreatResult {
   if (total <= 0) return { prevIndex: null };
   if (current <= 0) return { prevIndex: null };
-  if (current > total) return { prevIndex: null };
+  if (current >= total) return { prevIndex: null };
   return { prevIndex: current - 1 };
 }
