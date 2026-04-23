@@ -108,9 +108,27 @@ src/__tests__/curriculum/        (NEW test suite — see §8)
 
 - `app/lesson/[id].tsx` imports from `src/curriculum/` only. It is the only place that knows about router and AsyncStorage wiring.
 - `LessonRunner` is pure: no router imports, no storage imports. Takes callbacks.
-- Exercise renderers are presentational: receive `{ exercise, onAttempt }` props. No router, no storage, no runner knowledge.
+- Exercise renderers are presentational: they receive the concrete exercise data plus `advance` and `reportAttempt` callbacks from the runner's render-props. No router, no storage, no runner-internals knowledge.
 - `lesson-01.ts` imports only types from `../types`. Zero behavior.
 - `lessons/index.ts` is a static registry object: `{ "lesson-01": lessonOneData }`. Keyed by `LessonData.id`.
+
+### 5.3 URL-to-lesson-id resolution
+
+The URL-facing route param is a human-readable numeric string (`/lesson/1`, `/lesson/12`). The registry key is a zero-padded canonical ID (`"lesson-01"`, `"lesson-12"`). The route owns the normalization:
+
+```ts
+// app/lesson/[id].tsx
+function resolveLessonId(param: string | string[] | undefined): string | null {
+  const raw = Array.isArray(param) ? param[0] : param;
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return `lesson-${String(n).padStart(2, "0")}`;
+}
+// const lesson = lessonRegistry[resolveLessonId(params.id) ?? ""];
+```
+
+Unresolvable param or missing key → "Lesson not found" view (§8). Keeping the URL numeric preserves link-friendliness; keeping the registry key zero-padded keeps it sort-stable for when Lesson 10+ arrives.
 
 ## 6. Type contracts
 
@@ -356,7 +374,8 @@ Owns:
   - `itemsTotal` = count of screens with `scored !== false`.
   - `itemsCorrect` = count of screens whose latest `ScreenOutcome.correct = true` AND `scored !== false`.
   - `decodingRuleSatisfied`: `true` if `lesson.passCriteria.requireCorrectLastTwoDecoding === false`, else `true` iff the last two `countsAsDecoding: true` screens (by sequence order in `lesson.screens`, using latest outcome) are both correct.
-  - `passed`: if `itemsTotal === 0`, `true` (trivial pass — Lesson 1). Otherwise `(itemsCorrect / itemsTotal) >= passCriteria.threshold && decodingRuleSatisfied`.
+  - `passed`: if `itemsTotal === 0`, `true` (degenerate case — lesson has no scored screens; Lesson 1 is not this case). Otherwise `(itemsCorrect / itemsTotal) >= passCriteria.threshold && decodingRuleSatisfied`.
+  - **Why Lesson 1 always passes:** Lesson 1 has 4 scored screens (3.2, 3.4, 4.1, 4.2), all in `retryMode: "until-correct"`. Advance fires only on a correct tap, so `itemsCorrect === itemsTotal === 4` at completion, `itemsCorrect / itemsTotal === 1.0 ≥ 0.85`, `decodingRuleSatisfied` is trivially true (no decoding items), so `passed === true`. This is by construction, not coincidence — the permissive retry mode is what makes the lesson welcoming.
 - **Final emission.** `masteryRecorder.recordLessonOutcome` fires once with the computed outcome, then `onComplete(outcome)`.
 
 Does not own: rendering, routing, persistence, hardware-back dialog.
@@ -449,7 +468,8 @@ State resolved by reading `completionStore.getCompletion("lesson-01")` on mount 
 | Android hardware back on completion view | No confirm. Acts as Continue. |
 | App backgrounded mid-lesson | State lost (no resume). Restart at screen 0 on next open. |
 | `goBack` when `allowBack === false` or `index === 0` | No-op. `canGoBack` prevents UI exposure anyway. |
-| Lesson 1 passed trivially (`itemsTotal === 0`) | `passed = true`, score line hidden in completion view. |
+| Lesson with `itemsTotal === 0` (degenerate case, not Lesson 1) | `passed = true`, score line hidden in completion view. |
+| Lesson 1 completion (`itemsTotal === 4`, until-correct ensures `itemsCorrect === 4`) | `passed = true` by construction. Score line shows "4 of 4 correct". |
 | `LessonData.screens` empty array | Runner renders nothing and never fires `onComplete`. Defensive: treat as configuration error; route shows "Lesson not found" equivalent. |
 
 ## 9. Testing
