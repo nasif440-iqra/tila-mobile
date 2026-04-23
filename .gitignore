@@ -21,6 +21,9 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
+# Superpowers brainstorm (visual companion mockups)
+.superpowers/
+
 # debug
 npm-debug.*
 yarn-debug.*
