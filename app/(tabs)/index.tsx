@@ -14,7 +14,7 @@ import Animated, {
   withDelay,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import { ErrorBoundary } from "react-error-boundary";
 import * as Sentry from "@sentry/react-native";
 import { useColors } from "../../src/design/theme";
@@ -25,6 +25,7 @@ import { WarmGradient } from "../../src/design/components";
 import { useAppState } from "../../src/state/hooks";
 import { useSubscription } from "../../src/monetization/hooks";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
+import { asyncStorageCompletionStore } from "../../src/curriculum/runtime/completion-store";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import { TrialCountdownBadge } from "../../src/components/monetization/TrialCountdownBadge";
 import { WirdTooltip } from "../../src/components/home/WirdTooltip";
@@ -169,6 +170,21 @@ export default function HomeScreen() {
     [motivation]
   );
 
+  // Lesson 1 completion state
+  const [lesson1Completed, setLesson1Completed] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      let cancelled = false;
+      asyncStorageCompletionStore.getCompletion("lesson-01").then((done) => {
+        if (!cancelled) setLesson1Completed(done);
+      });
+      return () => {
+        cancelled = true;
+      };
+    }, [])
+  );
+
   // Wird tooltip
   const [showWirdTooltip, setShowWirdTooltip] = useState(false);
 
@@ -255,14 +271,38 @@ export default function HomeScreen() {
           </Pressable>
         )}
 
-        {/* ── Curriculum Placeholder ── */}
-        <View style={styles.placeholderSection}>
-          <Text style={[typography.heading3, { color: colors.textMuted, textAlign: "center" }]}>
-            Curriculum coming soon
-          </Text>
-          <Text style={[typography.body, { color: colors.textMuted, marginTop: spacing.sm, textAlign: "center" }]}>
-            New lessons are in development. Your streak and progress are still saved.
-          </Text>
+        {/* ── Lesson 1 CTA card ── */}
+        <View style={styles.lessonCard}>
+          <Text style={styles.lessonEyebrow}>Lesson 1 · Phase 1 · Module 1.1</Text>
+          <Text style={styles.lessonTitle}>Arabic Starts Here</Text>
+          {lesson1Completed ? (
+            <>
+              <View style={styles.completeRow}>
+                <Text style={styles.completeCheck}>✓</Text>
+                <Text style={styles.completeText}>Lesson 1 complete</Text>
+              </View>
+              <Pressable
+                onPress={() => router.push("/lesson/1")}
+                style={[styles.lessonButton, styles.lessonButtonSecondary]}
+                accessibilityRole="button"
+                accessibilityLabel="Replay Lesson 1"
+              >
+                <Text style={styles.lessonButtonSecondaryText}>Replay Lesson 1</Text>
+              </Pressable>
+              <View style={styles.nextDisabled}>
+                <Text style={styles.nextDisabledText}>Lesson 2 coming soon</Text>
+              </View>
+            </>
+          ) : (
+            <Pressable
+              onPress={() => router.push("/lesson/1")}
+              style={styles.lessonButton}
+              accessibilityRole="button"
+              accessibilityLabel="Start Lesson 1"
+            >
+              <Text style={styles.lessonButtonText}>Start</Text>
+            </Pressable>
+          )}
         </View>
 
         <View style={{ height: spacing.xxxl }} />
@@ -360,10 +400,41 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Curriculum placeholder
-  placeholderSection: {
-    padding: spacing.xl,
-    alignItems: "center",
-    marginTop: spacing.xxl,
+  // Lesson 1 CTA card
+  lessonCard: {
+    marginHorizontal: spacing.sm,
+    marginVertical: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: "#FFFFFF",
+    gap: spacing.sm,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
+  lessonEyebrow: { ...typography.label, color: "#8a8a8a" },
+  lessonTitle: { ...typography.heading2, fontSize: 20, color: "#163323" },
+  lessonButton: {
+    backgroundColor: "#163323",
+    borderRadius: radii.full,
+    paddingVertical: spacing.sm,
+    alignItems: "center" as const,
+    marginTop: spacing.xs,
+  },
+  lessonButtonText: { color: "#F8F6F0", fontWeight: "600" as const, fontSize: 15 },
+  lessonButtonSecondary: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#163323" },
+  lessonButtonSecondaryText: { color: "#163323", fontWeight: "600" as const, fontSize: 15 },
+  completeRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: spacing.xs },
+  completeCheck: { color: "#163323", fontSize: 18, fontWeight: "700" as const },
+  completeText: { ...typography.body, color: "#163323" },
+  nextDisabled: {
+    marginTop: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radii.lg,
+    backgroundColor: "#f4f1e8",
+    alignItems: "center" as const,
+  },
+  nextDisabledText: { ...typography.label, color: "#9a9484" },
 });
