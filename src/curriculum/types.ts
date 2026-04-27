@@ -33,7 +33,6 @@ export interface TapExercise {
   type: "tap";
   prompt: string;
   target: EntityKey;
-  audioOnMount?: string;
   options: Array<{ display: string; entityKey: EntityKey; correct: boolean }>;
 }
 

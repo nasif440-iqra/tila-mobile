@@ -36,10 +36,6 @@ export function TapExercise({
   const wrongTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (exercise.audioOnMount) onPlayAudio?.(exercise.audioOnMount);
-  }, [exercise.audioOnMount, onPlayAudio]);
-
-  useEffect(() => {
     return () => {
       if (advanceTimerRef.current) clearTimeout(advanceTimerRef.current);
       if (wrongTimerRef.current) clearTimeout(wrongTimerRef.current);
@@ -99,16 +95,6 @@ export function TapExercise({
   return (
     <View style={styles.container}>
       <Text style={[styles.prompt, { color: colors.text }]}>{exercise.prompt}</Text>
-      {exercise.audioOnMount ? (
-        <Pressable
-          onPress={() => onPlayAudio?.(exercise.audioOnMount!)}
-          style={[styles.replayBubble, { backgroundColor: colors.primary }]}
-          accessibilityLabel="Replay audio"
-          accessibilityRole="button"
-        >
-          <Text style={[styles.replayIcon, { color: colors.bg }]}>🔊</Text>
-        </Pressable>
-      ) : null}
       <View style={styles.options}>
         {exercise.options.map((opt, i) => {
           const state = optionStates[i];
@@ -138,11 +124,6 @@ export function TapExercise({
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", padding: spacing.md, gap: spacing.lg },
   prompt: { ...typography.body, textAlign: "center" },
-  replayBubble: {
-    width: 56, height: 56, borderRadius: 28, alignSelf: "center",
-    alignItems: "center", justifyContent: "center",
-  },
-  replayIcon: { fontSize: 22 },
   options: { flexDirection: "row", gap: spacing.sm },
   option: {
     flex: 1, borderWidth: 2, borderColor: "#e8e2cf",
