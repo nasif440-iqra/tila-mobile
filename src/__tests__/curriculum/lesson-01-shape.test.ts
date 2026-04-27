@@ -3,27 +3,53 @@ import { lessonOne } from "../../curriculum/lessons/lesson-01";
 import { lessonRegistry } from "../../curriculum/lessons";
 
 const KNOWN_ENTITY_KEYS = new Set([
-  "letter:alif",
   "letter:ba",
+  "combo:ba+fatha",
 ]);
 
-describe("lesson-01 shape", () => {
+const EXPECTED_SCREEN_IDS = [
+  "t-rtl-intro",
+  "t-meet-ba",
+  "p-hear-ba",
+  "t-mark",
+  "p-hear-ba-fatha",
+  "r-read-ba-fatha",
+];
+
+describe("lesson-01 shape (proof-shape redesign)", () => {
   it("has canonical ID 'lesson-01'", () => {
     expect(lessonOne.id).toBe("lesson-01");
+  });
+
+  it("is marked as an onboarding lesson — SPEC Constraint 1", () => {
+    expect(lessonOne.kind).toBe("onboarding");
   });
 
   it("matches authoring markdown frontmatter", () => {
     expect(lessonOne.phase).toBe(1);
     expect(lessonOne.module).toBe("1.1");
     expect(lessonOne.title).toBe("Arabic Starts Here");
-    expect(lessonOne.durationTargetSeconds).toBe(180);
-    expect(lessonOne.passCriteria.threshold).toBe(0.8);
+    expect(lessonOne.durationTargetSeconds).toBe(150);
+    expect(lessonOne.passCriteria.threshold).toBe(0);
     expect(lessonOne.passCriteria.requireCorrectLastTwoDecoding).toBe(false);
-    expect(lessonOne.introducedEntities).toEqual([]);
+    expect(lessonOne.introducedEntities).toEqual(["letter:ba", "combo:ba+fatha"]);
     expect(lessonOne.reviewEntities).toEqual([]);
-    // Lesson 1 previews Alif + Ba for the completion-view glyph preview
-    // even though neither is formally introduced (that's Lesson 2's job).
-    expect(lessonOne.completionGlyphs).toEqual(["letter:alif", "letter:ba"]);
+    expect(lessonOne.completionGlyphs).toEqual(["combo:ba+fatha"]);
+    expect(lessonOne.completionSubtitle).toBe(
+      "You just read your first Arabic syllable: بَ"
+    );
+  });
+
+  it("has exactly the expected six screens in order", () => {
+    expect(lessonOne.screens.map((s) => s.id)).toEqual(EXPECTED_SCREEN_IDS);
+  });
+
+  it("ends with a Read exercise — the proof moment", () => {
+    const last = lessonOne.screens.at(-1);
+    expect(last?.kind).toBe("exercise");
+    if (last?.kind === "exercise") {
+      expect(last.exercise.type).toBe("read");
+    }
   });
 
   it("every exercise option's entityKey is a known entity", () => {
@@ -48,13 +74,12 @@ describe("lesson-01 shape", () => {
         continue;
       }
       const ex = screen.exercise;
-      if (ex.type === "tap" && ex.audioOnMount !== undefined) {
-        expect(ex.audioOnMount.length).toBeGreaterThan(0);
-      }
       if (ex.type === "hear") {
         expect(ex.audioPath.length).toBeGreaterThan(0);
       }
-      if (ex.type === "read" && ex.audioModel !== undefined) {
+      if (ex.type === "read") {
+        // Required by the type now; check explicitly so the test fails
+        // loudly if a future refactor weakens the contract.
         expect(ex.audioModel.length).toBeGreaterThan(0);
       }
     }
@@ -63,13 +88,6 @@ describe("lesson-01 shape", () => {
   it("screen IDs are unique within the lesson", () => {
     const ids = lessonOne.screens.map((s) => s.id);
     expect(new Set(ids).size).toBe(ids.length);
-  });
-
-  it("contains at least one mastery-check screen", () => {
-    const masteryCheckScreens = lessonOne.screens.filter(
-      (s) => s.kind === "exercise" && s.part === "mastery-check"
-    );
-    expect(masteryCheckScreens.length).toBeGreaterThan(0);
   });
 
   it("is registered under its own ID in the registry", () => {

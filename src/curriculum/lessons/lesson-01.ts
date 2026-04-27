@@ -1,97 +1,61 @@
 import type { LessonData } from "../types";
 
 /**
- * Runtime artifact for Lesson 1 — "Arabic Starts Here".
+ * Runtime artifact for Lesson 1 — "Arabic Starts Here" (proof-shape redesign).
+ *
  * Human-authored spec: curriculum/phase-1/01-arabic-starts-here.md
- * Keep this file in sync with the markdown frontmatter and exercise blocks.
- * When markdown edits, this file must be updated manually (A0 — parser deferred).
+ * Engineering SPEC:   docs/superpowers/specs/2026-04-27-lesson-1-proof-shape-design.md
+ *
+ * Lesson 1 is an ONBOARDING lesson — it does not follow standard lesson
+ * anatomy (no warm-recall, no scored items, no mastery-check). The proof
+ * is the lesson: the learner ends having read بَ. The kind: "onboarding"
+ * discriminator is load-bearing — see SPEC Constraint 1.
+ *
+ * Keep this file in sync with the authoring markdown. When markdown edits,
+ * this file must be updated manually (parser deferred until at least
+ * Lesson 2–3 ship).
  */
 export const lessonOne: LessonData = {
   id: "lesson-01",
+  kind: "onboarding",
   phase: 1,
   module: "1.1",
   title: "Arabic Starts Here",
-  outcome:
-    "Orient to right-to-left reading, that letters change shape, and that a letter + a mark makes a sound. No scored reading yet.",
-  durationTargetSeconds: 180,
-  introducedEntities: [],
+  outcome: "Read your first Arabic syllable: بَ.",
+  durationTargetSeconds: 150,
+  introducedEntities: ["letter:ba", "combo:ba+fatha"],
   reviewEntities: [],
-  passCriteria: { threshold: 0.8, requireCorrectLastTwoDecoding: false },
-  completionSubtitle: "You just met your first Arabic letters.",
-  // introducedEntities stays [] because Lesson 1 only previews Alif and Ba
-  // (formally introduced in Lesson 2). completionGlyphs gives the completion
-  // view what to show anyway — see types.ts for rationale.
-  completionGlyphs: ["letter:alif", "letter:ba"],
+  passCriteria: { threshold: 0, requireCorrectLastTwoDecoding: false },
+  completionSubtitle: "You just read your first Arabic syllable: بَ",
+  completionGlyphs: ["combo:ba+fatha"],
   screens: [
+    // Screen 1 — Teach: RTL orientation
     {
       kind: "teach",
       id: "t-rtl-intro",
       blocks: [
-        { type: "text", content: "Arabic reads right to left — the opposite of English. Every word starts on the right." },
+        {
+          type: "text",
+          content:
+            "Arabic reads right to left. Every word starts on the right.",
+        },
         { type: "reading-direction", word: "بِسْمِ" },
         { type: "audio", path: "audio/lesson_01/rtl_intro.mp3", label: "Listen" },
       ],
     },
+
+    // Screen 2 — Teach: meet Ba (the letter, by name)
     {
       kind: "teach",
-      id: "t-shape-change",
+      id: "t-meet-ba",
       blocks: [
-        { type: "text", content: "Notice how the same letter looks different depending on where it sits in a word. This is normal." },
-        {
-          type: "shape-variants",
-          letter: "ب",
-          variants: [
-            { position: "isolated", rendered: "ب" },
-            { position: "initial", rendered: "بـ" },
-            { position: "medial", rendered: "ـبـ" },
-            { position: "final", rendered: "ـب" },
-          ],
-        },
-        { type: "audio", path: "audio/lesson_01/shape_change_intro.mp3", label: "Listen" },
+        { type: "text", content: "This letter is Ba." },
+        { type: "glyph-display", letter: "ب", size: "large" },
+        { type: "audio", path: "audio/letter/ba_name.mp3", label: "Listen" },
       ],
     },
-    {
-      kind: "teach",
-      id: "t-mark-intro",
-      blocks: [
-        { type: "text", content: "A letter by itself is a shape. Add a small mark, and it becomes a sound you can read." },
-        { type: "glyph-display", letter: "ب", withMark: "بَ", size: "large" },
-        { type: "audio", path: "audio/lesson_01/mark_intro.mp3", label: "Listen" },
-      ],
-    },
-    {
-      kind: "exercise",
-      id: "p-hear-alif",
-      part: "practice",
-      scored: false,
-      countsAsDecoding: false,
-      exercise: {
-        type: "hear",
-        prompt: "Tap to hear again — this is Alif.",
-        target: "letter:alif",
-        audioPath: "audio/letter/alif_name.mp3",
-        displayOnScreen: "ا",
-        note: "Tap as many times as you like.",
-      },
-    },
-    {
-      kind: "exercise",
-      id: "p-tap-alif",
-      part: "practice",
-      scored: true,
-      countsAsDecoding: false,
-      retryMode: "until-correct",
-      exercise: {
-        type: "tap",
-        prompt: "Which one did you just hear?",
-        target: "letter:alif",
-        audioOnMount: "audio/letter/alif_name.mp3",
-        options: [
-          { display: "ا", entityKey: "letter:alif", correct: true },
-          { display: "ب", entityKey: "letter:ba", correct: false },
-        ],
-      },
-    },
+
+    // Screen 3 — Practice (unscored): hear Ba's name again
     {
       kind: "exercise",
       id: "p-hear-ba",
@@ -100,63 +64,64 @@ export const lessonOne: LessonData = {
       countsAsDecoding: false,
       exercise: {
         type: "hear",
-        prompt: "Tap to hear again — this is Ba.",
+        prompt: "Tap to hear it again.",
         target: "letter:ba",
         audioPath: "audio/letter/ba_name.mp3",
         displayOnScreen: "ب",
         note: "Tap as many times as you like.",
       },
     },
+
+    // Screen 4 — Teach: the mark turns it into a sound you can read
+    {
+      kind: "teach",
+      id: "t-mark",
+      blocks: [
+        {
+          type: "text",
+          content:
+            "A small mark turns it into a sound you can read.",
+        },
+        { type: "glyph-display", letter: "ب", withMark: "بَ", size: "large" },
+        {
+          type: "audio",
+          path: "audio/letter/ba_fatha_sound.mp3",
+          label: "Listen",
+        },
+      ],
+    },
+
+    // Screen 5 — Practice (unscored): hear the syllable sound
     {
       kind: "exercise",
-      id: "p-tap-ba",
+      id: "p-hear-ba-fatha",
       part: "practice",
-      scored: true,
+      scored: false,
       countsAsDecoding: false,
-      retryMode: "until-correct",
       exercise: {
-        type: "tap",
-        prompt: "Which one did you just hear?",
-        target: "letter:ba",
-        audioOnMount: "audio/letter/ba_name.mp3",
-        options: [
-          { display: "ا", entityKey: "letter:alif", correct: false },
-          { display: "ب", entityKey: "letter:ba", correct: true },
-        ],
+        type: "hear",
+        prompt: "Tap to hear it again.",
+        target: "combo:ba+fatha",
+        audioPath: "audio/letter/ba_fatha_sound.mp3",
+        displayOnScreen: "بَ",
+        note: "Tap as many times as you like.",
       },
     },
+
+    // Screen 6 — Read (the proof): try saying بَ, then check
     {
       kind: "exercise",
-      id: "mc-tap-alif",
-      part: "mastery-check",
-      scored: true,
+      id: "r-read-ba-fatha",
+      part: "practice",
+      scored: false,
       countsAsDecoding: false,
-      retryMode: "until-correct",
       exercise: {
-        type: "tap",
-        prompt: "Tap Alif.",
-        target: "letter:alif",
-        options: [
-          { display: "ب", entityKey: "letter:ba", correct: false },
-          { display: "ا", entityKey: "letter:alif", correct: true },
-        ],
-      },
-    },
-    {
-      kind: "exercise",
-      id: "mc-tap-ba",
-      part: "mastery-check",
-      scored: true,
-      countsAsDecoding: false,
-      retryMode: "until-correct",
-      exercise: {
-        type: "tap",
-        prompt: "Tap Ba.",
-        target: "letter:ba",
-        options: [
-          { display: "ا", entityKey: "letter:alif", correct: false },
-          { display: "ب", entityKey: "letter:ba", correct: true },
-        ],
+        type: "read",
+        prompt: "Try saying it first.",
+        target: "combo:ba+fatha",
+        display: "بَ",
+        audioModel: "audio/letter/ba_fatha_sound.mp3",
+        revealCopy: "That's ba.",
       },
     },
   ],
