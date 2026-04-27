@@ -26,6 +26,7 @@ export function renderExercise({
     case "tap":
       return (
         <TapExercise
+          key={screenId}
           screenId={screenId}
           exercise={exercise}
           retryMode={retryMode}
@@ -37,6 +38,7 @@ export function renderExercise({
     case "hear":
       return (
         <HearExercise
+          key={screenId}
           screenId={screenId}
           exercise={exercise}
           advance={advance}

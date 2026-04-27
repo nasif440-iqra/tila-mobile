@@ -44,6 +44,7 @@ export const lessonOne: LessonData = {
             { position: "isolated", rendered: "ب" },
             { position: "initial", rendered: "بـ" },
             { position: "medial", rendered: "ـبـ" },
+            { position: "final", rendered: "ـب" },
           ],
         },
         { type: "audio", path: "audio/lesson_01/shape_change_intro.mp3", label: "Listen" },

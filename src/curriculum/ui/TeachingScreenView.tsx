@@ -65,19 +65,19 @@ function TeachingBlockView({
 
     case "glyph-display":
       return (
-        <View style={styles.glyphStack}>
-          <Text
-            style={[
-              block.size === "medium" ? styles.arabicMedium : styles.arabicLarge,
-              { color: colors.text },
-            ]}
-          >
-            {block.letter}
-          </Text>
+        <View style={styles.glyphPair}>
+          <View style={styles.glyphCol}>
+            <Text style={[styles.arabicXL, { color: colors.text }]}>{block.letter}</Text>
+            <Text style={[styles.label, { color: colors.textSoft }]}>letter</Text>
+          </View>
           {block.withMark ? (
-            <Text style={[styles.arabicLarge, { color: colors.primary, marginTop: spacing.xs }]}>
-              {block.withMark}
-            </Text>
+            <>
+              <Text style={[styles.arrow, { color: colors.textSoft }]}>→</Text>
+              <View style={styles.glyphCol}>
+                <Text style={[styles.arabicXL, { color: colors.primary }]}>{block.withMark}</Text>
+                <Text style={[styles.label, { color: colors.textSoft }]}>letter + mark</Text>
+              </View>
+            </>
           ) : null}
         </View>
       );
@@ -119,7 +119,10 @@ const styles = StyleSheet.create({
   arrow: { fontSize: 32 },
   arabicLarge: { fontFamily: fontFamilies.arabicRegular, fontSize: 56, lineHeight: 72 },
   arabicMedium: { fontFamily: fontFamilies.arabicRegular, fontSize: 40, lineHeight: 56 },
+  arabicXL: { fontFamily: fontFamilies.arabicRegular, fontSize: 96, lineHeight: 120 },
   glyphStack: { alignItems: "center" },
+  glyphPair: { flexDirection: "row", alignItems: "center", gap: spacing.lg },
+  glyphCol: { alignItems: "center", gap: spacing.xs },
   variantsRow: { flexDirection: "row", gap: spacing.md, justifyContent: "center" },
   variant: { alignItems: "center", gap: spacing.xs },
   label: { ...typography.label },

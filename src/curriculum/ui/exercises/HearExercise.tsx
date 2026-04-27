@@ -32,6 +32,9 @@ export function HearExercise({ screenId, exercise, advance, onPlayAudio }: Props
   return (
     <View style={styles.container}>
       <Text style={[styles.prompt, { color: colors.text }]}>{exercise.prompt}</Text>
+      {exercise.displayOnScreen ? (
+        <Text style={[styles.glyph, { color: colors.text }]}>{exercise.displayOnScreen}</Text>
+      ) : null}
       <Pressable
         onPress={handleSpeakerTap}
         style={[
@@ -43,9 +46,6 @@ export function HearExercise({ screenId, exercise, advance, onPlayAudio }: Props
       >
         <Text style={[styles.speakerIcon, { color: colors.bg }]}>🔊</Text>
       </Pressable>
-      {exercise.displayOnScreen ? (
-        <Text style={[styles.glyph, { color: colors.text }]}>{exercise.displayOnScreen}</Text>
-      ) : null}
       {exercise.note ? (
         <Text style={[styles.hint, { color: colors.textSoft }]}>{exercise.note}</Text>
       ) : null}
@@ -94,8 +94,8 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center",
   },
   speakerIcon: { fontSize: 32 },
-  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 72, lineHeight: 88 },
-  hint: { ...typography.label, fontStyle: "italic" },
+  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 96, lineHeight: 120 },
+  hint: { ...typography.body, fontSize: 13, fontStyle: "italic", textTransform: "none" },
   nextButton: {
     marginTop: spacing.lg,
     alignSelf: "stretch",
