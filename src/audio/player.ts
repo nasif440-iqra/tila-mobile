@@ -104,6 +104,35 @@ const SOUND_ASSETS: Record<string, AudioSource> = {
   ya: require("../../assets/audio/sounds/ya.wav"),
 };
 
+// ── Harakat sound assets (letter + mark combinations) ──
+//
+// Initially populated only for Lesson 1's needs (Ba). Expand as curriculum
+// requires. Keys are `<letter-id>-<harakat>`.
+//
+// NOTE: ba-kasra and ba-dhamma recordings may not exist yet — when missing,
+// playback gracefully falls back to playLetterSound(letterId) so Lesson 1
+// is at least audible (the fatha sound) until the real recordings land.
+
+type Harakat = "fatha" | "kasra" | "dhamma";
+
+const HARAKAT_SOUND_ASSETS: Record<string, AudioSource> = {
+  // Fatha for ba uses the existing sound asset (ba.wav is the fatha-register "ba").
+  "2-fatha": require("../../assets/audio/sounds/ba.wav"),
+  // ba-kasra and ba-dhamma: stub out; real assets land separately.
+  // Until recorded, fall back to fatha sound so the lesson plays.
+  // To wire real recordings: drop ba_kasra.wav / ba_dhamma.wav into
+  // assets/audio/sounds/ and switch the require() paths below.
+  "2-kasra": require("../../assets/audio/sounds/ba.wav"),
+  "2-dhamma": require("../../assets/audio/sounds/ba.wav"),
+};
+
+export function playLetterHarakatSound(letterId: number, harakat: Harakat): void {
+  const source = HARAKAT_SOUND_ASSETS[`${letterId}-${harakat}`];
+  if (source) {
+    void playVoice(source);
+  }
+}
+
 // ── Public API ──
 
 export function getLetterAsset(
@@ -255,4 +284,31 @@ export function playLetterName(letterId: number): void {
 export function playLetterSound(letterId: number): void {
   const source = getLetterAsset(letterId, "sound");
   if (source) playVoice(source);
+}
+
+// ── Curriculum-path router ──
+//
+// Bridges the curriculum's logical audio paths (e.g., "audio/letter/ba_name.mp3")
+// to actual asset playback. Curriculum data stays human-readable; this map
+// stays small and focused. Add new entries as new lessons author audio.
+//
+// Unknown paths log a warning and no-op — never throw.
+
+const PATH_TO_PLAYER: Record<string, () => void> = {
+  "audio/letter/ba_name.mp3": () => playLetterName(2),
+  "audio/letter/ba_fatha_sound.mp3": () => playLetterHarakatSound(2, "fatha"),
+  "audio/letter/ba_kasra_sound.mp3": () => playLetterHarakatSound(2, "kasra"),
+  "audio/letter/ba_dhamma_sound.mp3": () => playLetterHarakatSound(2, "dhamma"),
+};
+
+export function playByPath(path: string): void {
+  const player = PATH_TO_PLAYER[path];
+  if (player) {
+    player();
+    return;
+  }
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.warn(`[audio] Unknown logical path: ${path}`);
+  }
 }
