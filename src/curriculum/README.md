@@ -1,30 +1,46 @@
 # src/curriculum/
 
-Scaffolding for future lesson work. Populated when the new curriculum blueprint lands.
+Home of the A0 vertical slice — lesson data, runtime, and UI for the first shipped lesson.
 
 ## Directory layout
 
-- `runtime/` — shape-neutral `LessonRunner` and its cursor logic. Deliberately opinionless about screen shapes. Do not add screen-type definitions here.
+- `runtime/` — `LessonRunner` and its cursor logic. Now typed to `LessonData` (no longer generic).
+- `lessons/` — lesson data files (`lesson-01.ts`, …) and the registry (`index.ts`).
+- `types.ts` — `LessonData` contract defining all seven exercise types.
+- `ui/` — rendering components for teaching blocks, Tap, Hear, chrome, and completion.
 - `reference/` — hidden reference lesson used for development and smoke testing. Not shown to production users. Gated by `EXPO_PUBLIC_DEV_REFERENCE_LESSON=true`.
 - `README.md` — this file.
 
 ## Runtime contract
 
-`LessonRunner<T>` takes:
+`LessonRunner` takes a `LessonData` directly:
 
-- `screens: T[]` — caller-defined screen type
-- `onComplete: () => void` — called after the last screen is advanced past
-- `renderScreen: (screen, { advance, index, total }) => ReactNode` — caller decides how to render
+- `lesson: LessonData` — fully typed lesson (exercises, metadata)
+- `onComplete: () => void` — called after the last block is advanced past
+- `masteryRecorder` — `noopMasteryRecorder` for now; real impl planned later
 
-The runtime does not know what a screen is. The new curriculum defines its own screen types.
+The runtime knows the `LessonData` shape. Screen-type generics are gone.
 
-## When the blueprint arrives
+## Status
 
-1. Create `src/curriculum/lessons/` for lesson data.
-2. Create `src/curriculum/types.ts` defining the new curriculum's `Screen` union (or richer shape — whatever the blueprint needs).
-3. Update `app/(tabs)/index.tsx` to render the new lesson grid.
-4. Create `app/lesson/[id].tsx` (or whatever the new route shape is) that invokes `LessonRunner` with the new types.
-5. Wire new analytics events, progress writes, and paywall gating (these were quarantined during the reset — see `.planning/RESET-DECISION-MEMO.md` §2 for what survived).
+The A0 vertical slice is live:
+
+- `types.ts` defines the `LessonData` contract (all seven exercise types).
+- `runtime/LessonRunner.tsx` consumes `LessonData` directly — no longer generic.
+- `lessons/lesson-01.ts` + `lessons/index.ts` carry Lesson 1 + registry.
+- `ui/` renders teaching blocks, Tap, Hear, chrome, and completion.
+- `app/lesson/[id].tsx` hosts the route; `app/(tabs)/index.tsx` exposes the CTA.
+
+See `docs/superpowers/specs/2026-04-22-a0-lesson-1-vertical-slice-design.md` for the full A0 design.
+
+## Adding a lesson
+
+1. Author the human spec at `curriculum/phase-N/<nn>-<slug>.md`.
+2. Hand-compile a sibling TS file at `src/curriculum/lessons/lesson-<nn>.ts`
+   that exports a `LessonData` matching the frontmatter and exercises.
+3. Register it in `src/curriculum/lessons/index.ts`.
+4. Add a shape test at `src/__tests__/curriculum/lesson-<nn>-shape.test.ts`.
+5. Expose a CTA on the home screen (current home card pattern).
 
 ## Running the reference lesson locally
 
@@ -42,12 +58,13 @@ The reference lesson exercises:
 
 It intentionally ignores answer correctness — it exists to smoke-test the runtime, not to be a graded lesson.
 
-## What NOT to do in here
+## What still NOT to do
 
-- Do not add opinionated screen-type definitions to `runtime/`. Keep it neutral.
-- Do not write production lesson data until the blueprint is approved.
-- Do not bypass the env flag on the sandbox route.
-- Do not import `RefScreen` from `reference/` anywhere outside `reference/` and `app/sandbox-lesson.tsx`. It is not a shared contract.
+- Don't bypass the env flag on `app/sandbox-lesson`.
+- Don't write a generalized markdown parser until at least Lesson 2–3 have shipped
+  — the contract may still shift. Manual hand-compile is correct for now.
+- Don't wake the quarantined mastery engine. `noopMasteryRecorder` stays until
+  a real impl is planned.
 
 ## Why this shape?
 
