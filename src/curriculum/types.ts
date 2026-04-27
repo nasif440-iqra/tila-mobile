@@ -65,14 +65,21 @@ export interface BuildExercise {
 
 export interface ReadExercise {
   type: "read";
+  /** User-facing prompt, e.g., "Try saying it first." */
   prompt: string;
   target: EntityKey;
+  /** The Arabic to read — single glyph or syllable for A0. */
   display: string;
   /**
-   * Post-attempt only. The runtime MUST NOT auto-play this before the
-   * learner's attempt. See curriculum §6 no-cueing guardrail.
+   * Model audio path. REQUIRED.
+   * The runtime MUST NOT auto-play this on mount. It is revealed only
+   * after the learner taps Check (after a `READ_ATTEMPT_DELAY_MS` lock).
+   * After reveal, Continue gates on audio playback completion.
+   * See SPEC Constraint 2 for rationale.
    */
-  audioModel?: string;
+  audioModel: string;
+  /** Optional one-line confirmation copy shown after reveal, e.g., "That's ba." */
+  revealCopy?: string;
 }
 
 export interface FixExercise {
