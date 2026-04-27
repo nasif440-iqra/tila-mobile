@@ -70,6 +70,7 @@ export default function LessonRoute() {
           >
             {screen.kind === "teach" ? (
               <TeachingScreenView
+                key={screen.id}
                 screen={screen}
                 onAdvance={() => advance()}
                 onPlayAudio={onPlayAudio}
