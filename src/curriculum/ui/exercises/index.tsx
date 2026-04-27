@@ -4,6 +4,7 @@ import type { Exercise } from "../../types";
 import type { EntityAttempt, ScreenOutcome } from "../../runtime/LessonRunner";
 import { TapExercise } from "./TapExercise";
 import { HearExercise } from "./HearExercise";
+import { ReadExercise } from "./ReadExercise";
 
 interface DispatchArgs {
   screenId: string;
@@ -46,9 +47,18 @@ export function renderExercise({
           onPlayAudio={onPlayAudio}
         />
       );
+    case "read":
+      return (
+        <ReadExercise
+          key={screenId}
+          screenId={screenId}
+          exercise={exercise}
+          advance={advance}
+          onPlayAudio={onPlayAudio}
+        />
+      );
     case "choose":
     case "build":
-    case "read":
     case "fix":
       return <UnimplementedExercise type={exercise.type} />;
   }
