@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, fontFamilies } from "../../design/tokens";
@@ -12,6 +12,23 @@ interface Props {
 
 export function TeachingScreenView({ screen, onAdvance, onPlayAudio }: Props) {
   const colors = useColors();
+
+  // Auto-play any audio blocks flagged for mount-time playback.
+  // Constraint 3: permitted only on Teach screens, which this component is.
+  useEffect(() => {
+    for (const block of screen.blocks) {
+      if (block.type === "audio" && block.autoPlay && onPlayAudio) {
+        onPlayAudio(block.path);
+        // Only one auto-play per screen — break after the first match to
+        // avoid stacking sounds when an author accidentally flags two.
+        break;
+      }
+    }
+    // Intentional: only run once on mount per screen instance. Re-running
+    // on screen change is handled by the parent re-mounting this component
+    // when `screen.id` changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -108,6 +125,100 @@ function TeachingBlockView({
           <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
         </Pressable>
       );
+
+    case "name-sound-pair": {
+      const handlePlay = (path: string) => {
+        onPlayAudio?.(path);
+      };
+      return (
+        <View style={styles.pairRow}>
+          <Pressable
+            onPress={() => handlePlay(block.left.audioPath)}
+            style={styles.pairCol}
+            accessibilityRole="button"
+            accessibilityLabel={block.left.label ?? "Play"}
+          >
+            <Text style={[styles.arabicXL, { color: colors.text }]}>
+              {block.left.glyph}
+            </Text>
+            {block.left.label ? (
+              <Text style={[styles.label, { color: colors.textSoft }]}>
+                {block.left.label}
+              </Text>
+            ) : null}
+            <View style={[styles.pairAudioBubble, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
+            </View>
+          </Pressable>
+          <Text style={[styles.pairArrow, { color: colors.textSoft }]}>↔</Text>
+          <Pressable
+            onPress={() => handlePlay(block.right.audioPath)}
+            style={styles.pairCol}
+            accessibilityRole="button"
+            accessibilityLabel={block.right.label ?? "Play"}
+          >
+            <Text style={[styles.arabicXL, { color: colors.primary }]}>
+              {block.right.glyph}
+            </Text>
+            {block.right.label ? (
+              <Text style={[styles.label, { color: colors.textSoft }]}>
+                {block.right.label}
+              </Text>
+            ) : null}
+            <View style={[styles.pairAudioBubble, { backgroundColor: colors.primary }]}>
+              <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
+            </View>
+          </Pressable>
+        </View>
+      );
+    }
+
+    case "mark-preview": {
+      const handleOptionPress = (path: string) => {
+        onPlayAudio?.(path);
+      };
+      return (
+        <View style={styles.markRow}>
+          {block.options.map((opt, i) => {
+            const highlighted = block.highlightIndex === i;
+            return (
+              <Pressable
+                key={i}
+                onPress={() => handleOptionPress(opt.audioPath)}
+                style={[
+                  styles.markOption,
+                  highlighted && { borderColor: colors.primary, borderWidth: 3 },
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={opt.label ?? "Play"}
+              >
+                <Text
+                  style={[
+                    styles.arabicMedium,
+                    { color: highlighted ? colors.primary : colors.text },
+                  ]}
+                >
+                  {opt.glyph}
+                </Text>
+                {opt.label ? (
+                  <Text style={[styles.label, { color: colors.textSoft }]}>
+                    {opt.label}
+                  </Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
+        </View>
+      );
+    }
+
+    default: {
+      // TypeScript exhaustiveness guard — adding a new TeachingBlock variant
+      // to types.ts will fail compilation here until this switch handles it.
+      const _exhaustive: never = block;
+      void _exhaustive;
+      return null;
+    }
   }
 }
 
@@ -154,4 +265,39 @@ const styles = StyleSheet.create({
   audioIcon: { fontSize: 28 },
   nextButton: { paddingVertical: spacing.sm, borderRadius: radii.full, alignItems: "center" },
   nextText: { ...typography.body, fontWeight: "600" },
+  pairRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.lg,
+    justifyContent: "center",
+  },
+  pairCol: {
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  pairArrow: {
+    fontSize: 28,
+  },
+  pairAudioBubble: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: spacing.xs,
+  },
+  markRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+    justifyContent: "center",
+  },
+  markOption: {
+    alignItems: "center",
+    gap: spacing.xs,
+    padding: spacing.sm,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: "#e8e2cf",
+    minWidth: 72,
+  },
 });
