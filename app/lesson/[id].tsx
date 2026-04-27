@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,6 +13,7 @@ import { LessonChrome } from "../../src/curriculum/ui/LessonChrome";
 import { LessonCompletionView } from "../../src/curriculum/ui/LessonCompletionView";
 import { TeachingScreenView } from "../../src/curriculum/ui/TeachingScreenView";
 import { renderExercise } from "../../src/curriculum/ui/exercises";
+import { configureAudioSession, playByPath } from "../../src/audio/player";
 
 export default function LessonRoute() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -32,6 +33,14 @@ export default function LessonRoute() {
 
   const handleContinue = useCallback(() => {
     router.replace("/(tabs)");
+  }, []);
+
+  useEffect(() => {
+    void configureAudioSession();
+  }, []);
+
+  const onPlayAudio = useCallback((path: string) => {
+    playByPath(path);
   }, []);
 
   if (!lesson) return <LessonNotFound />;
@@ -60,7 +69,11 @@ export default function LessonRoute() {
             onExitRequested={handleExit}
           >
             {screen.kind === "teach" ? (
-              <TeachingScreenView screen={screen} onAdvance={() => advance()} />
+              <TeachingScreenView
+                screen={screen}
+                onAdvance={() => advance()}
+                onPlayAudio={onPlayAudio}
+              />
             ) : (
               renderExercise({
                 screenId: screen.id,
@@ -68,6 +81,7 @@ export default function LessonRoute() {
                 retryMode: screen.retryMode ?? "one-shot",
                 advance,
                 reportAttempt,
+                onPlayAudio,
               })
             )}
           </LessonChrome>
