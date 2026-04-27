@@ -118,6 +118,14 @@ export type Screen = TeachingScreen | ExerciseScreen;
 
 export interface LessonData {
   id: string;
+  /**
+   * "onboarding" lessons are exempt from standard lesson anatomy
+   * (warm-recall → practice → mastery-check, scored items, decoding rule).
+   * Reserved for the first-session experience. Future onboarding lessons
+   * require curriculum-team sign-off; otherwise default to "standard".
+   * Test enforcement is added once Lesson 2 lands.
+   */
+  kind?: "onboarding" | "standard";
   phase: number;
   module: string;
   title: string;
