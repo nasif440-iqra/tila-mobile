@@ -23,7 +23,38 @@ export type TeachingBlock =
         rendered: string;
       }>;
     }
-  | { type: "audio"; path: string; label?: string };
+  | {
+      type: "audio";
+      path: string;
+      label?: string;
+      /**
+       * If true, the runtime fires `onPlayAudio(path)` once on screen mount.
+       * Permitted only on Teach screens (SPEC Constraint 3 — auto-play
+       * teach-only). Default: false (tap-to-play only).
+       */
+      autoPlay?: boolean;
+    }
+  | {
+      /**
+       * Side-by-side comparison of two glyphs with per-glyph tap-to-play audio.
+       * Used to teach the NAME vs SOUND distinction (e.g., ب → "baa" alongside
+       * بَ → "ba"). Each side has its own glyph + audio path.
+       */
+      type: "name-sound-pair";
+      left: { glyph: string; audioPath: string; label?: string };
+      right: { glyph: string; audioPath: string; label?: string };
+    }
+  | {
+      /**
+       * Multi-option preview of mark variants. Renders N tappable glyphs,
+       * each with its own audio path. Optional `highlightIndex` visually
+       * emphasizes today's focus. Used to introduce the mark system before
+       * narrowing scope (e.g., showing fatha/kasra/dhamma, highlighting fatha).
+       */
+      type: "mark-preview";
+      options: Array<{ glyph: string; audioPath: string; label?: string }>;
+      highlightIndex?: number;
+    };
 
 // ────────────────────────────────────────────────────────────
 // Exercise union — all seven types per curriculum §7
