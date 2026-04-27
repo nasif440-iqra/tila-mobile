@@ -24,6 +24,7 @@ function resolveGlyph(entityKey: string): string | null {
     "letter:meem": "م",
     "letter:laam": "ل",
     "letter:noon": "ن",
+    "combo:ba+fatha": "بَ",
   };
   return letterMap[entityKey] ?? null;
 }
