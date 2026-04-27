@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, StyleSheet, Animated, Easing } from "react-native";
+import { View, Text, Pressable, StyleSheet, Animated, Easing, AccessibilityInfo } from "react-native";
 import { useColors } from "../../../design/theme";
 import { typography, spacing, radii, fontFamilies } from "../../../design/tokens";
 import type { ReadExercise as ReadExerciseData } from "../../types";
@@ -33,6 +33,22 @@ type State =
 export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props) {
   const colors = useColors();
   const [state, setState] = useState<State>("attempt-locked");
+  const [reduceMotion, setReduceMotion] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
+      if (!cancelled) setReduceMotion(enabled);
+    });
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      (enabled) => setReduceMotion(enabled)
+    );
+    return () => {
+      cancelled = true;
+      sub.remove();
+    };
+  }, []);
 
   const checkOpacity = useRef(new Animated.Value(0)).current;
   const revealOpacity = useRef(new Animated.Value(0)).current;
@@ -45,7 +61,7 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
       setState("attempt-open");
       Animated.timing(checkOpacity, {
         toValue: 1,
-        duration: FADE_MS,
+        duration: reduceMotion ? 0 : FADE_MS,
         easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }).start();
@@ -53,7 +69,7 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
     return () => {
       if (lockTimer.current) clearTimeout(lockTimer.current);
     };
-  }, [checkOpacity]);
+  }, [checkOpacity, reduceMotion]);
 
   // Cleanup audio timer on unmount to avoid setState on unmounted component.
   useEffect(() => {
@@ -75,7 +91,7 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
     setState("playing");
     Animated.timing(revealOpacity, {
       toValue: 1,
-      duration: FADE_MS,
+      duration: reduceMotion ? 0 : FADE_MS,
       easing: Easing.out(Easing.ease),
       useNativeDriver: true,
     }).start();
@@ -108,6 +124,7 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
 
       {showReveal && exercise.revealCopy ? (
         <Animated.Text
+          accessibilityLiveRegion="polite"
           style={[styles.reveal, { color: colors.textSoft, opacity: revealOpacity }]}
         >
           {exercise.revealCopy}
@@ -127,6 +144,7 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
               ]}
               accessibilityRole="button"
               accessibilityLabel="Check"
+              accessibilityState={{ disabled: checkDisabled }}
             >
               <Text style={[styles.checkText, { color: colors.bg }]}>Check</Text>
             </Pressable>
