@@ -296,6 +296,7 @@ export function playLetterSound(letterId: number): void {
 // Unknown paths log a warning and no-op — never throw.
 
 const PATH_TO_PLAYER: Record<string, () => void> = {
+  "audio/letter/alif_name.mp3": () => playLetterName(1),
   "audio/letter/ba_name.mp3": () => playLetterName(2),
   "audio/letter/ba_fatha_sound.mp3": () => playLetterHarakatSound(2, "fatha"),
   "audio/letter/ba_kasra_sound.mp3": () => playLetterHarakatSound(2, "kasra"),
