@@ -166,7 +166,7 @@ export const lessonOne: LessonData = {
         {
           type: "text",
           content:
-            "This mark gives Ba an \"a\" sound. Together, this reads: ba.",
+            "This mark is called fatha. It adds an \"a\" sound to the letter. The letter Ba + fatha = \"ba\"",
         },
         {
           type: "audio",

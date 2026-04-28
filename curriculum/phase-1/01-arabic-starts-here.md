@@ -89,7 +89,7 @@ The learner understands:
 - **Type:** Teach
 - **Heading:** "Today's sound"
 - **Visual:** Large بَ + speaker button.
-- **Body:** "This mark gives Ba an \"a\" sound. Together, this reads: ba."
+- **Body:** "This mark is called fatha. It adds an \"a\" sound to the letter. The letter Ba + fatha = \"ba\""
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — auto-plays once on mount; tap speaker to replay.
 
 ### Screen 7 — Read (the proof)
