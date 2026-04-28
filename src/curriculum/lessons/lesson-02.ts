@@ -4,12 +4,13 @@ import type { LessonData } from "../types";
  * Runtime artifact for Lesson 2 — "Alif + Ba + Fatha = بَ".
  *
  * Human-authored spec: curriculum/phase-1/02-alif-ba-fatha.md
- * Compiled from round-5 reviewer markdown (16 screens, 6 practice items).
+ * Compiled from round-6 spec (lesson1spec.txt) — first-reading-win teach pivot.
  *
- * First scored lesson. Learner confirms Ba recognition (warm recall),
- * meets Alif for the first time (teach), practices letter/mark/syllable
- * discrimination (practice — 6 items on a deliberate staircase), and reads
- * بَ unprompted on the final two items (mastery check).
+ * First scored lesson. Learner reads بَ on Teach Screen 2.1 (the emotional
+ * reading win), then learns the fatha name (2.2), the letter-vs-syllable
+ * equation (2.3), and meets Alif as a named visual symbol only (2.4).
+ * Practices letter/mark/syllable discrimination (6 items) and reads بَ
+ * unprompted on the final two items (mastery).
  * Both Read items must be correct for the decoding gate.
  *
  * kind: "standard" — SPEC Constraint 1 (scored, anatomy enforced, decoding rule active).
@@ -116,74 +117,77 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // ── Part 2 — Teach (~80s, 4 screens) ──────────────────────────────────────
+    // ── Part 2 — Teach (~80s, 4 screens, round-6 first-reading-win pivot) ────
+    // Screen 2.1 leads with بَ + auto-play so the very first teach moment IS
+    // the reading win. Fatha is named in 2.2, the equation is shown in 2.3,
+    // and Alif is demoted to one light "named visual symbol only" screen
+    // (2.4) per spec — no Alif sound, no اَ, no vowel claim.
 
-    // Screen 2.1 — Meet Alif. Auto-play once on mount (Constraint 3 — Teach only).
-    // Alif introduced as named visual symbol only — no sound teaching for Alif.
+    // Screen 2.1 — First reading win. Auto-play once on mount (Constraint 3).
     {
       kind: "teach",
-      id: "teach-meet-alif",
+      id: "teach-first-ba",
       blocks: [
-        { type: "heading", text: "Meet Alif" },
-        { type: "glyph-display", letter: "ا", size: "large" },
-        { type: "text", content: "This is the letter you saw above. It's called Alif." },
+        { type: "heading", text: "Your first sound" },
+        { type: "glyph-display", letter: "بَ", size: "large" },
+        { type: "text", content: "This says ba." },
         {
           type: "audio",
-          path: "audio/letter/alif_name.mp3",
-          label: "Hear name",
+          path: "audio/letter/ba_fatha_sound.mp3",
+          label: "Hear ba",
           autoPlay: true,
         },
       ],
     },
 
-    // Screen 2.2 — Alif's shape. No audio. Minimal — no connection-rule
-    // foreshadowing (Lesson 14), no sound teaching for Alif.
+    // Screen 2.2 — Name the mark. Tap-to-play only.
     {
       kind: "teach",
-      id: "teach-alif-shape",
+      id: "teach-fatha-mark",
       blocks: [
-        { type: "heading", text: "Alif's shape" },
-        { type: "glyph-display", letter: "ا", size: "large" },
-        { type: "text", content: "For now, just remember: Alif is a tall line." },
-      ],
-    },
-
-    // Screen 2.3 — Recognize fatha. Tap-to-play only (no auto-play).
-    // Re-teaches fatha as a named concept before any item asks the learner to
-    // discriminate the syllable from the letter. Licenses the ب-vs-بَ contrast
-    // beginning at Item 3.4.
-    {
-      kind: "teach",
-      id: "teach-recognize-fatha",
-      blocks: [
-        { type: "heading", text: "Remember this mark?" },
+        { type: "heading", text: "The mark adds a" },
         { type: "glyph-display", letter: "بَ", size: "large" },
-        {
-          type: "text",
-          content: "This little mark is called fatha. It tells a letter to make an 'a' sound.",
-        },
+        { type: "text", content: "The small line above Ba is called fatha." },
+        { type: "text", content: "It adds the a sound." },
         {
           type: "audio",
           path: "audio/letter/ba_fatha_sound.mp3",
-          label: "Hear sound",
+          label: "Hear ba",
         },
       ],
     },
 
-    // Screen 2.4 — Today's syllable. Bridge into Practice.
-    // Equation + mark observation only. Does NOT name the sound.
-    // Tap-to-play only (no auto-play per Constraint 3).
+    // Screen 2.3 — Letter vs syllable. Allowed to name the sound because
+    // the first reading win already happened on 2.1.
     {
       kind: "teach",
-      id: "teach-equation",
+      id: "teach-letter-vs-syllable",
       blocks: [
-        { type: "heading", text: "Today's syllable" },
+        { type: "heading", text: "Ba becomes ba" },
         { type: "text", content: "ب + fatha = بَ" },
-        { type: "text", content: "This has a mark." },
+        { type: "text", content: "ب is the letter. بَ is the sound ba." },
         {
           type: "audio",
           path: "audio/letter/ba_fatha_sound.mp3",
-          label: "Hear sound",
+          label: "Hear ba",
+        },
+      ],
+    },
+
+    // Screen 2.4 — Light Alif intro. Named visual symbol only.
+    // No autoPlay. Does NOT claim Alif "makes" a sound or is a vowel.
+    {
+      kind: "teach",
+      id: "teach-meet-alif-light",
+      blocks: [
+        { type: "heading", text: "Meet Alif" },
+        { type: "glyph-display", letter: "ا", size: "large" },
+        { type: "text", content: "This is Alif." },
+        { type: "text", content: "For now, just remember: it looks like a tall line." },
+        {
+          type: "audio",
+          path: "audio/letter/alif_name.mp3",
+          label: "Hear name",
         },
       ],
     },

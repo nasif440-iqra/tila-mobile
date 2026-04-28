@@ -31,9 +31,10 @@ completion_glyphs:
 The learner finishes this lesson:
 
 1. Recognizing **ب** reliably from a 2-letter set.
-2. Knowing that **ا** is called Alif and looks like a tall line. **(Visual + name only — no sound is taught for Alif in this lesson.)**
-3. Naming the small mark above ب as **fatha**, and recognizing that the mark changes how the letter looks.
-4. Reading **بَ** correctly on the final two Read items.
+2. Reading **بَ** as "ba" on the very first teach screen — the emotional reading win arrives before any other teaching.
+3. Knowing that **ا** is called Alif and looks like a tall line. **(Visual + name only — no sound is taught for Alif in this lesson.)**
+4. Naming the small mark above ب as **fatha**, and recognizing that the mark changes how the letter looks.
+5. Reading **بَ** correctly on the final two Read items.
 
 ## Prompt language system (locked for this lesson)
 
@@ -82,42 +83,44 @@ The job here is **only** to confirm that ب recognition from Lesson 1 stuck. Ali
 
 ### Part 2 — Teach (~80s, 4 screens)
 
-#### Screen 2.1 — Meet Alif
+Round-6 first-reading-win pivot. Screen 2.1 IS the reading moment — the learner sees بَ and hears "ba" before any other teaching. Fatha is named on 2.2 (after the win). The letter/syllable equation arrives on 2.3, where naming the sound is now licensed because the win already happened. Alif is demoted to one light screen (2.4) — named visual symbol only, no sound, no اَ, no vowel claim.
+
+#### Screen 2.1 — Your first sound (`teach-first-ba`)
+
+- **Type:** Teach
+- **Heading:** "Your first sound"
+- **Visual:** Large بَ.
+- **Body:** "This says ba."
+- **Audio:** `audio/letter/ba_fatha_sound.mp3` — auto-plays once on mount (Constraint 3); tap speaker to replay.
+- **Note:** The very first teach screen IS the emotional reading win. Auto-play is permitted because this is a Teach screen, not a Read or Check.
+
+#### Screen 2.2 — The mark adds a (`teach-fatha-mark`)
+
+- **Type:** Teach
+- **Heading:** "The mark adds a"
+- **Visual:** Large بَ.
+- **Body:** "The small line above Ba is called fatha." / "It adds the a sound."
+- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play (no auto-play).
+- **Note:** Names the mark only after the learner has already heard and read ba.
+
+#### Screen 2.3 — Ba becomes ba (`teach-letter-vs-syllable`)
+
+- **Type:** Teach
+- **Heading:** "Ba becomes ba"
+- **Content lines:**
+  - `ب + fatha = بَ`
+  - `ب is the letter. بَ is the sound ba.`
+- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play (no auto-play).
+- **Note:** Naming the sound here is allowed because the first reading win already happened on Screen 2.1. The screen explicitly separates plain Ba from Ba with fatha.
+
+#### Screen 2.4 — Meet Alif (`teach-meet-alif-light`)
 
 - **Type:** Teach
 - **Heading:** "Meet Alif"
-- **Body:** "This is the letter you saw above. It's called Alif."
-- **Visual:** Large ا + speaker button.
-- **Audio:** `audio/letter/alif_name.mp3` — auto-plays once on mount; tap speaker to replay.
-- **Note:** Constraint 2 — Alif is introduced as a **named visual symbol only**. The body never claims Alif "makes an 'a' sound" or "is a vowel." Just: this letter exists, it is called Alif.
-
-#### Screen 2.2 — Alif's shape
-
-- **Type:** Teach
-- **Heading:** "Alif's shape"
-- **Body:** "For now, just remember: Alif is a tall line."
-- **Visual:** A single isolated ا, large and centered.
-- **Audio:** None.
-- **Note:** Minimal. No connection-rule foreshadowing (Lesson 14 owns that), no sound teaching for Alif.
-
-#### Screen 2.3 — Remember fatha
-
-- **Type:** Teach
-- **Heading:** "Remember this mark?"
-- **Body:** "This little mark is called **fatha**. It tells a letter to make an 'a' sound."
-- **Visual:** Large بَ with the fatha mark subtly highlighted (gold underline or glow on the mark only).
-- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play (no auto-play).
-- **Note:** Re-teaches fatha as a named concept before any item asks the learner to discriminate the syllable from the letter. This screen is what licenses the ب-vs-بَ contrast that begins in Item 3.4.
-
-#### Screen 2.4 — Today's syllable
-
-- **Type:** Teach (`teach-equation`)
-- **Heading:** "Today's syllable"
-- **Content lines:**
-  - `ب + fatha = بَ`
-  - `This has a mark.`
-- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play (no auto-play).
-- **Note:** The equation shows the construction; "This has a mark." is the visual observation. Do NOT include "Ba plus fatha gives the sound 'ba'" or "this says ba" — those name the sound, which is held for the audio items. This screen's job is equation + mark observation, not sound naming.
+- **Visual:** Large ا.
+- **Body:** "This is Alif." / "For now, just remember: it looks like a tall line."
+- **Audio:** `audio/letter/alif_name.mp3` — tap-to-play (no auto-play).
+- **Note:** Alif gets only one light screen. No claim that Alif "makes" a sound. No claim Alif is a vowel. Do NOT teach اَ. Do NOT add an Alif sound item.
 
 ### Part 3 — Practice (~120s, 6 items)
 
@@ -228,11 +231,10 @@ The lesson's actual measurement. Items are **one-shot** — no retries. Per mast
 
 ## Why this version is better pedagogically (round-5 mark-recognition pivot)
 
-- **Stabilize before discriminate.** The first time the learner is asked to distinguish ب from بَ is Item 3.4 — *after* fatha has been re-taught (Screen 2.3) and the syllable equation has been shown (Screen 2.4). The previous version put a ب-vs-بَ contrast too early; round-5 holds it until the visual concept is established.
+- **First reading win first.** The very first teach screen (2.1) shows بَ and auto-plays "ba". The learner reads it before they meet fatha by name (2.2), before they see the equation (2.3), and before Alif is named at all (2.4). The previous version put four Alif-heavy screens before the syllable; round-6 fixes that ordering.
 - **Mark-first, sound-second.** Items 3.4 and 3.5 are purely visual: find the glyph with the mark. No audio. This anchors the visual distinction at the pixel level before Item 3.6 asks the learner to connect an *audio* "ba" to the marked glyph. The cognitive ramp is: visual mark-ID (3.4) → visual reinforce flipped (3.5) → audio sound mapping (3.6).
 - **Locked prompt vocabulary.** Five canonical prompts, each with a clear semantic role. The learner never has to guess whether "Tap Ba" means the letter or the sound — those forms are gone. `Tap the one with the mark.` is visual mark-ID; `Tap what you hear.` is audio-ID; `Tap the letter Ba.` is letter-ID. Three different jobs, three different sentences, no overlap. "Which one says 'ba'?" is removed from the canonical set — it named a sound in text, which conflicted with the mark-recognition pivot.
 - **Alif as named visual symbol only.** No item teaches or tests Alif's sound. Alif's role is bounded: see it (warm recall), name it (Screen 2.1 auto-play), recognize it visually (3.2), filter it as a distractor in mastery (4.1). The lesson does not claim Alif "makes an 'a' sound" or "is a vowel" — saving that ambiguity for the phases where it actually matters.
-- **Screen 2.4 equation + observation.** "ب + fatha = بَ" states the construction. "This has a mark." names the visual property. The screen does not name the sound — that remains for the audio items to establish.
 
 ## Constraints in play
 
