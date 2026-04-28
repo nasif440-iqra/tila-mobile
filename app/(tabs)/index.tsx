@@ -98,6 +98,19 @@ function DailyGoalPill({
   );
 }
 
+// ── Module-level constants ──
+
+const LESSON_IDS = [
+  "lesson-01",
+  "lesson-02",
+  "lesson-03",
+  "lesson-04",
+  "lesson-05",
+  "lesson-06",
+  "lesson-07",
+  "lesson-08",
+];
+
 // ── Main screen ──
 
 export default function HomeScreen() {
@@ -177,20 +190,6 @@ export default function HomeScreen() {
   );
 
   // Lesson grid state
-  const LESSON_IDS = useMemo(
-    () => [
-      "lesson-01",
-      "lesson-02",
-      "lesson-03",
-      "lesson-04",
-      "lesson-05",
-      "lesson-06",
-      "lesson-07",
-      "lesson-08",
-    ],
-    []
-  );
-
   const [cells, setCells] = useState<LessonCell[]>(() =>
     LESSON_IDS.map((id, idx) => ({
       lessonId: id,
@@ -207,7 +206,7 @@ export default function HomeScreen() {
       return () => {
         cancelled = true;
       };
-    }, [LESSON_IDS])
+    }, [])
   );
 
   const lessonTitles = useMemo<Record<string, string>>(() => {
@@ -216,16 +215,13 @@ export default function HomeScreen() {
       map[id] = lessonRegistry[id]?.title ?? `Lesson ${parseInt(id.split("-")[1] ?? "0", 10)}`;
     }
     return map;
-  }, [LESSON_IDS]);
+  }, []);
 
-  const handleLessonPress = useCallback(
-    (lessonId: string) => {
-      if (!lessonRegistry[lessonId]) return; // not yet authored — guard
-      const num = parseInt(lessonId.split("-")[1] ?? "0", 10);
-      router.push({ pathname: "/lesson/[id]", params: { id: String(num) } });
-    },
-    []
-  );
+  const handleLessonPress = (lessonId: string) => {
+    if (!lessonRegistry[lessonId]) return; // not yet authored — guard
+    const num = parseInt(lessonId.split("-")[1] ?? "0", 10);
+    router.push({ pathname: "/lesson/[id]", params: { id: String(num) } });
+  };
 
   // Wird tooltip
   const [showWirdTooltip, setShowWirdTooltip] = useState(false);
