@@ -23,7 +23,7 @@ The codebase already contains code for these systems. They stay dormant — no n
 - Per-question scoring beyond pass/fail
 - Re-recording L1 audio
 - Polishing L1 further (it's good enough for the test cohort)
-- New `TeachingBlock` types unless a lesson genuinely cannot be expressed without one
+- New `TeachingBlock` types. The rule is **compose, not create** — reuse existing blocks (text, heading, glyph-display, shape-variants, audio, name-sound-pair, mark-preview, reading-direction) creatively to express new teaching shapes. Do not introduce new primitives.
 - New `Exercise` renderer types beyond the four in this design (Choose, Build, Fix, Check). The shipped renderer set after Wave 2 is exactly **7** (Tap, Hear, Choose, Build, Read, Fix, Check). **Lock is hard: no 8th type until Phase 1 ships to the 30–50 cohort.**
 
 ## Three Waves
@@ -46,10 +46,11 @@ The codebase already contains code for these systems. They stay dormant — no n
 **L3 — "Meet Meem" with contrast scaffolding** (master curriculum §13, Module 1.1, modified)
 - Outcome: add م, read بَ / مَ without guessing.
 - Exercise mix: Tap, Hear, Choose, Build, Read.
-- **Critical shape requirement (reviewer pushback):** L3 is not vanilla "Meet Meem." It must:
-  1. Reinforce Ba vs Alif with fatha (L2 carryover) before Meem appears.
+- **Hard structural constraint:** L3 cannot introduce Meem until the learner demonstrates Ba/Alif/fatha stability. Practically: **the first 30–40% of L3 is pure reinforcement (no Meem)**, and only then does Meem appear. Without this, Reality Check produces false negatives — "they didn't learn" when actually "you rushed them."
+- L3 shape, in order:
+  1. Reinforce Ba vs Alif with fatha (L2 carryover) — first ~30–40% of the lesson, no Meem.
   2. Introduce Meem carefully — visual, then sound, then combination, in steps.
-  3. Include heavy contrast exercises (بَ vs مَ) once Meem lands.
+  3. Heavy contrast exercises (بَ vs مَ) once Meem lands.
 - Without this scaffolding, Reality Check confusion at L3 becomes ambiguous (was it Meem too fast, or did L1/L2 not actually teach?).
 
 ### Renderers (built in Wave 1)
@@ -63,6 +64,7 @@ The codebase already contains code for these systems. They stay dormant — no n
 - Used by L3–L8. Genuinely new interaction model: present a target syllable (audio + glyph), present 3–5 tappable tiles (letters + marks), learner taps in correct sequence to build it.
 - Spec: existing `BuildExercise` interface in `src/curriculum/types.ts:115`. `correctSequence: EntityKey[]` already defined.
 - Open design questions deferred to writing-plans phase: tap-to-arrange vs drag, error-on-each-tap vs check-on-submit, undo affordance.
+- **Kill switch:** if `BuildExercise` is not shippable by Day 3 of Wave 1, **remove it from L3**, replace those exercise slots with `Choose` + `Tap` combinations, and reintroduce Build in Wave 2 alongside Fix and Check. Reality Check goal ("can they read بَ?") does not require construction — preserving Wave 1 momentum is more important than format completeness.
 
 ### Product
 
@@ -70,7 +72,8 @@ The codebase already contains code for these systems. They stay dormant — no n
 - 8 cells (L1–L8), shown in a single column or 2×4 grid (visual decision deferred to writing-plans).
 - Cells render in three states: completed (checkmark + tap to replay), unlocked (tap to start), locked (no tap, lock icon).
 - Sequential unlock: L_n unlocked iff L_{n-1} completed.
-- Persist nothing visual on the lesson cards beyond completion state — no scoring badges, no streak indicators, no "X% accuracy."
+- **"You are here" indicator** on the current lesson cell (the first uncompleted unlocked cell) — subtle highlight, glow, or animated outline. Reduces cognitive load and improves completion likelihood. Tiny change, big impact.
+- Persist nothing visual on the lesson cards beyond completion state and the current-lesson indicator — no scoring badges, no streak indicators, no "X% accuracy."
 
 **Progress persistence**
 - AsyncStorage only. No SQLite mastery writes.
@@ -83,7 +86,9 @@ The codebase already contains code for these systems. They stay dormant — no n
 Two events to start. No PostHog dashboards yet — log to console + Sentry breadcrumbs is sufficient signal for the 5–10 observed sessions.
 
 - `lesson_start` — `{ lessonId, timestamp }`
-- `lesson_complete` — `{ lessonId, timestamp, durationSeconds, attemptCounts: Record<screenId, number> }`
+- `lesson_complete` — `{ lessonId, timestamp, durationSeconds, attemptCounts: Record<screenId, number>, firstTryCorrectRate: number }`
+
+**Derived metric: `firstTryCorrectRate`** = `(screens where attempts === 1 and outcome === correct) / (total scored screens)`. Computed in `LessonRunner.onComplete` from the `outcomesRef` map. Distinguishes *learning* from *guess-and-retry* — the headline signal for whether the lesson teaches even at small sample sizes. Reality Check sessions should observe this number alongside the qualitative feedback.
 
 ### Reality Check Gate (end of Wave 1)
 
@@ -103,6 +108,14 @@ After the session, ask three questions:
 - Move faster through L2 than L1
 - Predict answers before tapping options
 - Make spontaneous generalizations like "oh it's always 'a' with that line"
+
+**Decision rule (handles conflicting signals):**
+
+Reality Check will produce mixed signal — some testers will struggle, others will breeze through. Before sessions begin, commit to this rule so you do not rationalize forward later:
+
+- **≥ 30% of testers hit any failure criterion → BLOCK Wave 2.** Fix L1–L3 first, re-run Reality Check with fresh testers.
+- **< 30% but the same confusion pattern repeats across multiple testers → FIX before scaling.** Pattern repetition is signal, not noise. Address the pattern, then advance.
+- **Confusion is isolated (one tester, unique issue, no repeat pattern) → LOG, do not block.** Note in feedback for later but do not derail Wave 2 on it.
 
 If failure criteria hit: fix L1–L3 before authoring L4–L8. Do not paper over with content.
 
@@ -219,7 +232,7 @@ For Phase 1, the new audio asset list is approximately 18 clips (5 letter names 
 - **L3 contrast scaffolding may need a renderer we haven't built** — if Ba/Alif/Meem contrast genuinely cannot be expressed with Tap/Choose/Build, the renderer-lock rule forces awkward authoring. Mitigation: design L3's contrast carefully during authoring, escalate before assuming a new renderer is needed.
 - **Reality Check fails and L4–L8 slips** — this is the design's intentional gate, not a risk to mitigate. Slip beats shipping a broken loop to 30–50.
 - **Audio production cadence becomes the bottleneck** — if founder ElevenLabs production lags lesson authoring, lessons ship with disabled HearButtons and Reality Check signal degrades. Mitigation: surface audio requests at the *start* of each lesson's authoring (as soon as the spec stabilizes), not at the end.
-- **Build exercise UX takes longer than 1 week** — new interaction model. If the design proves complex, consider deferring Build to L5+ (L3/L4 don't strictly require it; the curriculum lists Build for L3 but Tap+Choose can carry the contrast load).
+- **Build exercise UX takes longer than 1 week** — new interaction model. Mitigation: the Wave 1 Build kill-switch (above) — if Build is not shippable by Day 3 of Wave 1, remove from L3, replace with Choose+Tap, defer to Wave 2.
 - **TestFlight external testers require Apple review** — adds 24–48h of calendar time before Wave 3 distribution actually starts. Submit early.
 
 ## Definition of Done (Phase 1 ships)
