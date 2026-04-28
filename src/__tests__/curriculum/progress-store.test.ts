@@ -73,6 +73,11 @@ describe("progressStore", () => {
     expect(await progressStore.isUnlocked("lesson-03")).toBe(false);
   });
 
+  it("returns false from isUnlocked for unknown lesson IDs", async () => {
+    expect(await progressStore.isUnlocked("lesson-99")).toBe(false);
+    expect(await progressStore.isUnlocked("")).toBe(false);
+  });
+
   it("returns safe default on read error", async () => {
     (AsyncStorage.getItem as any).mockRejectedValue(new Error("boom"));
     const state = await progressStore.getProgress();
