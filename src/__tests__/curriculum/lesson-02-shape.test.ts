@@ -205,7 +205,7 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     expect(lessonRegistry[lessonTwo.id]).toBe(lessonTwo);
   });
 
-  // ── Round-4 specific assertions ────────────────────────────────────────────
+  // ── Round-5 specific assertions ────────────────────────────────────────────
 
   it("warm-recall Item 1.3 (wr-1-3) uses ا as distractor — not بَ", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "wr-1-3");
@@ -216,72 +216,95 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     expect(entityKeys).not.toContain("combo:ba+fatha");
   });
 
-  it("pr-3-1 is a tap exercise with prompt 'Tap the letter Ba'", () => {
+  it("wr-1-3 has correct (ب) on the left — position flipped from wr-1-1 and wr-1-2", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "wr-1-3");
+    if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "tap")
+      throw new Error("wr-1-3 must be a tap exercise");
+    expect(screen.exercise.options[0].entityKey).toBe("letter:ba");
+    expect(screen.exercise.options[0].correct).toBe(true);
+  });
+
+  it("pr-3-1 is a tap exercise with prompt 'Tap the letter Ba.'", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "pr-3-1");
     if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "tap")
       throw new Error("pr-3-1 must be a tap exercise");
-    expect(screen.exercise.prompt).toBe("Tap the letter Ba");
+    expect(screen.exercise.prompt).toBe("Tap the letter Ba.");
     expect(screen.exercise.target).toBe("letter:ba");
     expect(screen.exercise.options).toHaveLength(2);
   });
 
-  it("pr-3-2 is a tap exercise for Alif with prompt 'Tap Alif'", () => {
+  it("pr-3-2 is a tap exercise for Alif with prompt 'Tap the letter Alif.'", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "pr-3-2");
     if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "tap")
       throw new Error("pr-3-2 must be a tap exercise");
-    expect(screen.exercise.prompt).toBe("Tap Alif");
+    expect(screen.exercise.prompt).toBe("Tap the letter Alif.");
     expect(screen.exercise.target).toBe("letter:alif");
     expect(screen.exercise.options).toHaveLength(2);
   });
 
-  it("pr-3-3 is a hear exercise for Ba name with prompt 'Tap the letter you hear'", () => {
+  it("pr-3-3 is a hear exercise for Ba name with prompt 'Tap the letter you hear.'", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "pr-3-3");
     if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "hear")
       throw new Error("pr-3-3 must be a hear exercise");
-    expect(screen.exercise.prompt).toBe("Tap the letter you hear");
+    expect(screen.exercise.prompt).toBe("Tap the letter you hear.");
     expect(screen.exercise.audioPath).toBe("audio/letter/ba_name.mp3");
     expect(screen.exercise.options).toHaveLength(2);
   });
 
-  it("pr-3-4 is AUDIO MODE choose: prompt 'Tap what you hear' + audioPrompt present", () => {
+  it("pr-3-4 is VISUAL MARK-ID: prompt 'Tap the one with the mark.' with NO audioPrompt", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "pr-3-4");
     if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
       throw new Error("pr-3-4 must be a choose exercise");
-    expect(screen.exercise.prompt).toBe("Tap what you hear");
-    expect(screen.exercise.audioPrompt).toBe("audio/letter/ba_fatha_sound.mp3");
-    expect(screen.exercise.options).toHaveLength(2);
-  });
-
-  it("pr-3-5 is VISUAL MODE choose: prompt 'Which one says 'ba'?' with NO audioPrompt", () => {
-    const screen = lessonTwo.screens.find((s) => s.id === "pr-3-5");
-    if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
-      throw new Error("pr-3-5 must be a choose exercise");
-    expect(screen.exercise.prompt).toBe("Which one says 'ba'?");
+    expect(screen.exercise.prompt).toBe("Tap the one with the mark.");
     expect(screen.exercise.audioPrompt).toBeUndefined();
     expect(screen.exercise.options).toHaveLength(2);
-  });
-
-  it("pr-3-6 is VISUAL REINFORCE choose: no audioPrompt, first option is letter:ba (positions flipped from 3.5)", () => {
-    const screen = lessonTwo.screens.find((s) => s.id === "pr-3-6");
-    if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
-      throw new Error("pr-3-6 must be a choose exercise");
-    expect(screen.exercise.prompt).toBe("Which one says 'ba'?");
-    expect(screen.exercise.audioPrompt).toBeUndefined();
-    expect(screen.exercise.options).toHaveLength(2);
-    // Position flip: ب (letter:ba, wrong) is first; بَ (combo:ba+fatha, correct) is second
+    // Position: letter:ba (incorrect) first, combo:ba+fatha (correct) second
     expect(screen.exercise.options[0].entityKey).toBe("letter:ba");
     expect(screen.exercise.options[0].correct).toBe(false);
     expect(screen.exercise.options[1].entityKey).toBe("combo:ba+fatha");
     expect(screen.exercise.options[1].correct).toBe(true);
   });
 
-  it("mc-4-1 is the only 3-option choose item and uses audioPrompt", () => {
+  it("pr-3-5 is VISUAL REINFORCE: prompt 'Tap the one with the mark.' with NO audioPrompt, correct on left", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "pr-3-5");
+    if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
+      throw new Error("pr-3-5 must be a choose exercise");
+    expect(screen.exercise.prompt).toBe("Tap the one with the mark.");
+    expect(screen.exercise.audioPrompt).toBeUndefined();
+    expect(screen.exercise.options).toHaveLength(2);
+    // Position flip from 3.4: combo:ba+fatha (correct) is now first (on the left)
+    expect(screen.exercise.options[0].entityKey).toBe("combo:ba+fatha");
+    expect(screen.exercise.options[0].correct).toBe(true);
+    expect(screen.exercise.options[1].entityKey).toBe("letter:ba");
+    expect(screen.exercise.options[1].correct).toBe(false);
+  });
+
+  it("pr-3-6 is AUDIO MODE: prompt 'Tap what you hear.' WITH audioPrompt ba_fatha_sound.mp3", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "pr-3-6");
+    if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
+      throw new Error("pr-3-6 must be a choose exercise");
+    expect(screen.exercise.prompt).toBe("Tap what you hear.");
+    expect(screen.exercise.audioPrompt).toBe("audio/letter/ba_fatha_sound.mp3");
+    expect(screen.exercise.options).toHaveLength(2);
+    // letter:ba first (incorrect), combo:ba+fatha second (correct)
+    expect(screen.exercise.options[0].entityKey).toBe("letter:ba");
+    expect(screen.exercise.options[1].entityKey).toBe("combo:ba+fatha");
+    expect(screen.exercise.options[1].correct).toBe(true);
+  });
+
+  it("mc-4-1 is the only 3-option choose item and uses audioPrompt; order: letter:ba, combo:ba+fatha (✓), letter:alif", () => {
     const screen = lessonTwo.screens.find((s) => s.id === "mc-4-1");
     if (!screen || screen.kind !== "exercise" || screen.exercise.type !== "choose")
       throw new Error("mc-4-1 must be a choose exercise");
-    expect(screen.exercise.prompt).toBe("Tap what you hear");
+    expect(screen.exercise.prompt).toBe("Tap what you hear.");
     expect(screen.exercise.audioPrompt).toBe("audio/letter/ba_fatha_sound.mp3");
     expect(screen.exercise.options).toHaveLength(3);
+    expect(screen.exercise.options[0].entityKey).toBe("letter:ba");
+    expect(screen.exercise.options[0].correct).toBe(false);
+    expect(screen.exercise.options[1].entityKey).toBe("combo:ba+fatha");
+    expect(screen.exercise.options[1].correct).toBe(true);
+    expect(screen.exercise.options[2].entityKey).toBe("letter:alif");
+    expect(screen.exercise.options[2].correct).toBe(false);
   });
 
   it("mc-4-2 prompt is 'Read this aloud.'", () => {
@@ -300,19 +323,45 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     expect(screen.countsAsDecoding).toBe(true);
   });
 
-  it("every Tap/Hear/Choose prompt uses only the 5 canonical forms (locked vocabulary)", () => {
+  it("Screen 2.4 (teach-equation) contains 'ب + fatha = بَ' and 'This has a mark.' in its text blocks", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "teach-equation");
+    if (!screen || screen.kind !== "teach")
+      throw new Error("teach-equation must be a teach screen");
+    const textContents = screen.blocks
+      .filter((b) => b.type === "text")
+      .map((b) => ("content" in b ? b.content : ""));
+    expect(textContents).toContain("ب + fatha = بَ");
+    expect(textContents).toContain("This has a mark.");
+    // Must NOT contain the banned sound-naming phrases
+    for (const content of textContents) {
+      expect(content).not.toMatch(/Ba plus fatha gives/i);
+      expect(content).not.toMatch(/this says ba/i);
+    }
+  });
+
+  it("every Tap/Hear/Choose prompt uses only the 5 canonical forms (round-5 locked vocabulary)", () => {
     const CANONICAL = new Set([
-      "Tap the letter Ba",
-      "Tap Alif",
-      "Tap the letter you hear",
-      "Tap what you hear",
-      "Which one says 'ba'?",
+      "Tap the letter Ba.",
+      "Tap the letter Alif.",
+      "Tap the letter you hear.",
+      "Tap what you hear.",
+      "Tap the one with the mark.",
     ]);
     for (const screen of lessonTwo.screens) {
       if (screen.kind !== "exercise") continue;
       const ex = screen.exercise;
       if (ex.type === "tap" || ex.type === "hear" || ex.type === "choose") {
         expect(CANONICAL.has(ex.prompt)).toBe(true);
+      }
+    }
+  });
+
+  it("the banned prompt 'Which one says 'ba'?' does not appear anywhere in the lesson", () => {
+    for (const screen of lessonTwo.screens) {
+      if (screen.kind !== "exercise") continue;
+      const ex = screen.exercise;
+      if (ex.type === "tap" || ex.type === "hear" || ex.type === "choose") {
+        expect(ex.prompt).not.toMatch(/Which one says/i);
       }
     }
   });

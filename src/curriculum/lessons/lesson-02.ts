@@ -4,7 +4,7 @@ import type { LessonData } from "../types";
  * Runtime artifact for Lesson 2 — "Alif + Ba + Fatha = بَ".
  *
  * Human-authored spec: curriculum/phase-1/02-alif-ba-fatha.md
- * Compiled from round-4 reviewer markdown (16 screens, 6 practice items).
+ * Compiled from round-5 reviewer markdown (16 screens, 6 practice items).
  *
  * First scored lesson. Learner confirms Ba recognition (warm recall),
  * meets Alif for the first time (teach), practices letter/mark/syllable
@@ -14,17 +14,21 @@ import type { LessonData } from "../types";
  *
  * kind: "standard" — SPEC Constraint 1 (scored, anatomy enforced, decoding rule active).
  *
- * Locked prompt vocabulary (5 canonical forms):
- *   "Tap the letter Ba"        — letter identification for ب
- *   "Tap Alif"                 — letter identification for ا
- *   "Tap the letter you hear"  — audio = letter name → pick glyph
- *   "Tap what you hear"        — audio = sound → pick glyph (includes syllable)
- *   "Which one says 'ba'?"     — visual sound identification, with or without audio
+ * Locked prompt vocabulary (5 canonical forms, round-5):
+ *   "Tap the letter Ba."        — letter identification for ب
+ *   "Tap the letter Alif."      — letter identification for ا
+ *   "Tap the letter you hear."  — audio = letter name → pick glyph
+ *   "Tap what you hear."        — audio = sound → pick glyph (includes syllable)
+ *   "Tap the one with the mark." — visual mark recognition → pick marked glyph
  *
- * Practice ramp: recognize letters (Tap) → hear letter name (Hear) →
- *   audio-only sound→syllable (Choose, audio mode) →
- *   text-only sound→syllable (Choose, visual mode) →
- *   visual mode repeat with positions flipped (Choose, visual reinforce).
+ * REMOVED from canonical set (round-5): "Which one says 'ba'?" — named a sound
+ * in text, conflicted with the mark-recognition pivot.
+ *
+ * Practice ramp (round-5 mark-recognition pivot):
+ *   Tap ب → Tap ا → Hear Ba name →
+ *   visual mark-ID (Choose, no audio) →
+ *   visual reinforce flipped (Choose, no audio) →
+ *   audio sound mapping (Choose, audio mode).
  *
  * Audio notes (Apr 2026): alif_name routing added to PATH_TO_PLAYER in prior
  * commit (8dce161). All three assets exist. Zero new ElevenLabs recordings
@@ -51,7 +55,7 @@ export const lessonTwo: LessonData = {
     // بَ does NOT appear in warm recall — that contrast is held until after
     // fatha has been re-taught in Screen 2.3.
 
-    // Item 1.1 — Tap Ba (ا as distractor; ب on left)
+    // Item 1.1 — Tap Ba (ا on left, ب ✓ on right)
     {
       kind: "exercise",
       id: "wr-1-1",
@@ -61,16 +65,16 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "tap",
-        prompt: "Tap the letter Ba",
+        prompt: "Tap the letter Ba.",
         target: "letter:ba",
         options: [
-          { display: "ب", entityKey: "letter:ba", correct: true },
           { display: "ا", entityKey: "letter:alif", correct: false },
+          { display: "ب", entityKey: "letter:ba", correct: true },
         ],
       },
     },
 
-    // Item 1.2 — Hear Ba name (options: ا on left, ب on right)
+    // Item 1.2 — Hear Ba name (ا on left, ب ✓ on right)
     {
       kind: "exercise",
       id: "wr-1-2",
@@ -80,7 +84,7 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "hear",
-        prompt: "Tap the letter you hear",
+        prompt: "Tap the letter you hear.",
         target: "letter:ba",
         audioPath: "audio/letter/ba_name.mp3",
         options: [
@@ -90,7 +94,8 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 1.3 — Tap Ba (positions flipped from 1.1: ا on left, ب ✓ on right)
+    // Item 1.3 — Tap Ba (positions FLIPPED: ب ✓ on left, ا on right)
+    // Correct ب is on the left — breaks positional muscle memory from 1.1/1.2.
     // Distractor is still ا — NOT بَ. The syllable contrast is held until after
     // Screen 2.3 re-teaches fatha.
     {
@@ -102,11 +107,11 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "tap",
-        prompt: "Tap the letter Ba",
+        prompt: "Tap the letter Ba.",
         target: "letter:ba",
         options: [
-          { display: "ا", entityKey: "letter:alif", correct: false },
           { display: "ب", entityKey: "letter:ba", correct: true },
+          { display: "ا", entityKey: "letter:alif", correct: false },
         ],
       },
     },
@@ -166,6 +171,7 @@ export const lessonTwo: LessonData = {
     },
 
     // Screen 2.4 — Today's syllable. Bridge into Practice.
+    // Equation + mark observation only. Does NOT name the sound.
     // Tap-to-play only (no auto-play per Constraint 3).
     {
       kind: "teach",
@@ -173,12 +179,7 @@ export const lessonTwo: LessonData = {
       blocks: [
         { type: "heading", text: "Today's syllable" },
         { type: "text", content: "ب + fatha = بَ" },
-        { type: "glyph-display", letter: "بَ", size: "large" },
-        {
-          type: "text",
-          variant: "secondary",
-          content: "Ba plus fatha gives the sound 'ba'.",
-        },
+        { type: "text", content: "This has a mark." },
         {
           type: "audio",
           path: "audio/letter/ba_fatha_sound.mp3",
@@ -188,13 +189,16 @@ export const lessonTwo: LessonData = {
     },
 
     // ── Part 3 — Practice (~120s, 6 items) ────────────────────────────────────
-    // Deliberate staircase:
-    //   Tap ب → Tap ا → Hear Ba name → Choose (audio mode) → Choose (visual mode)
-    //   → Choose (visual reinforce, positions flipped).
-    // All scored, until-correct. Alif held back from syllable contrast until
-    // mastery (4.1 is the only 3-option item in the lesson).
+    // Deliberate staircase (round-5 mark-recognition pivot):
+    //   Tap ب → Tap ا → Hear Ba name →
+    //   visual mark-ID (Choose, no audio) →
+    //   visual reinforce flipped (Choose, no audio) →
+    //   audio sound mapping (Choose, audio mode).
+    // All scored, until-correct. Mark-recognition (3.4, 3.5) establishes the
+    // visual contrast before audio mapping (3.6) tests the decoding step.
+    // Alif held back as distractor until mastery (4.1 is the only 3-option item).
 
-    // Item 3.1 — Tap Ba (visual recognition; ب ✓ on left, ا on right)
+    // Item 3.1 — Tap Ba (ا on left, ب ✓ on right)
     {
       kind: "exercise",
       id: "pr-3-1",
@@ -204,16 +208,16 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "tap",
-        prompt: "Tap the letter Ba",
+        prompt: "Tap the letter Ba.",
         target: "letter:ba",
         options: [
-          { display: "ب", entityKey: "letter:ba", correct: true },
           { display: "ا", entityKey: "letter:alif", correct: false },
+          { display: "ب", entityKey: "letter:ba", correct: true },
         ],
       },
     },
 
-    // Item 3.2 — Tap Alif (visual recognition of just-introduced letter)
+    // Item 3.2 — Tap Alif (ب on left, ا ✓ on right)
     {
       kind: "exercise",
       id: "pr-3-2",
@@ -223,11 +227,11 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "tap",
-        prompt: "Tap Alif",
+        prompt: "Tap the letter Alif.",
         target: "letter:alif",
         options: [
-          { display: "ا", entityKey: "letter:alif", correct: true },
           { display: "ب", entityKey: "letter:ba", correct: false },
+          { display: "ا", entityKey: "letter:alif", correct: true },
         ],
       },
     },
@@ -243,7 +247,7 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "hear",
-        prompt: "Tap the letter you hear",
+        prompt: "Tap the letter you hear.",
         target: "letter:ba",
         audioPath: "audio/letter/ba_name.mp3",
         options: [
@@ -253,9 +257,9 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 3.4 — Choose: AUDIO MODE (single instruction mode — auditory only).
-    // Learner hears "ba" and picks the matching glyph. Text and audio do not
-    // compete for attention. 2 options only — Alif held back for mastery.
+    // Item 3.4 — Choose: VISUAL MARK-ID (no audio).
+    // Learner picks the glyph that has the fatha mark. No audio competes.
+    // First option: ب (letter:ba, incorrect); second: بَ (combo:ba+fatha, correct).
     {
       kind: "exercise",
       id: "pr-3-4",
@@ -265,19 +269,18 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "choose",
-        prompt: "Tap what you hear",
+        prompt: "Tap the one with the mark.",
         target: "combo:ba+fatha",
-        audioPrompt: "audio/letter/ba_fatha_sound.mp3",
         options: [
-          { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
           { display: "ب", entityKey: "letter:ba", correct: false },
+          { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
         ],
       },
     },
 
-    // Item 3.5 — Choose: VISUAL MODE (single instruction mode — visual only).
-    // Prompt names the target sound; no audio competes. Same 2-option contrast
-    // as 3.4 but tested through reading the prompt rather than hearing it.
+    // Item 3.5 — Choose: VISUAL REINFORCE (positions FLIPPED from 3.4, no audio).
+    // Same visual mark-ID task — correct syllable is now first (on the left).
+    // First option: بَ (combo:ba+fatha, correct); second: ب (letter:ba, incorrect).
     {
       kind: "exercise",
       id: "pr-3-5",
@@ -287,7 +290,7 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "choose",
-        prompt: "Which one says 'ba'?",
+        prompt: "Tap the one with the mark.",
         target: "combo:ba+fatha",
         options: [
           { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
@@ -296,9 +299,9 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 3.6 — Choose: VISUAL REINFORCE (option positions FLIPPED from 3.5).
-    // Same visual-only task — no audioPrompt — but correct syllable is on the
-    // right rather than the left. Breaks positional muscle memory from 3.5.
+    // Item 3.6 — Choose: AUDIO MODE (sound → symbol mapping).
+    // After 3.4–3.5 anchored the visual contrast, learner hears "ba" and maps
+    // it to the marked glyph. First option: ب (incorrect); second: بَ (correct).
     {
       kind: "exercise",
       id: "pr-3-6",
@@ -308,8 +311,9 @@ export const lessonTwo: LessonData = {
       retryMode: "until-correct",
       exercise: {
         type: "choose",
-        prompt: "Which one says 'ba'?",
+        prompt: "Tap what you hear.",
         target: "combo:ba+fatha",
+        audioPrompt: "audio/letter/ba_fatha_sound.mp3",
         options: [
           { display: "ب", entityKey: "letter:ba", correct: false },
           { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
@@ -321,7 +325,8 @@ export const lessonTwo: LessonData = {
     // All one-shot. Per master curriculum §10, the last two scored items are
     // Reads; both must be correct for requireCorrectLastTwoDecoding to pass.
 
-    // Item 4.1 — Choose (first and only 3-option item; Alif rejoins option set)
+    // Item 4.1 — Choose (first and only 3-option item; Alif rejoins option set).
+    // Order: letter:ba (first), combo:ba+fatha (second, correct), letter:alif (third).
     {
       kind: "exercise",
       id: "mc-4-1",
@@ -331,13 +336,13 @@ export const lessonTwo: LessonData = {
       retryMode: "one-shot",
       exercise: {
         type: "choose",
-        prompt: "Tap what you hear",
+        prompt: "Tap what you hear.",
         target: "combo:ba+fatha",
         audioPrompt: "audio/letter/ba_fatha_sound.mp3",
         options: [
-          { display: "ا", entityKey: "letter:alif", correct: false },
-          { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
           { display: "ب", entityKey: "letter:ba", correct: false },
+          { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
+          { display: "ا", entityKey: "letter:alif", correct: false },
         ],
       },
     },

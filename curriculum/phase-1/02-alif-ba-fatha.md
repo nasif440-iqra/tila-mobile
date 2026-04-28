@@ -32,7 +32,7 @@ The learner finishes this lesson:
 
 1. Recognizing **ب** reliably from a 2-letter set.
 2. Knowing that **ا** is called Alif and looks like a tall line. **(Visual + name only — no sound is taught for Alif in this lesson.)**
-3. Naming the small mark above ب as **fatha**, and knowing fatha tells a letter to make an "a" sound.
+3. Naming the small mark above ب as **fatha**, and recognizing that the mark changes how the letter looks.
 4. Reading **بَ** correctly on the final two Read items.
 
 ## Prompt language system (locked for this lesson)
@@ -41,13 +41,13 @@ Every Tap / Hear / Choose item in this lesson uses **exactly one** of these prom
 
 | Prompt | Use |
 |---|---|
-| `Tap the letter Ba` | Letter identification for ب (must distinguish from the syllable بَ) |
-| `Tap Alif` | Letter identification for ا (no sound disambiguation needed) |
-| `Tap the letter you hear` | Audio is a letter *name* (Bah, Alif), learner picks the matching glyph |
-| `Tap what you hear` | Audio is a *sound* (ba), learner picks the matching glyph from a set that includes the syllable |
-| `Which one says 'ba'?` | Sound identification, with or without audio |
+| `Tap the letter Ba.` | Letter identification for ب (must distinguish from the syllable بَ) |
+| `Tap the letter Alif.` | Letter identification for ا (no sound disambiguation needed) |
+| `Tap the letter you hear.` | Audio is a letter *name* (Bah, Alif), learner picks the matching glyph |
+| `Tap what you hear.` | Audio is a *sound* (ba), learner picks the matching glyph from a set that includes the syllable |
+| `Tap the one with the mark.` | Visual mark recognition — learner picks the glyph that has the fatha mark |
 
-If both **ب** and **بَ** appear as options on the same screen, the prompt MUST be one of the two sound-naming forms (`Tap what you hear` or `Which one says 'ba'?`) — never the letter-form.
+If both **ب** and **بَ** appear as options on the same screen, the prompt MUST be one of the two sound/mark-distinguishing forms (`Tap what you hear.` or `Tap the one with the mark.`) — never the letter-form.
 
 ## Flow
 
@@ -58,25 +58,27 @@ The job here is **only** to confirm that ب recognition from Lesson 1 stuck. Ali
 #### Item 1.1 — Tap
 
 - **Type:** Tap exercise (scored, retry: until-correct)
-- **Prompt:** `Tap the letter Ba`
+- **Prompt:** `Tap the letter Ba.`
 - **Target:** `letter:ba`
-- **Options:** [ب ✓, ا]
+- **Options:** [ا, ب ✓]
+- **Note:** Correct ب is on the right.
 
 #### Item 1.2 — Hear
 
 - **Type:** Hear exercise (scored, retry: until-correct)
-- **Prompt:** `Tap the letter you hear`
+- **Prompt:** `Tap the letter you hear.`
 - **Audio:** `audio/letter/ba_name.mp3` (Bah — letter name)
 - **Target:** `letter:ba`
 - **Options:** [ا, ب ✓]
+- **Note:** Correct ب is on the right.
 
 #### Item 1.3 — Tap
 
 - **Type:** Tap exercise (scored, retry: until-correct)
-- **Prompt:** `Tap the letter Ba`
+- **Prompt:** `Tap the letter Ba.`
 - **Target:** `letter:ba`
-- **Options:** [ا, ب ✓]
-- **Note:** Same prompt as 1.1 but option positions are flipped. Three exposures to ا without naming. The teach phase pays this off on Screen 2.1.
+- **Options:** [ب ✓, ا]
+- **Note:** Correct ب is on the left (positions flipped from 1.1 and 1.2). Three exposures to ا without naming. The teach phase pays this off on Screen 2.1.
 
 ### Part 2 — Teach (~80s, 4 screens)
 
@@ -109,69 +111,74 @@ The job here is **only** to confirm that ب recognition from Lesson 1 stuck. Ali
 
 #### Screen 2.4 — Today's syllable
 
-- **Type:** Teach
+- **Type:** Teach (`teach-equation`)
 - **Heading:** "Today's syllable"
-- **Body:** "ب + fatha = بَ"
-- **Equation (secondary):** "Ba plus fatha gives the sound 'ba'."
-- **Visual:** Equation row: ب + (fatha glyph) → بَ.
-- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play.
-- **Note:** This is the bridge into Practice. After this screen, every claim the lesson tests has been stated on screen.
+- **Content lines:**
+  - `ب + fatha = بَ`
+  - `This has a mark.`
+- **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play (no auto-play).
+- **Note:** The equation shows the construction; "This has a mark." is the visual observation. Do NOT include "Ba plus fatha gives the sound 'ba'" or "this says ba" — those name the sound, which is held for the audio items. This screen's job is equation + mark observation, not sound naming.
 
 ### Part 3 — Practice (~120s, 6 items)
 
-The practice ramp is a deliberate staircase. Recognize letters → hear letter name → bridge sound to syllable (text + audio name the target) → infer sound to syllable (audio only) → visual-only recognition. The 3-option discrimination is held back for mastery.
+The practice ramp is a deliberate staircase:
+- Recognize letters (Tap) → hear letter name (Hear) →
+- Visual mark-ID (Choose, no audio) → visual reinforce flipped (Choose, no audio) →
+- Audio sound mapping (Choose, audio mode).
+
+All scored, until-correct. Mark-recognition items (3.4, 3.5) establish the visual contrast before the audio mapping (3.6) tests the decoding step. Alif is held back as a distractor until mastery (4.1).
 
 #### Item 3.1 — Tap (recognize Ba)
 
 - **Type:** Tap (scored, retry: until-correct)
-- **Prompt:** `Tap the letter Ba`
+- **Prompt:** `Tap the letter Ba.`
 - **Target:** `letter:ba`
-- **Options:** [ب ✓, ا]
+- **Options:** [ا, ب ✓]
 - **Cognitive load:** Low. Visual recognition only.
 
 #### Item 3.2 — Tap (recognize Alif)
 
 - **Type:** Tap (scored, retry: until-correct)
-- **Prompt:** `Tap Alif`
+- **Prompt:** `Tap the letter Alif.`
 - **Target:** `letter:alif`
-- **Options:** [ا ✓, ب]
+- **Options:** [ب, ا ✓]
 - **Cognitive load:** Low. Visual recognition of the just-introduced letter.
 
 #### Item 3.3 — Hear (audio recognition for Ba)
 
 - **Type:** Hear (scored, retry: until-correct)
-- **Prompt:** `Tap the letter you hear`
+- **Prompt:** `Tap the letter you hear.`
 - **Audio:** `audio/letter/ba_name.mp3` (Bah — letter name)
 - **Target:** `letter:ba`
 - **Options:** [ا, ب ✓]
 - **Cognitive load:** Low–medium. Audio → letter mapping for ب only. (Alif has no audio practice item — its audio was auto-played in Screen 2.1, and Constraint 2 keeps Alif's role to "named visual symbol.")
 
-#### Item 3.4 — Choose (AUDIO MODE: map sound → symbol)
+#### Item 3.4 — Choose (VISUAL MODE: mark recognition)
 
 - **Type:** Choose (scored, retry: until-correct)
-- **Prompt:** `Tap what you hear`
-- **Audio prompt:** `audio/letter/ba_fatha_sound.mp3`
-- **Target:** `combo:ba+fatha`
-- **Options:** [بَ ✓, ب]
-- **Cognitive load:** Medium-low. **Single instruction mode — auditory only.** The learner hears "ba" and picks the matching glyph. Text and audio do not compete for attention. Two options only — alif is held back for mastery.
-
-#### Item 3.5 — Choose (VISUAL MODE: map text → sound)
-
-- **Type:** Choose (scored, retry: until-correct)
-- **Prompt:** `Which one says 'ba'?`
-- **Audio prompt:** *(none)*
-- **Target:** `combo:ba+fatha`
-- **Options:** [بَ ✓, ب]
-- **Cognitive load:** Medium. **Single instruction mode — visual only.** The text names the target sound; no audio competes. Same 2-option contrast as 3.4 but tested through reading the prompt rather than hearing it.
-
-#### Item 3.6 — Choose (VISUAL MODE: reinforce)
-
-- **Type:** Choose (scored, retry: until-correct)
-- **Prompt:** `Which one says 'ba'?`
+- **Prompt:** `Tap the one with the mark.`
 - **Audio prompt:** *(none)*
 - **Target:** `combo:ba+fatha`
 - **Options:** [ب, بَ ✓]
-- **Cognitive load:** Medium. Same task as 3.5 (visual sound-ID, no audio) with **option positions flipped** — the correct syllable is on the right rather than the left. Reinforces the visual-only mapping while breaking any positional muscle memory from 3.5. Confidence anchor before mastery's harder 3-option discrimination.
+- **Cognitive load:** Low–medium. Visual mark-ID only. Learner looks for the glyph that has the fatha mark above it. No audio competes for attention. Two options — Alif held back for mastery.
+
+#### Item 3.5 — Choose (VISUAL REINFORCE: mark recognition, positions flipped)
+
+- **Type:** Choose (scored, retry: until-correct)
+- **Prompt:** `Tap the one with the mark.`
+- **Audio prompt:** *(none)*
+- **Target:** `combo:ba+fatha`
+- **Options:** [بَ ✓, ب]
+- **Cognitive load:** Low–medium. Same visual mark-ID task as 3.4 with **option positions flipped** — correct syllable is now on the left. Breaks positional muscle memory from 3.4.
+
+#### Item 3.6 — Choose (AUDIO MODE: map sound → symbol)
+
+- **Type:** Choose (scored, retry: until-correct)
+- **Prompt:** `Tap what you hear.`
+- **Audio prompt:** `audio/letter/ba_fatha_sound.mp3`
+- **Target:** `combo:ba+fatha`
+- **Options:** [ب, بَ ✓]
+- **Cognitive load:** Medium. After the two visual-only mark items (3.4–3.5) have anchored the ب-vs-بَ contrast, the learner hears "ba" and maps it to the marked glyph. Audio-driven decoding step, 2 options only.
 
 ### Part 4 — Mastery Check (~40s, 3 items)
 
@@ -180,11 +187,11 @@ The lesson's actual measurement. Items are **one-shot** — no retries. Per mast
 #### Item 4.1 — Choose (3-option discrimination)
 
 - **Type:** Choose (scored, **one-shot**)
-- **Prompt:** `Tap what you hear`
+- **Prompt:** `Tap what you hear.`
 - **Audio prompt:** `audio/letter/ba_fatha_sound.mp3`
 - **Target:** `combo:ba+fatha`
-- **Options:** [ا, بَ ✓, ب]
-- **Note:** **First and only 3-option discrimination of the lesson.** Alif rejoins the option set for the harder discrimination. After 3.4–3.6 anchored the 2-option ba-vs-بَ contrast, the learner is ready to filter alif as visual noise. One-shot mode makes it feel consequential.
+- **Options:** [ب, بَ ✓, ا]
+- **Note:** **First and only 3-option item of the lesson.** Alif rejoins the option set for the harder discrimination. After 3.4–3.6 anchored the 2-option mark/sound contrast, the learner is ready to filter alif as visual noise. One-shot mode makes it feel consequential. Order: `letter:ba` first, `combo:ba+fatha` (correct) second, `letter:alif` third.
 
 #### Item 4.2 — Read (decoding)
 
@@ -193,6 +200,9 @@ The lesson's actual measurement. Items are **one-shot** — no retries. Per mast
 - **Target:** `combo:ba+fatha`
 - **Display:** بَ (large, centered)
 - **AudioModel:** `audio/letter/ba_fatha_sound.mp3`
+- **PromptHeading:** "Your turn"
+- **RevealHeading:** "You read it"
+- **RevealCopy:** "That says ba."
 - **Note:** Per Constraint 2 of the rendering layer (no auto-play on Read), the learner says it in their head, taps Check after the lock window, audio reveals.
 
 #### Item 4.3 — Read (decoding)
@@ -202,7 +212,10 @@ The lesson's actual measurement. Items are **one-shot** — no retries. Per mast
 - **Target:** `combo:ba+fatha`
 - **Display:** بَ
 - **AudioModel:** `audio/letter/ba_fatha_sound.mp3`
-- **Note:** Same syllable, second pass. The prompt humanizes the rhythm. By the third unprompted reading of بَ (4.1's correct tap implicitly counts as one), the syllable is theirs.
+- **PromptHeading:** "Your turn"
+- **RevealHeading:** "You read it"
+- **RevealCopy:** "That says ba."
+- **Note:** Same syllable, second pass. The prompt humanizes the rhythm.
 
 ## Completion screen
 
@@ -213,11 +226,13 @@ The lesson's actual measurement. Items are **one-shot** — no retries. Per mast
 - **Tone:** Calm. No confetti.
 - **Action:** Continue → returns to home tab.
 
-## Why this version is better pedagogically
+## Why this version is better pedagogically (round-5 mark-recognition pivot)
 
-- **Stabilize before discriminate.** The first time the learner is asked to distinguish ب from بَ is Item 3.4 — *after* fatha has been re-taught (Screen 2.3) and the syllable equation has been shown (Screen 2.4). The previous version put a ب-vs-بَ contrast in warm recall (Item 1.3) and a 3-option discrimination at Item 3.4 in practice; both forced the learner to do work the lesson hadn't yet supported.
-- **Locked prompt vocabulary.** Five canonical prompts, each with a clear semantic role. The learner never has to guess whether "Tap Ba" means the letter or the sound — those forms are gone. The text rules surface the cognitive load openly: `Which one says 'ba'?` is sound-ID; `Tap the letter Ba` is letter-ID; `Tap what you hear` is audio-ID. Three different jobs, three different sentences, no overlap.
+- **Stabilize before discriminate.** The first time the learner is asked to distinguish ب from بَ is Item 3.4 — *after* fatha has been re-taught (Screen 2.3) and the syllable equation has been shown (Screen 2.4). The previous version put a ب-vs-بَ contrast too early; round-5 holds it until the visual concept is established.
+- **Mark-first, sound-second.** Items 3.4 and 3.5 are purely visual: find the glyph with the mark. No audio. This anchors the visual distinction at the pixel level before Item 3.6 asks the learner to connect an *audio* "ba" to the marked glyph. The cognitive ramp is: visual mark-ID (3.4) → visual reinforce flipped (3.5) → audio sound mapping (3.6).
+- **Locked prompt vocabulary.** Five canonical prompts, each with a clear semantic role. The learner never has to guess whether "Tap Ba" means the letter or the sound — those forms are gone. `Tap the one with the mark.` is visual mark-ID; `Tap what you hear.` is audio-ID; `Tap the letter Ba.` is letter-ID. Three different jobs, three different sentences, no overlap. "Which one says 'ba'?" is removed from the canonical set — it named a sound in text, which conflicted with the mark-recognition pivot.
 - **Alif as named visual symbol only.** No item teaches or tests Alif's sound. Alif's role is bounded: see it (warm recall), name it (Screen 2.1 auto-play), recognize it visually (3.2), filter it as a distractor in mastery (4.1). The lesson does not claim Alif "makes an 'a' sound" or "is a vowel" — saving that ambiguity for the phases where it actually matters.
+- **Screen 2.4 equation + observation.** "ب + fatha = بَ" states the construction. "This has a mark." names the visual property. The screen does not name the sound — that remains for the audio items to establish.
 
 ## Constraints in play
 
