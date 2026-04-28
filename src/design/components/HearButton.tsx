@@ -16,12 +16,19 @@ interface HearButtonProps {
   onPlay: () => void | Promise<void>;
   size?: number;
   accessibilityLabel?: string;
+  /**
+   * When true, the button is non-interactive and visually de-emphasized.
+   * Used to indicate the audio asset isn't yet available without removing
+   * the visual affordance.
+   */
+  disabled?: boolean;
 }
 
 export function HearButton({
   onPlay,
   size = 48,
   accessibilityLabel = "Play audio",
+  disabled = false,
 }: HearButtonProps) {
   const colors = useColors();
   const [loading, setLoading] = useState(false);
@@ -40,7 +47,7 @@ export function HearButton({
   }
 
   const handlePress = useCallback(async () => {
-    if (loading) return;
+    if (loading || disabled) return;
     hapticTap();
     setLoading(true);
     try {
@@ -48,14 +55,14 @@ export function HearButton({
     } finally {
       setLoading(false);
     }
-  }, [onPlay, loading]);
+  }, [onPlay, loading, disabled]);
 
   return (
     <AnimatedPressable
       onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      disabled={loading}
+      disabled={loading || disabled}
       style={[
         styles.base,
         {
@@ -63,7 +70,7 @@ export function HearButton({
           height: size,
           borderRadius: size / 2,
           backgroundColor: colors.primarySoft,
-          opacity: loading ? 0.6 : 1,
+          opacity: loading ? 0.6 : disabled ? 0.4 : 1,
         },
         animatedStyle,
       ]}

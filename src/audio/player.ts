@@ -118,12 +118,13 @@ type Harakat = "fatha" | "kasra" | "dhamma";
 const HARAKAT_SOUND_ASSETS: Record<string, AudioSource> = {
   // Fatha for ba uses the existing sound asset (ba.wav is the fatha-register "ba").
   "2-fatha": require("../../assets/audio/sounds/ba.wav"),
-  // ba-kasra and ba-dhamma: stub out; real assets land separately.
-  // Until recorded, fall back to fatha sound so the lesson plays.
-  // To wire real recordings: drop ba_kasra.wav / ba_dhamma.wav into
-  // assets/audio/sounds/ and switch the require() paths below.
-  "2-kasra": require("../../assets/audio/sounds/ba.wav"),
-  "2-dhamma": require("../../assets/audio/sounds/ba.wav"),
+  // ba-kasra and ba-dhamma intentionally absent. Per curriculum-team
+  // directive, missing audio must NOT silently fall back to the fatha
+  // sound — the lesson UI is responsible for showing a disabled
+  // HearButton when the audio path resolves to nothing. Add real
+  // recordings here when they're produced:
+  //   "2-kasra": require("../../assets/audio/sounds/ba_kasra.wav"),
+  //   "2-dhamma": require("../../assets/audio/sounds/ba_dhamma.wav"),
 };
 
 export function playLetterHarakatSound(letterId: number, harakat: Harakat): void {

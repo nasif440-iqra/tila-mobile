@@ -8,6 +8,7 @@ export type EntityKey = string; // "letter:alif", "combo:ba+fatha", "mark:fatha"
 
 export type TeachingBlock =
   | { type: "text"; content: string }
+  | { type: "heading"; text: string }
   | { type: "reading-direction"; word: string }
   | {
       type: "glyph-display";
@@ -48,12 +49,14 @@ export type TeachingBlock =
         audioPath: string;
         label?: string;
         transliteration?: string;
+        helperText?: string;
       };
       right: {
         glyph: string;
         audioPath: string;
         label?: string;
         transliteration?: string;
+        helperText?: string;
       };
     }
   | {
@@ -62,9 +65,11 @@ export type TeachingBlock =
        * each with its own audio path. Optional `highlightIndex` visually
        * emphasizes today's focus. Used to introduce the mark system before
        * narrowing scope (e.g., showing fatha/kasra/dhamma, highlighting fatha).
+       * An option without `audioPath` should render a disabled HearButton
+       * (visible affordance, inert) until its recording lands.
        */
       type: "mark-preview";
-      options: Array<{ glyph: string; audioPath: string; label?: string }>;
+      options: Array<{ glyph: string; audioPath?: string; label?: string }>;
       highlightIndex?: number;
     };
 
@@ -107,6 +112,8 @@ export interface BuildExercise {
 
 export interface ReadExercise {
   type: "read";
+  /** Optional heading shown above the prompt body in the attempt-locked / attempt-open states. */
+  promptHeading?: string;
   /** User-facing prompt, e.g., "Try saying it first." */
   prompt: string;
   target: EntityKey;
@@ -120,6 +127,8 @@ export interface ReadExercise {
    * See SPEC Constraint 2 for rationale.
    */
   audioModel: string;
+  /** Optional heading shown above the reveal copy in the playing / revealed / replaying states. */
+  revealHeading?: string;
   /** Optional one-line confirmation copy shown after reveal, e.g., "That's ba." */
   revealCopy?: string;
 }
