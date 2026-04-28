@@ -6,7 +6,7 @@ import { useColors } from "../../src/design/theme";
 import { typography, spacing, radii } from "../../src/design/tokens";
 import { LessonRunner, type LessonOutcome } from "../../src/curriculum/runtime/LessonRunner";
 import { noopMasteryRecorder } from "../../src/curriculum/runtime/mastery-recorder";
-import { asyncStorageCompletionStore } from "../../src/curriculum/runtime/completion-store";
+import { progressStore } from "../../src/curriculum/runtime/progress-store";
 import { resolveLessonId } from "../../src/curriculum/runtime/url-resolver";
 import { lessonRegistry } from "../../src/curriculum/lessons";
 import { LessonChrome } from "../../src/curriculum/ui/LessonChrome";
@@ -23,7 +23,8 @@ export default function LessonRoute() {
   const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
 
   const handleComplete = useCallback(async (o: LessonOutcome) => {
-    await asyncStorageCompletionStore.markCompleted(o.lessonId);
+    await progressStore.markCompleted(o.lessonId);
+    await progressStore.setLastReached(o.lessonId);
     setOutcome(o);
   }, []);
 
