@@ -189,5 +189,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#ffffff",
   },
-  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 64, lineHeight: 96 },
+  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 64, lineHeight: 128 },
 });
