@@ -18,6 +18,7 @@ export interface LessonOutcome {
   itemsTotal: number;
   itemsCorrect: number;
   decodingRuleSatisfied: boolean;
+  firstTryCorrectRate: number;
 }
 
 function isScored(screen: Screen): boolean {
@@ -53,11 +54,23 @@ export function computeLessonOutcome(
     return ratio >= lesson.passCriteria.threshold && decodingRuleSatisfied;
   })();
 
+  const firstTryCorrectRate = (() => {
+    if (scoredScreens.length === 0) return 0;
+    const firstTryWins = scoredScreens.filter((s) => {
+      const o = outcomes.get(s.id);
+      if (!o || o.correct !== true) return false;
+      if (o.entityAttempts.length === 0) return true;
+      return o.entityAttempts[0]?.correct === true;
+    }).length;
+    return firstTryWins / scoredScreens.length;
+  })();
+
   return {
     lessonId: lesson.id,
     passed,
     itemsTotal,
     itemsCorrect,
     decodingRuleSatisfied,
+    firstTryCorrectRate,
   };
 }
