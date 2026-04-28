@@ -157,24 +157,18 @@ function TeachingBlockView({
         </View>
       );
 
-    case "mark-preview": {
-      const handleOptionPress = (path: string) => {
-        onPlayAudio?.(path);
-      };
+    case "mark-preview":
       return (
         <View style={styles.markRow}>
           {block.options.map((opt, i) => {
             const highlighted = block.highlightIndex === i;
             return (
-              <Pressable
+              <View
                 key={i}
-                onPress={() => handleOptionPress(opt.audioPath)}
                 style={[
                   styles.markOption,
                   highlighted && { borderColor: colors.primary, borderWidth: 3 },
                 ]}
-                accessibilityRole="button"
-                accessibilityLabel={opt.label ?? "Play"}
               >
                 <Text
                   style={[
@@ -189,12 +183,16 @@ function TeachingBlockView({
                     {opt.label}
                   </Text>
                 ) : null}
-              </Pressable>
+                <HearButton
+                  size={36}
+                  onPlay={() => onPlayAudio?.(opt.audioPath)}
+                  accessibilityLabel={opt.label ?? "Play"}
+                />
+              </View>
             );
           })}
         </View>
       );
-    }
 
     default: {
       // TypeScript exhaustiveness guard — adding a new TeachingBlock variant
