@@ -183,10 +183,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#e8e2cf",
     borderRadius: radii.lg,
-    padding: spacing.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.lg,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "#ffffff",
   },
-  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 44, lineHeight: 56 },
+  glyph: { fontFamily: fontFamilies.arabicRegular, fontSize: 64, lineHeight: 96 },
 });
