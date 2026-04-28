@@ -121,4 +121,20 @@ describe("computeLessonOutcome.firstTryCorrectRate", () => {
     const result = computeLessonOutcome(l, outcomes);
     expect(result.firstTryCorrectRate).toBeCloseTo(1.0, 5);
   });
+
+  it("counts as first-try-correct when first attempt is correct even if subsequent attempts exist", () => {
+    const l = lesson([scoredScreen("a")]);
+    const outcomes = new Map([
+      ["a", {
+        screenId: "a",
+        correct: true,
+        entityAttempts: [
+          { entityKey: "letter:alif", itemId: "i1", correct: true },
+          { entityKey: "letter:alif", itemId: "i2", correct: true },
+        ],
+      }],
+    ]);
+    const result = computeLessonOutcome(l, outcomes);
+    expect(result.firstTryCorrectRate).toBeCloseTo(1.0, 5);
+  });
 });
