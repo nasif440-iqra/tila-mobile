@@ -1,20 +1,23 @@
 import type { LessonData } from "../types";
 
 /**
- * Runtime artifact for Lesson 1 v2 — "Your First Arabic Sound".
+ * Runtime artifact for Lesson 1 v3 — "Your First Arabic Sound".
  *
  * Human-authored spec: curriculum/phase-1/01-arabic-starts-here.md
- * Engineering SPEC:   docs/superpowers/specs/2026-04-27-lesson-1-v2-name-vs-sound-design.md
+ * Reviewer-driven copy: lesson1spec.txt (root of repo, untracked)
  *
  * Lesson 1 explicitly teaches the NAME vs SOUND distinction:
- *   - Letters have a NAME (e.g., ب is called "Bah", in classroom register).
- *   - Letters take on a SOUND when paired with a harakat mark
- *     (e.g., بَ is read "ba" — short, clipped — with a fatha).
+ *   - Letters have a NAME (what they're called).
+ *   - When you READ, you say the SOUND, which depends on a small mark
+ *     (harakat). Today only fatha matters.
  *
  * 6-screen flow: Direction → Meet Ba (name) → Name vs Sound (the core)
- *               → Mark system preview → Focus on بَ → Read بَ.
+ *               → Mark system preview (today only ba) → Focus on بَ → Read بَ.
  *
  * kind: "onboarding" — SPEC Constraint 1 (no scoring, no mastery-check).
+ *
+ * Audio status (Apr 2026): kasra and dhamma sounds are not yet recorded.
+ * Their HearButtons render in disabled state per the no-fallback directive.
  */
 export const lessonOne: LessonData = {
   id: "lesson-01",
@@ -23,7 +26,7 @@ export const lessonOne: LessonData = {
   module: "1.1",
   title: "Your First Arabic Sound",
   outcome:
-    "Learners understand letters have names, marks give sounds, and they can read بَ.",
+    "Learners understand that letters have names, marks give reading sounds, and they can read بَ.",
   durationTargetSeconds: 150,
   introducedEntities: ["letter:ba", "combo:ba+fatha"],
   reviewEntities: [],
@@ -57,43 +60,51 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 3 — Name vs Sound (the core teaching moment). Tap-to-play, no auto-play.
+    // Screen 3 — Name vs Sound (the core teaching moment).
+    // Heading + body copy emphasizes BEHAVIOR ("when you read, you say the sound")
+    // over abstract distinction. Cards carry transliteration + helper text.
     {
       kind: "teach",
       id: "t-name-vs-sound",
       blocks: [
+        { type: "heading", text: "Name vs. reading sound" },
         {
           type: "text",
           content:
-            "Letters have a name. A small mark changes how they sound.",
+            "Letters have names. But when you read, you say the sound.",
         },
         {
           type: "name-sound-pair",
           left: {
             glyph: "ب",
             audioPath: "audio/letter/ba_name.mp3",
-            label: "name",
+            label: "Letter name",
             transliteration: "Bah",
+            helperText: "What it's called",
           },
           right: {
             glyph: "بَ",
             audioPath: "audio/letter/ba_fatha_sound.mp3",
-            label: "sound",
+            label: "Reading sound",
             transliteration: "ba",
+            helperText: "What you read",
           },
         },
       ],
     },
 
-    // Screen 4 — Mark system preview (fatha highlighted). Tap each to hear.
+    // Screen 4 — Mark system preview. بَ is today's target; بِ and بُ shown
+    // for system context but not playable yet (no recordings) — their
+    // HearButtons render disabled. Labels say "Today: ba" vs "Later".
     {
       kind: "teach",
       id: "t-mark-system",
       blocks: [
+        { type: "heading", text: "Marks change the sound" },
         {
           type: "text",
           content:
-            "These small marks change the sound. Today, we'll learn this one.",
+            "These small marks make different sounds. Today, we only need this one.",
         },
         {
           type: "mark-preview",
@@ -101,17 +112,18 @@ export const lessonOne: LessonData = {
             {
               glyph: "بَ",
               audioPath: "audio/letter/ba_fatha_sound.mp3",
-              label: "ba",
+              label: "Today: ba",
             },
             {
               glyph: "بِ",
-              audioPath: "audio/letter/ba_kasra_sound.mp3",
-              label: "bi",
+              // audioPath intentionally absent — recording not yet produced.
+              // Disabled HearButton rendered per no-fallback directive.
+              label: "Later",
             },
             {
               glyph: "بُ",
-              audioPath: "audio/letter/ba_dhamma_sound.mp3",
-              label: "bu",
+              // audioPath intentionally absent — see بِ above.
+              label: "Later",
             },
           ],
           highlightIndex: 0,
@@ -124,8 +136,13 @@ export const lessonOne: LessonData = {
       kind: "teach",
       id: "t-focus-bafatha",
       blocks: [
+        { type: "heading", text: "Today's sound" },
         { type: "glyph-display", letter: "بَ", size: "large" },
-        { type: "text", content: "This is ba." },
+        {
+          type: "text",
+          content:
+            "This mark gives Ba an \"a\" sound. Together, this reads: ba.",
+        },
         {
           type: "audio",
           path: "audio/letter/ba_fatha_sound.mp3",
@@ -135,7 +152,9 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 6 — Read بَ (the proof). Unscored Read with the locked-attempt machine.
+    // Screen 6 — Read بَ (the proof). Heading + body swap on reveal.
+    // promptHeading "Your turn" / prompt "Look at it first..." during attempt.
+    // revealHeading "You read it" / revealCopy "That says ba." after Check.
     {
       kind: "exercise",
       id: "r-read-bafatha",
@@ -144,11 +163,13 @@ export const lessonOne: LessonData = {
       countsAsDecoding: false,
       exercise: {
         type: "read",
-        prompt: "Try saying it",
+        promptHeading: "Your turn",
+        prompt: "Look at it first. Say it in your head.",
         target: "combo:ba+fatha",
         display: "بَ",
         audioModel: "audio/letter/ba_fatha_sound.mp3",
-        revealCopy: "That's ba.",
+        revealHeading: "You read it",
+        revealCopy: "That says ba.",
       },
     },
   ],

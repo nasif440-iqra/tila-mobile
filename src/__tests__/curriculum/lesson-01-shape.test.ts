@@ -18,7 +18,7 @@ const EXPECTED_SCREEN_IDS = [
   "r-read-bafatha",
 ];
 
-describe("lesson-01 shape (v2 — name vs sound)", () => {
+describe("lesson-01 shape (v3 — name vs sound, surgical copy)", () => {
   it("has canonical ID 'lesson-01'", () => {
     expect(lessonOne.id).toBe("lesson-01");
   });
@@ -27,7 +27,7 @@ describe("lesson-01 shape (v2 — name vs sound)", () => {
     expect(lessonOne.kind).toBe("onboarding");
   });
 
-  it("matches v2 spec frontmatter", () => {
+  it("matches frontmatter", () => {
     expect(lessonOne.phase).toBe(1);
     expect(lessonOne.module).toBe("1.1");
     expect(lessonOne.title).toBe("Your First Arabic Sound");
@@ -37,9 +37,6 @@ describe("lesson-01 shape (v2 — name vs sound)", () => {
     expect(lessonOne.introducedEntities).toEqual(["letter:ba", "combo:ba+fatha"]);
     expect(lessonOne.reviewEntities).toEqual([]);
     expect(lessonOne.completionGlyphs).toEqual(["combo:ba+fatha"]);
-    expect(lessonOne.completionSubtitle).toBe(
-      "You just read your first Arabic sound."
-    );
   });
 
   it("has exactly the expected six screens in order", () => {
@@ -67,7 +64,7 @@ describe("lesson-01 shape (v2 — name vs sound)", () => {
     expect(unknown).toEqual([]);
   });
 
-  it("every audio reference is a non-empty string", () => {
+  it("every present audio reference is a non-empty string", () => {
     for (const screen of lessonOne.screens) {
       if (screen.kind === "teach") {
         for (const block of screen.blocks) {
@@ -77,8 +74,11 @@ describe("lesson-01 shape (v2 — name vs sound)", () => {
             expect(block.right.audioPath.length).toBeGreaterThan(0);
           }
           if (block.type === "mark-preview") {
+            // audioPath is optional — only assert if present.
             for (const opt of block.options) {
-              expect(opt.audioPath.length).toBeGreaterThan(0);
+              if (opt.audioPath !== undefined) {
+                expect(opt.audioPath.length).toBeGreaterThan(0);
+              }
             }
           }
         }
@@ -96,17 +96,38 @@ describe("lesson-01 shape (v2 — name vs sound)", () => {
 
   it("auto-play audio blocks appear only on Teach screens (Constraint 3)", () => {
     for (const screen of lessonOne.screens) {
-      if (screen.kind === "exercise") {
-        // Exercise screens have no `blocks` property — the constraint
-        // is structurally upheld by the type system, not asserted here.
-        continue;
-      }
-      // For teach screens, just ensure any auto-play block has an audio path.
+      if (screen.kind === "exercise") continue;
       for (const block of screen.blocks) {
         if (block.type === "audio" && block.autoPlay) {
           expect(block.path.length).toBeGreaterThan(0);
         }
       }
+    }
+  });
+
+  it("at least one mark-preview option has no audioPath (kasra/dhamma fallback removed)", () => {
+    let foundMissingAudio = false;
+    for (const screen of lessonOne.screens) {
+      if (screen.kind !== "teach") continue;
+      for (const block of screen.blocks) {
+        if (block.type === "mark-preview") {
+          for (const opt of block.options) {
+            if (opt.audioPath === undefined) {
+              foundMissingAudio = true;
+            }
+          }
+        }
+      }
+    }
+    expect(foundMissingAudio).toBe(true);
+  });
+
+  it("Read exercise has both promptHeading and revealHeading", () => {
+    const last = lessonOne.screens.at(-1);
+    expect(last?.kind).toBe("exercise");
+    if (last?.kind === "exercise" && last.exercise.type === "read") {
+      expect(last.exercise.promptHeading).toBeDefined();
+      expect(last.exercise.revealHeading).toBeDefined();
     }
   });
 

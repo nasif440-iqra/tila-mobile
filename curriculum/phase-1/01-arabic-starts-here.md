@@ -4,7 +4,7 @@ kind: onboarding
 phase: 1
 module: "1.1"
 title: "Your First Arabic Sound"
-outcome: "Learners understand letters have names, marks give sounds, and they can read بَ."
+outcome: "Learners understand that letters have names, marks give reading sounds, and they can read بَ."
 duration_target_seconds: 150
 introduced_entities:
   - letter:ba
@@ -23,15 +23,16 @@ completion_glyphs:
 > **Onboarding lesson.** This lesson does not follow standard lesson anatomy.
 > No warm-recall, no scored items, no mastery-check. The proof IS the lesson:
 > the learner finishes having read بَ, with explicit understanding that
-> letters have a NAME and a SOUND, and that small marks change the sound.
+> letters have a NAME and a READING SOUND, and that small marks change the
+> sound.
 
 ## Goal
 
 The learner understands:
 
 1. Arabic reads right to left.
-2. Letters have **names**.
-3. Marks give **sounds**.
+2. Letters have **names** (what they're called).
+3. Marks give **reading sounds** (what you say when you read).
 4. They can read one syllable: **بَ**.
 
 ## Flow
@@ -49,40 +50,53 @@ The learner understands:
 - **Visual:** Large ب + speaker button.
 - **Copy:** "This letter is called Ba."
 - **Audio:** `audio/letter/ba_name.mp3` — auto-plays once on mount; tap speaker to replay.
-- **Note:** The asset is the letter's *name* ("baa", classroom register), longer than the syllable sound.
+- **Note:** The asset is the letter's *name* ("Bah", classroom register), longer than the syllable sound.
 
-### Screen 3 — The core concept (NAME vs SOUND)
-
-- **Type:** Teach
-- **Visual:** Side-by-side. Left column: ب glyph, "Bah" transliteration, "name" label, hear button. Right column: بَ glyph (in primary green), "ba" transliteration, "sound" label, hear button.
-- **Copy:** "Letters have a name. A small mark changes how they sound."
-- **Audio:** Tap-to-play for each — no auto-play.
-- **Note:** This is the most important screen in the lesson. The contrast between the two recordings is load-bearing.
-
-### Screen 4 — The mark system (preview, then focus)
+### Screen 3 — Name vs Reading Sound (the core)
 
 - **Type:** Teach
-- **Visual:** Three tappable options — بَ (highlighted), بِ, بُ.
-- **Copy:** "These small marks change the sound. Today, we'll learn this one."
-- **Audio:** Tap each option to hear ba / bi / bu. No auto-play.
-- **Note:** Builds the mental model that letters + marks = many sounds, then narrows scope. Do not over-explain.
+- **Heading:** "Name vs. reading sound"
+- **Body:** "Letters have names. But when you read, you say the sound."
+- **Visual:** Side-by-side cards.
+  - **Left card:** ب glyph, transliteration "Bah", helper text "What it's called", label "Letter name", HearButton.
+  - **Right card:** بَ glyph (in primary green), transliteration "ba", helper text "What you read", label "Reading sound", HearButton.
+- **Audio:** Tap-to-play for each side. No auto-play.
+- **Note:** Behavioral framing — the difference between name and reading sound is captured in the helper text ("What it's called" vs "What you read"). This screen is load-bearing.
+
+### Screen 4 — The mark system (preview, narrowed to today)
+
+- **Type:** Teach
+- **Heading:** "Marks change the sound"
+- **Body:** "These small marks make different sounds. Today, we only need this one."
+- **Visual:** Three options.
+  - **بَ** (highlighted, primary border, label "Today: ba", playable HearButton).
+  - **بِ** (muted, label "Later", **disabled HearButton** — kasra recording not yet produced).
+  - **بُ** (muted, label "Later", **disabled HearButton** — dhamma recording not yet produced).
+- **Audio:** Today's sound (بَ) plays via `audio/letter/ba_fatha_sound.mp3`. Tomorrow's (بِ, بُ) intentionally do not play — no fallback to fatha.
+- **Note:** The system is shown but scope is narrowed. Authors must NOT silently fall back to fatha audio for kasra/dhamma.
 
 ### Screen 5 — Focus (lock the target)
 
 - **Type:** Teach
+- **Heading:** "Today's sound"
 - **Visual:** Large بَ + speaker button.
-- **Copy:** "This is ba."
+- **Body:** "This mark gives Ba an \"a\" sound. Together, this reads: ba."
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — auto-plays once on mount; tap speaker to replay.
 
 ### Screen 6 — Read (the proof)
 
 - **Type:** Read exercise (unscored)
-- **Visual:** Large centered بَ. Prompt + delayed Check button.
-- **Behavior:**
-  - On mount: glyph + prompt only. **No audio plays.** Check button is NOT yet rendered.
-  - After 1500ms (`READ_ATTEMPT_DELAY_MS`): Check button fades in.
-  - Learner taps Check: model audio plays, "That's ba." reveal copy fades in.
-  - Audio ends: Replay button appears, Continue enables.
+- **Visual:** Large centered بَ.
+- **Initial state:**
+  - **Heading:** "Your turn"
+  - **Body:** "Look at it first. Say it in your head."
+  - **Behavior:** No audio, no Check button visible.
+- **After 1500ms:** Check button fades in.
+- **On Check tap:** Audio plays, reveal block fades in.
+- **Reveal state:**
+  - **Heading:** "You read it"
+  - **Body:** "That says ba."
+- **After audio ends:** Replay button appears, Continue enables.
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — revealed only after Check tap.
 
 ## Completion screen
@@ -102,16 +116,20 @@ This lesson is the load-bearing demonstration of three locked engineering constr
 2. **Constraint 2 — Read requires attempt before reveal.** Screen 6 enforces a 1500ms attempt-locked window before Check is tappable.
 3. **Constraint 3 — Auto-play permitted only on Teach screens.** Screens 2 and 5 auto-play; screens 1, 3, 4, and 6 never auto-play.
 
+Plus the v3 directive:
+
+4. **No silent audio fallback.** When a mark-preview option's audio isn't recorded yet, its HearButton renders disabled. Never substitute fatha audio for kasra or dhamma.
+
 ## Audio recording requirements
 
-| Asset | Role | Notes |
+| Asset | Role | Status |
 |---|---|---|
-| `assets/audio/names/ba.wav` | Letter NAME — "baa" | Long, classroom register, ~600–800ms. |
-| `assets/audio/sounds/ba.wav` | Fatha sound — "ba" | Short, clipped, ~300–500ms. Distinct from the name on a phone speaker. |
-| `assets/audio/sounds/ba_kasra.wav` | Kasra sound — "bi" | NEW — same recording session, same voice, same register as ba (sound). |
-| `assets/audio/sounds/ba_dhamma.wav` | Dhamma sound — "bu" | NEW — same. |
+| `assets/audio/names/ba.wav` | Letter NAME — "Bah" | Exists. Long, classroom register, ~600–800ms. |
+| `assets/audio/sounds/ba.wav` | Fatha sound — "ba" | Exists. Short, clipped, ~300–500ms. |
+| `assets/audio/sounds/ba_kasra.wav` | Kasra sound — "bi" | **Missing.** Disabled HearButton on Screen 4 until recorded. |
+| `assets/audio/sounds/ba_dhamma.wav` | Dhamma sound — "bu" | **Missing.** Disabled HearButton on Screen 4 until recorded. |
 
-Until ba_kasra.wav and ba_dhamma.wav are recorded, the audio router falls back to playing the fatha sound for those paths. Lesson 1 plays end-to-end on the existing assets, but Screen 4's three-option contrast is muted (all three play the same "ba" sound) until real recordings land.
+Until the missing recordings land, Screen 4 plays only fatha and disables the other two HearButtons. To wire real recordings: add the .wav files to `assets/audio/sounds/`, then update `HARAKAT_SOUND_ASSETS` in `src/audio/player.ts` (commented examples present).
 
 ## Out of scope
 
