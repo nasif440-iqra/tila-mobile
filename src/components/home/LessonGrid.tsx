@@ -1,0 +1,152 @@
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  StyleSheet,
+  AccessibilityInfo,
+} from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withSequence,
+  withTiming,
+  cancelAnimation,
+} from "react-native-reanimated";
+import { useColors } from "../../design/theme";
+import { typography, spacing, radii } from "../../design/tokens";
+import type { LessonCell } from "../../curriculum/runtime/grid-state";
+
+interface LessonGridProps {
+  cells: LessonCell[];
+  titles: Record<string, string>;
+  onPress: (lessonId: string) => void;
+}
+
+const cellAccessibilityLabel = (cell: LessonCell, title: string): string => {
+  const status =
+    cell.state === "completed"
+      ? "completed"
+      : cell.state === "current"
+        ? "next up"
+        : "locked";
+  return `${title}, ${status}`;
+};
+
+export function LessonGrid({ cells, titles, onPress }: LessonGridProps) {
+  const colors = useColors();
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    let alive = true;
+    AccessibilityInfo.isReduceMotionEnabled().then((value) => {
+      if (alive) setReduceMotion(value);
+    });
+    const sub = AccessibilityInfo.addEventListener(
+      "reduceMotionChanged",
+      setReduceMotion
+    );
+    return () => {
+      alive = false;
+      sub.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      cancelAnimation(glow);
+      glow.value = 0;
+      return;
+    }
+    glow.value = withRepeat(
+      withSequence(
+        withTiming(1, { duration: 1400 }),
+        withTiming(0, { duration: 1400 })
+      ),
+      -1,
+      false
+    );
+    return () => cancelAnimation(glow);
+  }, [reduceMotion, glow]);
+
+  const glowStyle = useAnimatedStyle(() => ({
+    opacity: 0.4 + glow.value * 0.5,
+  }));
+
+  return (
+    <View style={styles.column}>
+      {cells.map((cell) => {
+        const title = titles[cell.lessonId] ?? cell.lessonId;
+        const interactive =
+          cell.state === "completed" || cell.state === "current";
+        const isCurrent = cell.state === "current";
+        return (
+          <Pressable
+            key={cell.lessonId}
+            onPress={interactive ? () => onPress(cell.lessonId) : undefined}
+            disabled={!interactive}
+            accessibilityRole={interactive ? "button" : "text"}
+            accessibilityLabel={cellAccessibilityLabel(cell, title)}
+            style={[
+              styles.cell,
+              {
+                backgroundColor: colors.bgCard,
+                borderColor: isCurrent ? colors.accent : colors.border,
+                opacity: cell.state === "locked" ? 0.45 : 1,
+              },
+            ]}
+          >
+            {isCurrent && !reduceMotion && (
+              <Animated.View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  {
+                    borderRadius: radii.lg,
+                    borderWidth: 2,
+                    borderColor: colors.accent,
+                  },
+                  glowStyle,
+                ]}
+              />
+            )}
+            <View style={styles.row}>
+              <Text style={[styles.title, { color: colors.text }]}>
+                {title}
+              </Text>
+              <Text style={[styles.badge, { color: colors.textSoft }]}>
+                {cell.state === "completed"
+                  ? "Done"
+                  : cell.state === "current"
+                    ? "Start"
+                    : "Locked"}
+              </Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  column: { gap: spacing.md, paddingHorizontal: spacing.md },
+  cell: {
+    minHeight: 72,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    justifyContent: "center",
+    overflow: "hidden",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  title: { ...typography.heading3 },
+  badge: { ...typography.caption },
+});
