@@ -5,18 +5,20 @@ import { lessonRegistry } from "../../curriculum/lessons";
 const KNOWN_ENTITY_KEYS = new Set([
   "letter:ba",
   "combo:ba+fatha",
+  "combo:ba+kasra",
+  "combo:ba+dhamma",
 ]);
 
 const EXPECTED_SCREEN_IDS = [
-  "t-rtl-intro",
+  "t-direction",
   "t-meet-ba",
-  "p-hear-ba",
-  "t-mark",
-  "p-hear-ba-fatha",
-  "r-read-ba-fatha",
+  "t-name-vs-sound",
+  "t-mark-system",
+  "t-focus-bafatha",
+  "r-read-bafatha",
 ];
 
-describe("lesson-01 shape (proof-shape redesign)", () => {
+describe("lesson-01 shape (v2 — name vs sound)", () => {
   it("has canonical ID 'lesson-01'", () => {
     expect(lessonOne.id).toBe("lesson-01");
   });
@@ -25,10 +27,10 @@ describe("lesson-01 shape (proof-shape redesign)", () => {
     expect(lessonOne.kind).toBe("onboarding");
   });
 
-  it("matches authoring markdown frontmatter", () => {
+  it("matches v2 spec frontmatter", () => {
     expect(lessonOne.phase).toBe(1);
     expect(lessonOne.module).toBe("1.1");
-    expect(lessonOne.title).toBe("Arabic Starts Here");
+    expect(lessonOne.title).toBe("Your First Arabic Sound");
     expect(lessonOne.durationTargetSeconds).toBe(150);
     expect(lessonOne.passCriteria.threshold).toBe(0);
     expect(lessonOne.passCriteria.requireCorrectLastTwoDecoding).toBe(false);
@@ -36,7 +38,7 @@ describe("lesson-01 shape (proof-shape redesign)", () => {
     expect(lessonOne.reviewEntities).toEqual([]);
     expect(lessonOne.completionGlyphs).toEqual(["combo:ba+fatha"]);
     expect(lessonOne.completionSubtitle).toBe(
-      "You just read your first Arabic syllable: بَ"
+      "You just read your first Arabic sound."
     );
   });
 
@@ -70,6 +72,15 @@ describe("lesson-01 shape (proof-shape redesign)", () => {
       if (screen.kind === "teach") {
         for (const block of screen.blocks) {
           if (block.type === "audio") expect(block.path.length).toBeGreaterThan(0);
+          if (block.type === "name-sound-pair") {
+            expect(block.left.audioPath.length).toBeGreaterThan(0);
+            expect(block.right.audioPath.length).toBeGreaterThan(0);
+          }
+          if (block.type === "mark-preview") {
+            for (const opt of block.options) {
+              expect(opt.audioPath.length).toBeGreaterThan(0);
+            }
+          }
         }
         continue;
       }
@@ -78,9 +89,23 @@ describe("lesson-01 shape (proof-shape redesign)", () => {
         expect(ex.audioPath.length).toBeGreaterThan(0);
       }
       if (ex.type === "read") {
-        // Required by the type now; check explicitly so the test fails
-        // loudly if a future refactor weakens the contract.
         expect(ex.audioModel.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it("auto-play audio blocks appear only on Teach screens (Constraint 3)", () => {
+    for (const screen of lessonOne.screens) {
+      if (screen.kind === "exercise") {
+        // Exercise screens have no `blocks` property — the constraint
+        // is structurally upheld by the type system, not asserted here.
+        continue;
+      }
+      // For teach screens, just ensure any auto-play block has an audio path.
+      for (const block of screen.blocks) {
+        if (block.type === "audio" && block.autoPlay) {
+          expect(block.path.length).toBeGreaterThan(0);
+        }
       }
     }
   });
