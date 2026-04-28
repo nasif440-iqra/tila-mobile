@@ -105,9 +105,9 @@ The learner just met ب in Lesson 1. The job here is to confirm that recognition
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — tap-to-play.
 - **Note:** This is the bridge into Practice. After this screen, the learner has been told everything they need.
 
-### Part 3 — Practice (~110s, 5 items)
+### Part 3 — Practice (~120s, 6 items)
 
-The mix moves from pure visual recognition (Tap) to audio-driven recognition (Hear) to syllable discrimination (Choose). Every item is scored. Until-correct mode throughout — the learner gets to try again on a wrong tap.
+The mix moves from pure visual recognition (Tap) to audio-driven recognition (Hear) to a *low-load sound-anchor bridge* (Choose with explicit framing) to *syllable discrimination* (Choose). Every item is scored. Until-correct mode throughout — the learner gets to try again on a wrong tap. The cognitive ramp is deliberate: build certainty *before* discrimination, not test discrimination *to produce* certainty.
 
 #### Item 3.1 — Tap
 
@@ -134,22 +134,31 @@ The mix moves from pure visual recognition (Tap) to audio-driven recognition (He
 - **Options:** [ا, ب ✓]
 - **Note:** Reinforces ب recognition by ear, now interleaved with alif's name.
 
-#### Item 3.4 — Choose
+#### Item 3.4 — Choose (sound-anchor bridge)
 
 - **Type:** Choose (scored, until-correct) — this is the lesson's first Choose exercise
+- **Prompt:** "Tap the sound 'ba'"
+- **Audio:** `audio/letter/ba_fatha_sound.mp3`
+- **Target:** `combo:ba+fatha`
+- **Options:** [بَ ✓, ب]
+- **Note:** Low-load bridge. The prompt **names the sound explicitly** ("the sound 'ba'") so the learner doesn't have to first decide *what* they're matching. Two options only — no alif noise. Anchors the sound→syllable mapping before any discrimination is asked. This is the gentle on-ramp into the harder item that follows.
+
+#### Item 3.5 — Choose (syllable discrimination)
+
+- **Type:** Choose (scored, until-correct)
 - **Prompt:** "Tap what you hear."
 - **Audio:** `audio/letter/ba_fatha_sound.mp3`
 - **Target:** `combo:ba+fatha`
-- **Options:** [بَ ✓, ب, ا]
-- **Note:** Discriminating the *syllable* from the *bare letter* is the core skill of this lesson. The audio is "ba" (short, fatha sound), and the correct option is the only one with the fatha mark.
+- **Options:** [بَ ✓, ب]
+- **Note:** Same audio + options as the bridge, but the prompt is **less explicit** ("Tap what you hear" — they have to decide *what* the sound is, then match it). Cognitive load lifts from the bridge by removing the prompt's hand-hold. Still 2 options — alif is held back for mastery check.
 
-#### Item 3.5 — Choose
+#### Item 3.6 — Choose (visual-only)
 
 - **Type:** Choose (scored, until-correct)
 - **Prompt:** "Which one says 'ba'?"
 - **Target:** `combo:ba+fatha`
 - **Options:** [بَ ✓, ب]
-- **Note:** No audio prompt — visual-only discrimination. Tests whether the learner can pick the syllable from the bare letter without leaning on audio cues.
+- **Note:** No audio prompt — visual-only discrimination. Tests whether the learner can pick the syllable from the bare letter without leaning on audio cues. Confidence anchor for the same 2-option contrast they've seen audio-driven twice.
 
 ### Part 4 — Mastery Check (~40s, 3 items)
 
@@ -162,7 +171,7 @@ The final three items are the lesson's actual measurement. Per master curriculum
 - **Audio:** `audio/letter/ba_fatha_sound.mp3`
 - **Target:** `combo:ba+fatha`
 - **Options:** [ا, بَ ✓, ب]
-- **Note:** Reordered options vs Item 3.4 ("unseen" position-wise). One-shot to make this feel different from Practice.
+- **Note:** **First and only 3-option discrimination of the lesson.** Practice rehearsed the 2-option version twice (Items 3.4 and 3.5) until the sound→syllable mapping was solid. Now alif is reintroduced as a third option — this is where the harder discrimination lives, after the simpler one is anchored. One-shot mode makes it feel consequential.
 
 #### Item 4.2 — Read
 
@@ -176,11 +185,11 @@ The final three items are the lesson's actual measurement. Per master curriculum
 #### Item 4.3 — Read
 
 - **Type:** Read (scored, decoding)
-- **Prompt:** "One more time."
+- **Prompt:** "Say it again."
 - **Target:** `combo:ba+fatha`
 - **Display:** بَ
 - **AudioModel:** `audio/letter/ba_fatha_sound.mp3`
-- **Note:** Same syllable, second pass. The repetition is intentional — by the third time the learner has read بَ unprompted, the syllable is theirs.
+- **Note:** Same syllable, second pass. The prompt humanizes the rhythm — "Say it again" rather than "One more time" feels conversational, not procedural. By the third time the learner has read بَ unprompted, the syllable is theirs.
 
 ## Completion screen
 
