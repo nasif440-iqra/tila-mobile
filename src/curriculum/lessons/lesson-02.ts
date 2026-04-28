@@ -4,15 +4,17 @@ import type { LessonData } from "../types";
  * Runtime artifact for Lesson 2 — "Alif + Ba + Fatha = بَ".
  *
  * Human-authored spec: curriculum/phase-1/02-alif-ba-fatha.md
+ * Compiled from round-2 reviewer markdown (16 screens, 6 practice items).
  *
  * First scored lesson. Learner confirms Ba recognition (warm recall),
  * meets Alif for the first time (teach), practices letter/mark/syllable
- * discrimination (practice), and reads بَ unprompted on the final two items
- * (mastery check). Both Read items must be correct for the decoding gate.
+ * discrimination (practice — 6 items including the sound-anchor bridge),
+ * and reads بَ unprompted on the final two items (mastery check).
+ * Both Read items must be correct for the decoding gate.
  *
  * kind: "standard" — SPEC Constraint 1 (scored, anatomy enforced, decoding rule active).
  *
- * Audio notes (Apr 2026): alif_name routing added to PATH_TO_PLAYER in this
+ * Audio notes (Apr 2026): alif_name routing added to PATH_TO_PLAYER in prior
  * commit. Asset exists at assets/audio/names/alif.wav (restored from HEAD
  * pre-Wave-1). Zero new ElevenLabs recordings required for L2.
  */
@@ -35,7 +37,7 @@ export const lessonTwo: LessonData = {
     // Confirms Ba recognition from L1. Alif appears as a silent distractor in
     // 1.1 and 1.2 to expose the eye before the teach phase names it formally.
 
-    // Item 1.1 — Tap Ba (alif as distractor)
+    // Item 1.1 — Tap Ba (alif as distractor; first exposure to ا on screen)
     {
       kind: "exercise",
       id: "wr-1-1",
@@ -74,7 +76,7 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 1.3 — Tap Ba (distractor is بَ, not alif — plants syllable contrast)
+    // Item 1.3 — Tap Ba (distractor switches to بَ — plants syllable contrast)
     {
       kind: "exercise",
       id: "wr-1-3",
@@ -124,8 +126,8 @@ export const lessonTwo: LessonData = {
       ],
     },
 
-    // Screen 2.3 — Recognize fatha. Tap-to-play (no auto-play; L1 already
-    // auto-played this sound on its Screen 6, so we don't repeat here).
+    // Screen 2.3 — Recognize fatha. Tap-to-play only (no auto-play; L1 already
+    // auto-played this sound on its Screen 6, per Constraint 3 "tap after first hear").
     {
       kind: "teach",
       id: "teach-recognize-fatha",
@@ -144,9 +146,8 @@ export const lessonTwo: LessonData = {
       ],
     },
 
-    // Screen 2.4 — Put it together (equation). Composed from existing primitives:
-    // heading + body text + glyph for each component + text secondary + audio.
-    // No new block type introduced.
+    // Screen 2.4 — Put it together (equation). Bridge into Practice.
+    // No auto-play — tap-to-play only.
     {
       kind: "teach",
       id: "teach-equation",
@@ -167,9 +168,12 @@ export const lessonTwo: LessonData = {
       ],
     },
 
-    // ── Part 3 — Practice (~110s, 5 items) ────────────────────────────────────
-    // Moves from visual recognition (Tap) → audio recognition (Hear) →
-    // syllable discrimination (Choose). All scored, until-correct.
+    // ── Part 3 — Practice (~120s, 6 items) ────────────────────────────────────
+    // Visual recognition (Tap) → audio recognition (Hear) →
+    // sound-anchor bridge (Choose, explicit prompt) →
+    // syllable discrimination (Choose, implicit prompt) →
+    // visual-only discrimination (Choose, no audio prompt).
+    // All scored, until-correct.
 
     // Item 3.1 — Tap Alif (first scored test of alif recognition)
     {
@@ -230,10 +234,34 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 3.4 — Choose: discriminate syllable from bare letter (audio prompt)
+    // Item 3.4 — Choose: sound-anchor bridge (explicit prompt, 2 options only)
+    // Low-load on-ramp: names the sound explicitly so learner doesn't need to
+    // decide *what* they're matching. Anchors sound→syllable before discrimination.
     {
       kind: "exercise",
       id: "pr-3-4",
+      part: "practice",
+      scored: true,
+      countsAsDecoding: false,
+      retryMode: "until-correct",
+      exercise: {
+        type: "choose",
+        prompt: "Tap the sound 'ba'",
+        target: "combo:ba+fatha",
+        audioPrompt: "audio/letter/ba_fatha_sound.mp3",
+        options: [
+          { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
+          { display: "ب", entityKey: "letter:ba", correct: false },
+        ],
+      },
+    },
+
+    // Item 3.5 — Choose: syllable discrimination (implicit prompt, 2 options)
+    // Same audio + options as bridge, but prompt hand-hold removed ("Tap what you hear").
+    // Alif held back for mastery check — only 2 options.
+    {
+      kind: "exercise",
+      id: "pr-3-5",
       part: "practice",
       scored: true,
       countsAsDecoding: false,
@@ -246,15 +274,15 @@ export const lessonTwo: LessonData = {
         options: [
           { display: "بَ", entityKey: "combo:ba+fatha", correct: true },
           { display: "ب", entityKey: "letter:ba", correct: false },
-          { display: "ا", entityKey: "letter:alif", correct: false },
         ],
       },
     },
 
-    // Item 3.5 — Choose: visual-only syllable discrimination (no audio prompt)
+    // Item 3.6 — Choose: visual-only discrimination (no audio prompt)
+    // Tests whether learner can pick the syllable without leaning on audio cues.
     {
       kind: "exercise",
-      id: "pr-3-5",
+      id: "pr-3-6",
       part: "practice",
       scored: true,
       countsAsDecoding: false,
@@ -274,7 +302,7 @@ export const lessonTwo: LessonData = {
     // Per master curriculum §10: the last two scored items are Reads, both
     // must be correct for requireCorrectLastTwoDecoding to pass.
 
-    // Item 4.1 — Choose (one-shot; mastery-check gate, different option order)
+    // Item 4.1 — Choose (one-shot; first and only 3-option item; alif reintroduced)
     {
       kind: "exercise",
       id: "mc-4-1",
@@ -315,7 +343,7 @@ export const lessonTwo: LessonData = {
       },
     },
 
-    // Item 4.3 — Read بَ (second pass; repetition is intentional per spec)
+    // Item 4.3 — Read بَ (second pass; "Say it again." — conversational, not procedural)
     {
       kind: "exercise",
       id: "mc-4-3",
@@ -326,7 +354,7 @@ export const lessonTwo: LessonData = {
       exercise: {
         type: "read",
         promptHeading: "Your turn",
-        prompt: "One more time.",
+        prompt: "Say it again.",
         target: "combo:ba+fatha",
         display: "بَ",
         audioModel: "audio/letter/ba_fatha_sound.mp3",

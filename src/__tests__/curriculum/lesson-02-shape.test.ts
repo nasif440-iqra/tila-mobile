@@ -39,8 +39,8 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     ]);
   });
 
-  it("has exactly 15 screens (3 warm-recall + 4 teach + 5 practice + 3 mastery-check)", () => {
-    expect(lessonTwo.screens).toHaveLength(15);
+  it("has exactly 16 screens (3 warm-recall + 4 teach + 6 practice + 3 mastery-check)", () => {
+    expect(lessonTwo.screens).toHaveLength(16);
   });
 
   it("part distribution matches the curriculum anatomy", () => {
@@ -49,18 +49,18 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     );
     expect(parts.filter((p) => p === "warm-recall")).toHaveLength(3);
     expect(parts.filter((p) => p === "teach")).toHaveLength(4);
-    expect(parts.filter((p) => p === "practice")).toHaveLength(5);
+    expect(parts.filter((p) => p === "practice")).toHaveLength(6);
     expect(parts.filter((p) => p === "mastery-check")).toHaveLength(3);
   });
 
   it("the four teach screens come after warm-recall and before practice", () => {
-    // warm-recall (0..2) | teach (3..6) | practice (7..11) | mastery-check (12..14)
+    // warm-recall (0..2) | teach (3..6) | practice (7..12) | mastery-check (13..15)
     expect(lessonTwo.screens[0].kind).toBe("exercise");
     expect(lessonTwo.screens[3].kind).toBe("teach");
     expect(lessonTwo.screens[6].kind).toBe("teach");
     expect(lessonTwo.screens[7].kind).toBe("exercise");
-    expect(lessonTwo.screens[11].kind).toBe("exercise");
     expect(lessonTwo.screens[12].kind).toBe("exercise");
+    expect(lessonTwo.screens[13].kind).toBe("exercise");
   });
 
   it("last two scored screens are Read exercises with countsAsDecoding=true", () => {
@@ -93,7 +93,7 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
         s.kind === "exercise" &&
         (s.part === "warm-recall" || s.part === "practice")
     );
-    expect(tryAgainItems).toHaveLength(8);
+    expect(tryAgainItems).toHaveLength(9);
     for (const s of tryAgainItems) {
       if (s.kind !== "exercise") continue;
       expect(s.retryMode).toBe("until-correct");
