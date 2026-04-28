@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -24,18 +24,46 @@ interface LessonGridProps {
   onPress: (lessonId: string) => void;
 }
 
-const cellAccessibilityLabel = (cell: LessonCell, title: string): string => {
-  const status =
-    cell.state === "completed"
-      ? "completed"
-      : cell.state === "current"
-        ? "next up"
-        : "locked";
-  return `${title}, ${status}`;
-};
+function cellStatus(state: LessonCell["state"]): string {
+  switch (state) {
+    case "completed":
+      return "completed";
+    case "current":
+      return "next up";
+    case "locked":
+      return "locked";
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+function cellBadgeText(state: LessonCell["state"]): string {
+  switch (state) {
+    case "completed":
+      return "Done";
+    case "current":
+      return "Start";
+    case "locked":
+      return "Locked";
+    default: {
+      const _exhaustive: never = state;
+      return _exhaustive;
+    }
+  }
+}
+
+function cellAccessibilityLabel(cell: LessonCell, title: string): string {
+  return `${title}, ${cellStatus(cell.state)}`;
+}
 
 export function LessonGrid({ cells, titles, onPress }: LessonGridProps) {
   const colors = useColors();
+  const hasCurrent = useMemo(
+    () => cells.some((c) => c.state === "current"),
+    [cells]
+  );
   const [reduceMotion, setReduceMotion] = useState(false);
   const glow = useSharedValue(0);
 
@@ -55,7 +83,7 @@ export function LessonGrid({ cells, titles, onPress }: LessonGridProps) {
   }, []);
 
   useEffect(() => {
-    if (reduceMotion) {
+    if (reduceMotion || !hasCurrent) {
       cancelAnimation(glow);
       glow.value = 0;
       return;
@@ -69,7 +97,7 @@ export function LessonGrid({ cells, titles, onPress }: LessonGridProps) {
       false
     );
     return () => cancelAnimation(glow);
-  }, [reduceMotion, glow]);
+  }, [reduceMotion, hasCurrent, glow]);
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: 0.4 + glow.value * 0.5,
@@ -117,11 +145,7 @@ export function LessonGrid({ cells, titles, onPress }: LessonGridProps) {
                 {title}
               </Text>
               <Text style={[styles.badge, { color: colors.textSoft }]}>
-                {cell.state === "completed"
-                  ? "Done"
-                  : cell.state === "current"
-                    ? "Start"
-                    : "Locked"}
+                {cellBadgeText(cell.state)}
               </Text>
             </View>
           </Pressable>
