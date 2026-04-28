@@ -59,4 +59,12 @@ describe("deriveLessonGridState", () => {
     expect(cells[0].state).toBe("current");
     expect(cells[1].state).toBe("locked");
   });
+
+  it("returns an empty array when given no lesson ids", () => {
+    const cells = deriveLessonGridState([], {
+      completedLessonIds: [],
+      lastReachedLessonId: null,
+    });
+    expect(cells).toEqual([]);
+  });
 });
