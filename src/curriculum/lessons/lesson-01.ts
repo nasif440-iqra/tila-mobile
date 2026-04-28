@@ -73,11 +73,13 @@ export const lessonOne: LessonData = {
             glyph: "ب",
             audioPath: "audio/letter/ba_name.mp3",
             label: "name",
+            transliteration: "Bah",
           },
           right: {
             glyph: "بَ",
             audioPath: "audio/letter/ba_fatha_sound.mp3",
             label: "sound",
+            transliteration: "ba",
           },
         },
       ],

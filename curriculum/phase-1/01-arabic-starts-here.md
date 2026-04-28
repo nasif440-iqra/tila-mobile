@@ -54,7 +54,7 @@ The learner understands:
 ### Screen 3 — The core concept (NAME vs SOUND)
 
 - **Type:** Teach
-- **Visual:** Side-by-side: ب → "baa" alongside بَ → "ba".
+- **Visual:** Side-by-side. Left column: ب glyph, "Bah" transliteration, "name" label, hear button. Right column: بَ glyph (in primary green), "ba" transliteration, "sound" label, hear button.
 - **Copy:** "Letters have a name. A small mark changes how they sound."
 - **Audio:** Tap-to-play for each — no auto-play.
 - **Note:** This is the most important screen in the lesson. The contrast between the two recordings is load-bearing.

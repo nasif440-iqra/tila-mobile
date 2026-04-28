@@ -38,11 +38,23 @@ export type TeachingBlock =
       /**
        * Side-by-side comparison of two glyphs with per-glyph tap-to-play audio.
        * Used to teach the NAME vs SOUND distinction (e.g., ب → "baa" alongside
-       * بَ → "ba"). Each side has its own glyph + audio path.
+       * بَ → "ba"). Each side has its own glyph + audio path. Optional
+       * transliteration provides English-script reinforcement when the audible
+       * difference is subtle (e.g., "Bah" longer vs "ba" shorter).
        */
       type: "name-sound-pair";
-      left: { glyph: string; audioPath: string; label?: string };
-      right: { glyph: string; audioPath: string; label?: string };
+      left: {
+        glyph: string;
+        audioPath: string;
+        label?: string;
+        transliteration?: string;
+      };
+      right: {
+        glyph: string;
+        audioPath: string;
+        label?: string;
+        transliteration?: string;
+      };
     }
   | {
       /**

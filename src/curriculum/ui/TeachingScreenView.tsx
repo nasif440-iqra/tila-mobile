@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { useColors } from "../../design/theme";
 import { typography, spacing, radii, fontFamilies } from "../../design/tokens";
+import { HearButton } from "../../design/components/HearButton";
 import type { TeachingBlock, TeachingScreen } from "../types";
 
 interface Props {
@@ -57,16 +58,6 @@ function TeachingBlockView({
   onPlayAudio?: (path: string) => void;
 }) {
   const colors = useColors();
-  const [audioTapped, setAudioTapped] = useState(false);
-
-  const handleAudioTap = useCallback(
-    (path: string) => {
-      setAudioTapped(true);
-      onPlayAudio?.(path);
-      setTimeout(() => setAudioTapped(false), 600);
-    },
-    [onPlayAudio]
-  );
 
   switch (block.type) {
     case "text":
@@ -113,65 +104,58 @@ function TeachingBlockView({
 
     case "audio":
       return (
-        <Pressable
-          onPress={() => handleAudioTap(block.path)}
-          style={[
-            styles.audioBubble,
-            { backgroundColor: audioTapped ? colors.accent : colors.primary },
-          ]}
-          accessibilityRole="button"
+        <HearButton
+          onPlay={() => onPlayAudio?.(block.path)}
           accessibilityLabel={block.label ?? "Play audio"}
-        >
-          <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
-        </Pressable>
+        />
       );
 
-    case "name-sound-pair": {
-      const handlePlay = (path: string) => {
-        onPlayAudio?.(path);
-      };
+    case "name-sound-pair":
       return (
         <View style={styles.pairRow}>
-          <Pressable
-            onPress={() => handlePlay(block.left.audioPath)}
-            style={styles.pairCol}
-            accessibilityRole="button"
-            accessibilityLabel={block.left.label ?? "Play"}
-          >
+          <View style={styles.pairCol}>
             <Text style={[styles.arabicXL, { color: colors.text }]}>
               {block.left.glyph}
             </Text>
+            {block.left.transliteration ? (
+              <Text style={[styles.transliteration, { color: colors.textSoft }]}>
+                {block.left.transliteration}
+              </Text>
+            ) : null}
             {block.left.label ? (
               <Text style={[styles.label, { color: colors.textSoft }]}>
                 {block.left.label}
               </Text>
             ) : null}
-            <View style={[styles.pairAudioBubble, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
-            </View>
-          </Pressable>
+            <HearButton
+              size={36}
+              onPlay={() => onPlayAudio?.(block.left.audioPath)}
+              accessibilityLabel={block.left.label ?? "Play"}
+            />
+          </View>
           <Text style={[styles.pairArrow, { color: colors.textSoft }]}>↔</Text>
-          <Pressable
-            onPress={() => handlePlay(block.right.audioPath)}
-            style={styles.pairCol}
-            accessibilityRole="button"
-            accessibilityLabel={block.right.label ?? "Play"}
-          >
+          <View style={styles.pairCol}>
             <Text style={[styles.arabicXL, { color: colors.primary }]}>
               {block.right.glyph}
             </Text>
+            {block.right.transliteration ? (
+              <Text style={[styles.transliteration, { color: colors.textSoft }]}>
+                {block.right.transliteration}
+              </Text>
+            ) : null}
             {block.right.label ? (
               <Text style={[styles.label, { color: colors.textSoft }]}>
                 {block.right.label}
               </Text>
             ) : null}
-            <View style={[styles.pairAudioBubble, { backgroundColor: colors.primary }]}>
-              <Text style={[styles.audioIcon, { color: colors.bg }]}>🔊</Text>
-            </View>
-          </Pressable>
+            <HearButton
+              size={36}
+              onPlay={() => onPlayAudio?.(block.right.audioPath)}
+              accessibilityLabel={block.right.label ?? "Play"}
+            />
+          </View>
         </View>
       );
-    }
 
     case "mark-preview": {
       const handleOptionPress = (path: string) => {
@@ -255,14 +239,10 @@ const styles = StyleSheet.create({
   variantsRow: { flexDirection: "row", gap: spacing.md, justifyContent: "center" },
   variant: { alignItems: "center", gap: spacing.xs },
   label: { ...typography.label },
-  audioBubble: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: "center",
-    justifyContent: "center",
+  transliteration: {
+    ...typography.body,
+    fontStyle: "italic",
   },
-  audioIcon: { fontSize: 28 },
   nextButton: { paddingVertical: spacing.sm, borderRadius: radii.full, alignItems: "center" },
   nextText: { ...typography.body, fontWeight: "600" },
   pairRow: {
@@ -277,14 +257,6 @@ const styles = StyleSheet.create({
   },
   pairArrow: {
     fontSize: 28,
-  },
-  pairAudioBubble: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: spacing.xs,
   },
   markRow: {
     flexDirection: "row",
