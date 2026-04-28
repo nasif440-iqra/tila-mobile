@@ -12,6 +12,7 @@ const KNOWN_ENTITY_KEYS = new Set([
 const EXPECTED_SCREEN_IDS = [
   "t-direction",
   "t-meet-ba",
+  "t-shape-change",
   "t-name-vs-sound",
   "t-mark-system",
   "t-focus-bafatha",
@@ -31,7 +32,7 @@ describe("lesson-01 shape (v3 — name vs sound, surgical copy)", () => {
     expect(lessonOne.phase).toBe(1);
     expect(lessonOne.module).toBe("1.1");
     expect(lessonOne.title).toBe("Your First Arabic Sound");
-    expect(lessonOne.durationTargetSeconds).toBe(150);
+    expect(lessonOne.durationTargetSeconds).toBe(165);
     expect(lessonOne.passCriteria.threshold).toBe(0);
     expect(lessonOne.passCriteria.requireCorrectLastTwoDecoding).toBe(false);
     expect(lessonOne.introducedEntities).toEqual(["letter:ba", "combo:ba+fatha"]);
@@ -39,7 +40,7 @@ describe("lesson-01 shape (v3 — name vs sound, surgical copy)", () => {
     expect(lessonOne.completionGlyphs).toEqual(["combo:ba+fatha"]);
   });
 
-  it("has exactly the expected six screens in order", () => {
+  it("has exactly the expected seven screens in order", () => {
     expect(lessonOne.screens.map((s) => s.id)).toEqual(EXPECTED_SCREEN_IDS);
   });
 

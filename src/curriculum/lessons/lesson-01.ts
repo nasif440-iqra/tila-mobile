@@ -27,7 +27,7 @@ export const lessonOne: LessonData = {
   title: "Your First Arabic Sound",
   outcome:
     "Learners understand that letters have names, marks give reading sounds, and they can read بَ.",
-  durationTargetSeconds: 150,
+  durationTargetSeconds: 165,
   introducedEntities: ["letter:ba", "combo:ba+fatha"],
   reviewEntities: [],
   passCriteria: { threshold: 0, requireCorrectLastTwoDecoding: false },
@@ -60,7 +60,32 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 3 — Name vs Sound (the core teaching moment).
+    // Screen 3 — Shape variants. The same letter looks different in different
+    // word positions. Restored from the original A0 lesson per founder request.
+    // No audio (visual self-explains).
+    {
+      kind: "teach",
+      id: "t-shape-change",
+      blocks: [
+        { type: "heading", text: "The same letter, different shapes" },
+        {
+          type: "text",
+          content:
+            "The shape changes depending on where the letter sits in a word. It's still the same letter.",
+        },
+        {
+          type: "shape-variants",
+          letter: "ب",
+          variants: [
+            { position: "isolated", rendered: "ب" },
+            { position: "initial", rendered: "بـ" },
+            { position: "medial", rendered: "ـبـ" },
+          ],
+        },
+      ],
+    },
+
+    // Screen 4 — Name vs Sound (the core teaching moment).
     // Heading + body copy emphasizes BEHAVIOR ("when you read, you say the sound")
     // over abstract distinction. Cards carry transliteration + helper text.
     {
@@ -93,7 +118,7 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 4 — Mark system preview. بَ is today's target; بِ and بُ shown
+    // Screen 5 — Mark system preview. بَ is today's target; بِ and بُ shown
     // for system context but not playable yet (no recordings) — their
     // HearButtons render disabled. Labels say "Today: ba" vs "Later".
     {
@@ -131,7 +156,7 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 5 — Focus on بَ (lock the target). Auto-play once.
+    // Screen 6 — Focus on بَ (lock the target). Auto-play once.
     {
       kind: "teach",
       id: "t-focus-bafatha",
@@ -152,7 +177,7 @@ export const lessonOne: LessonData = {
       ],
     },
 
-    // Screen 6 — Read بَ (the proof). Heading + body swap on reveal.
+    // Screen 7 — Read بَ (the proof). Heading + body swap on reveal.
     // promptHeading "Your turn" / prompt "Look at it first..." during attempt.
     // revealHeading "You read it" / revealCopy "That says ba." after Check.
     {

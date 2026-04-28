@@ -5,7 +5,7 @@ phase: 1
 module: "1.1"
 title: "Your First Arabic Sound"
 outcome: "Learners understand that letters have names, marks give reading sounds, and they can read بَ."
-duration_target_seconds: 150
+duration_target_seconds: 165
 introduced_entities:
   - letter:ba
   - combo:ba+fatha
@@ -52,7 +52,16 @@ The learner understands:
 - **Audio:** `audio/letter/ba_name.mp3` — auto-plays once on mount; tap speaker to replay.
 - **Note:** The asset is the letter's *name* ("Bah", classroom register), longer than the syllable sound.
 
-### Screen 3 — Name vs Reading Sound (the core)
+### Screen 3 — Shape variants
+
+- **Type:** Teach
+- **Heading:** "The same letter, different shapes"
+- **Body:** "The shape changes depending on where the letter sits in a word. It's still the same letter."
+- **Visual:** ب shown in three positions: isolated (ب), initial (بـ), medial (ـبـ).
+- **Audio:** None.
+- **Note:** Restored from the original A0 lesson per founder request. Establishes that shape variation across word positions is normal — sets up later lessons where letters appear in connected forms without confusing the learner.
+
+### Screen 4 — Name vs Reading Sound (the core)
 
 - **Type:** Teach
 - **Heading:** "Name vs. reading sound"
@@ -63,7 +72,7 @@ The learner understands:
 - **Audio:** Tap-to-play for each side. No auto-play.
 - **Note:** Behavioral framing — the difference between name and reading sound is captured in the helper text ("What it's called" vs "What you read"). This screen is load-bearing.
 
-### Screen 4 — The mark system (preview, narrowed to today)
+### Screen 5 — The mark system (preview, narrowed to today)
 
 - **Type:** Teach
 - **Heading:** "Marks change the sound"
@@ -75,7 +84,7 @@ The learner understands:
 - **Audio:** Today's sound (بَ) plays via `audio/letter/ba_fatha_sound.mp3`. Tomorrow's (بِ, بُ) intentionally do not play — no fallback to fatha.
 - **Note:** The system is shown but scope is narrowed. Authors must NOT silently fall back to fatha audio for kasra/dhamma.
 
-### Screen 5 — Focus (lock the target)
+### Screen 6 — Focus (lock the target)
 
 - **Type:** Teach
 - **Heading:** "Today's sound"
@@ -83,7 +92,7 @@ The learner understands:
 - **Body:** "This mark gives Ba an \"a\" sound. Together, this reads: ba."
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — auto-plays once on mount; tap speaker to replay.
 
-### Screen 6 — Read (the proof)
+### Screen 7 — Read (the proof)
 
 - **Type:** Read exercise (unscored)
 - **Visual:** Large centered بَ.
@@ -113,8 +122,8 @@ The learner understands:
 This lesson is the load-bearing demonstration of three locked engineering constraints:
 
 1. **Constraint 1 — Onboarding lesson exception.** Lesson 1 alone uses `kind: "onboarding"`. No other lesson may copy this anatomy without curriculum-team sign-off.
-2. **Constraint 2 — Read requires attempt before reveal.** Screen 6 enforces a 1500ms attempt-locked window before Check is tappable.
-3. **Constraint 3 — Auto-play permitted only on Teach screens.** Screens 2 and 5 auto-play; screens 1, 3, 4, and 6 never auto-play.
+2. **Constraint 2 — Read requires attempt before reveal.** Screen 7 enforces a 1500ms attempt-locked window before Check is tappable.
+3. **Constraint 3 — Auto-play permitted only on Teach screens.** Screens 2 and 6 auto-play; screens 1, 3, 4, 5, and 7 never auto-play.
 
 Plus the v3 directive:
 
@@ -126,10 +135,10 @@ Plus the v3 directive:
 |---|---|---|
 | `assets/audio/names/ba.wav` | Letter NAME — "Bah" | Exists. Long, classroom register, ~600–800ms. |
 | `assets/audio/sounds/ba.wav` | Fatha sound — "ba" | Exists. Short, clipped, ~300–500ms. |
-| `assets/audio/sounds/ba_kasra.wav` | Kasra sound — "bi" | **Missing.** Disabled HearButton on Screen 4 until recorded. |
-| `assets/audio/sounds/ba_dhamma.wav` | Dhamma sound — "bu" | **Missing.** Disabled HearButton on Screen 4 until recorded. |
+| `assets/audio/sounds/ba_kasra.wav` | Kasra sound — "bi" | **Missing.** Disabled HearButton on Screen 5 until recorded. |
+| `assets/audio/sounds/ba_dhamma.wav` | Dhamma sound — "bu" | **Missing.** Disabled HearButton on Screen 5 until recorded. |
 
-Until the missing recordings land, Screen 4 plays only fatha and disables the other two HearButtons. To wire real recordings: add the .wav files to `assets/audio/sounds/`, then update `HARAKAT_SOUND_ASSETS` in `src/audio/player.ts` (commented examples present).
+Until the missing recordings land, Screen 5 plays only fatha and disables the other two HearButtons. To wire real recordings: add the .wav files to `assets/audio/sounds/`, then update `HARAKAT_SOUND_ASSETS` in `src/audio/player.ts` (commented examples present).
 
 ## Out of scope
 
