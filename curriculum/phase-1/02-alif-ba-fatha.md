@@ -4,7 +4,7 @@ kind: standard
 phase: 1
 module: "1.1"
 title: "Alif + Ba + Fatha = بَ"
-outcome: "Read بَ — your first scored Arabic syllable. Meet Alif along the way."
+outcome: "Read بَ — your first Arabic syllable. Meet Alif along the way."
 duration_target_seconds: 240
 introduced_entities:
   - letter:alif
@@ -63,8 +63,8 @@ The learner just met ب in Lesson 1. The job here is to confirm that recognition
 - **Type:** Tap exercise (scored, retry: until-correct)
 - **Prompt:** "Tap Ba."
 - **Target:** `letter:ba`
-- **Options:** [ب ✓, ا]
-- **Note:** Final recall. After three exposures, the learner has seen ا three times without being told what it is. The teach phase pays this off.
+- **Options:** [ب ✓, بَ]
+- **Note:** Final recall. The distractor flips from alif (used in 1.1 and 1.2) to بَ — same letter shape but with the fatha mark. Plants the syllable-vs-letter contrast that Practice will exercise in earnest. After two alif exposures (not three), the teach phase pays off the warm-recall tension cleanly without making alif feel overused.
 
 ### Part 2 — Teach (~80s, 4 screens)
 
@@ -81,10 +81,10 @@ The learner just met ب in Lesson 1. The job here is to confirm that recognition
 
 - **Type:** Teach
 - **Heading:** "Alif's shape"
-- **Body:** "Alif looks like a tall line. / It mostly stands alone — letters after it don't usually connect."
-- **Visual:** Two glyphs side by side, both ا. Label the first "Alone" (isolated ا), label the second "After another letter" (final ـا).
+- **Body:** "For now, just remember: Alif is a tall line."
+- **Visual:** A single isolated ا, large and centered.
 - **Audio:** None.
-- **Note:** Alif's two-shape simplicity is itself a reassurance after L1's three-shape ب. The "doesn't connect after it" rule is *foreshadowed*, not drilled — drilled in Lesson 14 ("Alif Breaks the Chain").
+- **Note:** The connection behavior of alif (acting as a chain-breaker in connected forms) is intentionally not introduced here. Lesson 14 ("Alif Breaks the Chain") owns that teaching. L2 keeps alif simple: one shape, one body line, no rules to track.
 
 #### Screen 2.3 — Recognize fatha
 
