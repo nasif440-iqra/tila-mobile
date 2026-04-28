@@ -61,6 +61,13 @@ function TeachingBlockView({
 
   switch (block.type) {
     case "text":
+      if (block.variant === "secondary") {
+        return (
+          <Text style={[styles.textSecondary, { color: colors.textSoft }]}>
+            {block.content}
+          </Text>
+        );
+      }
       return <Text style={[styles.text, { color: colors.text }]}>{block.content}</Text>;
 
     case "heading":
@@ -230,6 +237,12 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "space-between", padding: spacing.md },
   blocks: { flex: 1, justifyContent: "center", alignItems: "center", gap: spacing.lg },
   text: { ...typography.body, textAlign: "center" },
+  textSecondary: {
+    ...typography.label,
+    fontSize: 13,
+    fontStyle: "italic",
+    textAlign: "center",
+  },
   heading: {
     ...typography.heading2,
     fontSize: 22,

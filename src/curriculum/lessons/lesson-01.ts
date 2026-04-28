@@ -71,7 +71,7 @@ export const lessonOne: LessonData = {
         {
           type: "text",
           content:
-            "The shape changes depending on where the letter sits in a word. It's still the same letter.",
+            "The shape changes in a word.\nIt's still the same letter.",
         },
         {
           type: "shape-variants",
@@ -96,21 +96,19 @@ export const lessonOne: LessonData = {
         {
           type: "text",
           content:
-            "Letters have names. But when you read, you say the sound.",
+            "Letters have names.\nWhen you read, you say the sound.",
         },
         {
           type: "name-sound-pair",
           left: {
             glyph: "ب",
             audioPath: "audio/letter/ba_name.mp3",
-            label: "Letter name",
             transliteration: "Bah",
-            helperText: "What it's called",
+            helperText: "Its name",
           },
           right: {
             glyph: "بَ",
             audioPath: "audio/letter/ba_fatha_sound.mp3",
-            label: "Reading sound",
             transliteration: "ba",
             helperText: "What you read",
           },
@@ -129,7 +127,7 @@ export const lessonOne: LessonData = {
         {
           type: "text",
           content:
-            "These small marks make different sounds. Today, we only need this one.",
+            "These small marks change the sound.\nToday, just this one.",
         },
         {
           type: "mark-preview",
@@ -166,7 +164,12 @@ export const lessonOne: LessonData = {
         {
           type: "text",
           content:
-            "This mark is called fatha. It adds an \"a\" sound to the letter. The letter Ba + fatha = \"ba\"",
+            "This mark is called fatha.\nIt gives the letter an \"a\" sound.",
+        },
+        {
+          type: "text",
+          variant: "secondary",
+          content: "Ba + fatha = ba",
         },
         {
           type: "audio",
@@ -189,7 +192,7 @@ export const lessonOne: LessonData = {
       exercise: {
         type: "read",
         promptHeading: "Your turn",
-        prompt: "Look at it first. Say it in your head.",
+        prompt: "Say it in your head.",
         target: "combo:ba+fatha",
         display: "بَ",
         audioModel: "audio/letter/ba_fatha_sound.mp3",

@@ -7,7 +7,17 @@ export type EntityKey = string; // "letter:alif", "combo:ba+fatha", "mark:fatha"
 // ────────────────────────────────────────────────────────────
 
 export type TeachingBlock =
-  | { type: "text"; content: string }
+  | {
+      type: "text";
+      content: string;
+      /**
+       * Visual weight for the text. "body" (default) is the standard
+       * paragraph style; "secondary" renders smaller, italic, in soft
+       * text color — for ancillary detail (e.g., an equation that
+       * supports the body but shouldn't compete with it).
+       */
+      variant?: "body" | "secondary";
+    }
   | { type: "heading"; text: string }
   | { type: "reading-direction"; word: string }
   | {

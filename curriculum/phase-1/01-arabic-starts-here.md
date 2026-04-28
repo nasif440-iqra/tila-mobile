@@ -56,7 +56,7 @@ The learner understands:
 
 - **Type:** Teach
 - **Heading:** "The same letter, different shapes"
-- **Body:** "The shape changes depending on where the letter sits in a word. It's still the same letter."
+- **Body:** "The shape changes in a word. / It's still the same letter."
 - **Visual:** ب shown in three positions: isolated (ب), initial (بـ), medial (ـبـ).
 - **Audio:** None.
 - **Note:** Restored from the original A0 lesson per founder request. Establishes that shape variation across word positions is normal — sets up later lessons where letters appear in connected forms without confusing the learner.
@@ -65,10 +65,10 @@ The learner understands:
 
 - **Type:** Teach
 - **Heading:** "Name vs. reading sound"
-- **Body:** "Letters have names. But when you read, you say the sound."
+- **Body:** "Letters have names. / When you read, you say the sound."
 - **Visual:** Side-by-side cards.
-  - **Left card:** ب glyph, transliteration "Bah", helper text "What it's called", label "Letter name", HearButton.
-  - **Right card:** بَ glyph (in primary green), transliteration "ba", helper text "What you read", label "Reading sound", HearButton.
+  - **Left card:** ب glyph, transliteration "Bah", helper text "Its name", HearButton.
+  - **Right card:** بَ glyph (in primary green), transliteration "ba", helper text "What you read", HearButton.
 - **Audio:** Tap-to-play for each side. No auto-play.
 - **Note:** Behavioral framing — the difference between name and reading sound is captured in the helper text ("What it's called" vs "What you read"). This screen is load-bearing.
 
@@ -76,7 +76,7 @@ The learner understands:
 
 - **Type:** Teach
 - **Heading:** "Marks change the sound"
-- **Body:** "These small marks make different sounds. Today, we only need this one."
+- **Body:** "These small marks change the sound. / Today, just this one."
 - **Visual:** Three options.
   - **بَ** (highlighted, primary border, label "Today: ba", playable HearButton).
   - **بِ** (muted, label "Later", **disabled HearButton** — kasra recording not yet produced).
@@ -89,7 +89,8 @@ The learner understands:
 - **Type:** Teach
 - **Heading:** "Today's sound"
 - **Visual:** Large بَ + speaker button.
-- **Body:** "This mark is called fatha. It adds an \"a\" sound to the letter. The letter Ba + fatha = \"ba\""
+- **Body:** "This mark is called fatha. / It gives the letter an "a" sound."
+- **Equation (secondary):** "Ba + fatha = ba"
 - **Audio:** `audio/letter/ba_fatha_sound.mp3` — auto-plays once on mount; tap speaker to replay.
 
 ### Screen 7 — Read (the proof)
@@ -98,7 +99,7 @@ The learner understands:
 - **Visual:** Large centered بَ.
 - **Initial state:**
   - **Heading:** "Your turn"
-  - **Body:** "Look at it first. Say it in your head."
+  - **Body:** "Say it in your head."
   - **Behavior:** No audio, no Check button visible.
 - **After 1500ms:** Check button fades in.
 - **On Check tap:** Audio plays, reveal block fades in.
