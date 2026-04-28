@@ -19,6 +19,7 @@ export interface LessonOutcome {
   itemsCorrect: number;
   decodingRuleSatisfied: boolean;
   firstTryCorrectRate: number;
+  attemptCounts: Record<string, number>;
 }
 
 function isScored(screen: Screen): boolean {
@@ -65,6 +66,12 @@ export function computeLessonOutcome(
     return firstTryWins / scoredScreens.length;
   })();
 
+  const attemptCounts: Record<string, number> = {};
+  for (const s of scoredScreens) {
+    const o = outcomes.get(s.id);
+    attemptCounts[s.id] = o?.entityAttempts.length ?? 0;
+  }
+
   return {
     lessonId: lesson.id,
     passed,
@@ -72,5 +79,6 @@ export function computeLessonOutcome(
     itemsCorrect,
     decodingRuleSatisfied,
     firstTryCorrectRate,
+    attemptCounts,
   };
 }

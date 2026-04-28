@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
@@ -14,6 +14,7 @@ import { LessonCompletionView } from "../../src/curriculum/ui/LessonCompletionVi
 import { TeachingScreenView } from "../../src/curriculum/ui/TeachingScreenView";
 import { renderExercise } from "../../src/curriculum/ui/exercises";
 import { configureAudioSession, playByPath } from "../../src/audio/player";
+import { track } from "../../src/analytics";
 
 export default function LessonRoute() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
@@ -21,10 +22,20 @@ export default function LessonRoute() {
   const lesson = lessonId ? lessonRegistry[lessonId] : undefined;
 
   const [outcome, setOutcome] = useState<LessonOutcome | null>(null);
+  const lessonStartedAtRef = useRef<number | null>(null);
 
   const handleComplete = useCallback(async (o: LessonOutcome) => {
     await progressStore.markCompleted(o.lessonId);
     await progressStore.setLastReached(o.lessonId);
+    const startedAt = lessonStartedAtRef.current;
+    const durationSeconds =
+      startedAt !== null ? Math.max(0, Math.round((Date.now() - startedAt) / 1000)) : 0;
+    track("lesson_complete", {
+      lessonId: o.lessonId,
+      durationSeconds,
+      attemptCounts: o.attemptCounts,
+      firstTryCorrectRate: o.firstTryCorrectRate,
+    });
     setOutcome(o);
   }, []);
 
@@ -35,6 +46,12 @@ export default function LessonRoute() {
   const handleContinue = useCallback(() => {
     router.replace("/(tabs)");
   }, []);
+
+  useEffect(() => {
+    if (!lesson) return;
+    lessonStartedAtRef.current = Date.now();
+    track("lesson_start", { lessonId: lesson.id });
+  }, [lesson]);
 
   useEffect(() => {
     void configureAudioSession();

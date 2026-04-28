@@ -137,4 +137,35 @@ describe("computeLessonOutcome.firstTryCorrectRate", () => {
     const result = computeLessonOutcome(l, outcomes);
     expect(result.firstTryCorrectRate).toBeCloseTo(1.0, 5);
   });
+
+  it("populates attemptCounts with per-scored-screen entityAttempts.length", () => {
+    const l = lesson([scoredScreen("a"), scoredScreen("b")]);
+    const outcomes = new Map([
+      ["a", {
+        screenId: "a",
+        correct: true,
+        entityAttempts: [
+          { entityKey: "letter:alif", itemId: "i1", correct: true },
+        ],
+      }],
+      ["b", {
+        screenId: "b",
+        correct: true,
+        entityAttempts: [
+          { entityKey: "letter:alif", itemId: "i1", correct: false },
+          { entityKey: "letter:alif", itemId: "i2", correct: false },
+          { entityKey: "letter:alif", itemId: "i3", correct: true },
+        ],
+      }],
+    ]);
+    const result = computeLessonOutcome(l, outcomes);
+    expect(result.attemptCounts).toEqual({ a: 1, b: 3 });
+  });
+
+  it("attemptCounts is empty when there are no scored screens", () => {
+    const l = lesson([unscoredScreen("a")]);
+    const outcomes = new Map();
+    const result = computeLessonOutcome(l, outcomes);
+    expect(result.attemptCounts).toEqual({});
+  });
 });
