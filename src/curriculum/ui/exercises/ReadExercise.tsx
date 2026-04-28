@@ -118,18 +118,34 @@ export function ReadExercise({ screenId, exercise, advance, onPlayAudio }: Props
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.prompt, { color: colors.text }]}>{exercise.prompt}</Text>
+      {!showReveal ? (
+        <View style={styles.copyBlock}>
+          {exercise.promptHeading ? (
+            <Text style={[styles.heading, { color: colors.text }]}>
+              {exercise.promptHeading}
+            </Text>
+          ) : null}
+          <Text style={[styles.prompt, { color: colors.text }]}>{exercise.prompt}</Text>
+        </View>
+      ) : (
+        <Animated.View
+          accessibilityLiveRegion="polite"
+          style={[styles.copyBlock, { opacity: revealOpacity }]}
+        >
+          {exercise.revealHeading ? (
+            <Text style={[styles.heading, { color: colors.text }]}>
+              {exercise.revealHeading}
+            </Text>
+          ) : null}
+          {exercise.revealCopy ? (
+            <Text style={[styles.reveal, { color: colors.textSoft }]}>
+              {exercise.revealCopy}
+            </Text>
+          ) : null}
+        </Animated.View>
+      )}
 
       <Text style={[styles.glyph, { color: colors.text }]}>{exercise.display}</Text>
-
-      {showReveal && exercise.revealCopy ? (
-        <Animated.Text
-          accessibilityLiveRegion="polite"
-          style={[styles.reveal, { color: colors.textSoft, opacity: revealOpacity }]}
-        >
-          {exercise.revealCopy}
-        </Animated.Text>
-      ) : null}
 
       <View style={styles.actionRow}>
         {showCheck ? (
@@ -184,6 +200,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: spacing.md,
     padding: spacing.md,
+  },
+  copyBlock: {
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  heading: {
+    ...typography.heading2,
+    fontSize: 22,
+    textAlign: "center",
   },
   prompt: { ...typography.body, textAlign: "center" },
   glyph: {

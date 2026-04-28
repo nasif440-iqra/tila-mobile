@@ -63,6 +63,11 @@ function TeachingBlockView({
     case "text":
       return <Text style={[styles.text, { color: colors.text }]}>{block.content}</Text>;
 
+    case "heading":
+      return (
+        <Text style={[styles.heading, { color: colors.text }]}>{block.text}</Text>
+      );
+
     case "reading-direction":
       return (
         <View style={styles.rtlRow}>
@@ -122,6 +127,11 @@ function TeachingBlockView({
                 {block.left.transliteration}
               </Text>
             ) : null}
+            {block.left.helperText ? (
+              <Text style={[styles.helperText, { color: colors.textSoft }]}>
+                {block.left.helperText}
+              </Text>
+            ) : null}
             {block.left.label ? (
               <Text style={[styles.label, { color: colors.textSoft }]}>
                 {block.left.label}
@@ -141,6 +151,11 @@ function TeachingBlockView({
             {block.right.transliteration ? (
               <Text style={[styles.transliteration, { color: colors.textSoft }]}>
                 {block.right.transliteration}
+              </Text>
+            ) : null}
+            {block.right.helperText ? (
+              <Text style={[styles.helperText, { color: colors.textSoft }]}>
+                {block.right.helperText}
               </Text>
             ) : null}
             {block.right.label ? (
@@ -185,8 +200,15 @@ function TeachingBlockView({
                 ) : null}
                 <HearButton
                   size={36}
-                  onPlay={() => onPlayAudio?.(opt.audioPath)}
-                  accessibilityLabel={opt.label ?? "Play"}
+                  disabled={!opt.audioPath}
+                  onPlay={() => {
+                    if (opt.audioPath) onPlayAudio?.(opt.audioPath);
+                  }}
+                  accessibilityLabel={
+                    opt.audioPath
+                      ? (opt.label ?? "Play")
+                      : "Audio coming soon"
+                  }
                 />
               </View>
             );
@@ -208,6 +230,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "space-between", padding: spacing.md },
   blocks: { flex: 1, justifyContent: "center", alignItems: "center", gap: spacing.lg },
   text: { ...typography.body, textAlign: "center" },
+  heading: {
+    ...typography.heading2,
+    fontSize: 22,
+    textAlign: "center",
+  },
+  helperText: {
+    ...typography.label,
+    fontStyle: "italic",
+    fontSize: 12,
+  },
   rtlRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
   arrow: { fontSize: 32 },
   arabicLarge: {
