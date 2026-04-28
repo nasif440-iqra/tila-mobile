@@ -323,20 +323,15 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     expect(screen.countsAsDecoding).toBe(true);
   });
 
-  it("Screen 2.4 (teach-equation) contains 'ب + fatha = بَ' and 'This has a mark.' in its text blocks", () => {
-    const screen = lessonTwo.screens.find((s) => s.id === "teach-equation");
+  it("Screen 2.3 (teach-letter-vs-syllable) contains 'ب + fatha = بَ' and 'ب is the letter. بَ is the sound ba.' in its text blocks", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "teach-letter-vs-syllable");
     if (!screen || screen.kind !== "teach")
-      throw new Error("teach-equation must be a teach screen");
+      throw new Error("teach-letter-vs-syllable must be a teach screen");
     const textContents = screen.blocks
       .filter((b) => b.type === "text")
       .map((b) => ("content" in b ? b.content : ""));
     expect(textContents).toContain("ب + fatha = بَ");
-    expect(textContents).toContain("This has a mark.");
-    // Must NOT contain the banned sound-naming phrases
-    for (const content of textContents) {
-      expect(content).not.toMatch(/Ba plus fatha gives/i);
-      expect(content).not.toMatch(/this says ba/i);
-    }
+    expect(textContents).toContain("ب is the letter. بَ is the sound ba.");
   });
 
   it("every Tap/Hear/Choose prompt uses only the 5 canonical forms (round-5 locked vocabulary)", () => {
@@ -384,5 +379,70 @@ describe("lesson-02 shape (Alif + Ba + Fatha)", () => {
     expect(paths.has("audio/letter/alif_name.mp3")).toBe(true);
     expect(paths.has("audio/letter/ba_name.mp3")).toBe(true);
     expect(paths.has("audio/letter/ba_fatha_sound.mp3")).toBe(true);
+  });
+
+  // ── Round-6 first-reading-win pivot assertions ─────────────────────────────
+
+  it("the four teach screens appear in exact order: teach-first-ba, teach-fatha-mark, teach-letter-vs-syllable, teach-meet-alif-light", () => {
+    const teachIds = lessonTwo.screens
+      .filter((s) => s.kind === "teach")
+      .map((s) => s.id);
+    expect(teachIds).toEqual([
+      "teach-first-ba",
+      "teach-fatha-mark",
+      "teach-letter-vs-syllable",
+      "teach-meet-alif-light",
+    ]);
+  });
+
+  it("the removed teach IDs no longer exist in the lesson", () => {
+    const allIds = new Set(lessonTwo.screens.map((s) => s.id));
+    expect(allIds.has("teach-meet-alif")).toBe(false);
+    expect(allIds.has("teach-alif-shape")).toBe(false);
+    expect(allIds.has("teach-recognize-fatha")).toBe(false);
+    expect(allIds.has("teach-equation")).toBe(false);
+  });
+
+  it("teach-first-ba is the autoPlay screen and uses ba_fatha_sound.mp3", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "teach-first-ba");
+    if (!screen || screen.kind !== "teach")
+      throw new Error("teach-first-ba must be a teach screen");
+    const autoPlayBlocks = screen.blocks.filter(
+      (b) => b.type === "audio" && b.autoPlay === true
+    );
+    expect(autoPlayBlocks).toHaveLength(1);
+    const ap = autoPlayBlocks[0];
+    if (ap.type !== "audio") throw new Error("expected audio block");
+    expect(ap.path).toBe("audio/letter/ba_fatha_sound.mp3");
+  });
+
+  it("teach-meet-alif-light has NO autoPlay block and does not teach Alif as a sound or vowel", () => {
+    const screen = lessonTwo.screens.find((s) => s.id === "teach-meet-alif-light");
+    if (!screen || screen.kind !== "teach")
+      throw new Error("teach-meet-alif-light must be a teach screen");
+    for (const block of screen.blocks) {
+      if (block.type === "audio") expect(block.autoPlay).not.toBe(true);
+    }
+    const textContents = screen.blocks
+      .filter((b) => b.type === "text")
+      .map((b) => ("content" in b ? b.content : ""));
+    for (const content of textContents) {
+      expect(content).not.toMatch(/Alif makes/i);
+      expect(content).not.toMatch(/Alif is a vowel/i);
+      expect(content).not.toMatch(/اَ/);
+    }
+  });
+
+  it("no teach screen anywhere in the lesson teaches Alif as an 'a' sound, calls Alif a vowel, or contains اَ", () => {
+    for (const screen of lessonTwo.screens) {
+      if (screen.kind !== "teach") continue;
+      for (const block of screen.blocks) {
+        if (block.type !== "text" && block.type !== "heading") continue;
+        const content = block.type === "text" ? block.content : block.text;
+        expect(content).not.toMatch(/Alif makes/i);
+        expect(content).not.toMatch(/Alif is a vowel/i);
+        expect(content).not.toMatch(/اَ/);
+      }
+    }
   });
 });
