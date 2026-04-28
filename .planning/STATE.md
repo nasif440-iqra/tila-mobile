@@ -88,10 +88,11 @@ See `.planning/RESET-DECISION-MEMO.md` for the full record of the reset decision
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260423-0s2 | Implementing Task 3 of the A0 Lesson 1 plan: CompletionStore + AsyncStorage impl (TDD). | 2026-04-23 | 4fd3456 | [260423-0s2-implementing-task-3-of-the-a0-lesson-1-p](./quick/260423-0s2-implementing-task-3-of-the-a0-lesson-1-p/) |
+| 260428-j5e | Rewrite Lesson 2 Teach phase per lesson1spec.txt (first-reading-win pivot). | 2026-04-28 | 6a35b33 | [260428-j5e-rewrite-lesson-2-teach-phase-per-lesson1](./quick/260428-j5e-rewrite-lesson-2-teach-phase-per-lesson1/) |
 
 ## Session Continuity
 
-Last activity: 2026-04-23 - Completed quick task 260423-0s2: Implementing Task 3 of the A0 Lesson 1 plan: CompletionStore + AsyncStorage impl (TDD).
+Last activity: 2026-04-28 - Completed quick task 260428-j5e: Rewrite Lesson 2 Teach phase per lesson1spec.txt (first-reading-win pivot).
 
 Last session: 2026-04-20 — curriculum reset executed over ~14 commits.
 Stopped at: Reset complete, awaiting blueprint.
