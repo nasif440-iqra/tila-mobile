@@ -25,7 +25,13 @@ import { WarmGradient } from "../../src/design/components";
 import { useAppState } from "../../src/state/hooks";
 import { useSubscription } from "../../src/monetization/hooks";
 import { getTodayDateString, getDayDifference } from "../../src/engine/dateUtils";
-import { asyncStorageCompletionStore } from "../../src/curriculum/runtime/completion-store";
+import { LessonGrid } from "../../src/components/home/LessonGrid";
+import { lessonRegistry } from "../../src/curriculum/lessons";
+import { progressStore } from "../../src/curriculum/runtime/progress-store";
+import {
+  deriveLessonGridState,
+  type LessonCell,
+} from "../../src/curriculum/runtime/grid-state";
 import { AnimatedStreakBadge } from "../../src/components/home/AnimatedStreakBadge";
 import { TrialCountdownBadge } from "../../src/components/monetization/TrialCountdownBadge";
 import { WirdTooltip } from "../../src/components/home/WirdTooltip";
@@ -170,19 +176,55 @@ export default function HomeScreen() {
     [motivation]
   );
 
-  // Lesson 1 completion state
-  const [lesson1Completed, setLesson1Completed] = useState(false);
+  // Lesson grid state
+  const LESSON_IDS = useMemo(
+    () => [
+      "lesson-01",
+      "lesson-02",
+      "lesson-03",
+      "lesson-04",
+      "lesson-05",
+      "lesson-06",
+      "lesson-07",
+      "lesson-08",
+    ],
+    []
+  );
+
+  const [cells, setCells] = useState<LessonCell[]>(() =>
+    LESSON_IDS.map((id, idx) => ({
+      lessonId: id,
+      state: idx === 0 ? "current" : "locked",
+    }))
+  );
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      asyncStorageCompletionStore.getCompletion("lesson-01").then((done) => {
-        if (!cancelled) setLesson1Completed(done);
+      progressStore.getProgress().then((progress) => {
+        if (!cancelled) setCells(deriveLessonGridState(LESSON_IDS, progress));
       });
       return () => {
         cancelled = true;
       };
-    }, [])
+    }, [LESSON_IDS])
+  );
+
+  const lessonTitles = useMemo<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    for (const id of LESSON_IDS) {
+      map[id] = lessonRegistry[id]?.title ?? `Lesson ${parseInt(id.split("-")[1] ?? "0", 10)}`;
+    }
+    return map;
+  }, [LESSON_IDS]);
+
+  const handleLessonPress = useCallback(
+    (lessonId: string) => {
+      if (!lessonRegistry[lessonId]) return; // not yet authored — guard
+      const num = parseInt(lessonId.split("-")[1] ?? "0", 10);
+      router.push({ pathname: "/lesson/[id]", params: { id: String(num) } });
+    },
+    []
   );
 
   // Wird tooltip
@@ -271,39 +313,8 @@ export default function HomeScreen() {
           </Pressable>
         )}
 
-        {/* ── Lesson 1 CTA card ── */}
-        <View style={styles.lessonCard}>
-          <Text style={styles.lessonEyebrow}>Lesson 1 · Phase 1 · Module 1.1</Text>
-          <Text style={styles.lessonTitle}>Arabic Starts Here</Text>
-          {lesson1Completed ? (
-            <>
-              <View style={styles.completeRow}>
-                <Text style={styles.completeCheck}>✓</Text>
-                <Text style={styles.completeText}>Lesson 1 complete</Text>
-              </View>
-              <Pressable
-                onPress={() => router.push("/lesson/1")}
-                style={[styles.lessonButton, styles.lessonButtonSecondary]}
-                accessibilityRole="button"
-                accessibilityLabel="Replay Lesson 1"
-              >
-                <Text style={styles.lessonButtonSecondaryText}>Replay Lesson 1</Text>
-              </Pressable>
-              <View style={styles.nextDisabled}>
-                <Text style={styles.nextDisabledText}>Lesson 2 coming soon</Text>
-              </View>
-            </>
-          ) : (
-            <Pressable
-              onPress={() => router.push("/lesson/1")}
-              style={styles.lessonButton}
-              accessibilityRole="button"
-              accessibilityLabel="Start Lesson 1"
-            >
-              <Text style={styles.lessonButtonText}>Start</Text>
-            </Pressable>
-          )}
-        </View>
+        {/* ── Lesson grid (8 cells, sequential unlock) ── */}
+        <LessonGrid cells={cells} titles={lessonTitles} onPress={handleLessonPress} />
 
         <View style={{ height: spacing.xxxl }} />
       </ScrollView>
@@ -400,41 +411,4 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
 
-  // Lesson 1 CTA card
-  lessonCard: {
-    marginHorizontal: spacing.sm,
-    marginVertical: spacing.sm,
-    padding: spacing.md,
-    borderRadius: radii.lg,
-    backgroundColor: "#FFFFFF",
-    gap: spacing.sm,
-    shadowColor: "#000",
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  lessonEyebrow: { ...typography.label, color: "#8a8a8a" },
-  lessonTitle: { ...typography.heading2, fontSize: 20, color: "#163323" },
-  lessonButton: {
-    backgroundColor: "#163323",
-    borderRadius: radii.full,
-    paddingVertical: spacing.sm,
-    alignItems: "center" as const,
-    marginTop: spacing.xs,
-  },
-  lessonButtonText: { color: "#F8F6F0", fontWeight: "600" as const, fontSize: 15 },
-  lessonButtonSecondary: { backgroundColor: "transparent", borderWidth: 1, borderColor: "#163323" },
-  lessonButtonSecondaryText: { color: "#163323", fontWeight: "600" as const, fontSize: 15 },
-  completeRow: { flexDirection: "row" as const, alignItems: "center" as const, gap: spacing.xs },
-  completeCheck: { color: "#163323", fontSize: 18, fontWeight: "700" as const },
-  completeText: { ...typography.body, color: "#163323" },
-  nextDisabled: {
-    marginTop: spacing.xs,
-    padding: spacing.sm,
-    borderRadius: radii.lg,
-    backgroundColor: "#f4f1e8",
-    alignItems: "center" as const,
-  },
-  nextDisabledText: { ...typography.label, color: "#9a9484" },
 });
