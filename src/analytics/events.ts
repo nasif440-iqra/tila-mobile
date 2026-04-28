@@ -130,6 +130,17 @@ export interface SyncFailedProps {
   table?: string;
 }
 
+export interface LessonStartProps {
+  lessonId: string;
+}
+
+export interface LessonCompleteProps {
+  lessonId: string;
+  durationSeconds: number;
+  attemptCounts: Record<string, number>;
+  firstTryCorrectRate: number;
+}
+
 export interface EventMap {
   app_opened: AppOpenedProps;
   onboarding_step_viewed: OnboardingStepViewedProps;
@@ -155,6 +166,8 @@ export interface EventMap {
   auth_sign_out: AuthSignOutProps;
   sync_completed: SyncCompletedProps;
   sync_failed: SyncFailedProps;
+  lesson_start: LessonStartProps;
+  lesson_complete: LessonCompleteProps;
 }
 
 export type EventName = keyof EventMap;
