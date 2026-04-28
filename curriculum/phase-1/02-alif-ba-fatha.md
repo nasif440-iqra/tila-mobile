@@ -146,32 +146,32 @@ The practice ramp is a deliberate staircase. Recognize letters → hear letter n
 - **Options:** [ا, ب ✓]
 - **Cognitive load:** Low–medium. Audio → letter mapping for ب only. (Alif has no audio practice item — its audio was auto-played in Screen 2.1, and Constraint 2 keeps Alif's role to "named visual symbol.")
 
-#### Item 3.4 — Choose (BRIDGE: text + audio both name the target)
-
-- **Type:** Choose (scored, retry: until-correct)
-- **Prompt:** `Which one says 'ba'?`
-- **Audio prompt:** `audio/letter/ba_fatha_sound.mp3`
-- **Target:** `combo:ba+fatha`
-- **Options:** [بَ ✓, ب]
-- **Cognitive load:** Medium-low. Both the text **and** the audio name the target sound — the learner doesn't have to first decide *what* they're matching. This anchors the sound→syllable mapping. Two options only — alif is held back for mastery.
-
-#### Item 3.5 — Choose (LESS EXPLICIT: audio only)
+#### Item 3.4 — Choose (AUDIO MODE: map sound → symbol)
 
 - **Type:** Choose (scored, retry: until-correct)
 - **Prompt:** `Tap what you hear`
 - **Audio prompt:** `audio/letter/ba_fatha_sound.mp3`
 - **Target:** `combo:ba+fatha`
 - **Options:** [بَ ✓, ب]
-- **Cognitive load:** Medium. Same audio as 3.4, but the prompt no longer names the target — the learner has to interpret what the sound is, then match. Still 2 options.
+- **Cognitive load:** Medium-low. **Single instruction mode — auditory only.** The learner hears "ba" and picks the matching glyph. Text and audio do not compete for attention. Two options only — alif is held back for mastery.
 
-#### Item 3.6 — Choose (VISUAL-ONLY: text only)
+#### Item 3.5 — Choose (VISUAL MODE: map text → sound)
 
 - **Type:** Choose (scored, retry: until-correct)
 - **Prompt:** `Which one says 'ba'?`
 - **Audio prompt:** *(none)*
 - **Target:** `combo:ba+fatha`
 - **Options:** [بَ ✓, ب]
-- **Cognitive load:** Medium. Text-only sound-ID. Same 2-option contrast they've now seen audio-driven twice. Confidence anchor before mastery.
+- **Cognitive load:** Medium. **Single instruction mode — visual only.** The text names the target sound; no audio competes. Same 2-option contrast as 3.4 but tested through reading the prompt rather than hearing it.
+
+#### Item 3.6 — Choose (VISUAL MODE: reinforce)
+
+- **Type:** Choose (scored, retry: until-correct)
+- **Prompt:** `Which one says 'ba'?`
+- **Audio prompt:** *(none)*
+- **Target:** `combo:ba+fatha`
+- **Options:** [ب, بَ ✓]
+- **Cognitive load:** Medium. Same task as 3.5 (visual sound-ID, no audio) with **option positions flipped** — the correct syllable is on the right rather than the left. Reinforces the visual-only mapping while breaking any positional muscle memory from 3.5. Confidence anchor before mastery's harder 3-option discrimination.
 
 ### Part 4 — Mastery Check (~40s, 3 items)
 
